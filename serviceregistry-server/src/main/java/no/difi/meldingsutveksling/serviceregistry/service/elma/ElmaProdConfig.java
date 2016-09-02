@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-@Profile({"production", "staging"})
+@Profile({"production"})
 @Configuration
 public class ElmaProdConfig {
     private static final String ELMA_ENDPOINT_KEY = "bdxr-transport-altinn";
