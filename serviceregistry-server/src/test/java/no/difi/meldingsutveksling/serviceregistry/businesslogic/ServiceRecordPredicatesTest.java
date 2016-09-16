@@ -14,6 +14,33 @@ import static org.junit.Assert.*;
 public class ServiceRecordPredicatesTest {
 
     @Test
+    public void identifierShouldBeCitizen() {
+        final String identifier = "06068700602";
+
+        final boolean result = ServiceRecordPredicates.isCitizen().test(identifier);
+
+        assertThat("Identifier should belong to a citizen", result, equalTo(true));
+    }
+
+    @Test
+    public void identierBelongingToOrganizationShouldNotBeCitizen() {
+        final String identifier = "991825827";
+
+        final boolean result = ServiceRecordPredicates.isCitizen().test(identifier);
+
+        assertThat("Identifier should belong to a citizen", result, equalTo(false));
+    }
+
+    @Test
+    public void messagesToCitizenUsesSikkerDigitalPost() {
+        final OrganizationInfo citizen = new OrganizationInfo.Builder().withOrganizationNumber("06068700602").build();
+
+        final boolean result = ServiceRecordPredicates.usesSikkerDigitalPost().test(citizen);
+
+        assertThat("Citizen should use sikker digital post", result, equalTo(true));
+    }
+
+    @Test
     public void messagesToPrivateOrganizationsUsesPostTilVirksomhet() {
         final OrganizationInfo privateOrganization = privateOrganization();
 

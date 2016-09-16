@@ -34,7 +34,7 @@ import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRe
 public class ServiceRecordController {
 
     private final ServiceRecordFactory serviceRecordFactory;
-    private BrregService brregService;
+    private BrregService entityService;
     private PrimaryServiceStore store;
     private static final Logger logger = LoggerFactory.getLogger(ServiceRecordController.class);
 
@@ -44,11 +44,11 @@ public class ServiceRecordController {
      * @param elmaLookupSerice used to lookup urls
      * @param ksLookup used for KS transport
      * @param store used to persist internal state
-     * @param brregService needed to lookup and retrieve organization information using an organization number
+     * @param entityService needed to lookup and retrieve organization information using an organization number
      */
     @Autowired
-    public ServiceRecordController(VirkSertService virkSertService, ELMALookupService elmaLookupSerice, KSLookup ksLookup, PrimaryServiceStore store, BrregService brregService, Environment environment) {
-        this.brregService = brregService;
+    public ServiceRecordController(VirkSertService virkSertService, ELMALookupService elmaLookupSerice, KSLookup ksLookup, PrimaryServiceStore store, BrregService entityService, Environment environment) {
+        this.entityService = entityService;
         this.store = store;
         this.serviceRecordFactory = new ServiceRecordFactory(environment, virkSertService, elmaLookupSerice, ksLookup);
     }
@@ -65,7 +65,7 @@ public class ServiceRecordController {
         MDC.put("identifier", identifier);
         Organization org = new Organization();
         ServiceIdentifier serviceIdentifier = store.getPrimaryOverride(identifier);
-        OrganizationInfo organization = brregService.getOrganizationInfo(identifier);
+        OrganizationInfo organization = entityService.getOrganizationInfo(identifier);
         organization.setPrimaryServiceIdentifier(serviceIdentifier);
 
         if(usesFormidlingstjenesten().test(organization)) {
