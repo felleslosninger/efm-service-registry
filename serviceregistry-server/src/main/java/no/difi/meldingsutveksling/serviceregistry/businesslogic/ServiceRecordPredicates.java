@@ -6,16 +6,17 @@ import no.difi.meldingsutveksling.serviceregistry.model.OrganizationTypes;
 
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 /**
  * Contains predicates used to determine the type of service record to create/use to send messages
  */
 public class ServiceRecordPredicates {
 
+    private static final Predicate<String> exactly_11_numbers = Pattern.compile(String.format("\\d{%d}", 11)).asPredicate();
+
     private ServiceRecordPredicates() {
     }
-
-    private static final int LENGTH_OF_FODSELSNUMMER = 11;
 
     public static Predicate<OrganizationInfo> usesPostTilVirksomhet() {
         Set<OrganizationType> privateOrganizationTypes = new OrganizationTypes().privateOrganization();
@@ -39,6 +40,7 @@ public class ServiceRecordPredicates {
     public static Predicate<String> isCitizen() {
         // This is actually an oversimplification based on minimum government requirements for a fodselsnummer
         // which is sufficient for the time being
-        return s -> s.matches(String.format("\\d{%d}", LENGTH_OF_FODSELSNUMMER));
+
+        return exactly_11_numbers;
     }
 }
