@@ -14,6 +14,15 @@ import static org.junit.Assert.*;
 public class ServiceRecordPredicatesTest {
 
     @Test
+    public void identifierContainsLettersShouldNotBeCitizen() {
+        final String identifier = "as123456789";
+
+        final boolean result = ServiceRecordPredicates.isCitizen().test(identifier);
+
+        assertThat("Identifier is not a valid citizen identifier", result, equalTo(false));
+    }
+
+    @Test
     public void identifierShouldBeCitizen() {
         final String identifier = "06068700602";
 
@@ -59,12 +68,12 @@ public class ServiceRecordPredicatesTest {
     }
 
     private OrganizationInfo privateOrganization() {
-        final Optional<OrganizationType> privateType = new OrganizationTypes().privateOrganization().stream().findFirst();
-        return new OrganizationInfo.Builder().setOrganizationType(privateType.get()).build();
+        final OrganizationType privateType = new OrganizationTypes().privateOrganization().stream().findFirst().orElseThrow(() -> new RuntimeException("Could not find a private organization"));
+        return new OrganizationInfo.Builder().setOrganizationType(privateType).build();
     }
 
     private OrganizationInfo publicOrganization() {
-        final Optional<OrganizationType> publicType = new OrganizationTypes().publicOrganization().stream().findFirst();
-        return new OrganizationInfo.Builder().setOrganizationType(publicType.get()).build();
+        final OrganizationType publicType = new OrganizationTypes().publicOrganization().stream().findFirst().orElseThrow(() -> new RuntimeException("Could not find a public organization type"));
+        return new OrganizationInfo.Builder().setOrganizationType(publicType).build();
     }
 }
