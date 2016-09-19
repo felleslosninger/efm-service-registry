@@ -5,6 +5,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import org.springframework.stereotype.Service;
 
+import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.isCitizen;
 import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.usesSikkerDigitalPost;
 
 @Service
@@ -19,7 +20,7 @@ public class EntityService {
     }
 
     public OrganizationInfo getEntityInfo(String identifier) {
-        if (usesSikkerDigitalPost().test(identifier)) {
+        if (isCitizen().test(identifier)) {
             return krrService.getCitizenInfo(identifier);
         } else {
             return brregService.getOrganizationInfo(identifier);
