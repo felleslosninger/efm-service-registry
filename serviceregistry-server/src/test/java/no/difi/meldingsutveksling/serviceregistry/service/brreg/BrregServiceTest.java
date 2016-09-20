@@ -32,7 +32,7 @@ public class BrregServiceTest {
 
     @Test
     public void brregHasOrganizationInfo() {
-        assertEquals(difi, brregService.getOrganizationInfo(difi.getOrganisationNumber()));
+        assertEquals(difi, brregService.getOrganizationInfo(difi.getIdentifier()));
     }
 
     @Test

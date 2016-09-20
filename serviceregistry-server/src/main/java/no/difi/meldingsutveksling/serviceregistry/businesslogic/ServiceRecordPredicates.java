@@ -16,18 +16,30 @@ public class ServiceRecordPredicates {
     private ServiceRecordPredicates() {
     }
 
+    /**
+     * Predicate to test whether Post til virksomheter is a valid service for sending messages
+     * @return predicate that evaluates true if able to use post til virksomhet
+     */
     public static Predicate<EntityInfo> usesPostTilVirksomhet() {
         Set<? extends EntityType> privateOrganizationTypes = new OrganizationTypes().privateOrganization();
         return o -> privateOrganizationTypes.contains(o.getEntityType());
     }
 
+    /**
+     * Predicate to test whether Formidlingstjenesten is a valid service for sending messages
+     * @return predicate that evaluates true if able to use formidlingstjenesten
+     */
     public static Predicate<EntityInfo> usesFormidlingstjenesten() {
         Set<? extends EntityType> publicOrganizationTypes = new OrganizationTypes().publicOrganization();
         return o -> publicOrganizationTypes.contains(o.getEntityType());
     }
 
+    /**
+     * Predicate to test whether Sikker digital post is a valid service for sending messages
+     * @return predicate that evaluates true if able to use sikker digital post
+     */
     public static Predicate<OrganizationInfo> usesSikkerDigitalPost() {
-        return o -> isCitizen().test(o.getOrganisationNumber());
+        return o -> isCitizen().test(o.getIdentifier());
     }
 
     /**
