@@ -1,5 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.service;
 
+import no.difi.meldingsutveksling.serviceregistry.model.CitizenInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
@@ -31,7 +32,7 @@ public class EntityService {
      */
     public EntityInfo getEntityInfo(String identifier) {
         if (isCitizen().test(identifier)) {
-            return krrService.getCitizenInfo(identifier);
+            return new CitizenInfo(identifier);
         } else {
             return brregService.getOrganizationInfo(identifier);
         }

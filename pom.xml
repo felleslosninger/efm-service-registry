@@ -36,8 +36,8 @@
 
     <modules>
         <module>serviceregistry-server</module>
-        <module>kontakt-reservasjonsregister-client</module>
         <module>webservice-tools</module>
+        <module>kontakt-reservasjonsregister-client</module>
         <module>audit</module>
     </modules>
     
