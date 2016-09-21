@@ -5,10 +5,13 @@ import com.google.common.base.Objects;
 
 import java.io.Serializable;
 
-public class OrganizationInfo implements Serializable {
+/**
+ * Contains information relevant for an organization
+ */
+public class OrganizationInfo implements Serializable, EntityInfo {
 
     private ServiceIdentifier primaryServiceIdentifier;
-    private String organisationNumber;
+    private String identifier;
     private String organizationName;
     private OrganizationType organizationType;
     private static final long serialVersionUID = 7526471155622776555L;
@@ -25,7 +28,7 @@ public class OrganizationInfo implements Serializable {
      */
     public OrganizationInfo(ServiceIdentifier primaryServiceIdentifier, String organisationNumber, String organizationName, OrganizationType organizationType) {
         this.primaryServiceIdentifier = primaryServiceIdentifier;
-        this.organisationNumber = organisationNumber;
+        this.identifier = organisationNumber;
         this.organizationName = organizationName;
         this.organizationType = organizationType;
     }
@@ -38,13 +41,20 @@ public class OrganizationInfo implements Serializable {
         this.primaryServiceIdentifier = primaryServiceIdentifier;
     }
 
-    public void setOrganisationNumber(String organisationNumber) {
-        this.organisationNumber = organisationNumber;
+    @Override
+    public EntityType getEntityType() {
+        return organizationType;
     }
 
-    public String getOrganisationNumber() {
-        return organisationNumber;
+    @Override
+    public String getIdentifier() {
+        return identifier;
     }
+
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
+    }
+
 
     public String getOrganizationName() {
         return this.organizationName;
@@ -76,7 +86,7 @@ public class OrganizationInfo implements Serializable {
         }
 
         public Builder withOrganizationNumber(String organisationNumber) {
-            organizationInfo.setOrganisationNumber(organisationNumber);
+            organizationInfo.setIdentifier(organisationNumber);
             return this;
         }
 
@@ -97,21 +107,21 @@ public class OrganizationInfo implements Serializable {
         if (o == null || getClass() != o.getClass()) return false;
         OrganizationInfo that = (OrganizationInfo) o;
         return primaryServiceIdentifier == that.primaryServiceIdentifier &&
-                Objects.equal(organisationNumber, that.organisationNumber) &&
+                Objects.equal(identifier, that.identifier) &&
                 Objects.equal(organizationName, that.organizationName) &&
                 Objects.equal(organizationType, that.organizationType);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(primaryServiceIdentifier, organisationNumber, organizationName, organizationType);
+        return Objects.hashCode(primaryServiceIdentifier, identifier, organizationName, organizationType);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("primaryServiceIdentifier", primaryServiceIdentifier)
-                .add("organisationNumber", organisationNumber)
+                .add("identifier", identifier)
                 .add("organizationName", organizationName)
                 .add("organizationType", organizationType)
                 .toString();

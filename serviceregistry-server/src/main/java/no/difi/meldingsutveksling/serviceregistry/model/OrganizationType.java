@@ -10,7 +10,7 @@ import java.io.Serializable;
  * See http://hotell.difi.no/?dataset=brreg/organisasjonsform
  *
  */
-public class OrganizationType implements Serializable {
+public class OrganizationType implements Serializable, EntityType {
     private String name;
     private String acronym;
 

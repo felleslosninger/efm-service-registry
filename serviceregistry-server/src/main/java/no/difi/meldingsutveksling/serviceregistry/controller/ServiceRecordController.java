@@ -3,10 +3,10 @@ package no.difi.meldingsutveksling.serviceregistry.controller;
 
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
-import no.difi.meldingsutveksling.serviceregistry.model.Organization;
-import no.difi.meldingsutveksling.serviceregistry.model.OrganizationInfo;
+import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
+import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
-import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
+import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.ks.KSLookup;
 import no.difi.meldingsutveksling.serviceregistry.service.persistence.PrimaryServiceStore;
@@ -29,26 +29,26 @@ import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRe
 import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.usesPostTilVirksomhet;
 
 @RequestMapping("/identifier")
-@ExposesResourceFor(OrganizationResource.class)
+@ExposesResourceFor(EntityResource.class)
 @RestController
 public class ServiceRecordController {
 
     private final ServiceRecordFactory serviceRecordFactory;
-    private BrregService brregService;
+    private EntityService entityService;
     private PrimaryServiceStore store;
     private static final Logger logger = LoggerFactory.getLogger(ServiceRecordController.class);
 
     /**
-     *
      * @param virkSertService used to retrieve organization certificates
      * @param elmaLookupSerice used to lookup urls
      * @param ksLookup used for KS transport
      * @param store used to persist internal state
-     * @param brregService needed to lookup and retrieve organization information using an organization number
+     * @param entityService needed to lookup and retrieve organization or citizen information using an identifier number
+     * @param environment Spring environment
      */
     @Autowired
-    public ServiceRecordController(VirkSertService virkSertService, ELMALookupService elmaLookupSerice, KSLookup ksLookup, PrimaryServiceStore store, BrregService brregService, Environment environment) {
-        this.brregService = brregService;
+    public ServiceRecordController(VirkSertService virkSertService, ELMALookupService elmaLookupSerice, KSLookup ksLookup, PrimaryServiceStore store, EntityService entityService, Environment environment) {
+        this.entityService = entityService;
         this.store = store;
         this.serviceRecordFactory = new ServiceRecordFactory(environment, virkSertService, elmaLookupSerice, ksLookup);
     }
@@ -61,21 +61,21 @@ public class ServiceRecordController {
      */
     @RequestMapping("/{identifier}")
     @ResponseBody
-    public HttpEntity<OrganizationResource> entity(@PathVariable("identifier") String identifier) {
+    public HttpEntity<EntityResource> entity(@PathVariable("identifier") String identifier) {
         MDC.put("identifier", identifier);
-        Organization org = new Organization();
+        Entity entity = new Entity();
         ServiceIdentifier serviceIdentifier = store.getPrimaryOverride(identifier);
-        OrganizationInfo organization = brregService.getOrganizationInfo(identifier);
-        organization.setPrimaryServiceIdentifier(serviceIdentifier);
+        EntityInfo entityInfo = entityService.getEntityInfo(identifier);
+        entityInfo.setPrimaryServiceIdentifier(serviceIdentifier);
 
-        if(usesFormidlingstjenesten().test(organization)) {
-            org.addServiceRecord(serviceRecordFactory.createEduServiceRecord(identifier));
+        if(usesFormidlingstjenesten().test(entityInfo)) {
+            entity.addServiceRecord(serviceRecordFactory.createEduServiceRecord(identifier));
         }
-        if(usesPostTilVirksomhet().test(organization)) {
-            org.addServiceRecord(serviceRecordFactory.createPostVirksomhetServiceRecord(identifier));
+        if(usesPostTilVirksomhet().test(entityInfo)) {
+            entity.addServiceRecord(serviceRecordFactory.createPostVirksomhetServiceRecord(identifier));
         }
-        org.setInfo(organization);
-        OrganizationResource organizationRes = new OrganizationResource(org);
+        entity.setInfo(entityInfo);
+        EntityResource organizationRes = new EntityResource(entity);
         return new ResponseEntity<>(organizationRes, HttpStatus.OK);
     }
 

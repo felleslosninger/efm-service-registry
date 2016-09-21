@@ -6,13 +6,18 @@ import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents an organization or a citizen
+ */
+public class Entity {
 
-public class Organization {
-
-    private OrganizationInfo info;
+    private EntityInfo info;
     private List<ServiceRecord> serviceRecords;
 
-    public Organization() {
+    /**
+     * Creates an empty Entity
+     */
+    public Entity() {
         serviceRecords = new ArrayList<>();
     }
 
@@ -20,11 +25,11 @@ public class Organization {
         serviceRecords.add(s);
     }
 
-    public OrganizationInfo getInfo() {
+    public EntityInfo getInfo() {
         return info;
     }
 
-    public void setInfo(OrganizationInfo info) {
+    public void setInfo(EntityInfo info) {
         this.info = info;
     }
 
