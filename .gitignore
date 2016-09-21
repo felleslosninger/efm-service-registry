@@ -13,3 +13,6 @@ target
 
 # IntelliJ
 /out/
+
+nb-configuration.xml
+nbactions.xml
