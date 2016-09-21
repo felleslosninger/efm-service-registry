@@ -25,18 +25,4 @@ public class CertificateToString {
             IOUtils.closeQuietly(stringWriter);
         }
     }
-
-    public static String toString(byte[] certificate) {
-        final StringWriter writer = new StringWriter();
-        JcaPEMWriter jcaPEMWriter = new JcaPEMWriter(writer);
-        try {
-            jcaPEMWriter.write(new String(certificate));
-            return jcaPEMWriter.toString();
-        } catch (IOException e) {
-            throw new ServiceRegistryException(e);
-        } finally {
-            IOUtils.closeQuietly(jcaPEMWriter);
-            IOUtils.closeQuietly(writer);
-        }
-    }
 }

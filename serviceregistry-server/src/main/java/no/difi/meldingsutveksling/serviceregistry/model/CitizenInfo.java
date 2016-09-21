@@ -2,7 +2,9 @@ package no.difi.meldingsutveksling.serviceregistry.model;
 
 import no.difi.meldingsutveksling.ptp.KontaktInfo;
 
-public class CitizenInfo implements EntityInfo {
+import java.io.Serializable;
+
+public class CitizenInfo implements Serializable, EntityInfo {
     private final String identifier;
     private ServiceIdentifier primaryServiceIdentifier;
 
@@ -17,7 +19,7 @@ public class CitizenInfo implements EntityInfo {
 
     @Override
     public EntityType getEntityType() {
-        return new CitizenType();
+        return new CitizenType("citizen");
     }
 
     @Override

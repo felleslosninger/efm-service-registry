@@ -57,7 +57,7 @@ public class ServiceRecordFactory {
 
     public ServiceRecord createSikkerDigitalPostRecord(String identifier) {
         final KontaktInfo kontaktInfo = krrService.getCitizenInfo(identifier);
-        return new SikkerDigitalPostServiceRecord(environment, CertificateToString.toString(kontaktInfo.getCertificate()), ServiceIdentifier.SIKKER_DIGITAL_POST, identifier);
+        return new SikkerDigitalPostServiceRecord(environment, kontaktInfo.getCertificate(), ServiceIdentifier.SIKKER_DIGITAL_POST, identifier);
     }
 
 }

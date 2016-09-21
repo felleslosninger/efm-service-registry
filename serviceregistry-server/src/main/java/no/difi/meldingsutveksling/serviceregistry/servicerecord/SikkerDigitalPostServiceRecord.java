@@ -10,6 +10,6 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
 
     @Override
     public String getEndPointURL() {
-        return null;
+        return environment.getProperty("krr.endpointURL");
     }
 }
