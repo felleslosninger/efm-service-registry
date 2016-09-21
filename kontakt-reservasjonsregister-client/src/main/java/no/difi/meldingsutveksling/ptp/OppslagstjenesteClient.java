@@ -73,14 +73,14 @@ public class OppslagstjenesteClient {
         securityInterceptor.setValidationCallbackHandler(new CallbackHandler() {
             @Override
             public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
-                Arrays.stream(callbacks).filter(c -> c instanceof WSPasswordCallback).forEach(c -> ((WSPasswordCallback)c).setPassword(conf.password));
+                Arrays.stream(callbacks).filter(c -> c instanceof WSPasswordCallback).forEach(c -> ((WSPasswordCallback) c).setPassword(conf.password));
             }
         });
 
         securityInterceptor.setSecurementSignatureAlgorithm("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256");
         securityInterceptor.setSecurementSignatureParts("{}{http://www.w3.org/2003/05/soap-envelope}Body;{}{http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd}Timestamp}");
-        final Crypto clientCrypto = getCryptoFactoryBean(new FileSystemResource("kontaktinfo-client-test.jks"), conf.password, conf.password);
-        final Crypto serverCrypto = getCryptoFactoryBean(new FileSystemResource("kontaktinfo-server-test.jks"), conf.password, conf.serverAlias);
+        final Crypto clientCrypto = getCryptoFactoryBean(new FileSystemResource(conf.getClientJksLocation()), conf.password, conf.clientAlias);
+        final Crypto serverCrypto = getCryptoFactoryBean(new FileSystemResource(conf.getServerJksLocation()), conf.password, conf.serverAlias);
         securityInterceptor.setSecurementSignatureCrypto(clientCrypto);
         securityInterceptor.setValidationSignatureCrypto(serverCrypto);
         securityInterceptor.setValidationDecryptionCrypto(clientCrypto);
@@ -121,18 +121,32 @@ public class OppslagstjenesteClient {
         private final String password;
         private final String clientAlias;
         private final String serverAlias;
+        private String clientJksLocation;
+        private String serverJksLocation;
 
         /**
          * Needed to construct OppslagstjenesteClient
          * @param url Url to the Oppslagstjeneste endpoint
          * @param password password for the JKS file
          * @param clientAlias for the JKS entry
+         * @param clientJksLocation path to the jks file that contain the client certificate
+         * @param serverJksLocation path to the jks file that contain the server certificate
          */
-        public Configuration(String url, String password, String clientAlias, String serverAlias) {
+        public Configuration(String url, String password, String clientAlias, String serverAlias, String clientJksLocation, String serverJksLocation) {
             this.url = url;
             this.password = password;
             this.clientAlias = clientAlias;
             this.serverAlias = serverAlias;
+            this.clientJksLocation = clientJksLocation;
+            this.serverJksLocation = serverJksLocation;
+        }
+
+        public String getClientJksLocation() {
+            return clientJksLocation;
+        }
+
+        public String getServerJksLocation() {
+            return serverJksLocation;
         }
     }
 
