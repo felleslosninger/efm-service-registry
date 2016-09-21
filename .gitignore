@@ -15,4 +15,4 @@ target
 /out/
 
 nb-configuration.xml
-nbaction.xml
+nbactions.xml
