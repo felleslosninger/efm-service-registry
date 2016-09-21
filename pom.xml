@@ -6,19 +6,13 @@
     <artifactId>serviceregistry-parent</artifactId>
     <version>1.0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
-        
+
     <scm>
         <connection>scm:git:https://github.com/difi/move-service-registry</connection>
         <developerConnection>scm:git:https://github.com/difi/move-service-registry</developerConnection>
         <url>https://github.com/difi/move-service-registry</url>
         <tag>HEAD</tag>
     </scm>
-    
-    <properties>
-        <spring.boot.version>1.4.0.RELEASE</spring.boot.version>
-        <!-- bug with logstash-logback-encoder in 1.1.7, wait for 1.1.8 http://jira.qos.ch/browse/LOGBACK-1158 -->
-        <logback.version>1.1.6</logback.version> 
-    </properties>
 
     <repositories>
         <repository>
@@ -28,10 +22,21 @@
         </repository>
     </repositories>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <spring.boot.version>1.4.0.RELEASE</spring.boot.version>
+        <logback.version>1.1.6</logback.version>
+    </properties>
+
     <modules>
+        <module>audit</module>
+        <module>webservice-tools</module>
         <module>serviceregistry-server</module>
+        <module>kontakt-reservasjonsregister-client</module>
     </modules>
-    
+
 
     <dependencyManagement>
         <dependencies>
@@ -84,16 +89,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.5.1</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-            
             <plugin>
                 <artifactId>maven-release-plugin</artifactId>
                 <version>2.5.3</version>

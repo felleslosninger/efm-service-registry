@@ -8,6 +8,7 @@ import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
+import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.ks.KSLookup;
 import no.difi.meldingsutveksling.serviceregistry.service.persistence.PrimaryServiceStore;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
@@ -27,6 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.usesFormidlingstjenesten;
 import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.usesPostTilVirksomhet;
+import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.usesSikkerDigitalPost;
 
 @RequestMapping("/identifier")
 @ExposesResourceFor(EntityResource.class)
@@ -34,6 +36,7 @@ import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRe
 public class ServiceRecordController {
 
     private final ServiceRecordFactory serviceRecordFactory;
+    private final KrrService krrService;
     private EntityService entityService;
     private PrimaryServiceStore store;
     private static final Logger logger = LoggerFactory.getLogger(ServiceRecordController.class);
@@ -45,12 +48,14 @@ public class ServiceRecordController {
      * @param store used to persist internal state
      * @param entityService needed to lookup and retrieve organization or citizen information using an identifier number
      * @param environment Spring environment
+     * @param krrService service for kontakt og reservasjons registeret needed by SDP
      */
     @Autowired
-    public ServiceRecordController(VirkSertService virkSertService, ELMALookupService elmaLookupSerice, KSLookup ksLookup, PrimaryServiceStore store, EntityService entityService, Environment environment) {
+    public ServiceRecordController(VirkSertService virkSertService, ELMALookupService elmaLookupSerice, KSLookup ksLookup, PrimaryServiceStore store, EntityService entityService, Environment environment, KrrService krrService) {
         this.entityService = entityService;
         this.store = store;
-        this.serviceRecordFactory = new ServiceRecordFactory(environment, virkSertService, elmaLookupSerice, ksLookup);
+        this.krrService = krrService;
+        this.serviceRecordFactory = new ServiceRecordFactory(environment, virkSertService, elmaLookupSerice, ksLookup, this.krrService);
     }
 
     /**
@@ -68,6 +73,9 @@ public class ServiceRecordController {
         EntityInfo entityInfo = entityService.getEntityInfo(identifier);
         entityInfo.setPrimaryServiceIdentifier(serviceIdentifier);
 
+        if (usesSikkerDigitalPost().test(entityInfo)) {
+            entity.addServiceRecord(serviceRecordFactory.createSikkerDigitalPostRecord(identifier));
+        }
         if(usesFormidlingstjenesten().test(entityInfo)) {
             entity.addServiceRecord(serviceRecordFactory.createEduServiceRecord(identifier));
         }

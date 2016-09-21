@@ -1,4 +1,13 @@
 package no.difi.meldingsutveksling.serviceregistry.model;
 
-public class CitizenType implements EntityType {
+import java.io.Serializable;
+
+public class CitizenType implements Serializable, EntityType {
+    final public String name;
+
+    public CitizenType(String name) {
+        this.name = name;
+    }
+
+
 }

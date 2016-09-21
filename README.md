@@ -5,6 +5,13 @@ The service registry component (SR) is a component designed to run centralized, 
 * It Creates a single network address participants need to access. This simplifies firewall configuration
 * It enable organisations to manage messaging for others. The SR component can return the organization number and certificate for a third party for services
 
+## Configuration
+krr.endpointURL - url to Kontakt- og Reservasjonsregisteret for instance ´https://kontaktinfo-ws-ver2.difi.no/kontaktinfo-external/ws-v5´
+jks.password - java keystore file password for instance ´changeit´
+jks.client.alias - java keystore alias to the client certificate (needs to be a valid virksomhetssertifikat) for instance ´client_alias´
+jks.client.location - location of the java keystore file that hold the client certificate for instance ´kontaktinfo-client-test.jks´
+jks.server.alias - java keystore alias to the server certificate for Kontakt- og Reservasjonsregisteret (needs to be a valid virksomhetssertifikat) for instance ´ver2´
+jks.server.location - location of the java keystore file that hold the client certificate for instance ´kontaktinfo-server-test.jks´
 ## Example request
 
 http://localhost:8080/organization/986186999
