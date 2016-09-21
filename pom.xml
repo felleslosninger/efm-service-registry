@@ -13,6 +13,7 @@
         <connection>scm:git:https://github.com/difi/move-service-registry</connection>
         <developerConnection>scm:git:https://github.com/difi/move-service-registry</developerConnection>
         <url>https://github.com/difi/move-service-registry</url>
+        <tag>HEAD</tag>
     </scm>
     
     <properties>
@@ -93,6 +94,22 @@
                     <source>1.8</source>
                     <target>1.8</target>
                 </configuration>
+            </plugin>
+            
+            <plugin>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.5.3</version>
+                <configuration>
+                    <tagNameFormat>v@{project.version}</tagNameFormat>
+                    <releaseProfiles>release</releaseProfiles>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.scm</groupId>
+                        <artifactId>maven-scm-provider-gitexe</artifactId>
+                        <version>1.9.5</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.owasp</groupId>
