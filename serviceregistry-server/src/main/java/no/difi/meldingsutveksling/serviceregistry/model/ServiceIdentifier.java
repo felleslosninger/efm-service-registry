@@ -1,21 +1,19 @@
 package no.difi.meldingsutveksling.serviceregistry.model;
 
+/**
+ * Identifiers for the individual services available for transport of messages
+ */
 public enum ServiceIdentifier {
-
-    EDU("EDU"), POST_VIRKSOMHET("POST_VIRKSOMHET"), SIKKER_DIGITAL_POST("SDP");
-    private String name;
-
-    ServiceIdentifier(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-
-    @Override
-    public String toString() {
-        return name;
-    }
+    /**
+     * Identifies archive-to-archive transportation
+     */
+    EDU,
+    /**
+     * Identifies using Altinn correspondence agency as transport
+     */
+    POST_VIRKSOMHET,
+    /**
+     * Identifies DIFI sikker digital post aka. Digital Post Innbygger
+     */
+    DPI
 }

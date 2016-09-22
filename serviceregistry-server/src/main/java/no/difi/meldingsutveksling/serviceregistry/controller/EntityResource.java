@@ -30,7 +30,7 @@ public class EntityResource extends ResourceSupport {
         for (ServiceRecord r : entity.getServiceRecords()) {
             final ServiceRecordResource e = new ServiceRecordResource(r);
             final Object invocationValue = methodOn(ServiceRecordController.class).setPrimary(entity.getInfo().getIdentifier(),
-                    r.getServiceIdentifier().getName());
+                    r.getServiceIdentifier());
             e.add(linkTo(invocationValue).withRel("setprimary"));
             serviceRecords.add(e);
         }
