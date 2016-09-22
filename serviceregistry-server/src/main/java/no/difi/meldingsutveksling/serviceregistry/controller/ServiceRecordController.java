@@ -3,8 +3,8 @@ package no.difi.meldingsutveksling.serviceregistry.controller;
 
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
-import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
+import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
@@ -26,9 +26,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.usesFormidlingstjenesten;
-import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.usesPostTilVirksomhet;
-import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.usesSikkerDigitalPost;
+import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.*;
 
 @RequestMapping("/identifier")
 @ExposesResourceFor(EntityResource.class)
@@ -48,7 +46,7 @@ public class ServiceRecordController {
      * @param store used to persist internal state
      * @param entityService needed to lookup and retrieve organization or citizen information using an identifier number
      * @param environment Spring environment
-     * @param krrService service for kontakt og reservasjons registeret needed by SDP
+     * @param krrService service for kontakt og reservasjons registeret needed by DPI
      */
     @Autowired
     public ServiceRecordController(VirkSertService virkSertService, ELMALookupService elmaLookupSerice, KSLookup ksLookup, PrimaryServiceStore store, EntityService entityService, Environment environment, KrrService krrService) {
@@ -101,8 +99,8 @@ public class ServiceRecordController {
 
 
     @RequestMapping("/primary")
-    public ResponseEntity setPrimary(@RequestParam("orgnr") String orgnr, @RequestParam("serviceidentifier") String serviceIdentifier) {
-        store.setPrimaryOverride(orgnr, ServiceIdentifier.valueOf(serviceIdentifier));
+    public ResponseEntity setPrimary(@RequestParam("orgnr") String orgnr, @RequestParam("serviceidentifier") ServiceIdentifier serviceIdentifier) {
+        store.setPrimaryOverride(orgnr, serviceIdentifier);
         return new ResponseEntity(HttpStatus.OK);
     }
 }

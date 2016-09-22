@@ -2,7 +2,6 @@ package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 import no.difi.meldingsutveksling.ptp.KontaktInfo;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
-import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
@@ -27,6 +26,14 @@ public class ServiceRecordFactory {
     private KSLookup ksLookup;
     private static final String NORWAY_PREFIX = "9908:";
 
+    /**
+     * Creates factory to create ServiceRecord using provided environment and services
+     * @param environment - parameters needed to contact the provided services
+     * @param virksertService - used to lookup virksomhetssertifikat (certificate)
+     * @param elmaLookupService - used to lookup hostname of Altinn formidlingstjeneste
+     * @param ksLookup - used to lookup if ks should be used for transportation
+     * @param krrService - used to lookup parameters needed to use DPI transportation
+     */
     public ServiceRecordFactory(Environment environment, VirkSertService virksertService, ELMALookupService elmaLookupService, KSLookup ksLookup, KrrService krrService) {
         this.environment = environment;
         this.virksertService = virksertService;
@@ -57,7 +64,7 @@ public class ServiceRecordFactory {
 
     public ServiceRecord createSikkerDigitalPostRecord(String identifier) {
         final KontaktInfo kontaktInfo = krrService.getCitizenInfo(identifier);
-        return new SikkerDigitalPostServiceRecord(environment, kontaktInfo.getCertificate(), ServiceIdentifier.SIKKER_DIGITAL_POST, identifier);
+        return new SikkerDigitalPostServiceRecord(environment, kontaktInfo.getCertificate(), ServiceIdentifier.DPI, identifier);
     }
 
 }
