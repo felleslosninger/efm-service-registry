@@ -64,10 +64,6 @@ public class OrganizationInfo implements Serializable, EntityInfo {
         this.organizationName = organizationName;
     }
 
-    public OrganizationType getOrganizationType() {
-        return organizationType;
-    }
-
     public static class Builder {
         private OrganizationInfo organizationInfo = new OrganizationInfo();
 
