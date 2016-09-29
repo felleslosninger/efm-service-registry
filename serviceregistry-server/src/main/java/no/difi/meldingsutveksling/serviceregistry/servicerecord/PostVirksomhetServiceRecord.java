@@ -11,8 +11,8 @@ public class PostVirksomhetServiceRecord extends ServiceRecord {
     public static final String CONFIG_KEY_ENDPOINT = "postvirksomhet.endPointURL";
 
     @Autowired
-    public PostVirksomhetServiceRecord(Environment environment, String pemCertificate, String orgnr) {
-        super(environment, pemCertificate, POST_VIRKSOMHET, orgnr);
+    public PostVirksomhetServiceRecord(Environment environment, String orgnr) {
+        super(environment, null, POST_VIRKSOMHET, orgnr);
     }
 
     @Override
