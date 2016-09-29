@@ -20,7 +20,12 @@ public class TestEnvironmentEnheter {
                 createBrregEnhet("Østby og Sandøy", "ORGL", "910094548"),
                 createBrregEnhet("Reipå og Bugøynes", "ORGL", "910085379"),
                 createBrregEnhet("Norfold og Henningsvær", "AS", "910071696"),
-                createBrregEnhet("Aure og Darbu", "AS", "810074582")
+                createBrregEnhet("Aure og Darbu", "AS", "810074582"),
+                // NVE test users
+                createBrregEnhet("Hasselvika og Stabbestad", "AS", "810196742"),
+                createBrregEnhet("Nord-Lenangen og Sørumsand", "AS", "910195611"),
+                createBrregEnhet("Vallersund og Sandset", "AS", "910175300"),
+                createBrregEnhet("Hesseng og Våle Revisjon", "AS", "910219308")
         };
     }
 
