@@ -50,7 +50,7 @@ public class ServiceRecordFactory {
     }
 
     public ServiceRecord createPostVirksomhetServiceRecord(String orgnr) {
-        return new PostVirksomhetServiceRecord(environment, lookupPemCertificate(orgnr), orgnr);
+        return new PostVirksomhetServiceRecord(environment, orgnr);
     }
 
     private String lookupPemCertificate(String orgnumber) {
