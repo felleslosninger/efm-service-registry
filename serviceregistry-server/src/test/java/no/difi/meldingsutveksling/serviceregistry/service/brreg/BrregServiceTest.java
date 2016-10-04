@@ -14,7 +14,6 @@ import java.util.Optional;
 import static org.junit.Assert.assertEquals;
 
 public class BrregServiceTest {
-    private static final OrganizationInfo EMPTY_ORGANIZATION_INFO = new OrganizationInfo();
     private BrregService brregService;
     private OrganizationInfo difi;
 
@@ -33,11 +32,6 @@ public class BrregServiceTest {
     @Test
     public void brregHasOrganizationInfo() {
         assertEquals(difi, brregService.getOrganizationInfo(difi.getIdentifier()));
-    }
-
-    @Test
-    public void brregHasNotOrganizationInfo() {
-        assertEquals(EMPTY_ORGANIZATION_INFO, brregService.getOrganizationInfo(""));
     }
 
     private BrregClientImpl setupMock(String orgNavn, String orgNr, String organisasjonsform) {
