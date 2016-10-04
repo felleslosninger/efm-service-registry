@@ -13,7 +13,7 @@ import java.net.URI;
 @Configuration
 @Profile({"staging", "production"})
 public class BrregProdConfig {
-    public static final String HTTP_DATA_BRREG_NO = "http://data.brreg.no/";
+
     @Autowired
     Environment environment;
 

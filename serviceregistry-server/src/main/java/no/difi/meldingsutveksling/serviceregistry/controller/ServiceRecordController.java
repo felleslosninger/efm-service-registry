@@ -2,6 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.controller;
 
 
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
@@ -64,11 +65,14 @@ public class ServiceRecordController {
      */
     @RequestMapping("/{identifier}")
     @ResponseBody
-    public HttpEntity<EntityResource> entity(@PathVariable("identifier") String identifier) {
+    public ResponseEntity entity(@PathVariable("identifier") String identifier) {
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
         ServiceIdentifier serviceIdentifier = store.getPrimaryOverride(identifier);
         EntityInfo entityInfo = entityService.getEntityInfo(identifier);
+        if (entityInfo == null) {
+            throw new EntityNotFoundException("Could not find entity for identifier: "+identifier);
+        }
         entityInfo.setPrimaryServiceIdentifier(serviceIdentifier);
 
         if (usesSikkerDigitalPost().test(entityInfo)) {
@@ -95,6 +99,12 @@ public class ServiceRecordController {
     @ExceptionHandler(EndpointUrlNotFound.class)
     public void endpointNotFound(HttpServletRequest req, Exception e) {
         logger.warn(String.format("Endpoint not found for %s", req.getRequestURL()), e);
+    }
+
+    @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find entity for the requested identifier")
+    @ExceptionHandler(EntityNotFoundException.class)
+    public void entityNotFound(HttpServletRequest req, Exception e) {
+        logger.warn(String.format("Entity not found for %s", req.getRequestURL()), e);
     }
 
 

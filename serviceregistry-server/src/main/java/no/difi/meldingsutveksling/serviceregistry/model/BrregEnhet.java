@@ -3,36 +3,39 @@ package no.difi.meldingsutveksling.serviceregistry.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.MoreObjects;
 
-import java.util.Optional;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
  * A POJO representing the JSON object returned from BRREG
  */
+@Entity
 @JsonIgnoreProperties
 public class BrregEnhet {
+    @Id
     String organisasjonsnummer;
     String navn;
     String organisasjonsform;
 
 
-    public Optional<String> getOrganisasjonsnummer() {
-        return Optional.of(organisasjonsnummer);
+    public String getOrganisasjonsnummer() {
+        return organisasjonsnummer;
     }
 
     public void setOrganisasjonsnummer(String organisasjonsnummer) {
         this.organisasjonsnummer = organisasjonsnummer;
     }
 
-    public Optional<String> getNavn() {
-        return Optional.of(navn);
+    public String getNavn() {
+        return navn;
     }
 
     public void setNavn(String navn) {
         this.navn = navn;
     }
 
-    public Optional<String> getOrganisasjonsform() {
-        return Optional.of(organisasjonsform);
+    public String getOrganisasjonsform() {
+        return organisasjonsform;
     }
 
     public void setOrganisasjonsform(String organisasjonsform) {

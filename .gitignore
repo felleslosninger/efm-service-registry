@@ -16,3 +16,6 @@ target
 
 nb-configuration.xml
 nbactions.xml
+
+## Node
+serviceregistry-server/node_modules
