@@ -43,13 +43,13 @@ public class TestEnvironmentEnheter {
         addBrregEnhet(brregEnhet);
     }
 
-    public BrregEnhet addBrregEnhet(BrregEnhet enhet) {
+    public boolean addBrregEnhet(BrregEnhet enhet) {
         BrregEnhet find = brregMockRepo.findOne(enhet.getOrganisasjonsnummer());
-        if (find != null) return find;
+        if (find != null) return false;
 
-        BrregEnhet save = brregMockRepo.save(enhet);
+        brregMockRepo.save(enhet);
 
-        return save;
+        return true;
     }
 
     public Optional<BrregEnhet> getBrregEnhet(String orgnr) {

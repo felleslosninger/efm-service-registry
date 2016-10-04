@@ -56,16 +56,16 @@ class EnhetsForm extends React.Component {
             url: '/addmockenhet',
             type: 'POST',
             contentType: 'application/json',
-            dataType: 'json',
+            dataType: 'html',
             processData: false,
             cache: false,
             data: JSON.stringify(msg),
-            success: function(data) {
-                this.setState({retval: ">> Lagt til i register"});
+            success: function(ret) {
+                this.setState({retval: `>> ${ret}`});
             }.bind(this),
             error: function(xhr, status, err) {
                 console.error(this.props.url, status, err.toString());
-                this.setState({retval: ">> Feil: "+err.toString()});
+                this.setState({retval: `>> Feil: ${err.toString()}`});
             }.bind(this)
         });
     }

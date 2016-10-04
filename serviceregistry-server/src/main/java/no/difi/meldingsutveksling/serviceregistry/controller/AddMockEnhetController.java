@@ -16,10 +16,13 @@ public class AddMockEnhetController {
     TestEnvironmentEnheter testEnheter;
 
     @RequestMapping(method = RequestMethod.POST, value = "/addmockenhet")
-    public BrregEnhet addMockEnhet(@RequestBody BrregEnhet enhet) {
+    @ResponseBody
+    public String addMockEnhet(@RequestBody BrregEnhet enhet) {
         logger.info("Adding {} to Brreg mock", enhet);
-        testEnheter.addBrregEnhet(enhet);
-        return enhet;
+        if (testEnheter.addBrregEnhet(enhet)) {
+            return "Lagt til i mock";
+        }
+        return "Enheten eksisterer allerede";
     }
 
     @RequestMapping(value = "/deletemockenhet/{orgnr}")
