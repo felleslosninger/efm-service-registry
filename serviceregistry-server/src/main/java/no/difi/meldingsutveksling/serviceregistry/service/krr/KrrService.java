@@ -11,7 +11,7 @@ import javax.annotation.PostConstruct;
 @Service
 public class KrrService {
 
-    private final Environment environment;
+    private Environment environment;
     private OppslagstjenesteClient client;
 
     @Autowired
@@ -22,7 +22,6 @@ public class KrrService {
     @PostConstruct
     private void initClient() {
         client = new OppslagstjenesteClient(createConfiguration());
-
     }
 
     public KontaktInfo getCitizenInfo(String identifier) {

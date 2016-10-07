@@ -64,7 +64,7 @@ public class ServiceRecordFactory {
 
     public ServiceRecord createSikkerDigitalPostRecord(String identifier) {
         final KontaktInfo kontaktInfo = krrService.getCitizenInfo(identifier);
-        return new SikkerDigitalPostServiceRecord(environment, kontaktInfo.getCertificate(), ServiceIdentifier.DPI, identifier);
+        return new SikkerDigitalPostServiceRecord(environment, kontaktInfo, ServiceIdentifier.DPI, identifier);
     }
 
 }
