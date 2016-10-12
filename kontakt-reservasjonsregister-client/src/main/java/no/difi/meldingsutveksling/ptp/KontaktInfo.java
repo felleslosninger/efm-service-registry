@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 public class KontaktInfo {
-    private static Function<? super Person, Optional<KontaktInfo>> personMapperKontaktInfo = (Function<Person, Optional<KontaktInfo>>) person -> Optional.of(new KontaktInfo(pemCertificateFrom(person.getX509Sertifikat()), person.getSikkerDigitalPostAdresse().getPostkasseadresse(), person.getSikkerDigitalPostAdresse().getPostkasseleverandoerAdresse()));
+    private static Function<? super Person, Optional<KontaktInfo>> personMapperKontaktInfo = (Function<Person, Optional<KontaktInfo>>) person -> Optional.of(new KontaktInfo(pemCertificateFrom(person.getX509Sertifikat()), person.getSikkerDigitalPostAdresse().getPostkasseleverandoerAdresse(), person.getSikkerDigitalPostAdresse().getPostkasseadresse()));
     String certificate;
     String orgnrPostkasse;
     String postkasseAdresse;
