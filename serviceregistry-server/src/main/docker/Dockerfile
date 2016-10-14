@@ -14,25 +14,19 @@ EXPOSE 9099
 #
 
 ENV APP_DIR=/var/lib/difi \
-    APP_PREFIX=serviceregistry \
-    APP_MAIN_CLASS=no.difi.meldingsutveksling.serviceregistry.MoveServiceRegistryApplication \
     APP_JAVA_PARAMS="" \
-    APP_PROFILE=dev
-
-ADD ${APP_PREFIX}*.jar ${APP_DIR}/
+    APP_PROFILE=dev \
+    DOCKERIZE_VERSION=v0.2.0
 
 RUN apk add --update \
-	    ca-certificates \
         curl \
-	    openssl  && \
-	    update-ca-certificates && \
-	    rm -rf /var/cache/apk/*
-
-RUN cd /tmp/ && \
-    curl -LO "http://download.oracle.com/otn-pub/java/jce/8/jce_policy-8.zip" -H 'Cookie: oraclelicense=accept-securebackup-cookie' && \
-    unzip jce_policy-8.zip && \
-    rm jce_policy-8.zip && \
-    yes |cp -v /tmp/UnlimitedJCEPolicyJDK8/*.jar ${JAVA_HOME}/lib/security/
+        tini \
+        ca-certificates \
+        openssl  && \
+        update-ca-certificates && \
+	rm -rf /var/cache/apk/* && \
+        wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && \
+        tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
 #
 # Start the application
@@ -40,4 +34,7 @@ RUN cd /tmp/ && \
 
 WORKDIR ${APP_DIR}
 
-CMD APP_NAME=$(ls ${APP_PREFIX}*.jar) && java -jar ${APP_JAVA_PARAMS} ${APP_NAME} ${APP_MAIN_CLASS} --spring.profiles.active=${APP_PROFILE}
+ENTRYPOINT ["/sbin/tini", "-g", "--", "./run.sh"]
+
+ADD *.jar ${APP_DIR}/app.jar
+ADD run.sh ${APP_DIR}/
