@@ -16,9 +16,9 @@
 
     <repositories>
         <repository>
-            <id>nexus-itest</id>
-            <name>Integrasjontest-miljø Nexus</name>
-            <url>http://itest-move-app01.difi.local:8081/content/repositories/difi.meldingsutveksler</url>
+            <id>DIFI MOVE 3rd party</id>
+            <name>DIFI MOVE 3rd party on Nexus</name>
+            <url>https://beta-meldingsutveksling.difi.no/content/repositories/thirdparty/</url>
         </repository>
         <repository>
             <id>DIFI Move releases</id>
