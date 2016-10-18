@@ -16,9 +16,14 @@
 
     <repositories>
         <repository>
-            <id>nexus-itest</id>
-            <name>Integrasjontest-miljø Nexus</name>
-            <url>http://itest-move-app01.difi.local:8081/content/repositories/difi.meldingsutveksler</url>
+            <id>DIFI MOVE 3rd party</id>
+            <name>DIFI MOVE 3rd party on Nexus</name>
+            <url>https://beta-meldingsutveksling.difi.no/content/repositories/thirdparty/</url>
+        </repository>
+        <repository>
+            <id>DIFI Move releases</id>
+            <name>DIFI MOVE releases on Nexus</name>
+            <url>https://beta-meldingsutveksling.difi.no/content/repositories/releases/</url>
         </repository>
     </repositories>
 
@@ -28,11 +33,10 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <spring.boot.version>1.4.0.RELEASE</spring.boot.version>
         <logback.version>1.1.6</logback.version>
+        <move-common.version>1.0.0</move-common.version>
     </properties>
 
     <modules>
-        <module>audit</module>
-        <module>webservice-tools</module>
         <module>serviceregistry-server</module>
         <module>kontakt-reservasjonsregister-client</module>
     </modules>
@@ -40,6 +44,16 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>no.difi.move-common</groupId>
+                <artifactId>webservice-tools</artifactId>
+                <version>${move-common.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>no.difi.move-common</groupId>
+                <artifactId>audit</artifactId>
+                <version>${move-common.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
