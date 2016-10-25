@@ -119,4 +119,95 @@
         <sha1>cae0497ceff725efd0438f070c8c0ca0ef3a7128</sha1>
         <cve>CVE-2016-6652</cve>
     </suppress>
+    <suppress>
+        <notes><![CDATA[
+            file name: tomcat-embed-websocket-8.5.5.jar
+            ]]></notes>
+        <sha1>fd99cd1cd4c824abdf03466f0509f067747f0d1a</sha1>
+        <cpe>cpe:/a:apache:tomcat:8.5.5</cpe>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+            file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.core/jackson-databind/pom.xml
+            ]]></notes>
+        <sha1>fc2fa919676ab9574a7e312fd44741e5569b86a1</sha1>
+        <cpe>cpe:/a:fasterxml:jackson:2.3.3</cpe>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+            file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.core/jackson-databind/pom.xml
+            ]]></notes>
+        <sha1>fc2fa919676ab9574a7e312fd44741e5569b86a1</sha1>
+        <cve>CVE-2016-3720</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+            file name: tomcat-embed-websocket-8.5.5.jar
+            ]]></notes>
+        <sha1>fd99cd1cd4c824abdf03466f0509f067747f0d1a</sha1>
+        <cve>CVE-2016-6325</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+            file name: tomcat-embed-websocket-8.5.5.jar
+            ]]></notes>
+        <sha1>fd99cd1cd4c824abdf03466f0509f067747f0d1a</sha1>
+        <cve>CVE-2016-5425</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+            file name: tomcat-embed-websocket-8.5.5.jar
+            ]]></notes>
+        <sha1>fd99cd1cd4c824abdf03466f0509f067747f0d1a</sha1>
+        <cve>CVE-2013-2185</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+            file name: tomcat-embed-websocket-8.5.5.jar
+            ]]></notes>
+        <sha1>fd99cd1cd4c824abdf03466f0509f067747f0d1a</sha1>
+        <cve>CVE-2009-2696</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+            file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/pom.xml
+            ]]></notes>
+        <sha1>c3eba3468d5971c45c981c803efa776508a5c63d</sha1>
+        <cve>CVE-2016-3720</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+            file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/pom.xml
+            ]]></notes>
+        <sha1>c3eba3468d5971c45c981c803efa776508a5c63d</sha1>
+        <cpe>cpe:/a:fasterxml:jackson:2.3.3</cpe>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+            file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/pom.xml
+            ]]></notes>
+        <sha1>2f4b8921cc1693827f46dbedcdfd2c1afe6e0928</sha1>
+        <cpe>cpe:/a:fasterxml:jackson:2.3.3</cpe>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+            file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/pom.xml
+            ]]></notes>
+        <sha1>2f4b8921cc1693827f46dbedcdfd2c1afe6e0928</sha1>
+        <cve>CVE-2016-3720</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+            file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/pom.xml
+            ]]></notes>
+        <sha1>63e7293b8a7ebc035133c91da4fcdfdc8d35fa56</sha1>
+        <cpe>cpe:/a:fasterxml:jackson:2.3.3</cpe>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+            file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/pom.xml
+            ]]></notes>
+        <sha1>63e7293b8a7ebc035133c91da4fcdfdc8d35fa56</sha1>
+        <cve>CVE-2016-3720</cve>
+    </suppress>
 </suppressions>

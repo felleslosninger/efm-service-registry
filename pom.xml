@@ -114,7 +114,7 @@
                 <artifactId>dependency-check-maven</artifactId>
                 <version>1.4.3</version>
                 <configuration>
-                    <format>XML</format>
+                   <format>XML</format>
                 </configuration>
             </plugin>
         </plugins>
