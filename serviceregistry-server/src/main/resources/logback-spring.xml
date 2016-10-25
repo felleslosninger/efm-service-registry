@@ -11,7 +11,7 @@
         <destination>${destination}</destination>
         <!-- encoder is required -->
         <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <customFields>{"appname":"${project.artifactId}","buildinfo.version":"${project.version}","buildinfo.lastcommit":"${buildNumber}""build.branch": "${scmBranch}"}</customFields>
+            <customFields>{"appname":"${project.artifactId}","buildinfo.version":"${project.version}","buildinfo.lastcommit":"${buildNumber}", "build.branch": "${scmBranch}"}</customFields>
         </encoder>
         <ssl>
             <trustStore>
