@@ -19,11 +19,23 @@
             <id>DIFI MOVE 3rd party</id>
             <name>DIFI MOVE 3rd party on Nexus</name>
             <url>https://beta-meldingsutveksling.difi.no/content/repositories/thirdparty/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
         </repository>
         <repository>
             <id>DIFI Move releases</id>
             <name>DIFI MOVE releases on Nexus</name>
             <url>https://beta-meldingsutveksling.difi.no/content/repositories/releases/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
         </repository>
     </repositories>
 
@@ -114,7 +126,7 @@
                 <artifactId>dependency-check-maven</artifactId>
                 <version>1.4.3</version>
                 <configuration>
-                   <format>XML</format>
+                    <format>XML</format>
                 </configuration>
             </plugin>
         </plugins>

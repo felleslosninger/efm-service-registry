@@ -1,22 +1,21 @@
 package no.difi.meldingsutveksling.serviceregistry.client.brreg;
 
+import java.net.URISyntaxException;
+import java.util.Optional;
+import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.dev.TestEnvironmentEnheter;
-import org.springframework.core.env.Environment;
-
-import java.net.URI;
-import java.util.Optional;
 
 public class BrregMockClient implements BrregClient {
 
     TestEnvironmentEnheter enheter;
-    Environment environment;
+    ServiceregistryProperties properties;
     BrregClient clientImpl;
 
-    public BrregMockClient(TestEnvironmentEnheter enheter, Environment env) {
+    public BrregMockClient(TestEnvironmentEnheter enheter, ServiceregistryProperties properties) throws URISyntaxException {
         this.enheter = enheter;
-        this.environment = env;
-        this.clientImpl = new BrregClientImpl(URI.create(environment.getProperty("brreg.enhetsregister.url")));
+        this.properties = properties;
+        this.clientImpl = new BrregClientImpl(properties.getBrreg().getEndpointURL().toURI());
     }
 
     @Override

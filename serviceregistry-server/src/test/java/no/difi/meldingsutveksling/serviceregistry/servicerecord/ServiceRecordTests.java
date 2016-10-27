@@ -1,25 +1,26 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.ks.KSLookup;
 import no.difi.meldingsutveksling.serviceregistry.service.ks.MockKSLookup;
-import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.vefa.peppol.common.lang.EndpointNotFoundException;
 import no.difi.vefa.peppol.common.model.Endpoint;
 import no.difi.vefa.peppol.lookup.api.LookupException;
 import org.junit.After;
+import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
+import static org.mockito.Matchers.anyString;
 import org.mockito.Mock;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import org.mockito.Spy;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.core.env.Environment;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ServiceRecordTests {
@@ -28,13 +29,10 @@ public class ServiceRecordTests {
     private static final String ORGNR = "123456789";
 
     @Mock
-    private VirkSertService virkSertService;
-
-    @Mock
     private ELMALookupService elmaLookupService;
 
     @Mock
-    private Environment environment;
+    private ServiceregistryProperties properties;
 
     @InjectMocks
     private EDUServiceRecord eduServiceRecord;
@@ -65,9 +63,11 @@ public class ServiceRecordTests {
     }
 
     @Test
-    public void testShouldgetEndPointForPostVirksomhetService() throws LookupException {
+    public void testShouldgetEndPointForPostVirksomhetService() throws LookupException, MalformedURLException {
         // But ... The PostVirksomhetRecord should lookup the Endpoint from configuration file
-        when(environment.getProperty(PostVirksomhetServiceRecord.CONFIG_KEY_ENDPOINT)).thenReturn(ENDPOINT_URL);
+        ServiceregistryProperties.PostVirksomhet mock = mock(ServiceregistryProperties.PostVirksomhet.class);
+        when(properties.getDpv()).thenReturn(mock);
+        when(mock.getEndpointURL()).thenReturn(new URL(ENDPOINT_URL));
         assertEquals(ENDPOINT_URL, postVirksomhetServiceRecord.getEndPointURL());
     }
 

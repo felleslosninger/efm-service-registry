@@ -1,13 +1,20 @@
 package no.difi.meldingsutveksling.serviceregistry;
 
-import org.springframework.boot.SpringApplication;
+import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import no.difi.meldingsutveksling.serviceregistry.spring.cloud.SpringCloudProtocolResolver;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
 @EnableJpaRepositories
+@EnableConfigurationProperties({ServiceregistryProperties.class})
 public class MoveServiceRegistryApplication {
+
     public static void main(String[] args) {
-        SpringApplication.run(MoveServiceRegistryApplication.class, args);
+        new SpringApplicationBuilder(MoveServiceRegistryApplication.class)
+                .initializers(new SpringCloudProtocolResolver())
+                .run(args);
     }
 }
