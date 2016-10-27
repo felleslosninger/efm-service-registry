@@ -1,15 +1,13 @@
 package no.difi.meldingsutveksling.serviceregistry.service.virksert;
 
-
+import java.security.cert.Certificate;
+import javax.annotation.PostConstruct;
+import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.virksert.client.VirksertClient;
 import no.difi.virksert.client.VirksertClientBuilder;
 import no.difi.virksert.client.VirksertClientException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
-import java.security.cert.Certificate;
 
 @Component
 public class VirkSertService {
@@ -17,7 +15,7 @@ public class VirkSertService {
     private VirksertClient virksertClient;
 
     @Autowired
-    private Environment environment;
+    private ServiceregistryProperties properties;
 
     public VirkSertService() {
     }
@@ -30,7 +28,7 @@ public class VirkSertService {
     public void init() {
         virksertClient = VirksertClientBuilder.newInstance()
                 .setScope("no.difi.meldingsutveksling.serviceregistry.service.virksert.DemoScope")
-                .setUri(environment.getProperty("adresseregister.endPointURL")).build();
+                .setUri(properties.getAr().getEndpointURL().toString()).build();
     }
 
     public Certificate getCertificate(String orgNumber) throws VirksertClientException {

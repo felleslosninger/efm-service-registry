@@ -1,6 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
-import org.springframework.core.env.Environment;
+import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 
 import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.EDU;
 
@@ -10,8 +10,8 @@ import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier
  */
 public class EDUServiceRecord extends ServiceRecord {
 
-    EDUServiceRecord(Environment environment, String pemCertificate, String endpoint, String orgnr) {
-        super(environment, pemCertificate, EDU, orgnr);
+    EDUServiceRecord(ServiceregistryProperties properties, String pemCertificate, String endpoint, String orgnr) {
+        super(properties, pemCertificate, EDU, orgnr);
         this.endpointUrl = endpoint;
     }
 

@@ -1,5 +1,15 @@
 package no.difi.meldingsutveksling.ptp;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.UnsupportedCallbackException;
 import net.logstash.logback.marker.Markers;
 import no.difi.ptp.sikkerdigitalpost.HentPersonerForespoersel;
 import no.difi.ptp.sikkerdigitalpost.HentPersonerRespons;
@@ -11,6 +21,7 @@ import org.apache.wss4j.common.ext.WSPasswordCallback;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.client.support.interceptor.ClientInterceptor;
 import org.springframework.ws.soap.SoapVersion;
@@ -18,13 +29,8 @@ import org.springframework.ws.soap.axiom.AxiomSoapMessageFactory;
 import org.springframework.ws.soap.security.wss4j2.Wss4jSecurityInterceptor;
 import org.springframework.ws.soap.security.wss4j2.support.CryptoFactoryBean;
 
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.callback.UnsupportedCallbackException;
-import java.io.IOException;
-import java.util.Arrays;
-
 public class OppslagstjenesteClient {
+
     private Configuration conf;
 
     public OppslagstjenesteClient(Configuration configuration) {
@@ -79,8 +85,8 @@ public class OppslagstjenesteClient {
 
         securityInterceptor.setSecurementSignatureAlgorithm("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256");
         securityInterceptor.setSecurementSignatureParts("{}{http://www.w3.org/2003/05/soap-envelope}Body;{}{http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd}Timestamp}");
-        final Crypto clientCrypto = getCryptoFactoryBean(new FileSystemResource(conf.getClientJksLocation()), conf.password, conf.clientAlias);
-        final Crypto serverCrypto = getCryptoFactoryBean(new FileSystemResource(conf.getServerJksLocation()), conf.password, conf.serverAlias);
+        final Crypto clientCrypto = getCryptoFactoryBean(conf.getClientJksLocation(), conf.password, conf.clientAlias);
+        final Crypto serverCrypto = getCryptoFactoryBean(conf.getServerJksLocation(), conf.password, conf.serverAlias);
         securityInterceptor.setSecurementSignatureCrypto(clientCrypto);
         securityInterceptor.setValidationSignatureCrypto(serverCrypto);
         securityInterceptor.setValidationDecryptionCrypto(clientCrypto);
@@ -117,22 +123,24 @@ public class OppslagstjenesteClient {
      * Parameter object to contain configuration needed to invoke the service oppslagstjeneste
      */
     public static class Configuration {
+
         private final String url;
         private final String password;
         private final String clientAlias;
         private final String serverAlias;
-        private String clientJksLocation;
-        private String serverJksLocation;
+        private Resource clientJksLocation;
+        private Resource serverJksLocation;
 
         /**
          * Needed to construct OppslagstjenesteClient
+         *
          * @param url Url to the Oppslagstjeneste endpoint
          * @param password password for the JKS file
          * @param clientAlias for the JKS entry
          * @param clientJksLocation path to the jks file that contain the client certificate
          * @param serverJksLocation path to the jks file that contain the server certificate
          */
-        public Configuration(String url, String password, String clientAlias, String serverAlias, String clientJksLocation, String serverJksLocation) {
+        public Configuration(String url, String password, String clientAlias, String serverAlias, Resource clientJksLocation, Resource serverJksLocation) {
             this.url = url;
             this.password = password;
             this.clientAlias = clientAlias;
@@ -141,14 +149,37 @@ public class OppslagstjenesteClient {
             this.serverJksLocation = serverJksLocation;
         }
 
-        public String getClientJksLocation() {
-            return clientJksLocation;
+        public Resource getClientJksLocation() {
+            if (clientJksLocation instanceof FileSystemResource) {
+                return clientJksLocation;
+            }
+            try {
+                File tmp = File.createTempFile("difi-move", "jks");
+                BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(tmp));
+                tmp.deleteOnExit();
+                FileCopyUtils.copy(clientJksLocation.getInputStream(), output);
+                return new FileSystemResource(tmp);
+            } catch (IOException ex) {
+                Logger.getLogger(OppslagstjenesteClient.class.getName()).log(Level.SEVERE, "Can't read keystore", ex);
+            }
+            return null;
         }
 
-        public String getServerJksLocation() {
-            return serverJksLocation;
+        public Resource getServerJksLocation() {
+            if (serverJksLocation instanceof FileSystemResource) {
+                return serverJksLocation;
+            }
+            try {
+                File tmp = File.createTempFile("difi-move", "jks");
+                BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(tmp));
+                tmp.deleteOnExit();
+                FileCopyUtils.copy(serverJksLocation.getInputStream(), output);
+                return new FileSystemResource(tmp);
+            } catch (IOException ex) {
+                Logger.getLogger(OppslagstjenesteClient.class.getName()).log(Level.SEVERE, "Can't read keystore", ex);
+            }
+            return null;
         }
     }
-
 
 }

@@ -1,7 +1,9 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
+import java.security.cert.Certificate;
 import no.difi.meldingsutveksling.ptp.KontaktInfo;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
@@ -10,17 +12,14 @@ import no.difi.meldingsutveksling.serviceregistry.service.virksert.CertificateTo
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.vefa.peppol.common.model.Endpoint;
 import no.difi.virksert.client.VirksertClientException;
-import org.springframework.core.env.Environment;
-
-import java.security.cert.Certificate;
 
 /**
- * Factory method class to create Service Records based on lookup endpoint urls and certificates corresponding to those
- * services
+ * Factory method class to create Service Records based on lookup endpoint urls and certificates corresponding to those services
  */
 public class ServiceRecordFactory {
+
     private final KrrService krrService;
-    private Environment environment;
+    private ServiceregistryProperties properties;
     private VirkSertService virksertService;
     private ELMALookupService elmaLookupService;
     private KSLookup ksLookup;
@@ -28,14 +27,15 @@ public class ServiceRecordFactory {
 
     /**
      * Creates factory to create ServiceRecord using provided environment and services
-     * @param environment - parameters needed to contact the provided services
+     *
+     * @param properties - parameters needed to contact the provided services
      * @param virksertService - used to lookup virksomhetssertifikat (certificate)
      * @param elmaLookupService - used to lookup hostname of Altinn formidlingstjeneste
      * @param ksLookup - used to lookup if ks should be used for transportation
      * @param krrService - used to lookup parameters needed to use DPI transportation
      */
-    public ServiceRecordFactory(Environment environment, VirkSertService virksertService, ELMALookupService elmaLookupService, KSLookup ksLookup, KrrService krrService) {
-        this.environment = environment;
+    public ServiceRecordFactory(ServiceregistryProperties properties, VirkSertService virksertService, ELMALookupService elmaLookupService, KSLookup ksLookup, KrrService krrService) {
+        this.properties = properties;
         this.virksertService = virksertService;
         this.elmaLookupService = elmaLookupService;
         this.ksLookup = ksLookup;
@@ -46,11 +46,11 @@ public class ServiceRecordFactory {
         String finalOrgNumber = ksLookup.mapOrganizationNumber(orgnr);
         Endpoint ep = elmaLookupService.lookup(NORWAY_PREFIX + finalOrgNumber);
         String pemCertificate = lookupPemCertificate(finalOrgNumber);
-        return new EDUServiceRecord(environment, pemCertificate, ep.getAddress(), orgnr);
+        return new EDUServiceRecord(properties, pemCertificate, ep.getAddress(), orgnr);
     }
 
     public ServiceRecord createPostVirksomhetServiceRecord(String orgnr) {
-        return new PostVirksomhetServiceRecord(environment, orgnr);
+        return new PostVirksomhetServiceRecord(properties, orgnr);
     }
 
     private String lookupPemCertificate(String orgnumber) {
@@ -64,7 +64,7 @@ public class ServiceRecordFactory {
 
     public ServiceRecord createSikkerDigitalPostRecord(String identifier) {
         final KontaktInfo kontaktInfo = krrService.getCitizenInfo(identifier);
-        return new SikkerDigitalPostServiceRecord(environment, kontaktInfo, ServiceIdentifier.DPI, identifier);
+        return new SikkerDigitalPostServiceRecord(properties, kontaktInfo, ServiceIdentifier.DPI, identifier);
     }
 
 }

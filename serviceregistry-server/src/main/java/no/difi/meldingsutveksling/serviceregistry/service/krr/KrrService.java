@@ -1,22 +1,21 @@
 package no.difi.meldingsutveksling.serviceregistry.service.krr;
 
+import javax.annotation.PostConstruct;
 import no.difi.meldingsutveksling.ptp.KontaktInfo;
 import no.difi.meldingsutveksling.ptp.OppslagstjenesteClient;
+import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
 
 @Service
 public class KrrService {
 
-    private Environment environment;
+    private ServiceregistryProperties properties;
     private OppslagstjenesteClient client;
 
     @Autowired
-    KrrService(Environment environment) {
-        this.environment = environment;
+    KrrService(ServiceregistryProperties properties) {
+        this.properties = properties;
     }
 
     @PostConstruct
@@ -31,11 +30,11 @@ public class KrrService {
 
     private OppslagstjenesteClient.Configuration createConfiguration() {
         return new OppslagstjenesteClient.Configuration(
-                environment.getProperty("krr.endpointURL"),
-                environment.getProperty("jks.password"),
-                environment.getProperty("jks.client.alias"),
-                environment.getProperty("jks.server.alias"),
-                environment.getProperty("jks.client.location"),
-                environment.getProperty("jks.server.location"));
+                properties.getKrr().getEndpointURL().toString(),
+                properties.getKrr().getClient().getPassword(),
+                properties.getKrr().getClient().getAlias(),
+                properties.getKrr().getServer().getAlias(),
+                properties.getKrr().getClient().getKeystore(),
+                properties.getKrr().getServer().getKeystore());
     }
 }

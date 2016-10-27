@@ -2,25 +2,24 @@ package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
-import org.springframework.core.env.Environment;
 
 import java.io.Serializable;
+import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class ServiceRecord implements Serializable {
 
-
-    protected Environment environment;
+    protected ServiceregistryProperties properties;
     protected String organisationNumber;
     private ServiceIdentifier serviceIdentifier;
     protected String endpointUrl;
     protected String pemCertificate;
 
-    public ServiceRecord(Environment e, String pemCertificate, ServiceIdentifier serviceIdentifier, String organisationNumber) {
+    public ServiceRecord(ServiceregistryProperties e, String pemCertificate, ServiceIdentifier serviceIdentifier, String organisationNumber) {
         this.organisationNumber = organisationNumber;
         this.serviceIdentifier = serviceIdentifier;
         this.pemCertificate = pemCertificate;
-        this.environment = e;
+        this.properties = e;
     }
 
     public String getOrganisationNumber() {
@@ -30,7 +29,6 @@ public abstract class ServiceRecord implements Serializable {
     public void setOrganisationNumber(String organisationNumber) {
         this.organisationNumber = organisationNumber;
     }
-
 
     public abstract String getEndPointURL();
 
@@ -48,11 +46,11 @@ public abstract class ServiceRecord implements Serializable {
 
     @Override
     public String toString() {
-        return "ServiceRecord{" +
-                "serviceIdentifier='" + serviceIdentifier + '\'' +
-                ", organisationNumber='" + organisationNumber + '\'' +
-                ", pemCertificate='" + getPemCertificate() + '\'' +
-                ", endPointURL='" + getEndPointURL() + '\'' +
-                '}';
+        return "ServiceRecord{"
+                + "serviceIdentifier='" + serviceIdentifier + '\''
+                + ", organisationNumber='" + organisationNumber + '\''
+                + ", pemCertificate='" + getPemCertificate() + '\''
+                + ", endPointURL='" + getEndPointURL() + '\''
+                + '}';
     }
 }
