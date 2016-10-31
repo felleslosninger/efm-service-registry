@@ -155,9 +155,10 @@ public class OppslagstjenesteClient {
             }
             try {
                 File tmp = File.createTempFile("difi-move", "jks");
-                BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(tmp));
-                tmp.deleteOnExit();
-                FileCopyUtils.copy(clientJksLocation.getInputStream(), output);
+                try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(tmp))) {
+                    tmp.deleteOnExit();
+                    FileCopyUtils.copy(clientJksLocation.getInputStream(), output);
+                }
                 return new FileSystemResource(tmp);
             } catch (IOException ex) {
                 Logger.getLogger(OppslagstjenesteClient.class.getName()).log(Level.SEVERE, "Can't read keystore", ex);
@@ -171,9 +172,10 @@ public class OppslagstjenesteClient {
             }
             try {
                 File tmp = File.createTempFile("difi-move", "jks");
-                BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(tmp));
-                tmp.deleteOnExit();
-                FileCopyUtils.copy(serverJksLocation.getInputStream(), output);
+                try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(tmp))) {
+                    tmp.deleteOnExit();
+                    FileCopyUtils.copy(serverJksLocation.getInputStream(), output);
+                }
                 return new FileSystemResource(tmp);
             } catch (IOException ex) {
                 Logger.getLogger(OppslagstjenesteClient.class.getName()).log(Level.SEVERE, "Can't read keystore", ex);
