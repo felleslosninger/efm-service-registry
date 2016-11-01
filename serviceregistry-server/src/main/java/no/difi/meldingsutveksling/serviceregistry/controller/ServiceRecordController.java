@@ -2,15 +2,14 @@ package no.difi.meldingsutveksling.serviceregistry.controller;
 
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
-import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.ks.KSLookup;
-import no.difi.meldingsutveksling.serviceregistry.service.persistence.PrimaryServiceStore;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
 import org.jboss.logging.MDC;
@@ -23,7 +22,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 
 import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.*;
 
@@ -35,22 +33,19 @@ public class ServiceRecordController {
     private final ServiceRecordFactory serviceRecordFactory;
     private final KrrService krrService;
     private EntityService entityService;
-    private PrimaryServiceStore store;
     private static final Logger logger = LoggerFactory.getLogger(ServiceRecordController.class);
 
     /**
      * @param virkSertService used to retrieve organization certificates
      * @param elmaLookupSerice used to lookup urls
      * @param ksLookup used for KS transport
-     * @param store used to persist internal state
      * @param entityService needed to lookup and retrieve organization or citizen information using an identifier number
      * @param properties Spring environment
      * @param krrService service for kontakt og reservasjons registeret needed by DPI
      */
     @Autowired
-    public ServiceRecordController(VirkSertService virkSertService, ELMALookupService elmaLookupSerice, KSLookup ksLookup, PrimaryServiceStore store, EntityService entityService, ServiceregistryProperties properties, KrrService krrService) {
+    public ServiceRecordController(VirkSertService virkSertService, ELMALookupService elmaLookupSerice, KSLookup ksLookup, EntityService entityService, ServiceregistryProperties properties, KrrService krrService) {
         this.entityService = entityService;
-        this.store = store;
         this.krrService = krrService;
         this.serviceRecordFactory = new ServiceRecordFactory(properties, virkSertService, elmaLookupSerice, ksLookup, this.krrService);
     }
@@ -67,21 +62,19 @@ public class ServiceRecordController {
     public ResponseEntity entity(@PathVariable("identifier") String identifier) {
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
-        ServiceIdentifier serviceIdentifier = store.getPrimaryOverride(identifier);
         EntityInfo entityInfo = entityService.getEntityInfo(identifier);
         if (entityInfo == null) {
             throw new EntityNotFoundException("Could not find entity for identifier: " + identifier);
         }
-        entityInfo.setPrimaryServiceIdentifier(serviceIdentifier);
 
         if (usesSikkerDigitalPost().test(entityInfo)) {
-            entity.addServiceRecord(serviceRecordFactory.createSikkerDigitalPostRecord(identifier));
+            entity.setServiceRecord(serviceRecordFactory.createSikkerDigitalPostRecord(identifier));
         }
         if (usesFormidlingstjenesten().test(entityInfo)) {
-            entity.addServiceRecord(serviceRecordFactory.createEduServiceRecord(identifier));
+            entity.setServiceRecord(serviceRecordFactory.createEduServiceRecord(identifier));
         }
         if (usesPostTilVirksomhet().test(entityInfo)) {
-            entity.addServiceRecord(serviceRecordFactory.createPostVirksomhetServiceRecord(identifier));
+            entity.setServiceRecord(serviceRecordFactory.createPostVirksomhetServiceRecord(identifier));
         }
         entity.setInfo(entityInfo);
         EntityResource organizationRes = new EntityResource(entity);
@@ -106,9 +99,4 @@ public class ServiceRecordController {
         logger.warn(String.format("Entity not found for %s", req.getRequestURL()), e);
     }
 
-    @RequestMapping("/primary")
-    public ResponseEntity setPrimary(@RequestParam("orgnr") String orgnr, @RequestParam("serviceidentifier") ServiceIdentifier serviceIdentifier) {
-        store.setPrimaryOverride(orgnr, serviceIdentifier);
-        return new ResponseEntity(HttpStatus.OK);
-    }
 }

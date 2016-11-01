@@ -10,7 +10,6 @@ import java.io.Serializable;
  */
 public class OrganizationInfo implements Serializable, EntityInfo {
 
-    private ServiceIdentifier primaryServiceIdentifier;
     private String identifier;
     private String organizationName;
     private OrganizationType organizationType;
@@ -21,24 +20,14 @@ public class OrganizationInfo implements Serializable, EntityInfo {
     }
 
     /**
-     * @param primaryServiceIdentifier name/id of preferred transport service
      * @param organisationNumber of the recipient organization
      * @param organizationName as name implies
      * @param organizationType or organization form as defined in BRREG
      */
-    public OrganizationInfo(ServiceIdentifier primaryServiceIdentifier, String organisationNumber, String organizationName, OrganizationType organizationType) {
-        this.primaryServiceIdentifier = primaryServiceIdentifier;
+    public OrganizationInfo(String organisationNumber, String organizationName, OrganizationType organizationType) {
         this.identifier = organisationNumber;
         this.organizationName = organizationName;
         this.organizationType = organizationType;
-    }
-
-    public ServiceIdentifier getPrimaryServiceIdentifier() {
-        return primaryServiceIdentifier;
-    }
-
-    public void setPrimaryServiceIdentifier(ServiceIdentifier primaryServiceIdentifier) {
-        this.primaryServiceIdentifier = primaryServiceIdentifier;
     }
 
     @Override
@@ -76,11 +65,6 @@ public class OrganizationInfo implements Serializable, EntityInfo {
             return organizationInfo;
         }
 
-        public Builder withPrimaryServiceIdentifier(ServiceIdentifier primaryServiceIdentifier) {
-            organizationInfo.setPrimaryServiceIdentifier(primaryServiceIdentifier);
-            return this;
-        }
-
         public Builder withOrganizationNumber(String organisationNumber) {
             organizationInfo.setIdentifier(organisationNumber);
             return this;
@@ -102,21 +86,19 @@ public class OrganizationInfo implements Serializable, EntityInfo {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OrganizationInfo that = (OrganizationInfo) o;
-        return primaryServiceIdentifier == that.primaryServiceIdentifier &&
-                Objects.equal(identifier, that.identifier) &&
+        return Objects.equal(identifier, that.identifier) &&
                 Objects.equal(organizationName, that.organizationName) &&
                 Objects.equal(organizationType, that.organizationType);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(primaryServiceIdentifier, identifier, organizationName, organizationType);
+        return Objects.hashCode(identifier, organizationName, organizationType);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("primaryServiceIdentifier", primaryServiceIdentifier)
                 .add("identifier", identifier)
                 .add("organizationName", organizationName)
                 .add("organizationType", organizationType)

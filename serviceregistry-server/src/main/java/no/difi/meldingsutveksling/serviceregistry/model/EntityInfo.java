@@ -5,8 +5,6 @@ package no.difi.meldingsutveksling.serviceregistry.model;
  */
 public interface EntityInfo {
 
-    void setPrimaryServiceIdentifier(ServiceIdentifier serviceIdentifier);
-
     EntityType getEntityType();
 
     String getIdentifier();
