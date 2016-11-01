@@ -7,15 +7,9 @@ import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
 import org.springframework.hateoas.ResourceSupport;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
-import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
-
 public class EntityResource extends ResourceSupport {
 
-    private List<ServiceRecordResource> serviceRecords;
+    private ServiceRecord serviceRecord;
     private Entity entity;
 
     /**
@@ -26,22 +20,15 @@ public class EntityResource extends ResourceSupport {
     @JsonCreator
     public EntityResource(@JsonProperty("entity") Entity entity) {
         this.entity = entity;
-        serviceRecords = new ArrayList<>();
-        for (ServiceRecord r : entity.getServiceRecords()) {
-            final ServiceRecordResource e = new ServiceRecordResource(r);
-            final Object invocationValue = methodOn(ServiceRecordController.class).setPrimary(entity.getInfo().getIdentifier(),
-                    r.getServiceIdentifier());
-            e.add(linkTo(invocationValue).withRel("setprimary"));
-            serviceRecords.add(e);
-        }
+        this.serviceRecord = entity.getServiceRecord();
     }
 
-    public List<ServiceRecordResource> getServiceRecords() {
-        return serviceRecords;
+    public ServiceRecord getServiceRecord() {
+        return serviceRecord;
     }
 
-    public void setServiceRecords(List<ServiceRecordResource> serviceRecords) {
-        this.serviceRecords = serviceRecords;
+    public void setServiceRecord(ServiceRecord serviceRecord) {
+        this.serviceRecord = serviceRecord;
     }
 
     public EntityInfo getInfoRecord() {

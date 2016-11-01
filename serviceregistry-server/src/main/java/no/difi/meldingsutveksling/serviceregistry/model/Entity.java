@@ -1,10 +1,8 @@
 package no.difi.meldingsutveksling.serviceregistry.model;
 
 
+import com.google.common.base.MoreObjects;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Represents an organization or a citizen
@@ -12,17 +10,20 @@ import java.util.List;
 public class Entity {
 
     private EntityInfo info;
-    private List<ServiceRecord> serviceRecords;
+    private ServiceRecord serviceRecord;
 
     /**
      * Creates an empty Entity
      */
     public Entity() {
-        serviceRecords = new ArrayList<>();
     }
 
-    public void addServiceRecord(ServiceRecord s) {
-        serviceRecords.add(s);
+    public void setServiceRecord(ServiceRecord s) {
+        this.serviceRecord = s;
+    }
+
+    public ServiceRecord getServiceRecord() {
+        return serviceRecord;
     }
 
     public EntityInfo getInfo() {
@@ -33,19 +34,11 @@ public class Entity {
         this.info = info;
     }
 
-    public List<ServiceRecord> getServiceRecords() {
-        return serviceRecords;
-    }
-
-    public void setServiceRecords(List<ServiceRecord> serviceRecords) {
-        this.serviceRecords = serviceRecords;
-    }
-
     @Override
     public String toString() {
-        return "Organisation{" +
-                "info=" + info +
-                ", serviceRecords=" + serviceRecords +
-                '}';
+        return MoreObjects.toStringHelper(this)
+                .add("info", info)
+                .add("serviceRecord", serviceRecord)
+                .toString();
     }
 }
