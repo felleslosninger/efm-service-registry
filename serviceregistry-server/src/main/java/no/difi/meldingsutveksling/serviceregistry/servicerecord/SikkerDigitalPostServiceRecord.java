@@ -8,11 +8,17 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
 
     private final String orgnrPostkasse;
     private final String postkasseAdresse;
+    private final String mobilnummer;
+    private final String varslingsStatus;
+    private final String epostAdresse;
 
     public SikkerDigitalPostServiceRecord(ServiceregistryProperties properties, KontaktInfo kontaktInfo, ServiceIdentifier serviceIdentifier, String organisationNumber) {
         super(properties, kontaktInfo.getCertificate(), serviceIdentifier, organisationNumber);
         orgnrPostkasse = kontaktInfo.getOrgnrPostkasse();
         postkasseAdresse = kontaktInfo.getPostkasseAdresse();
+        varslingsStatus = kontaktInfo.getVarslingsstatus().value();
+        epostAdresse = kontaktInfo.getEpostadresse();
+        mobilnummer = kontaktInfo.getMobiltelefonnummer();
     }
 
     @Override
@@ -26,5 +32,17 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
 
     public String getPostkasseAdresse() {
         return postkasseAdresse;
+    }
+
+    public String getMobilnummer() {
+        return mobilnummer;
+    }
+
+    public String getVarslingsStatus() {
+        return varslingsStatus;
+    }
+
+    public String getEpostAdresse() {
+        return epostAdresse;
     }
 }
