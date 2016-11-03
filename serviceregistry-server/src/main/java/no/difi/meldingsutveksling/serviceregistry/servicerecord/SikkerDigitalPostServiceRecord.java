@@ -16,7 +16,7 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
         super(properties, kontaktInfo.getCertificate(), serviceIdentifier, organisationNumber);
         orgnrPostkasse = kontaktInfo.getOrgnrPostkasse();
         postkasseAdresse = kontaktInfo.getPostkasseAdresse();
-        varslingsStatus = kontaktInfo.getVarslingsstatus().value();
+        varslingsStatus = kontaktInfo.getVarslingsstatus();
         epostAdresse = kontaktInfo.getEpostadresse();
         mobilnummer = kontaktInfo.getMobiltelefonnummer();
     }

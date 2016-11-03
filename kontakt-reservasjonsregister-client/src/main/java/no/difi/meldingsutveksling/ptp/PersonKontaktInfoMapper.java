@@ -12,8 +12,12 @@ import java.security.cert.X509Certificate;
 import java.util.Optional;
 
 public class PersonKontaktInfoMapper {
+
+    public PersonKontaktInfoMapper() {
+    }
+
     static Optional<KontaktInfo> map(Person person) {
-        return Optional.of(new KontaktInfo(pemCertificateFrom(person.getX509Sertifikat()), person.getSikkerDigitalPostAdresse().getPostkasseleverandoerAdresse(), person.getSikkerDigitalPostAdresse().getPostkasseadresse(), person.getKontaktinformasjon().getEpostadresse().getValue(), person.getKontaktinformasjon().getMobiltelefonnummer().getValue(), person.getVarslingsstatus()));
+        return Optional.of(new KontaktInfo(pemCertificateFrom(person.getX509Sertifikat()), person.getSikkerDigitalPostAdresse().getPostkasseleverandoerAdresse(), person.getSikkerDigitalPostAdresse().getPostkasseadresse(), person.getKontaktinformasjon().getEpostadresse().getValue(), person.getKontaktinformasjon().getMobiltelefonnummer().getValue(), person.getVarslingsstatus().value()));
     }
 
     private static String pemCertificateFrom(byte[] certificateBytes) {
