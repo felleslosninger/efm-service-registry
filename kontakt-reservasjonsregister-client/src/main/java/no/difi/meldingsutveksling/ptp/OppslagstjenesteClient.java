@@ -39,7 +39,7 @@ public class OppslagstjenesteClient {
 
     public KontaktInfo hentKontaktInformasjon(String pid) {
         final HentPersonerForespoersel hentPersonerForespoersel = HentPersonerForespoersel.builder()
-                .addInformasjonsbehov(Informasjonsbehov.KONTAKTINFO, Informasjonsbehov.SIKKER_DIGITAL_POST, Informasjonsbehov.SERTIFIKAT)
+                .addInformasjonsbehov(Informasjonsbehov.KONTAKTINFO, Informasjonsbehov.SIKKER_DIGITAL_POST, Informasjonsbehov.SERTIFIKAT, Informasjonsbehov.VARSLINGS_STATUS)
                 .addPersonidentifikator(pid)
                 .build();
 
