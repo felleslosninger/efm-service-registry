@@ -2,6 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.auth;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.google.common.base.MoreObjects;
 
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
 public class IdportenOidcTokenInfoResponse {
@@ -80,5 +81,19 @@ public class IdportenOidcTokenInfoResponse {
 
     public void setClientOrgno(String clientOrgno) {
         this.clientOrgno = clientOrgno;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("active", active)
+                .add("tokenType", tokenType)
+                .add("expiresIn", expiresIn)
+                .add("exp", exp)
+                .add("iat", iat)
+                .add("scope", scope)
+                .add("clientId", clientId)
+                .add("clientOrgno", clientOrgno)
+                .toString();
     }
 }
