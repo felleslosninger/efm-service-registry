@@ -42,7 +42,13 @@ public class JwtAuthFilter extends GenericFilterBean {
 
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
-        String token = request.getHeader("X-Access-Token");
+        String authHeader = request.getHeader("authorization");
+        if (authHeader == null || !authHeader.startsWith("bearer")) {
+            sendUnauthorizedResponse(response);
+            return;
+        }
+        String token = authHeader.substring(7);
+        log.info("Request with token: {}", token);
         if (token != null && validateToken(token)) {
             filterChain.doFilter(servletRequest, servletResponse);
         } else {
