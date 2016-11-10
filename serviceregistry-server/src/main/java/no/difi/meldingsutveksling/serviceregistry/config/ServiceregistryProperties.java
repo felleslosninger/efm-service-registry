@@ -79,7 +79,7 @@ public class ServiceregistryProperties {
 
     public static class Auth {
         private boolean enable;
-        private URL oidcUrl;
+        private URL tokeninfoUrl;
 
         public boolean isEnable() {
             return enable;
@@ -89,12 +89,12 @@ public class ServiceregistryProperties {
             this.enable = enable;
         }
 
-        public URL getOidcUrl() {
-            return oidcUrl;
+        public URL getTokeninfoUrl() {
+            return tokeninfoUrl;
         }
 
-        public void setOidcUrl(URL oidcUrl) {
-            this.oidcUrl = oidcUrl;
+        public void setTokeninfoUrl(URL tokeninfoUrl) {
+            this.tokeninfoUrl = tokeninfoUrl;
         }
     }
 

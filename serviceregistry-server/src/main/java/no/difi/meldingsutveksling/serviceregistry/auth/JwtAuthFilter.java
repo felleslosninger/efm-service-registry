@@ -11,7 +11,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.GenericFilterBean;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -69,19 +68,16 @@ public class JwtAuthFilter extends GenericFilterBean {
         RestTemplate restTemplate = new RestTemplate();
         restTemplate.getMessageConverters().add(formHttpMessageConverter);
 
-        URI oidcTokenUri;
+        URI tokeninfoUri;
         try {
-            oidcTokenUri = props.getAuth().getOidcUrl().toURI();
+            tokeninfoUri = props.getAuth().getTokeninfoUrl().toURI();
         } catch (URISyntaxException e) {
             log.error("Error converting property to URI", e);
             throw new RuntimeException(e);
         }
-        URI fullUri = UriComponentsBuilder.fromUri(oidcTokenUri)
-                .pathSegment("idporten-oidc-provider/tokeninfo")
-                .build().toUri();
 
         log.info("Fetching tokeninfo for token: {}", token);
-        ResponseEntity<IdportenOidcTokenInfoResponse> responseEntity = restTemplate.exchange(fullUri, HttpMethod.POST,
+        ResponseEntity<IdportenOidcTokenInfoResponse> responseEntity = restTemplate.exchange(tokeninfoUri, HttpMethod.POST,
                 httpEntity, IdportenOidcTokenInfoResponse.class);
         log.info("Response: {}", responseEntity.toString());
 
