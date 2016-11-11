@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,6 +29,7 @@ import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRe
 @RequestMapping("/identifier")
 @ExposesResourceFor(EntityResource.class)
 @RestController
+@PreAuthorize("#oauth2.hasScope('scope_move_1')")
 public class ServiceRecordController {
 
     private final ServiceRecordFactory serviceRecordFactory;

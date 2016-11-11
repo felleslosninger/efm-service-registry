@@ -79,7 +79,6 @@ public class ServiceregistryProperties {
 
     public static class Auth {
         private boolean enable;
-        private URL tokeninfoUrl;
 
         public boolean isEnable() {
             return enable;
@@ -89,13 +88,6 @@ public class ServiceregistryProperties {
             this.enable = enable;
         }
 
-        public URL getTokeninfoUrl() {
-            return tokeninfoUrl;
-        }
-
-        public void setTokeninfoUrl(URL tokeninfoUrl) {
-            this.tokeninfoUrl = tokeninfoUrl;
-        }
     }
 
     public static class DigitalPostInnbygger {
