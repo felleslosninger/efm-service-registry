@@ -5,9 +5,10 @@
  */
 package no.difi.meldingsutveksling.serviceregistry.config;
 
-import java.net.URL;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.io.Resource;
+
+import java.net.URL;
 
 /**
  *
@@ -25,6 +26,16 @@ public class ServiceregistryProperties {
     private PostVirksomhet dpv;
 
     private Adresseregister ar;
+
+    private Auth auth;
+
+    public Auth getAuth() {
+        return auth;
+    }
+
+    public void setAuth(Auth auth) {
+        this.auth = auth;
+    }
 
     public DigitalPostInnbygger getDpi() {
         return dpi;
@@ -64,6 +75,19 @@ public class ServiceregistryProperties {
 
     public void setAr(Adresseregister ar) {
         this.ar = ar;
+    }
+
+    public static class Auth {
+        private boolean enable;
+
+        public boolean isEnable() {
+            return enable;
+        }
+
+        public void setEnable(boolean enable) {
+            this.enable = enable;
+        }
+
     }
 
     public static class DigitalPostInnbygger {
