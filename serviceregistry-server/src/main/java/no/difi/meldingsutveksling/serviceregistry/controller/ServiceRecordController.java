@@ -29,7 +29,7 @@ import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRe
 @RequestMapping("/identifier")
 @ExposesResourceFor(EntityResource.class)
 @RestController
-@PreAuthorize("#oauth2.hasScope('scope_move_1')")
+@PreAuthorize("#oauth2.hasAnyScope('scope_move_1', 'scope_move_2', 'move/dpo.read', 'move/dpv.read', 'move/dpi.read')")
 public class ServiceRecordController {
 
     private final ServiceRecordFactory serviceRecordFactory;
