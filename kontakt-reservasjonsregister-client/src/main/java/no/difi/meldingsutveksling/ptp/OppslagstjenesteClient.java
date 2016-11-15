@@ -1,18 +1,10 @@
 package no.difi.meldingsutveksling.ptp;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.callback.UnsupportedCallbackException;
 import net.logstash.logback.marker.Markers;
 import no.difi.ptp.sikkerdigitalpost.HentPersonerForespoersel;
 import no.difi.ptp.sikkerdigitalpost.HentPersonerRespons;
+import no.difi.ptp.sikkerdigitalpost.HentPrintSertifikatForespoersel;
+import no.difi.ptp.sikkerdigitalpost.HentPrintSertifikatRespons;
 import no.difi.ptp.sikkerdigitalpost.Informasjonsbehov;
 import no.difi.webservice.support.SoapFaultInterceptorLogger;
 import org.apache.wss4j.common.crypto.Crypto;
@@ -28,6 +20,17 @@ import org.springframework.ws.soap.SoapVersion;
 import org.springframework.ws.soap.axiom.AxiomSoapMessageFactory;
 import org.springframework.ws.soap.security.wss4j2.Wss4jSecurityInterceptor;
 import org.springframework.ws.soap.security.wss4j2.support.CryptoFactoryBean;
+
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.UnsupportedCallbackException;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class OppslagstjenesteClient {
 
@@ -46,8 +49,22 @@ public class OppslagstjenesteClient {
         WebServiceTemplate template = createWebServiceTemplate(HentPersonerRespons.class.getPackage().getName());
 
         final HentPersonerRespons hentPersonerRespons = (HentPersonerRespons) template.marshalSendAndReceive(conf.url, hentPersonerForespoersel);
-        return KontaktInfo.from(hentPersonerRespons);
+        KontaktInfo kontaktInfo = KontaktInfo.from(hentPersonerRespons);
+        
+        return kontaktInfo;
 
+    }
+
+    /**
+     *  Tjenesten kan brukes for å sende forsendelser av brev til mottakere som har reservert seg eller ikke registrert/oppdatert sin kontaktinformasjon.
+     */
+    public void hentPrintSertifikat() {
+        HentPrintSertifikatForespoersel request = new HentPrintSertifikatForespoersel();
+        WebServiceTemplate template = createWebServiceTemplate(HentPrintSertifikatRespons.class.getPackage().getName());
+
+        HentPrintSertifikatRespons response = (HentPrintSertifikatRespons) template.marshalSendAndReceive(conf.url, request);
+
+//        return response.
     }
 
     private WebServiceTemplate createWebServiceTemplate(String contextPath) {

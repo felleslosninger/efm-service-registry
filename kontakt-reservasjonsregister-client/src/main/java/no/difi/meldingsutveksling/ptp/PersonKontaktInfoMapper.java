@@ -1,5 +1,6 @@
 package no.difi.meldingsutveksling.ptp;
 
+import com.google.common.base.MoreObjects;
 import no.difi.ptp.sikkerdigitalpost.Person;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 
@@ -11,13 +12,22 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Optional;
 
-public class PersonKontaktInfoMapper {
+class PersonKontaktInfoMapper {
 
-    public PersonKontaktInfoMapper() {
+    private PersonKontaktInfoMapper() {
     }
 
     static Optional<KontaktInfo> map(Person person) {
-        return Optional.of(new KontaktInfo(pemCertificateFrom(person.getX509Sertifikat()), person.getSikkerDigitalPostAdresse().getPostkasseleverandoerAdresse(), person.getSikkerDigitalPostAdresse().getPostkasseadresse(), person.getKontaktinformasjon().getEpostadresse().getValue(), person.getKontaktinformasjon().getMobiltelefonnummer().getValue(), person.getVarslingsstatus().value()));
+        MailboxProvider providerDetails = new MailboxProvider(pemCertificateFrom(person.getX509Sertifikat()),
+                person.getSikkerDigitalPostAdresse().getPostkasseleverandoerAdresse(),
+                person.getSikkerDigitalPostAdresse().getPostkasseadresse()
+                );
+
+        PersonDetails personDetails = new PersonDetails(person.getKontaktinformasjon().getEpostadresse().getValue(),
+                person.getKontaktinformasjon().getMobiltelefonnummer().getValue(),
+                person.getVarslingsstatus().value());
+
+        return Optional.of(new KontaktInfo(providerDetails, personDetails));
     }
 
     private static String pemCertificateFrom(byte[] certificateBytes) {
@@ -30,6 +40,72 @@ public class PersonKontaktInfoMapper {
             return sw.toString();
         } catch (IOException |CertificateException e) {
             throw new RuntimeException("Failed to create pem certificate from bytes", e);
+        }
+    }
+
+    static class MailboxProvider {
+        private final String pemCertificateFrom;
+        private final String leverandoerAdresse;
+        private final String postkasseAdresse;
+
+        MailboxProvider(String pemCertificateFrom, String leverandoerAdresse, String postkasseAdresse) {
+            this.pemCertificateFrom = pemCertificateFrom;
+            this.leverandoerAdresse = leverandoerAdresse;
+            this.postkasseAdresse = postkasseAdresse;
+        }
+
+        String getPemCertificateFrom() {
+            return pemCertificateFrom;
+        }
+
+        String getProviderUrl() {
+            return leverandoerAdresse;
+        }
+
+        String getMailboxId() {
+            return postkasseAdresse;
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                    .add("pemCertificateFrom", pemCertificateFrom)
+                    .add("leverandoerAdresse", leverandoerAdresse)
+                    .add("postkasseAdresse", postkasseAdresse)
+                    .toString();
+        }
+    }
+
+    static class PersonDetails {
+        private final String emailAdress;
+        private final String phoneNumber;
+        private final String reserved;
+
+        PersonDetails(String emailAdress, String phoneNumber, String reserved) {
+            this.emailAdress = emailAdress;
+            this.phoneNumber = phoneNumber;
+            this.reserved = reserved;
+        }
+
+        String getEmailAdress() {
+            return emailAdress;
+        }
+
+        String getPhoneNumber() {
+            return phoneNumber;
+        }
+
+        public String getReserved() {
+            return reserved;
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                    .add("emailAdress", emailAdress)
+                    .add("phoneNumber", phoneNumber)
+                    .add("reserved", reserved)
+                    .toString();
         }
     }
 }

@@ -1,43 +1,27 @@
 package no.difi.meldingsutveksling.ptp;
 
 import com.google.common.base.MoreObjects;
-import no.difi.ptp.sikkerdigitalpost.*;
-import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
+import no.difi.ptp.sikkerdigitalpost.HentPersonerRespons;
 
 public class KontaktInfo {
-    private final String certificate;
-    private final String orgnrPostkasse;
-    private final String postkasseAdresse;
-    private final String epostadresse;
-    private final String mobiltelefonnummer;
-    private final String varslingsstatus;
+    private final PersonKontaktInfoMapper.MailboxProvider providerDetails;
+    private final PersonKontaktInfoMapper.PersonDetails personDetails;
 
-    public KontaktInfo(String certificate, String orgnrPostkasse, String postkasseAdresse, String epostadresse, String mobiltelefonnummer, String varslingsstatus) {
-        this.certificate = certificate;
-        this.orgnrPostkasse = orgnrPostkasse;
-        this.postkasseAdresse = postkasseAdresse;
-        this.epostadresse = epostadresse;
-        this.mobiltelefonnummer = mobiltelefonnummer;
-        this.varslingsstatus = varslingsstatus;
+    KontaktInfo(PersonKontaktInfoMapper.MailboxProvider providerDetails, PersonKontaktInfoMapper.PersonDetails personDetails) {
+        this.providerDetails = providerDetails;
+        this.personDetails = personDetails;
     }
 
     public String getCertificate() {
-        return certificate;
+        return providerDetails.getPemCertificateFrom();
     }
 
     public String getOrgnrPostkasse() {
-        return orgnrPostkasse;
+        return providerDetails.getProviderUrl();
     }
 
     public String getPostkasseAdresse() {
-        return postkasseAdresse;
+        return providerDetails.getMailboxId();
     }
 
     public static KontaktInfo from(HentPersonerRespons hentPersonerRespons) {
@@ -48,14 +32,14 @@ public class KontaktInfo {
      * @return the email address to send notifications to
      */
     public String getEpostadresse() {
-        return epostadresse;
+        return personDetails.getEmailAdress();
     }
 
     /**
      * @return the mobile phone number to send notifications to
      */
     public String getMobiltelefonnummer() {
-        return mobiltelefonnummer;
+        return personDetails.getPhoneNumber();
     }
 
     /**
@@ -63,18 +47,14 @@ public class KontaktInfo {
      * @return Enum value
      */
     public String getVarslingsstatus() {
-        return varslingsstatus;
+        return personDetails.getReserved();
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("certificate", certificate)
-                .add("orgnrPostkasse", orgnrPostkasse)
-                .add("postkasseAdresse", postkasseAdresse)
-                .add("epostadresse", epostadresse)
-                .add("mobiltelefonnummer", mobiltelefonnummer)
-                .add("varslingsstatus", varslingsstatus)
+                .add("providerDetails", providerDetails)
+                .add("personDetails", personDetails)
                 .toString();
     }
 }
