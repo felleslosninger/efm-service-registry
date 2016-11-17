@@ -51,9 +51,9 @@ class EnhetsForm extends React.Component {
             navn: this.state.navn,
             organisasjonsform: this.state.organisasjonsform
         }
-        console.log(JSON.stringify(msg));
+        var postUrl = window.location.href.replace("mockenhet", "addmockenhet");
         $.ajax({
-            url: '/addmockenhet',
+            url: postUrl,
             type: 'POST',
             contentType: 'application/json',
             dataType: 'html',
