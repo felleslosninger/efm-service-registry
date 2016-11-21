@@ -4,8 +4,10 @@ import com.google.common.base.MoreObjects;
 import no.difi.ptp.sikkerdigitalpost.HentPersonerRespons;
 
 public class KontaktInfo {
+    private static final PersonKontaktInfoMapper.PersonDetails EMPTY = new PersonKontaktInfoMapper.PersonDetails("", "", false, true, false);
     private final PersonKontaktInfoMapper.MailboxProvider providerDetails;
     private final PersonKontaktInfoMapper.PersonDetails personDetails;
+    private PrintProviderDetails printDetails;
 
     KontaktInfo(PersonKontaktInfoMapper.MailboxProvider providerDetails, PersonKontaktInfoMapper.PersonDetails personDetails) {
         this.providerDetails = providerDetails;
@@ -13,11 +15,18 @@ public class KontaktInfo {
     }
 
     public String getCertificate() {
-        return providerDetails.getPemCertificateFrom();
+        if (canReceiveDigitalPost()) {
+            return providerDetails.getPemCertificateFrom();
+        } else {
+            return printDetails.getPemCertificate();
+        }
     }
 
     public String getOrgnrPostkasse() {
-        return providerDetails.getProviderUrl();
+        if (canReceiveDigitalPost()) {
+            return providerDetails.getProviderUrl();
+        }
+        return printDetails.getPostkasseleverandoerAdresse();
     }
 
     public String getPostkasseAdresse() {
@@ -46,8 +55,8 @@ public class KontaktInfo {
      * Status indicates whether or not to notify the recipient of a sent message
      * @return Enum value
      */
-    public String getVarslingsstatus() {
-        return personDetails.getReserved();
+    public boolean isNotifiable() {
+        return personDetails.isNotifiable();
     }
 
     @Override
@@ -57,4 +66,21 @@ public class KontaktInfo {
                 .add("personDetails", personDetails)
                 .toString();
     }
+
+    public boolean isReservert() {
+        return personDetails.isReservert();
+    }
+
+    public boolean canReceiveDigitalPost() {
+        return (personDetails.isEmpty() || providerDetails.hasMailbox()) && !personDetails.isReservert() && personDetails.isAktiv();
+    }
+
+    public void setPrintDetails(PrintProviderDetails printDetails) {
+        this.printDetails = printDetails;
+    }
+
+    public boolean hasMailbox() {
+        return providerDetails.hasMailbox();
+    }
+
 }

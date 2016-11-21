@@ -49,22 +49,21 @@ public class OppslagstjenesteClient {
         WebServiceTemplate template = createWebServiceTemplate(HentPersonerRespons.class.getPackage().getName());
 
         final HentPersonerRespons hentPersonerRespons = (HentPersonerRespons) template.marshalSendAndReceive(conf.url, hentPersonerForespoersel);
-        KontaktInfo kontaktInfo = KontaktInfo.from(hentPersonerRespons);
-        
-        return kontaktInfo;
+
+        return KontaktInfo.from(hentPersonerRespons);
 
     }
 
     /**
      *  Tjenesten kan brukes for å sende forsendelser av brev til mottakere som har reservert seg eller ikke registrert/oppdatert sin kontaktinformasjon.
      */
-    public void hentPrintSertifikat() {
+    public PrintProviderDetails getPrintProviderDetails() {
         HentPrintSertifikatForespoersel request = new HentPrintSertifikatForespoersel();
         WebServiceTemplate template = createWebServiceTemplate(HentPrintSertifikatRespons.class.getPackage().getName());
 
         HentPrintSertifikatRespons response = (HentPrintSertifikatRespons) template.marshalSendAndReceive(conf.url, request);
 
-//        return response.
+        return PrintProviderDetails.from(response);
     }
 
     private WebServiceTemplate createWebServiceTemplate(String contextPath) {
