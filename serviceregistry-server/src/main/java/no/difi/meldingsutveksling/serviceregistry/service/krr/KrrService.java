@@ -1,11 +1,12 @@
 package no.difi.meldingsutveksling.serviceregistry.service.krr;
 
-import javax.annotation.PostConstruct;
 import no.difi.meldingsutveksling.ptp.KontaktInfo;
 import no.difi.meldingsutveksling.ptp.OppslagstjenesteClient;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
 
 @Service
 public class KrrService {
@@ -25,7 +26,11 @@ public class KrrService {
 
     public KontaktInfo getCitizenInfo(String identifier) {
 
-        return client.hentKontaktInformasjon(identifier);
+        KontaktInfo kontaktInfo = client.hentKontaktInformasjon(identifier);
+        if (kontaktInfo.canReceiveDigitalPost() || !kontaktInfo.hasMailbox()) {
+            kontaktInfo.setPrintDetails(client.getPrintProviderDetails());
+        }
+        return kontaktInfo;
     }
 
     private OppslagstjenesteClient.Configuration createConfiguration() {
