@@ -27,6 +27,17 @@
             </releases>
         </repository>
         <repository>
+            <id>DIFI Internal MOVE 3rd party</id>
+            <name>DIFI Internal MOVE 3rd party on Nexus</name>
+            <url>http://itest-move-app01.difi.local:8081/content/repositories/difi.meldingsutveksler/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+        <repository>
             <id>DIFI Move releases</id>
             <name>DIFI MOVE releases on Nexus</name>
             <url>https://beta-meldingsutveksling.difi.no/content/repositories/releases/</url>
@@ -43,7 +54,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <move-common.version>1.0.0</move-common.version>
+        <move-common.version>1.0.4</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
     </properties>
 
@@ -68,7 +79,7 @@
             <dependency>
                 <groupId>no.difi.move-common</groupId>
                 <artifactId>move-dependencies</artifactId>
-                <version>1.0.1</version>
+                <version>${move-common.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
