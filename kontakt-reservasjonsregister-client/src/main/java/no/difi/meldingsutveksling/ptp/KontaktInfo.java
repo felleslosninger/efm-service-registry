@@ -1,43 +1,36 @@
 package no.difi.meldingsutveksling.ptp;
 
 import com.google.common.base.MoreObjects;
-import no.difi.ptp.sikkerdigitalpost.*;
-import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
+import no.difi.ptp.sikkerdigitalpost.HentPersonerRespons;
 
 public class KontaktInfo {
-    private final String certificate;
-    private final String orgnrPostkasse;
-    private final String postkasseAdresse;
-    private final String epostadresse;
-    private final String mobiltelefonnummer;
-    private final String varslingsstatus;
+    private static final PersonKontaktInfoMapper.PersonDetails EMPTY = new PersonKontaktInfoMapper.PersonDetails("", "", false, true, false);
+    private final PersonKontaktInfoMapper.MailboxProvider providerDetails;
+    private final PersonKontaktInfoMapper.PersonDetails personDetails;
+    private PrintProviderDetails printDetails;
 
-    public KontaktInfo(String certificate, String orgnrPostkasse, String postkasseAdresse, String epostadresse, String mobiltelefonnummer, String varslingsstatus) {
-        this.certificate = certificate;
-        this.orgnrPostkasse = orgnrPostkasse;
-        this.postkasseAdresse = postkasseAdresse;
-        this.epostadresse = epostadresse;
-        this.mobiltelefonnummer = mobiltelefonnummer;
-        this.varslingsstatus = varslingsstatus;
+    KontaktInfo(PersonKontaktInfoMapper.MailboxProvider providerDetails, PersonKontaktInfoMapper.PersonDetails personDetails) {
+        this.providerDetails = providerDetails;
+        this.personDetails = personDetails;
     }
 
     public String getCertificate() {
-        return certificate;
+        if (canReceiveDigitalPost()) {
+            return providerDetails.getPemCertificateFrom();
+        } else {
+            return printDetails.getPemCertificate();
+        }
     }
 
     public String getOrgnrPostkasse() {
-        return orgnrPostkasse;
+        if (canReceiveDigitalPost()) {
+            return providerDetails.getProviderUrl();
+        }
+        return printDetails.getPostkasseleverandoerAdresse();
     }
 
     public String getPostkasseAdresse() {
-        return postkasseAdresse;
+        return providerDetails.getMailboxId();
     }
 
     public static KontaktInfo from(HentPersonerRespons hentPersonerRespons) {
@@ -48,33 +41,46 @@ public class KontaktInfo {
      * @return the email address to send notifications to
      */
     public String getEpostadresse() {
-        return epostadresse;
+        return personDetails.getEmailAdress();
     }
 
     /**
      * @return the mobile phone number to send notifications to
      */
     public String getMobiltelefonnummer() {
-        return mobiltelefonnummer;
+        return personDetails.getPhoneNumber();
     }
 
     /**
      * Status indicates whether or not to notify the recipient of a sent message
      * @return Enum value
      */
-    public String getVarslingsstatus() {
-        return varslingsstatus;
+    public boolean isNotifiable() {
+        return personDetails.isNotifiable();
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("certificate", certificate)
-                .add("orgnrPostkasse", orgnrPostkasse)
-                .add("postkasseAdresse", postkasseAdresse)
-                .add("epostadresse", epostadresse)
-                .add("mobiltelefonnummer", mobiltelefonnummer)
-                .add("varslingsstatus", varslingsstatus)
+                .add("providerDetails", providerDetails)
+                .add("personDetails", personDetails)
                 .toString();
     }
+
+    public boolean isReservert() {
+        return personDetails.isReservert();
+    }
+
+    public boolean canReceiveDigitalPost() {
+        return (personDetails.isEmpty() || providerDetails.hasMailbox()) && !personDetails.isReservert() && personDetails.isAktiv();
+    }
+
+    public void setPrintDetails(PrintProviderDetails printDetails) {
+        this.printDetails = printDetails;
+    }
+
+    public boolean hasMailbox() {
+        return providerDetails.hasMailbox();
+    }
+
 }
