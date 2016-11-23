@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/identifier")
@@ -48,12 +48,12 @@ public class ServiceRecordController {
      */
     @RequestMapping("/{identifier}")
     @ResponseBody
-    public ResponseEntity entity(@PathVariable("identifier") String identifier, OAuth2Authentication auth) {
+    public ResponseEntity entity(@PathVariable("identifier") String identifier, Authentication auth) {
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
         EntityInfo entityInfo = entityService.getEntityInfo(identifier);
         // TODO: send clientOrgnr videre til KRR
-        String clientOrgnr = (String) auth.getPrincipal();
+        String clientOrgnr = auth == null ? null : (String) auth.getPrincipal();
         if (entityInfo == null) {
             throw new EntityNotFoundException("Could not find entity for identifier: " + identifier);
         }
