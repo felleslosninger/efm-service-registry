@@ -1,8 +1,9 @@
 package no.difi.meldingsutveksling.serviceregistry.controller;
 
+import javax.servlet.http.HttpServletRequest;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
-import no.difi.meldingsutveksling.serviceregistry.auth.OrgnrUserAuthConverter;
+import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.*;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
@@ -16,13 +17,7 @@ import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.security.oauth2.provider.token.DefaultAccessTokenConverter;
-import org.springframework.security.oauth2.provider.token.RemoteTokenServices;
 import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletRequest;
-
-import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.*;
 
 @RequestMapping("/identifier")
 @ExposesResourceFor(EntityResource.class)
@@ -33,24 +28,15 @@ public class ServiceRecordController {
     private EntityService entityService;
     private static final Logger logger = LoggerFactory.getLogger(ServiceRecordController.class);
 
-    private RemoteTokenServices tokenServices;
-
     /**
      * @param serviceRecordFactory for creation of the identifiers respective service record
      * @param entityService needed to lookup and retrieve organization or citizen information using an identifier number
      */
     @Autowired
     public ServiceRecordController(ServiceRecordFactory serviceRecordFactory,
-                                   EntityService entityService,
-                                   RemoteTokenServices tokenServices) {
+            EntityService entityService) {
         this.entityService = entityService;
         this.serviceRecordFactory = serviceRecordFactory;
-        this.tokenServices = tokenServices;
-
-        OrgnrUserAuthConverter orgnrUserAuthConverter = new OrgnrUserAuthConverter();
-        DefaultAccessTokenConverter defaultAccessTokenConverter = new DefaultAccessTokenConverter();
-        defaultAccessTokenConverter.setUserTokenConverter(orgnrUserAuthConverter);
-        this.tokenServices.setAccessTokenConverter(defaultAccessTokenConverter);
     }
 
     /**
@@ -67,7 +53,7 @@ public class ServiceRecordController {
         Entity entity = new Entity();
         EntityInfo entityInfo = entityService.getEntityInfo(identifier);
         // TODO: send clientOrgnr videre til KRR
-        String clientOrgnr = (String)auth.getPrincipal();
+        String clientOrgnr = (String) auth.getPrincipal();
         if (entityInfo == null) {
             throw new EntityNotFoundException("Could not find entity for identifier: " + identifier);
         }
