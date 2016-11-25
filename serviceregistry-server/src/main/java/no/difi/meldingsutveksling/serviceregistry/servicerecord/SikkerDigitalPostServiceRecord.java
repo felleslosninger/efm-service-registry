@@ -1,6 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 import no.difi.meldingsutveksling.ptp.KontaktInfo;
+import no.difi.meldingsutveksling.ptp.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 
@@ -12,8 +13,10 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
     private final boolean kanVarsles;
     private final String epostAdresse;
     private final boolean fysiskPost;
+    private final PostAddress postAddress;
+    private final PostAddress returnAddress;
 
-    public SikkerDigitalPostServiceRecord(ServiceregistryProperties properties, KontaktInfo kontaktInfo, ServiceIdentifier serviceIdentifier, String organisationNumber) {
+    public SikkerDigitalPostServiceRecord(ServiceregistryProperties properties, KontaktInfo kontaktInfo, ServiceIdentifier serviceIdentifier, String organisationNumber, PostAddress postAddress, PostAddress returnAddress) {
         super(properties, kontaktInfo.getCertificate(), serviceIdentifier, organisationNumber);
         orgnrPostkasse = kontaktInfo.getOrgnrPostkasse();
         postkasseAdresse = kontaktInfo.getPostkasseAdresse();
@@ -21,6 +24,8 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
         epostAdresse = kontaktInfo.getEpostadresse();
         mobilnummer = kontaktInfo.getMobiltelefonnummer();
         fysiskPost = kontaktInfo.isReservert();
+        this.postAddress = postAddress;
+        this.returnAddress = returnAddress;
     }
 
     @Override
@@ -50,5 +55,13 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
 
     public boolean isFysiskPost() {
         return fysiskPost;
+    }
+
+    public PostAddress getPostAddress() {
+        return postAddress;
+    }
+
+    public PostAddress getReturnAddress() {
+        return returnAddress;
     }
 }
