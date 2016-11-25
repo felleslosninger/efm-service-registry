@@ -1,7 +1,9 @@
 package no.difi.meldingsutveksling.serviceregistry.controller;
 
+import javax.servlet.http.HttpServletRequest;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
+import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.*;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
@@ -14,11 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import javax.servlet.http.HttpServletRequest;
-
-import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.*;
 
 @RequestMapping("/identifier")
 @ExposesResourceFor(EntityResource.class)
@@ -35,10 +34,9 @@ public class ServiceRecordController {
      */
     @Autowired
     public ServiceRecordController(ServiceRecordFactory serviceRecordFactory,
-                                   EntityService entityService) {
+            EntityService entityService) {
         this.entityService = entityService;
         this.serviceRecordFactory = serviceRecordFactory;
-//        this.serviceRecordFactory = new ServiceRecordFactory(properties, virkSertService, elmaLookupSerice, ksLookup, this.krrService);
     }
 
     /**
@@ -50,10 +48,12 @@ public class ServiceRecordController {
      */
     @RequestMapping("/{identifier}")
     @ResponseBody
-    public ResponseEntity entity(@PathVariable("identifier") String identifier) {
+    public ResponseEntity entity(@PathVariable("identifier") String identifier, Authentication auth) {
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
         EntityInfo entityInfo = entityService.getEntityInfo(identifier);
+        // TODO: send clientOrgnr videre til KRR
+        String clientOrgnr = auth == null ? null : (String) auth.getPrincipal();
         if (entityInfo == null) {
             throw new EntityNotFoundException("Could not find entity for identifier: " + identifier);
         }
