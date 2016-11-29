@@ -72,7 +72,7 @@ public class KontaktInfo {
     }
 
     public boolean canReceiveDigitalPost() {
-        return (personDetails.isEmpty() || providerDetails.hasMailbox()) && !personDetails.isReservert() && personDetails.isAktiv();
+        return (providerDetails.hasMailbox()) && !personDetails.isReservert() && personDetails.isAktiv();
     }
 
     public void setPrintDetails(PrintProviderDetails printDetails) {
