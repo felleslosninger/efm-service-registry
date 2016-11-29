@@ -12,12 +12,12 @@ public class PostAddress {
     private final String postalArea;
     private final String country;
 
-    public PostAddress(String name, String street1, String street2, String street3, String street4, String postalCode, String postalArea, String country) {
+    public PostAddress(String name, Street street, String postalCode, String postalArea, String country) {
         this.name = name;
-        this.street1 = street1;
-        this.street2 = street2;
-        this.street3 = street3;
-        this.street4 = street4;
+        this.street1 = street.getStreet1();
+        this.street2 = street.getStreet2();
+        this.street3 = street.getStreet3();
+        this.street4 = street.getStreet4();
         this.postalCode = postalCode;
         this.postalArea = postalArea;
         this.country = country;

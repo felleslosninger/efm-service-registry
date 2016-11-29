@@ -4,7 +4,6 @@ import com.google.common.base.MoreObjects;
 import no.difi.ptp.sikkerdigitalpost.HentPersonerRespons;
 
 public class KontaktInfo {
-    private static final PersonKontaktInfoMapper.PersonDetails EMPTY = new PersonKontaktInfoMapper.PersonDetails("", "", false, true, false);
     private final PersonKontaktInfoMapper.MailboxProvider providerDetails;
     private final PersonKontaktInfoMapper.PersonDetails personDetails;
     private PrintProviderDetails printDetails;

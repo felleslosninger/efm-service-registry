@@ -48,14 +48,6 @@ class PersonKontaktInfoMapper {
         return person.getKontaktinformasjon() != null;
     }
 
-    private static boolean hasPostkasseleverandoerAdresse(Person person) {
-        return person.getSikkerDigitalPostAdresse() != null;
-    }
-
-    private static boolean hasCertificate(Person person) {
-        return person.getX509Sertifikat() != null;
-    }
-
     static class MailboxProvider {
         public static final MailboxProvider EMPTY = new MailboxProvider(null, null, null);
         private final String pemCertificateFrom;
@@ -157,7 +149,7 @@ class PersonKontaktInfoMapper {
          * @return true if all necessary details are in place for sending digital post
          */
         public boolean isEmpty() {
-            return (emailAdress == null && phoneNumber == null);
+            return emailAdress == null && phoneNumber == null;
         }
     }
 }

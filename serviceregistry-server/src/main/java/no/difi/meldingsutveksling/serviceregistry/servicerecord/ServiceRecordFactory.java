@@ -2,6 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 import no.difi.meldingsutveksling.ptp.KontaktInfo;
 import no.difi.meldingsutveksling.ptp.PostAddress;
+import no.difi.meldingsutveksling.ptp.Street;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
@@ -74,7 +75,7 @@ public class ServiceRecordFactory {
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
     public ServiceRecord createSikkerDigitalPostRecord(String identifier) {
         final KontaktInfo kontaktInfo = krrService.getCitizenInfo(identifier);
-        PostAddress postAddress = new PostAddress("DIFI", "Grev Wedels plass 9", "", "", "", "0151", "Oslo", "Norway");
+        PostAddress postAddress = new PostAddress("DIFI", new Street("Grev Wedels plass 9", "", "", ""), "0151", "Oslo", "Norway");
         return new SikkerDigitalPostServiceRecord(properties, kontaktInfo, ServiceIdentifier.DPI, identifier, postAddress, postAddress);
     }
 

@@ -9,7 +9,10 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
-public class Util {
+class Util {
+    private Util() {
+    }
+
     static String pemCertificateFrom(byte[] certificateBytes) {
         if (certificateBytes == null) {
             throw new PemCertificateException("Input certificate cannot be null");
@@ -22,13 +25,17 @@ public class Util {
             pemWriter.flush();
             return sw.toString();
         } catch (IOException |CertificateException e) {
-            throw new RuntimeException("Failed to create pem certificate from bytes", e);
+            throw new PemCertificateException("Failed to create pem certificate from bytes", e);
         }
     }
 
     private static class PemCertificateException extends RuntimeException {
-        public PemCertificateException(String s) {
+        PemCertificateException(String s) {
             super(s);
+        }
+
+        PemCertificateException(String s, Exception e) {
+            super(s, e);
         }
     }
 }
