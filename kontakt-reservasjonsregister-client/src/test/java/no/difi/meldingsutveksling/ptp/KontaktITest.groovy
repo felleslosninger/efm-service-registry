@@ -28,7 +28,6 @@ class KontaktITest extends Specification {
             ki.canReceiveDigitalPost() == expected
         where:
             scenario                    | mailbox   | aktiv | reservert | expected
-            'missing person details'    | true      | true  | false     | false
             'missing mailbox'           | false     | true  | false     | false
             'person not active'         | true      | false | false     | false
             'person is reserved'        | true      | true  | true      | false
