@@ -6,6 +6,7 @@ import no.difi.ptp.sikkerdigitalpost.HentPersonerRespons;
 import no.difi.ptp.sikkerdigitalpost.HentPrintSertifikatForespoersel;
 import no.difi.ptp.sikkerdigitalpost.HentPrintSertifikatRespons;
 import no.difi.ptp.sikkerdigitalpost.Informasjonsbehov;
+import no.difi.ptp.sikkerdigitalpost.Oppslagstjenesten;
 import no.difi.webservice.support.SoapFaultInterceptorLogger;
 import org.apache.wss4j.common.crypto.Crypto;
 import org.apache.wss4j.common.crypto.Merlin;
@@ -14,8 +15,12 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.ws.WebServiceMessage;
+import org.springframework.ws.client.core.WebServiceMessageCallback;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.client.support.interceptor.ClientInterceptor;
+import org.springframework.ws.soap.SoapHeader;
+import org.springframework.ws.soap.SoapMessage;
 import org.springframework.ws.soap.SoapVersion;
 import org.springframework.ws.soap.axiom.AxiomSoapMessageFactory;
 import org.springframework.ws.soap.security.wss4j2.Wss4jSecurityInterceptor;
@@ -24,6 +29,12 @@ import org.springframework.ws.soap.security.wss4j2.support.CryptoFactoryBean;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.UnsupportedCallbackException;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.util.JAXBSource;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -48,7 +59,26 @@ public class OppslagstjenesteClient {
 
         WebServiceTemplate template = createWebServiceTemplate(HentPersonerRespons.class.getPackage().getName());
 
-        final HentPersonerRespons hentPersonerRespons = (HentPersonerRespons) template.marshalSendAndReceive(conf.url, hentPersonerForespoersel);
+        Oppslagstjenesten oppslagstjenesten = new Oppslagstjenesten();
+        oppslagstjenesten.setPaaVegneAv("biristrand");
+
+        final HentPersonerRespons hentPersonerRespons = (HentPersonerRespons) template.marshalSendAndReceive(conf.url, hentPersonerForespoersel, new WebServiceMessageCallback() {
+            @Override
+            public void doWithMessage(WebServiceMessage webServiceMessage) throws IOException, TransformerException {
+                SoapMessage soapMessage = (SoapMessage) webServiceMessage;
+                SoapHeader soapHeader = soapMessage.getSoapHeader();
+                TransformerFactory transformerFactory = TransformerFactory.newInstance();
+                final Transformer transformer = transformerFactory.newTransformer();
+                try {
+                    JAXBSource jaxbSource = new JAXBSource(JAXBContext.newInstance(Oppslagstjenesten.class), oppslagstjenesten);
+                    transformer.transform(jaxbSource, soapHeader.getResult());
+                } catch (JAXBException e) {
+                    e.printStackTrace();
+                }
+
+                soapHeader.getResult();
+            }
+        });
 
         return KontaktInfo.from(hentPersonerRespons);
 
