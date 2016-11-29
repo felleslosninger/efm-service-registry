@@ -9,8 +9,8 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 
-class Util {
-    private Util() {
+class CertificateUtil {
+    private CertificateUtil() {
     }
 
     static String pemCertificateFrom(byte[] certificateBytes) {

@@ -13,7 +13,7 @@ public class PrintProviderDetails {
     }
 
     public static PrintProviderDetails from(HentPrintSertifikatRespons response) {
-        return new PrintProviderDetails(response.getPostkasseleverandoerAdresse(), Util.pemCertificateFrom(response.getX509Sertifikat()));
+        return new PrintProviderDetails(response.getPostkasseleverandoerAdresse(), CertificateUtil.pemCertificateFrom(response.getX509Sertifikat()));
     }
 
     public String getPostkasseleverandoerAdresse() {

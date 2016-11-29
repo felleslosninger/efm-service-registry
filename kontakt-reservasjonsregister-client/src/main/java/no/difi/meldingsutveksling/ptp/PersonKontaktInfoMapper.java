@@ -20,7 +20,7 @@ class PersonKontaktInfoMapper {
 
 
         if(pw.hasCertificate()) {
-            pemCertificate = Util.pemCertificateFrom(pw.getX509Sertifikat());
+            pemCertificate = CertificateUtil.pemCertificateFrom(pw.getX509Sertifikat());
         }
         MailboxProvider providerDetails = MailboxProvider.EMPTY;
         if(pw.hasMailbox()) {
