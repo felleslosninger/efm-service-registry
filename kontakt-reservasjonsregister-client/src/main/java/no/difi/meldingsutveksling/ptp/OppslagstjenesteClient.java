@@ -1,6 +1,7 @@
 package no.difi.meldingsutveksling.ptp;
 
 import net.logstash.logback.marker.Markers;
+import no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters;
 import no.difi.ptp.sikkerdigitalpost.HentPersonerForespoersel;
 import no.difi.ptp.sikkerdigitalpost.HentPersonerRespons;
 import no.difi.ptp.sikkerdigitalpost.HentPrintSertifikatForespoersel;
@@ -48,17 +49,15 @@ public class OppslagstjenesteClient {
         this.conf = configuration;
     }
 
-    public KontaktInfo hentKontaktInformasjon(String pid) {
+    public KontaktInfo hentKontaktInformasjon(LookupParameters lookupParameters) {
         final HentPersonerForespoersel hentPersonerForespoersel = HentPersonerForespoersel.builder()
                 .addInformasjonsbehov(Informasjonsbehov.KONTAKTINFO, Informasjonsbehov.SIKKER_DIGITAL_POST, Informasjonsbehov.SERTIFIKAT, Informasjonsbehov.VARSLINGS_STATUS)
-                .addPersonidentifikator(pid)
+                .addPersonidentifikator(lookupParameters.getIdentifier())
                 .build();
 
         WebServiceTemplate template = createWebServiceTemplate(HentPersonerRespons.class.getPackage().getName());
 
-
-        final String lote = "896987402";
-        WebServiceMessageCallback callback = conf.isPaaVegneAvEnabled() ? noopCallback -> { } : addPaaVegneAvToSoapHeader(lote);
+        WebServiceMessageCallback callback = conf.isPaaVegneAvEnabled() ? noopCallback -> { } : addPaaVegneAvToSoapHeader(lookupParameters.getClientOrgnr());
         final HentPersonerRespons hentPersonerRespons = (HentPersonerRespons) template.marshalSendAndReceive(conf.url, hentPersonerForespoersel, callback);
 
         return KontaktInfo.from(hentPersonerRespons);
@@ -86,12 +85,11 @@ public class OppslagstjenesteClient {
     /**
      *  Tjenesten kan brukes for å sende forsendelser av brev til mottakere som har reservert seg eller ikke registrert/oppdatert sin kontaktinformasjon.
      */
-    public PrintProviderDetails getPrintProviderDetails() {
+    public PrintProviderDetails getPrintProviderDetails(String orgnumber) {
         HentPrintSertifikatForespoersel request = new HentPrintSertifikatForespoersel();
         WebServiceTemplate template = createWebServiceTemplate(HentPrintSertifikatRespons.class.getPackage().getName());
 
-        String lote = "896987402";
-        WebServiceMessageCallback callback = conf.isPaaVegneAvEnabled() ? emptyCallback -> { } : addPaaVegneAvToSoapHeader(lote);
+        WebServiceMessageCallback callback = conf.isPaaVegneAvEnabled() ? emptyCallback -> { } : addPaaVegneAvToSoapHeader(orgnumber);
         HentPrintSertifikatRespons response = (HentPrintSertifikatRespons) template.marshalSendAndReceive(conf.url, request, callback);
 
         return PrintProviderDetails.from(response);

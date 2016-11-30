@@ -3,6 +3,7 @@ package no.difi.meldingsutveksling.serviceregistry.service.krr;
 import no.difi.meldingsutveksling.ptp.KontaktInfo;
 import no.difi.meldingsutveksling.ptp.OppslagstjenesteClient;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,11 +25,11 @@ public class KrrService {
         client = new OppslagstjenesteClient(createConfiguration());
     }
 
-    public KontaktInfo getCitizenInfo(String identifier) {
+    public KontaktInfo getCitizenInfo(LookupParameters lookupParameters) {
 
-        KontaktInfo kontaktInfo = client.hentKontaktInformasjon(identifier);
+        KontaktInfo kontaktInfo = client.hentKontaktInformasjon(lookupParameters);
         if (kontaktInfo.canReceiveDigitalPost() || !kontaktInfo.hasMailbox()) {
-            kontaktInfo.setPrintDetails(client.getPrintProviderDetails());
+            kontaktInfo.setPrintDetails(client.getPrintProviderDetails(lookupParameters.getClientOrgnr()));
         }
         return kontaktInfo;
     }
