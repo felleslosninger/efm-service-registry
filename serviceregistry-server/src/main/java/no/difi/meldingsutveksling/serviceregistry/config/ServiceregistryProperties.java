@@ -28,6 +28,7 @@ public class ServiceregistryProperties {
     private Adresseregister ar;
 
     private Auth auth;
+    private FeatureToggle feature;
 
     public Auth getAuth() {
         return auth;
@@ -75,6 +76,14 @@ public class ServiceregistryProperties {
 
     public void setAr(Adresseregister ar) {
         this.ar = ar;
+    }
+
+    public FeatureToggle getFeature() {
+        return feature;
+    }
+
+    public void setFeature(FeatureToggle feature) {
+        this.feature = feature;
     }
 
     public static class Auth {
@@ -133,6 +142,18 @@ public class ServiceregistryProperties {
 
         public void setServer(Keystore server) {
             this.server = server;
+        }
+    }
+
+    public static class FeatureToggle {
+        private boolean paaVegneAvOppslag = false;
+
+        public boolean isPaaVegneAvOppslag() {
+            return paaVegneAvOppslag;
+        }
+
+        public void setPaaVegneAvOppslag(boolean paaVegneAvOppslag) {
+            this.paaVegneAvOppslag = paaVegneAvOppslag;
         }
     }
 

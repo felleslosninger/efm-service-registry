@@ -5,6 +5,7 @@ import no.difi.meldingsutveksling.ptp.PostAddress;
 import no.difi.meldingsutveksling.ptp.Street;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
@@ -73,10 +74,16 @@ public class ServiceRecordFactory {
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
-    public ServiceRecord createSikkerDigitalPostRecord(String identifier) {
-        final KontaktInfo kontaktInfo = krrService.getCitizenInfo(identifier);
+    public ServiceRecord createSikkerDigitalPostRecord(String identifier, String clientOrgnr) {
+
+        final KontaktInfo kontaktInfo = krrService.getCitizenInfo(lookup(identifier).onBehalfOf(clientOrgnr));
         PostAddress postAddress = new PostAddress("DIFI", new Street("Grev Wedels plass 9", "", "", ""), "0151", "Oslo", "Norway");
         return new SikkerDigitalPostServiceRecord(properties, kontaktInfo, ServiceIdentifier.DPI, identifier, postAddress, postAddress);
+    }
+
+    private LookupParameters lookup(String identifier) {
+        final LookupParameters lookupParameters = new LookupParameters(identifier);
+        return lookupParameters;
     }
 
 }
