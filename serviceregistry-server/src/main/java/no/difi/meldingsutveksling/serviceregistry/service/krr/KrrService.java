@@ -34,12 +34,14 @@ public class KrrService {
     }
 
     private OppslagstjenesteClient.Configuration createConfiguration() {
-        return new OppslagstjenesteClient.Configuration(
+        final OppslagstjenesteClient.Configuration configuration = new OppslagstjenesteClient.Configuration(
                 properties.getKrr().getEndpointURL().toString(),
                 properties.getKrr().getClient().getPassword(),
                 properties.getKrr().getClient().getAlias(),
                 properties.getKrr().getServer().getAlias(),
                 properties.getKrr().getClient().getKeystore(),
                 properties.getKrr().getServer().getKeystore());
+        configuration.setPaaVegneAvEnabled(properties.getFeature().isPaaVegneAvOppslag());
+        return configuration;
     }
 }

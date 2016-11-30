@@ -17,6 +17,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.ws.client.core.WebServiceMessageCallback;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.client.support.interceptor.ClientInterceptor;
 import org.springframework.ws.soap.SoapHeader;
@@ -55,11 +56,19 @@ public class OppslagstjenesteClient {
 
         WebServiceTemplate template = createWebServiceTemplate(HentPersonerRespons.class.getPackage().getName());
 
-        Oppslagstjenesten oppslagstjenesten = new Oppslagstjenesten();
-        String lote = "896987402";
-        oppslagstjenesten.setPaaVegneAv(lote);
 
-        final HentPersonerRespons hentPersonerRespons = (HentPersonerRespons) template.marshalSendAndReceive(conf.url, hentPersonerForespoersel, webServiceMessage -> {
+        final String lote = "896987402";
+        WebServiceMessageCallback callback = conf.isPaaVegneAvEnabled() ? noopCallback -> { } : addPaaVegneAvToSoapHeader(lote);
+        final HentPersonerRespons hentPersonerRespons = (HentPersonerRespons) template.marshalSendAndReceive(conf.url, hentPersonerForespoersel, callback);
+
+        return KontaktInfo.from(hentPersonerRespons);
+
+    }
+
+    private WebServiceMessageCallback addPaaVegneAvToSoapHeader(String orgnumber) {
+        Oppslagstjenesten oppslagstjenesten = new Oppslagstjenesten();
+        oppslagstjenesten.setPaaVegneAv(orgnumber);
+        return webServiceMessage -> {
             SoapMessage soapMessage = (SoapMessage) webServiceMessage;
             SoapHeader soapHeader = soapMessage.getSoapHeader();
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -68,13 +77,10 @@ public class OppslagstjenesteClient {
                 JAXBSource jaxbSource = new JAXBSource(JAXBContext.newInstance(Oppslagstjenesten.class.getPackage().getName()), oppslagstjenesten);
                 transformer.transform(jaxbSource, soapHeader.getResult());
             } catch (JAXBException e) {
-                String m = String.format("Failed to add paa vegne av oppslag for %s", lote);
+                String m = String.format("Failed to add paa vegne av oppslag for %s", orgnumber);
                 throw new OppslagstjenesteException(m, e);
             }
-        });
-
-        return KontaktInfo.from(hentPersonerRespons);
-
+        };
     }
 
     /**
@@ -84,7 +90,9 @@ public class OppslagstjenesteClient {
         HentPrintSertifikatForespoersel request = new HentPrintSertifikatForespoersel();
         WebServiceTemplate template = createWebServiceTemplate(HentPrintSertifikatRespons.class.getPackage().getName());
 
-        HentPrintSertifikatRespons response = (HentPrintSertifikatRespons) template.marshalSendAndReceive(conf.url, request);
+        String lote = "896987402";
+        WebServiceMessageCallback callback = conf.isPaaVegneAvEnabled() ? emptyCallback -> { } : addPaaVegneAvToSoapHeader(lote);
+        HentPrintSertifikatRespons response = (HentPrintSertifikatRespons) template.marshalSendAndReceive(conf.url, request, callback);
 
         return PrintProviderDetails.from(response);
     }
@@ -168,6 +176,7 @@ public class OppslagstjenesteClient {
         private final String serverAlias;
         private Resource clientJksLocation;
         private Resource serverJksLocation;
+        private boolean paaVegneAvEnabled;
 
         /**
          * Needed to construct OppslagstjenesteClient
@@ -219,6 +228,14 @@ public class OppslagstjenesteClient {
                 logger.error("Can't read keystore", ex);
             }
             return null;
+        }
+
+        public boolean isPaaVegneAvEnabled() {
+            return paaVegneAvEnabled;
+        }
+
+        public void setPaaVegneAvEnabled(boolean paaVegneAvEnabled) {
+            this.paaVegneAvEnabled = paaVegneAvEnabled;
         }
     }
 
