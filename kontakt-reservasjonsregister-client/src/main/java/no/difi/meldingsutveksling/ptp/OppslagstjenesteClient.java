@@ -11,12 +11,12 @@ import no.difi.webservice.support.SoapFaultInterceptorLogger;
 import org.apache.wss4j.common.crypto.Crypto;
 import org.apache.wss4j.common.crypto.Merlin;
 import org.apache.wss4j.common.ext.WSPasswordCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.util.FileCopyUtils;
-import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.client.core.WebServiceMessageCallback;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.client.support.interceptor.ClientInterceptor;
 import org.springframework.ws.soap.SoapHeader;
@@ -26,26 +26,22 @@ import org.springframework.ws.soap.axiom.AxiomSoapMessageFactory;
 import org.springframework.ws.soap.security.wss4j2.Wss4jSecurityInterceptor;
 import org.springframework.ws.soap.security.wss4j2.support.CryptoFactoryBean;
 
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class OppslagstjenesteClient {
 
     private Configuration conf;
+    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
 
     public OppslagstjenesteClient(Configuration configuration) {
         this.conf = configuration;
@@ -60,23 +56,20 @@ public class OppslagstjenesteClient {
         WebServiceTemplate template = createWebServiceTemplate(HentPersonerRespons.class.getPackage().getName());
 
         Oppslagstjenesten oppslagstjenesten = new Oppslagstjenesten();
-        oppslagstjenesten.setPaaVegneAv("biristrand");
+        String lote = "896987402";
+        oppslagstjenesten.setPaaVegneAv(lote);
 
-        final HentPersonerRespons hentPersonerRespons = (HentPersonerRespons) template.marshalSendAndReceive(conf.url, hentPersonerForespoersel, new WebServiceMessageCallback() {
-            @Override
-            public void doWithMessage(WebServiceMessage webServiceMessage) throws IOException, TransformerException {
-                SoapMessage soapMessage = (SoapMessage) webServiceMessage;
-                SoapHeader soapHeader = soapMessage.getSoapHeader();
-                TransformerFactory transformerFactory = TransformerFactory.newInstance();
-                final Transformer transformer = transformerFactory.newTransformer();
-                try {
-                    JAXBSource jaxbSource = new JAXBSource(JAXBContext.newInstance(Oppslagstjenesten.class), oppslagstjenesten);
-                    transformer.transform(jaxbSource, soapHeader.getResult());
-                } catch (JAXBException e) {
-                    e.printStackTrace();
-                }
-
-                soapHeader.getResult();
+        final HentPersonerRespons hentPersonerRespons = (HentPersonerRespons) template.marshalSendAndReceive(conf.url, hentPersonerForespoersel, webServiceMessage -> {
+            SoapMessage soapMessage = (SoapMessage) webServiceMessage;
+            SoapHeader soapHeader = soapMessage.getSoapHeader();
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            final Transformer transformer = transformerFactory.newTransformer();
+            try {
+                JAXBSource jaxbSource = new JAXBSource(JAXBContext.newInstance(Oppslagstjenesten.class.getPackage().getName()), oppslagstjenesten);
+                transformer.transform(jaxbSource, soapHeader.getResult());
+            } catch (JAXBException e) {
+                String m = String.format("Failed to add paa vegne av oppslag for %s", lote);
+                throw new OppslagstjenesteException(m, e);
             }
         });
 
@@ -122,12 +115,11 @@ public class OppslagstjenesteClient {
         securityInterceptor.setSecurementPassword(conf.password);
         securityInterceptor.setValidationActions("Signature Timestamp Encrypt");
 
-        securityInterceptor.setValidationCallbackHandler(new CallbackHandler() {
-            @Override
-            public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
-                Arrays.stream(callbacks).filter(c -> c instanceof WSPasswordCallback).forEach(c -> ((WSPasswordCallback) c).setPassword(conf.password));
-            }
-        });
+        securityInterceptor.setValidationCallbackHandler(
+                callbacks -> Arrays.stream(callbacks)
+                        .filter(c -> c instanceof WSPasswordCallback)
+                        .forEach(c -> ((WSPasswordCallback) c).setPassword(conf.password))
+        );
 
         securityInterceptor.setSecurementSignatureAlgorithm("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256");
         securityInterceptor.setSecurementSignatureParts("{}{http://www.w3.org/2003/05/soap-envelope}Body;{}{http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd}Timestamp}");
@@ -207,7 +199,7 @@ public class OppslagstjenesteClient {
                 }
                 return new FileSystemResource(tmp);
             } catch (IOException ex) {
-                Logger.getLogger(OppslagstjenesteClient.class.getName()).log(Level.SEVERE, "Can't read keystore", ex);
+                logger.error("Can't read keystore", ex);
             }
             return null;
         }
@@ -224,7 +216,7 @@ public class OppslagstjenesteClient {
                 }
                 return new FileSystemResource(tmp);
             } catch (IOException ex) {
-                Logger.getLogger(OppslagstjenesteClient.class.getName()).log(Level.SEVERE, "Can't read keystore", ex);
+                logger.error("Can't read keystore", ex);
             }
             return null;
         }
