@@ -26,7 +26,6 @@ public class LookupParameters {
     }
 
     public static LookupParameters lookup(String identifier) {
-        final LookupParameters lookupParameters = new LookupParameters(identifier);
-        return lookupParameters;
+        return new LookupParameters(identifier);
     }
 }
