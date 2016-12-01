@@ -18,6 +18,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.ws.WebServiceMessage;
 import org.springframework.ws.client.core.WebServiceMessageCallback;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.client.support.interceptor.ClientInterceptor;
@@ -32,6 +33,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -49,6 +51,12 @@ public class OppslagstjenesteClient {
         this.conf = configuration;
     }
 
+    /**
+     * Brukes til å hente parametre til sikker digital post forsendelse
+     *
+     * @param lookupParameters parametre til KRR oppslaget, dvs. personnummeret og virksomhetens organisasjonsnummer
+     * @return parametre for å sende sikker digital post
+     */
     public KontaktInfo hentKontaktInformasjon(LookupParameters lookupParameters) {
         final HentPersonerForespoersel hentPersonerForespoersel = HentPersonerForespoersel.builder()
                 .addInformasjonsbehov(Informasjonsbehov.KONTAKTINFO, Informasjonsbehov.SIKKER_DIGITAL_POST, Informasjonsbehov.SERTIFIKAT, Informasjonsbehov.VARSLINGS_STATUS)
@@ -57,18 +65,53 @@ public class OppslagstjenesteClient {
 
         WebServiceTemplate template = createWebServiceTemplate(HentPersonerRespons.class.getPackage().getName());
 
-        WebServiceMessageCallback callback = conf.isPaaVegneAvEnabled() ? noopCallback -> { } : addPaaVegneAvToSoapHeader(lookupParameters.getClientOrgnr());
+        WebServiceMessageCallback callback;
+        if (conf.isPaaVegneAvEnabled()) {
+            callback = new SoapHeaderCallbackHandler(lookupParameters.getClientOrgnr()); // must be added in production
+        } else {
+            callback = noopCallback -> {}; // only to be used in test/development.
+        }
         final HentPersonerRespons hentPersonerRespons = (HentPersonerRespons) template.marshalSendAndReceive(conf.url, hentPersonerForespoersel, callback);
 
         return KontaktInfo.from(hentPersonerRespons);
 
     }
 
-    private WebServiceMessageCallback addPaaVegneAvToSoapHeader(String orgnumber) {
-        Oppslagstjenesten oppslagstjenesten = new Oppslagstjenesten();
-        oppslagstjenesten.setPaaVegneAv(orgnumber);
-        return webServiceMessage -> {
-            SoapMessage soapMessage = (SoapMessage) webServiceMessage;
+    /**
+     * Tjenesten kan brukes for å sende forsendelser av brev til mottakere som har reservert seg eller ikke registrert/oppdatert sin kontaktinformasjon.
+     *
+     * @param lookupParameters inneholder organisasjonsnummeret til virksomheten man gjør oppslag på vegne av
+     * @return parametre for å sende melding til printtjenesten
+     */
+    public PrintProviderDetails getPrintProviderDetails(LookupParameters lookupParameters) {
+        HentPrintSertifikatForespoersel request = new HentPrintSertifikatForespoersel();
+        WebServiceTemplate template = createWebServiceTemplate(HentPrintSertifikatRespons.class.getPackage().getName());
+        WebServiceMessageCallback callback;
+        if (conf.isPaaVegneAvEnabled()) {
+            callback = new SoapHeaderCallbackHandler(lookupParameters.getClientOrgnr());
+        } else {
+            callback = noopCallback -> {}; // only needed during development/test.
+        }
+        HentPrintSertifikatRespons response = (HentPrintSertifikatRespons) template.marshalSendAndReceive(conf.url, request, callback);
+
+        return PrintProviderDetails.from(response);
+    }
+
+    /**
+     * Callback to be used with Spring WS template to add PaaVegneAv element to SOAP header
+     */
+    private static class SoapHeaderCallbackHandler implements WebServiceMessageCallback{
+        private final String orgnumber;
+
+        private SoapHeaderCallbackHandler(String orgnumber) {
+            this.orgnumber = orgnumber;
+        }
+
+        @Override
+        public void doWithMessage(WebServiceMessage message) throws IOException, TransformerException {
+            Oppslagstjenesten oppslagstjenesten = new Oppslagstjenesten();
+            oppslagstjenesten.setPaaVegneAv(orgnumber);
+            SoapMessage soapMessage = (SoapMessage) message;
             SoapHeader soapHeader = soapMessage.getSoapHeader();
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
             final Transformer transformer = transformerFactory.newTransformer();
@@ -79,20 +122,7 @@ public class OppslagstjenesteClient {
                 String m = String.format("Failed to add paa vegne av oppslag for %s", orgnumber);
                 throw new OppslagstjenesteException(m, e);
             }
-        };
-    }
-
-    /**
-     *  Tjenesten kan brukes for å sende forsendelser av brev til mottakere som har reservert seg eller ikke registrert/oppdatert sin kontaktinformasjon.
-     */
-    public PrintProviderDetails getPrintProviderDetails(String orgnumber) {
-        HentPrintSertifikatForespoersel request = new HentPrintSertifikatForespoersel();
-        WebServiceTemplate template = createWebServiceTemplate(HentPrintSertifikatRespons.class.getPackage().getName());
-
-        WebServiceMessageCallback callback = conf.isPaaVegneAvEnabled() ? emptyCallback -> { } : addPaaVegneAvToSoapHeader(orgnumber);
-        HentPrintSertifikatRespons response = (HentPrintSertifikatRespons) template.marshalSendAndReceive(conf.url, request, callback);
-
-        return PrintProviderDetails.from(response);
+        }
     }
 
     private WebServiceTemplate createWebServiceTemplate(String contextPath) {

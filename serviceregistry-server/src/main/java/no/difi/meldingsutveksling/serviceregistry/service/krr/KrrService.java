@@ -29,7 +29,7 @@ public class KrrService {
 
         KontaktInfo kontaktInfo = client.hentKontaktInformasjon(lookupParameters);
         if (kontaktInfo.canReceiveDigitalPost() || !kontaktInfo.hasMailbox()) {
-            kontaktInfo.setPrintDetails(client.getPrintProviderDetails(lookupParameters.getClientOrgnr()));
+            kontaktInfo.setPrintDetails(client.getPrintProviderDetails(lookupParameters));
         }
         return kontaktInfo;
     }
