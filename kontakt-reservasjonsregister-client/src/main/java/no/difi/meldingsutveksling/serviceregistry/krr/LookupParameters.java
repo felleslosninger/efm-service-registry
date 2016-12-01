@@ -24,4 +24,9 @@ public class LookupParameters {
         setClientOrgnr(clientOrgnr);
         return this;
     }
+
+    public static LookupParameters lookup(String identifier) {
+        final LookupParameters lookupParameters = new LookupParameters(identifier);
+        return lookupParameters;
+    }
 }

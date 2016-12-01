@@ -5,7 +5,6 @@ import no.difi.meldingsutveksling.ptp.PostAddress;
 import no.difi.meldingsutveksling.ptp.Street;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
-import no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
@@ -19,6 +18,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 import java.security.cert.Certificate;
+
+import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
 
 /**
  * Factory method class to create Service Records based on lookup endpoint urls and certificates corresponding to those services
@@ -81,9 +82,6 @@ public class ServiceRecordFactory {
         return new SikkerDigitalPostServiceRecord(properties, kontaktInfo, ServiceIdentifier.DPI, identifier, postAddress, postAddress);
     }
 
-    private LookupParameters lookup(String identifier) {
-        final LookupParameters lookupParameters = new LookupParameters(identifier);
-        return lookupParameters;
-    }
+
 
 }
