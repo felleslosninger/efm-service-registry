@@ -19,6 +19,8 @@ import org.springframework.stereotype.Component;
 
 import java.security.cert.Certificate;
 
+import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
+
 /**
  * Factory method class to create Service Records based on lookup endpoint urls and certificates corresponding to those services
  */
@@ -73,10 +75,13 @@ public class ServiceRecordFactory {
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
-    public ServiceRecord createSikkerDigitalPostRecord(String identifier) {
-        final KontaktInfo kontaktInfo = krrService.getCitizenInfo(identifier);
+    public ServiceRecord createSikkerDigitalPostRecord(String identifier, String clientOrgnr) {
+
+        final KontaktInfo kontaktInfo = krrService.getCitizenInfo(lookup(identifier).onBehalfOf(clientOrgnr));
         PostAddress postAddress = new PostAddress("DIFI", new Street("Grev Wedels plass 9", "", "", ""), "0151", "Oslo", "Norway");
         return new SikkerDigitalPostServiceRecord(properties, kontaktInfo, ServiceIdentifier.DPI, identifier, postAddress, postAddress);
     }
+
+
 
 }
