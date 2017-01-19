@@ -233,8 +233,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-        <dependency>
+        <!-- <dependency>
             <groupId>no.difi.vefa</groupId>
+            <artifactId>peppol-lookup</artifactId>
+        </dependency> -->
+        <dependency>
+            <groupId>com.github.difi.vefa-peppol</groupId>
             <artifactId>peppol-lookup</artifactId>
         </dependency>
         <dependency>
