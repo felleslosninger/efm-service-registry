@@ -6,19 +6,18 @@ import no.difi.vefa.peppol.common.lang.EndpointNotFoundException;
 import no.difi.vefa.peppol.common.model.*;
 import no.difi.vefa.peppol.lookup.LookupClient;
 import no.difi.vefa.peppol.lookup.api.LookupException;
-
-import no.difi.vefa.peppol.security.api.PeppolSecurityException;
+import no.difi.vefa.peppol.security.lang.PeppolSecurityException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * See configuraion beans for beans that might be injected as LookupClient and TrasnportProfile
+ * See configuraion beans for beans that might be injected as LookupClient and TransportProfile
  */
 @Component
 public class ELMALookupService {
 
-    private static final ProcessIdentifier PROCESS_IDENTIFIER = new ProcessIdentifier("urn:www.difi.no:profile:meldingsutveksling:ver1.0");
-    private static final DocumentTypeIdentifier DOCUMENT_IDENTIFIER = new DocumentTypeIdentifier("urn:no:difi:meldingsuveksling:xsd::Melding##urn:www.difi.no:meldingsutveksling:melding:1.0:extended:urn:www.difi.no:encoded:aes-zip:1.0::1.0");
+    private static final ProcessIdentifier PROCESS_IDENTIFIER = ProcessIdentifier.of("urn:www.difi.no:profile:meldingsutveksling:ver1.0");
+    private static final DocumentTypeIdentifier DOCUMENT_IDENTIFIER = DocumentTypeIdentifier.of("urn:no:difi:meldingsuveksling:xsd::Melding##urn:www.difi.no:meldingsutveksling:melding:1.0:extended:urn:www.difi.no:encoded:aes-zip:1.0::1.0");
 
     private LookupClient lookupClient;
     private TransportProfile transportProfile;
@@ -31,7 +30,7 @@ public class ELMALookupService {
 
     public Endpoint lookup(String organisationNumber) {
         try {
-            return lookupClient.getEndpoint(new ParticipantIdentifier(organisationNumber),
+            return lookupClient.getEndpoint(ParticipantIdentifier.of(organisationNumber),
                     DOCUMENT_IDENTIFIER,
                     PROCESS_IDENTIFIER,
                     transportProfile);

@@ -1,6 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
@@ -58,7 +59,7 @@ public class ServiceRecordTests {
     public void testShouldGetEndPointFromEDUServiceRecord() throws LookupException, EndpointNotFoundException {
         // The EDURecord should lookup the Endpoint Using ELMA
         eduServiceRecord.setOrganisationNumber(ORGNR);
-        when(elmaLookupService.lookup("9908:" + ORGNR)).thenReturn(new Endpoint(null, null, ENDPOINT_URL, null));
+        when(elmaLookupService.lookup("9908:" + ORGNR)).thenReturn(Endpoint.of(null, URI.create(ENDPOINT_URL), null));
         assertEquals(ENDPOINT_URL, eduServiceRecord.getEndPointURL());
     }
 

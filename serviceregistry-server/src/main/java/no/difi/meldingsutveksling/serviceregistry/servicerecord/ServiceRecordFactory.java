@@ -57,7 +57,7 @@ public class ServiceRecordFactory {
         String finalOrgNumber = ksLookup.mapOrganizationNumber(orgnr);
         Endpoint ep = elmaLookupService.lookup(NORWAY_PREFIX + finalOrgNumber);
         String pemCertificate = lookupPemCertificate(finalOrgNumber);
-        return new EDUServiceRecord(properties, pemCertificate, ep.getAddress(), orgnr);
+        return new EDUServiceRecord(properties, pemCertificate, ep.getAddress().toString(), orgnr);
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpv.read')")
@@ -81,7 +81,4 @@ public class ServiceRecordFactory {
         PostAddress postAddress = new PostAddress("DIFI", new Street("Grev Wedels plass 9", "", "", ""), "0151", "Oslo", "Norway");
         return new SikkerDigitalPostServiceRecord(properties, kontaktInfo, ServiceIdentifier.DPI, identifier, postAddress, postAddress);
     }
-
-
-
 }
