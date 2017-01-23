@@ -16,8 +16,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class ELMALookupService {
 
-    private static final ProcessIdentifier PROCESS_IDENTIFIER = ProcessIdentifier.of("urn:www.difi.no:profile:meldingsutveksling:ver1.0");
-    private static final DocumentTypeIdentifier DOCUMENT_IDENTIFIER = DocumentTypeIdentifier.of("urn:no:difi:meldingsuveksling:xsd::Melding##urn:www.difi.no:meldingsutveksling:melding:1.0:extended:urn:www.difi.no:encoded:aes-zip:1.0::1.0");
+    private static final ProcessIdentifier PROCESS_IDENTIFIER = ProcessIdentifier.of("urn:www.difi.no:profile:staging-meldingsutveksling:ver1.0");
+    private static final DocumentTypeIdentifier DOCUMENT_IDENTIFIER = DocumentTypeIdentifier.of("urn:no:difi:staging-meldingsuveksling:xsd::Melding##urn:www.difi.no:staging-meldingsutveksling:melding:1.0:extended:urn:www.difi.no:encoded:aes-zip:1.0::1.0");
 
     private LookupClient lookupClient;
     private TransportProfile transportProfile;
