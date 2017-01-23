@@ -7,13 +7,12 @@ import no.difi.vefa.peppol.common.lang.EndpointNotFoundException;
 import no.difi.vefa.peppol.common.model.*;
 import no.difi.vefa.peppol.lookup.LookupClient;
 import no.difi.vefa.peppol.lookup.api.LookupException;
-
-import no.difi.vefa.peppol.security.api.PeppolSecurityException;
+import no.difi.vefa.peppol.security.lang.PeppolSecurityException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * See configuraion beans for beans that might be injected as LookupClient and TrasnportProfile
+ * See configuraion beans for beans that might be injected as LookupClient and TransportProfile
  */
 @Component
 public class ELMALookupService {
@@ -32,9 +31,9 @@ public class ELMALookupService {
 
     public Endpoint lookup(String organisationNumber) {
         try {
-            return lookupClient.getEndpoint(new ParticipantIdentifier(organisationNumber),
-                    new DocumentTypeIdentifier(props.getElma().getDocumentTypeIdentifier()),
-                    new ProcessIdentifier(props.getElma().getProcessIdentifier()),
+            return lookupClient.getEndpoint(ParticipantIdentifier.of(organisationNumber),
+                    DocumentTypeIdentifier.of(props.getElma().getDocumentTypeIdentifier()),
+                    ProcessIdentifier.of(props.getElma().getProcessIdentifier()),
                     transportProfile);
         } catch (PeppolSecurityException e) {
             throw new ServiceRegistryException(e);

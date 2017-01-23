@@ -1,10 +1,12 @@
 package no.difi.meldingsutveksling.serviceregistry.service.elma;
 
+import no.difi.vefa.peppol.common.lang.PeppolLoadingException;
 import no.difi.vefa.peppol.common.model.TransportProfile;
 import no.difi.vefa.peppol.lookup.LookupClient;
 import no.difi.vefa.peppol.lookup.LookupClientBuilder;
-import no.difi.vefa.peppol.lookup.locator.BusdoxLocator;
-import no.difi.vefa.peppol.lookup.locator.DynamicLocator;
+import no.difi.vefa.peppol.lookup.locator.BdxlLocator;
+import no.difi.vefa.peppol.mode.Mode;
+import no.difi.vefa.peppol.security.util.EmptyCertificateValidator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -13,7 +15,7 @@ import org.springframework.context.annotation.Profile;
 @Profile({"itest", "systest"})
 public class ElmaSystestConfig {
     private static final String ELMA_ENDPOINT_KEY = "bdxr-transport-altinn-systemtest";
-    private static final TransportProfile TRANSPORT_PROFILE_ALTINN_SYSTEST = new TransportProfile(ELMA_ENDPOINT_KEY);
+    private static final TransportProfile TRANSPORT_PROFILE_ALTINN_SYSTEST = TransportProfile.of(ELMA_ENDPOINT_KEY);
 
     @Bean
     public TransportProfile getTransportProfile() {
@@ -21,11 +23,11 @@ public class ElmaSystestConfig {
     }
 
     @Bean
-    public LookupClient getElmaLookupClient() {
+    public LookupClient getElmaLookupClient() throws PeppolLoadingException {
+        Mode mode = Mode.of(Mode.TEST);
         return LookupClientBuilder.forTest()
-                .locator(new BusdoxLocator(DynamicLocator.OPENPEPPOL_TEST))
-                .endpointCertificateValidator(null)
-                .providerCertificateValidator(null)
+                .locator(mode.initiate(BdxlLocator.class))
+                .certificateValidator(EmptyCertificateValidator.INSTANCE)
                 .build();
     }
 }

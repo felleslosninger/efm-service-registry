@@ -1,13 +1,14 @@
 package no.difi.meldingsutveksling.serviceregistry.service.virksert;
 
-import java.security.cert.Certificate;
-import javax.annotation.PostConstruct;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.virksert.client.VirksertClient;
 import no.difi.virksert.client.VirksertClientBuilder;
 import no.difi.virksert.client.VirksertClientException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import java.security.cert.Certificate;
 
 @Component
 public class VirkSertService {
@@ -27,7 +28,6 @@ public class VirkSertService {
     @PostConstruct
     public void init() {
         virksertClient = VirksertClientBuilder.newInstance()
-                .setScope("no.difi.meldingsutveksling.serviceregistry.service.virksert.DemoScope")
                 .setUri(properties.getAr().getEndpointURL().toString()).build();
     }
 
