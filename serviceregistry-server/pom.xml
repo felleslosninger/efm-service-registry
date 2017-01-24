@@ -35,10 +35,10 @@
                         <artifactId>docker-maven-plugin</artifactId>
                         <version>0.4.11</version>
                         <configuration>
-                            <imageName>${docker.registry}/${project.artifactId}:${project.parent.version}</imageName>
+                            <imageName>${docker.registry}/${project.artifactId}:latest</imageName>
                             <dockerDirectory>${project.basedir}/src/main/docker</dockerDirectory>
                             <imageTags>
-                                <imageTag>latest</imageTag>
+                                <imageTag>${project.parent.version}</imageTag>
                             </imageTags>
                             <resources>
                                 <resource>
@@ -54,6 +54,7 @@
                                 <phase>package</phase>
                                 <goals>
                                     <goal>build</goal>
+                                    <goal>tag</goal>
                                     <goal>push</goal>
                                 </goals>
                             </execution>
