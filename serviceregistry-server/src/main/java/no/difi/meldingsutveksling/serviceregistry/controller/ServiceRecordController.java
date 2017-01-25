@@ -5,6 +5,7 @@ import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
+import no.difi.meldingsutveksling.serviceregistry.model.NotificationObligation;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
 import org.jboss.logging.MDC;
@@ -15,18 +16,12 @@ import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.usesFormidlingstjenesten;
-import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.usesPostTilVirksomhet;
-import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.usesSikkerDigitalPost;
+import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.*;
 
 @RequestMapping("/identifier")
 @ExposesResourceFor(EntityResource.class)
@@ -48,16 +43,22 @@ public class ServiceRecordController {
         this.serviceRecordFactory = serviceRecordFactory;
     }
 
+    @InitBinder
+    protected void initBinders(WebDataBinder binder) {
+        binder.registerCustomEditor(NotificationObligation.class, new NotificationEditor());
+    }
+
     /**
      * Used to retrieve information needed to send a message to an entity (organization or a person) having the provided
      * identifier
      *
      * @param identifier of the organization/person to receive a message
+     * @param notification determines service record based on the recipient being notifiable
      * @return JSON object with information needed to send a message
      */
     @RequestMapping("/{identifier}")
     @ResponseBody
-    public ResponseEntity entity(@PathVariable("identifier") String identifier, Authentication auth) {
+    public ResponseEntity entity(@PathVariable("identifier") String identifier, @RequestParam(name="notification", defaultValue="NOT_OBLIGATED") NotificationObligation notification, Authentication auth) {
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
         EntityInfo entityInfo = entityService.getEntityInfo(identifier);
