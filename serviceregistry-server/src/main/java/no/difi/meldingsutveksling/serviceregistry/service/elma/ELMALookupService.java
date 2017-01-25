@@ -1,6 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.service.elma;
 
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
+import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.vefa.peppol.common.lang.EndpointNotFoundException;
 import no.difi.vefa.peppol.common.model.*;
@@ -16,8 +17,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class ELMALookupService {
 
-    private static final ProcessIdentifier PROCESS_IDENTIFIER = ProcessIdentifier.of("urn:www.difi.no:profile:staging-meldingsutveksling:ver1.0");
-    private static final DocumentTypeIdentifier DOCUMENT_IDENTIFIER = DocumentTypeIdentifier.of("urn:no:difi:staging-meldingsuveksling:xsd::Melding##urn:www.difi.no:staging-meldingsutveksling:melding:1.0:extended:urn:www.difi.no:encoded:aes-zip:1.0::1.0");
+    @Autowired
+    private ServiceregistryProperties props;
 
     private LookupClient lookupClient;
     private TransportProfile transportProfile;
@@ -31,8 +32,8 @@ public class ELMALookupService {
     public Endpoint lookup(String organisationNumber) {
         try {
             return lookupClient.getEndpoint(ParticipantIdentifier.of(organisationNumber),
-                    DOCUMENT_IDENTIFIER,
-                    PROCESS_IDENTIFIER,
+                    DocumentTypeIdentifier.of(props.getElma().getDocumentTypeIdentifier()),
+                    ProcessIdentifier.of(props.getElma().getProcessIdentifier()),
                     transportProfile);
         } catch (PeppolSecurityException e) {
             throw new ServiceRegistryException(e);
