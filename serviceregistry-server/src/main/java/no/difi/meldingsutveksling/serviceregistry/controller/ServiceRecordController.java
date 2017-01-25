@@ -1,11 +1,11 @@
 package no.difi.meldingsutveksling.serviceregistry.controller;
 
+import no.difi.meldingsutveksling.NotificationObligation;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
-import no.difi.meldingsutveksling.serviceregistry.model.NotificationObligation;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
 import org.jboss.logging.MDC;
@@ -68,7 +68,7 @@ public class ServiceRecordController {
         }
 
         if (usesSikkerDigitalPost().test(entityInfo)) {
-            entity.setServiceRecord(serviceRecordFactory.createSikkerDigitalPostRecord(identifier, clientOrgnr));
+            entity.setServiceRecord(serviceRecordFactory.createSikkerDigitalPostRecord(identifier, clientOrgnr, notification));
         }
         if (usesFormidlingstjenesten().test(entityInfo)) {
             entity.setServiceRecord(serviceRecordFactory.createEduServiceRecord(identifier));

@@ -1,6 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.controller;
 
-import no.difi.meldingsutveksling.serviceregistry.model.NotificationObligation;
+import no.difi.meldingsutveksling.NotificationObligation;
 
 import java.beans.PropertyEditorSupport;
 
