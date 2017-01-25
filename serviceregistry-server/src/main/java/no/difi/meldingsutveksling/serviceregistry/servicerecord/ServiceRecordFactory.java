@@ -60,8 +60,8 @@ public class ServiceRecordFactory {
         Endpoint ep = elmaLookupService.lookup(NORWAY_PREFIX + finalOrgNumber);
         String adr = ep.getAddress().toString();
         if (adr.contains("#")) {
-            String uri = adr.substring(0, adr.indexOf("#"));
-            String[] codes = adr.substring(adr.indexOf("#")+1).split("-");
+            String uri = adr.substring(0, adr.indexOf('#'));
+            String[] codes = adr.substring(adr.indexOf('#')+1).split("-");
             String serviceCode = codes[0];
             String serviceEditionCode = codes[1];
             return new EDUServiceRecord(properties, pemCertificate, uri, serviceCode, serviceEditionCode, orgnr);
