@@ -61,7 +61,6 @@ public class ServiceRecordController {
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
         EntityInfo entityInfo = entityService.getEntityInfo(identifier);
-        // TODO: send clientOrgnr videre til KRR
         String clientOrgnr = auth == null ? null : (String) auth.getPrincipal();
         if (entityInfo == null) {
             throw new EntityNotFoundException("Could not find entity for identifier: " + identifier);

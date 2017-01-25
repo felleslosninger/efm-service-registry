@@ -10,9 +10,20 @@ import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier
  */
 public class EDUServiceRecord extends ServiceRecord {
 
+    private String serviceCode;
+    private String serviceEditionCode;
+
     EDUServiceRecord(ServiceregistryProperties properties, String pemCertificate, String endpoint, String orgnr) {
         super(properties, pemCertificate, EDU, orgnr);
         this.endpointUrl = endpoint;
+    }
+
+    EDUServiceRecord(ServiceregistryProperties properties, String pemCertificate, String endpoint, String serviceCode,
+                     String serviceEditionCode, String orgnr) {
+        super(properties, pemCertificate, EDU, orgnr);
+        this.endpointUrl = endpoint;
+        this.serviceCode = serviceCode;
+        this.serviceEditionCode = serviceEditionCode;
     }
 
     @Override
@@ -23,5 +34,21 @@ public class EDUServiceRecord extends ServiceRecord {
     @Override
     public String getOrganisationNumber() {
         return organisationNumber;
+    }
+
+    public String getServiceCode() {
+        return serviceCode;
+    }
+
+    public void setServiceCode(String serviceCode) {
+        this.serviceCode = serviceCode;
+    }
+
+    public String getServiceEditionCode() {
+        return serviceEditionCode;
+    }
+
+    public void setServiceEditionCode(String serviceEditionCode) {
+        this.serviceEditionCode = serviceEditionCode;
     }
 }
