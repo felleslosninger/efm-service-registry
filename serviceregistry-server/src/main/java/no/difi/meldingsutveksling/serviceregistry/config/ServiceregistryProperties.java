@@ -18,17 +18,13 @@ import java.net.URL;
 public class ServiceregistryProperties {
 
     private DigitalPostInnbygger dpi;
-
     private KontaktOgReservasjonsRegister krr;
-
     private Brønnøysundregistrene brreg;
-
     private PostVirksomhet dpv;
-
     private Adresseregister ar;
-
     private Auth auth;
     private FeatureToggle feature;
+    private ELMA elma;
 
     public Auth getAuth() {
         return auth;
@@ -84,6 +80,36 @@ public class ServiceregistryProperties {
 
     public void setFeature(FeatureToggle feature) {
         this.feature = feature;
+    }
+
+    public ELMA getElma() {
+        return elma;
+    }
+
+    public void setElma(ELMA elma) {
+        this.elma = elma;
+    }
+
+    public static class ELMA {
+
+        private String processIdentifier;
+        private String documentTypeIdentifier;
+
+        public String getProcessIdentifier() {
+            return processIdentifier;
+        }
+
+        public void setProcessIdentifier(String processIdentifier) {
+            this.processIdentifier = processIdentifier;
+        }
+
+        public String getDocumentTypeIdentifier() {
+            return documentTypeIdentifier;
+        }
+
+        public void setDocumentTypeIdentifier(String documentTypeIdentifier) {
+            this.documentTypeIdentifier = documentTypeIdentifier;
+        }
     }
 
     public static class Auth {
