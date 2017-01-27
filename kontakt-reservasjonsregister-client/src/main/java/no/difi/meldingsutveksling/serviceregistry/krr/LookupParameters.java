@@ -44,4 +44,8 @@ public class LookupParameters {
     public NotificationObligation getNotificationObligation() {
         return notificationObligation;
     }
+
+    public boolean isObligatedToBeNotified() {
+        return notificationObligation == NotificationObligation.OBLIGATED;
+    }
 }

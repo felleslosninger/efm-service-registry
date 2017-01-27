@@ -53,12 +53,12 @@ public class ServiceRecordController {
      * identifier
      *
      * @param identifier of the organization/person to receive a message
-     * @param notification determines service record based on the recipient being notifiable
+     * @param obligation determines service record based on the recipient being notifiable
      * @return JSON object with information needed to send a message
      */
     @RequestMapping("/{identifier}")
     @ResponseBody
-    public ResponseEntity entity(@PathVariable("identifier") String identifier, @RequestParam(name="notification", defaultValue="NOT_OBLIGATED") NotificationObligation notification, Authentication auth) {
+    public ResponseEntity entity(@PathVariable("identifier") String identifier, @RequestParam(name="notification", defaultValue="NOT_OBLIGATED") NotificationObligation obligation, Authentication auth) {
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
         EntityInfo entityInfo = entityService.getEntityInfo(identifier);
@@ -68,7 +68,7 @@ public class ServiceRecordController {
         }
 
         if (usesSikkerDigitalPost().test(entityInfo)) {
-            entity.setServiceRecord(serviceRecordFactory.createSikkerDigitalPostRecord(identifier, clientOrgnr, notification));
+            entity.setServiceRecord(serviceRecordFactory.createSikkerDigitalPostRecord(identifier, clientOrgnr, obligation));
         }
         if (usesFormidlingstjenesten().test(entityInfo)) {
             entity.setServiceRecord(serviceRecordFactory.createEduServiceRecord(identifier));

@@ -88,7 +88,10 @@ public class ServiceRecordFactory {
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
     public ServiceRecord createSikkerDigitalPostRecord(String identifier, String clientOrgnr, NotificationObligation obligation) {
 
-        final KontaktInfo kontaktInfo = krrService.getCitizenInfo(lookup(identifier).onBehalfOf(clientOrgnr).require(obligation));
+        final KontaktInfo kontaktInfo = krrService.getCitizenInfo(
+                lookup(identifier)
+                        .onBehalfOf(clientOrgnr)
+                        .require(obligation));
         PostAddress postAddress = new PostAddress("DIFI", new Street("Grev Wedels plass 9", "", "", ""), "0151", "Oslo", "Norway");
         return new SikkerDigitalPostServiceRecord(properties, kontaktInfo, ServiceIdentifier.DPI, identifier, postAddress, postAddress);
     }

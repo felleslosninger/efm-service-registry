@@ -73,7 +73,7 @@ public class OppslagstjenesteClient {
         }
         final HentPersonerRespons hentPersonerRespons = (HentPersonerRespons) template.marshalSendAndReceive(conf.url, hentPersonerForespoersel, callback);
 
-        return KontaktInfo.from(hentPersonerRespons);
+        return KontaktInfo.from(hentPersonerRespons).withObligatedToBeNotified(lookupParameters.isObligatedToBeNotified());
 
     }
 
@@ -178,17 +178,17 @@ public class OppslagstjenesteClient {
             cryptoFactoryBean.setKeyStorePassword(password);
             cryptoFactoryBean.setDefaultX509Alias(alias);
         } catch (IOException e) {
-            throw new RuntimeException("Unable to create security interceptor due to problems with keystore file...", e);
+            throw new OppslagstjenesteException("Unable to create security interceptor due to problems with keystore file...", e);
         }
         try {
             cryptoFactoryBean.afterPropertiesSet();
         } catch (Exception e) {
-            throw new RuntimeException("ERROR", e);
+            throw new OppslagstjenesteException("ERROR", e);
         }
         try {
             return cryptoFactoryBean.getObject();
         } catch (Exception e) {
-            throw new RuntimeException("Could not create CryptoFactoryBean", e);
+            throw new OppslagstjenesteException("Could not create CryptoFactoryBean", e);
         }
 
     }
@@ -224,7 +224,7 @@ public class OppslagstjenesteClient {
             this.serverJksLocation = serverJksLocation;
         }
 
-        public Resource getClientJksLocation() {
+        Resource getClientJksLocation() {
             if (clientJksLocation instanceof FileSystemResource) {
                 return clientJksLocation;
             }
@@ -241,7 +241,7 @@ public class OppslagstjenesteClient {
             return null;
         }
 
-        public Resource getServerJksLocation() {
+        Resource getServerJksLocation() {
             if (serverJksLocation instanceof FileSystemResource) {
                 return serverJksLocation;
             }
@@ -258,7 +258,7 @@ public class OppslagstjenesteClient {
             return null;
         }
 
-        public boolean isPaaVegneAvEnabled() {
+        boolean isPaaVegneAvEnabled() {
             return paaVegneAvEnabled;
         }
 
