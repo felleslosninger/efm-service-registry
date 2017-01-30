@@ -1,5 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
+import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.ptp.KontaktInfo;
 import no.difi.meldingsutveksling.ptp.PostAddress;
 import no.difi.meldingsutveksling.ptp.Street;
@@ -85,9 +86,12 @@ public class ServiceRecordFactory {
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
-    public ServiceRecord createSikkerDigitalPostRecord(String identifier, String clientOrgnr) {
+    public ServiceRecord createSikkerDigitalPostRecord(String identifier, String clientOrgnr, Notification obligation) {
 
-        final KontaktInfo kontaktInfo = krrService.getCitizenInfo(lookup(identifier).onBehalfOf(clientOrgnr));
+        final KontaktInfo kontaktInfo = krrService.getCitizenInfo(
+                lookup(identifier)
+                        .onBehalfOf(clientOrgnr)
+                        .require(obligation));
         PostAddress postAddress = new PostAddress("DIFI", new Street("Grev Wedels plass 9", "", "", ""), "0151", "Oslo", "Norway");
         return new SikkerDigitalPostServiceRecord(properties, kontaktInfo, ServiceIdentifier.DPI, identifier, postAddress, postAddress);
     }

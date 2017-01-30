@@ -77,9 +77,4 @@ public class KontaktInfo {
     public void setPrintDetails(PrintProviderDetails printDetails) {
         this.printDetails = printDetails;
     }
-
-    public boolean hasMailbox() {
-        return providerDetails.hasMailbox();
-    }
-
 }

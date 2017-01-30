@@ -255,6 +255,23 @@
             <groupId>no.difi.virksert</groupId>
             <artifactId>virksert-client</artifactId>
         </dependency>
+        <dependency>
+            <groupId>no.difi.meldingsutveksling</groupId>
+            <artifactId>service-registry-domain</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.spockframework</groupId>
+            <artifactId>spock-core</artifactId>
+            <version>1.0-groovy-2.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib-nodep</artifactId>
+            <version>3.1</version>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
