@@ -1,11 +1,11 @@
 package no.difi.meldingsutveksling.serviceregistry.krr;
 
-import no.difi.meldingsutveksling.NotificationObligation;
+import no.difi.meldingsutveksling.Notification;
 
 public class LookupParameters {
     private final String identifier;
     private String clientOrgnr;
-    private NotificationObligation notificationObligation;
+    private Notification notification;
 
     private LookupParameters(String identifier) {
         this.identifier = identifier;
@@ -32,20 +32,20 @@ public class LookupParameters {
         return new LookupParameters(identifier);
     }
 
-    public LookupParameters require(NotificationObligation obligation) {
-        setNotificationObligation(obligation);
+    public LookupParameters require(Notification obligation) {
+        setNotification(obligation);
         return this;
     }
 
-    private void setNotificationObligation(NotificationObligation notificationObligation) {
-        this.notificationObligation = notificationObligation;
+    private void setNotification(Notification notification) {
+        this.notification = notification;
     }
 
-    public NotificationObligation getNotificationObligation() {
-        return notificationObligation;
+    public Notification getNotification() {
+        return notification;
     }
 
     public boolean isObligatedToBeNotified() {
-        return notificationObligation == NotificationObligation.OBLIGATED;
+        return notification == Notification.OBLIGATED;
     }
 }

@@ -28,10 +28,11 @@ public class KrrService {
     public KontaktInfo getCitizenInfo(LookupParameters lookupParameters) {
 
         KontaktInfo kontaktInfo = client.hentKontaktInformasjon(lookupParameters);
-        if (!kontaktInfo.canReceiveDigitalPost() ||
-                (!kontaktInfo.isNotifiable() || lookupParameters.isObligatedToBeNotified())) {
-            kontaktInfo.setPrintDetails(client.getPrintProviderDetails(lookupParameters));
+        if (kontaktInfo.canReceiveDigitalPost() &&
+                (kontaktInfo.isNotifiable() || !lookupParameters.isObligatedToBeNotified())) {
+            return kontaktInfo;
         }
+        kontaktInfo.setPrintDetails(client.getPrintProviderDetails(lookupParameters));
         return kontaktInfo;
     }
 

@@ -6,8 +6,8 @@ import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperti
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import static no.difi.meldingsutveksling.NotificationObligation.NOT_OBLIGATED
-import static no.difi.meldingsutveksling.NotificationObligation.OBLIGATED
+import static no.difi.meldingsutveksling.Notification.NOT_OBLIGATED
+import static no.difi.meldingsutveksling.Notification.OBLIGATED
 import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup
 
 class KrrServiceTest extends Specification {
@@ -27,15 +27,18 @@ class KrrServiceTest extends Specification {
         kontaktInfo.canReceiveDigitalPost() >> true
         def lookupParameters = lookup(someIdentifier).require(notificationObligation)
         service.client.hentKontaktInformasjon(lookupParameters) >> kontaktInfo
+
         when:
         service.getCitizenInfo(lookupParameters)
+
         then:
         times * kontaktInfo.setPrintDetails(_)
+
         where:
         scenario                                                 | notificationObligation | isNotifiable | times
-        "cannot be notified but is obligated to be notified"     | OBLIGATED     | false        | 1
-        "can be notified but is not obligated to be notified"    | NOT_OBLIGATED | true         | 0
-        "can be notified but is not obligated to be notified"    | NOT_OBLIGATED | true         | 0
-        "cannot be notified and is not obligated to be notified" | OBLIGATED     | true         | 1
+        "cannot be notified and is obligated to be notified"     | OBLIGATED     | false        | 1
+        "can be notified and is not obligated to be notified"    | NOT_OBLIGATED | true         | 0
+        "cannot be notified and is not obligated to be notified" | NOT_OBLIGATED | false         | 0
+        "cannot be notified and is obligated to be notified" | OBLIGATED     | true         | 0
     }
 }

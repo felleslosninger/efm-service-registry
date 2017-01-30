@@ -1,6 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.controller;
 
-import no.difi.meldingsutveksling.NotificationObligation;
+import no.difi.meldingsutveksling.Notification;
 
 import java.beans.PropertyEditorSupport;
 
@@ -10,6 +10,6 @@ import java.beans.PropertyEditorSupport;
 class NotificationEditor extends PropertyEditorSupport {
     @Override
     public void setAsText(String text) {
-        setValue(NotificationObligation.valueOf(text.toUpperCase()));
+        setValue(Notification.valueOf(text.toUpperCase()));
     }
 }

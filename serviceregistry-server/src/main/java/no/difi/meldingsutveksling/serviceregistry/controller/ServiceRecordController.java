@@ -1,6 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.controller;
 
-import no.difi.meldingsutveksling.NotificationObligation;
+import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
@@ -45,7 +45,7 @@ public class ServiceRecordController {
 
     @InitBinder
     protected void initBinders(WebDataBinder binder) {
-        binder.registerCustomEditor(NotificationObligation.class, new NotificationEditor());
+        binder.registerCustomEditor(Notification.class, new NotificationEditor());
     }
 
     /**
@@ -58,7 +58,7 @@ public class ServiceRecordController {
      */
     @RequestMapping("/{identifier}")
     @ResponseBody
-    public ResponseEntity entity(@PathVariable("identifier") String identifier, @RequestParam(name="notification", defaultValue="NOT_OBLIGATED") NotificationObligation obligation, Authentication auth) {
+    public ResponseEntity entity(@PathVariable("identifier") String identifier, @RequestParam(name="notification", defaultValue="NOT_OBLIGATED") Notification obligation, Authentication auth) {
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
         EntityInfo entityInfo = entityService.getEntityInfo(identifier);
