@@ -7,7 +7,6 @@ public class KontaktInfo {
     private final PersonKontaktInfoMapper.MailboxProvider providerDetails;
     private final PersonKontaktInfoMapper.PersonDetails personDetails;
     private PrintProviderDetails printDetails;
-    private boolean obligatedToBeNotified;
 
     KontaktInfo(PersonKontaktInfoMapper.MailboxProvider providerDetails, PersonKontaktInfoMapper.PersonDetails personDetails) {
         this.providerDetails = providerDetails;
@@ -77,14 +76,5 @@ public class KontaktInfo {
 
     public void setPrintDetails(PrintProviderDetails printDetails) {
         this.printDetails = printDetails;
-    }
-
-    public boolean hasMailbox() {
-        return providerDetails.hasMailbox();
-    }
-
-    KontaktInfo withObligatedToBeNotified(boolean obligatedToBeNotified) {
-        this.obligatedToBeNotified = obligatedToBeNotified;
-        return this;
     }
 }

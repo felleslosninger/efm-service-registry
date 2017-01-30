@@ -73,7 +73,7 @@ public class OppslagstjenesteClient {
         }
         final HentPersonerRespons hentPersonerRespons = (HentPersonerRespons) template.marshalSendAndReceive(conf.url, hentPersonerForespoersel, callback);
 
-        return KontaktInfo.from(hentPersonerRespons).withObligatedToBeNotified(lookupParameters.isObligatedToBeNotified());
+        return KontaktInfo.from(hentPersonerRespons);
 
     }
 
