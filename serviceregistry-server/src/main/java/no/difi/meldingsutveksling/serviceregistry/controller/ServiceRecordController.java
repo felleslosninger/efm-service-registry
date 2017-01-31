@@ -67,6 +67,9 @@ public class ServiceRecordController {
         }
 
         if (usesSikkerDigitalPost().test(entityInfo)) {
+            if (auth == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No authentication provided.");
+            }
             entity.setServiceRecord(serviceRecordFactory.createSikkerDigitalPostRecord(identifier, clientOrgnr));
         }
         if (usesFormidlingstjenesten().test(entityInfo)) {
