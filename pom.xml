@@ -4,7 +4,7 @@
 
     <groupId>no.difi.meldingsutveksling</groupId>
     <artifactId>serviceregistry-parent</artifactId>
-    <version>1.0.33-SNAPSHOT</version>
+    <version>1.0.35-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <scm>
@@ -65,6 +65,7 @@
     <modules>
         <module>serviceregistry-server</module>
         <module>kontakt-reservasjonsregister-client</module>
+        <module>domain</module>
     </modules>
 
 
