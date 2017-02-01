@@ -1,6 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.controller;
 
 import no.difi.meldingsutveksling.Notification;
+import no.difi.meldingsutveksling.logging.Audit;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
@@ -16,12 +17,14 @@ import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 
 import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.*;
+import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 
 @RequestMapping("/identifier")
 @ExposesResourceFor(EntityResource.class)
@@ -58,14 +61,27 @@ public class ServiceRecordController {
      */
     @RequestMapping("/{identifier}")
     @ResponseBody
-    public ResponseEntity entity(@PathVariable("identifier") String identifier, @RequestParam(name="notification", defaultValue="NOT_OBLIGATED") Notification obligation, Authentication auth) {
+    public ResponseEntity entity(
+            @PathVariable("identifier") String identifier,
+            @RequestParam(name="notification", defaultValue="NOT_OBLIGATED") Notification obligation,
+            Authentication auth,
+            HttpServletRequest request) {
+
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
         EntityInfo entityInfo = entityService.getEntityInfo(identifier);
-        String clientOrgnr = auth == null ? null : (String) auth.getPrincipal();
         if (entityInfo == null) {
             throw new EntityNotFoundException("Could not find entity for identifier: " + identifier);
         }
+
+        String clientOrgnr = auth == null ? null : (String) auth.getPrincipal();
+        if (clientOrgnr != null) {
+            String tokenValue = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
+            Audit.info("Authorized lookup request", markerFrom(request.getRemoteAddr(), clientOrgnr, tokenValue));
+        } else {
+            Audit.info("Unauthorized lookup request", markerFrom(request.getRemoteAddr()));
+        }
+
 
         if (usesSikkerDigitalPost().test(entityInfo)) {
             if (auth == null) {
