@@ -5,6 +5,8 @@ import net.logstash.logback.marker.Markers;
 
 public class SRMarkerFactory {
 
+    private SRMarkerFactory() {}
+
     private static final String REMOTE_IP = "remote_ip";
     private static final String CLIENT_ID = "client_id";
     private static final String AUTH_TOKEN = "auth_token";
