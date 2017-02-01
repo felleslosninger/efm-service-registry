@@ -86,13 +86,16 @@ public class ServiceRecordFactory {
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
-    public ServiceRecord createSikkerDigitalPostRecord(String identifier, String clientOrgnr, Notification obligation) {
+    public ServiceRecord createServiceRecordForCititzen(String identifier, String clientOrgnr, Notification obligation) {
 
         final KontaktInfo kontaktInfo = krrService.getCitizenInfo(
                 lookup(identifier)
                         .onBehalfOf(clientOrgnr)
                         .require(obligation));
         PostAddress postAddress = new PostAddress("DIFI", new Street("Grev Wedels plass 9", "", "", ""), "0151", "Oslo", "Norway");
+        if (!kontaktInfo.hasMailbox() && !kontaktInfo.isReservert()) {
+            return createPostVirksomhetServiceRecord(identifier);
+        }
         return new SikkerDigitalPostServiceRecord(properties, kontaktInfo, ServiceIdentifier.DPI, identifier, postAddress, postAddress);
     }
 }

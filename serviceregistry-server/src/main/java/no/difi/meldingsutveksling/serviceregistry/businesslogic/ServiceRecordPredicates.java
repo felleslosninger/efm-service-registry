@@ -38,7 +38,7 @@ public class ServiceRecordPredicates {
      * Predicate to test whether Sikker digital post is a valid service for sending messages
      * @return predicate that evaluates true if able to use sikker digital post
      */
-    public static Predicate<EntityInfo> usesSikkerDigitalPost() {
+    public static Predicate<EntityInfo> shouldCreateServiceRecordForCititzen() {
         return o -> isCitizen().test(o.getIdentifier());
     }
 

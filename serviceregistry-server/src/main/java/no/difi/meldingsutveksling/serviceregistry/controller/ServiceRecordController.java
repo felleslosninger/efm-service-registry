@@ -82,12 +82,11 @@ public class ServiceRecordController {
             Audit.info("Unauthorized lookup request", markerFrom(request.getRemoteAddr()));
         }
 
-
-        if (usesSikkerDigitalPost().test(entityInfo)) {
+        if (shouldCreateServiceRecordForCititzen().test(entityInfo)) {
             if (auth == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No authentication provided.");
             }
-            entity.setServiceRecord(serviceRecordFactory.createSikkerDigitalPostRecord(identifier, clientOrgnr, obligation));
+            entity.setServiceRecord(serviceRecordFactory.createServiceRecordForCititzen(identifier, clientOrgnr, obligation));
         }
         if (usesFormidlingstjenesten().test(entityInfo)) {
             entity.setServiceRecord(serviceRecordFactory.createEduServiceRecord(identifier));
