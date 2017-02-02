@@ -13,7 +13,6 @@ import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.ks.KSLookup;
-import no.difi.meldingsutveksling.serviceregistry.service.virksert.CertificateToString;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.vefa.peppol.common.model.Endpoint;
 import no.difi.virksert.client.VirksertClientException;
@@ -24,7 +23,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 import java.lang.invoke.MethodHandles;
-import java.security.cert.Certificate;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
 
@@ -63,8 +61,6 @@ public class ServiceRecordFactory {
     @PreAuthorize("#oauth2.hasScope('move/dpo.read')")
     public ServiceRecord createEduServiceRecord(String orgnr) {
         String finalOrgNumber = ksLookup.mapOrganizationNumber(orgnr);
-        String pemCertificate = lookupPemCertificate(finalOrgNumber);
-
         Endpoint ep;
         try {
             ep = elmaLookupService.lookup(NORWAY_PREFIX + finalOrgNumber);
@@ -74,6 +70,8 @@ public class ServiceRecordFactory {
 
             return createPostVirksomhetServiceRecord(orgnr);
         }
+        String pemCertificate = lookupPemCertificate(finalOrgNumber);
+
         String adr = ep.getAddress().toString();
         if (adr.contains("#")) {
             String uri = adr.substring(0, adr.indexOf('#'));
@@ -93,8 +91,7 @@ public class ServiceRecordFactory {
 
     private String lookupPemCertificate(String orgnumber) {
         try {
-            Certificate c = virksertService.getCertificate(orgnumber);
-            return CertificateToString.toString(c);
+            return virksertService.getCertificate(orgnumber);
         } catch (VirksertClientException e) {
             throw new CertificateNotFoundException(String.format("Unable to find certificate for: %s", orgnumber), e);
         }
