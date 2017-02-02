@@ -47,4 +47,8 @@ public class KrrService {
         configuration.setPaaVegneAvEnabled(properties.getFeature().isPaaVegneAvOppslag());
         return configuration;
     }
+
+    public void setClient(OppslagstjenesteClient client) {
+        this.client = client;
+    }
 }
