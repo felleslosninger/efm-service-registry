@@ -7,6 +7,8 @@ import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
+import no.difi.meldingsutveksling.serviceregistry.security.EntitySigner;
+import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
 import org.jboss.logging.MDC;
@@ -26,14 +28,14 @@ import javax.servlet.http.HttpServletRequest;
 import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.*;
 import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 
-@RequestMapping("/identifier")
 @ExposesResourceFor(EntityResource.class)
 @RestController
 public class ServiceRecordController {
 
+    private static final Logger logger = LoggerFactory.getLogger(ServiceRecordController.class);
     private final ServiceRecordFactory serviceRecordFactory;
     private EntityService entityService;
-    private static final Logger logger = LoggerFactory.getLogger(ServiceRecordController.class);
+    private EntitySigner entitySigner;
 
     /**
      * @param serviceRecordFactory for creation of the identifiers respective service record
@@ -41,9 +43,11 @@ public class ServiceRecordController {
      */
     @Autowired
     public ServiceRecordController(ServiceRecordFactory serviceRecordFactory,
-            EntityService entityService) {
+                                   EntityService entityService,
+                                   EntitySigner entitySigner) {
         this.entityService = entityService;
         this.serviceRecordFactory = serviceRecordFactory;
+        this.entitySigner = entitySigner;
     }
 
     @InitBinder
@@ -59,7 +63,7 @@ public class ServiceRecordController {
      * @param obligation determines service record based on the recipient being notifiable
      * @return JSON object with information needed to send a message
      */
-    @RequestMapping("/{identifier}")
+    @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
     public ResponseEntity entity(
             @PathVariable("identifier") String identifier,
@@ -97,6 +101,20 @@ public class ServiceRecordController {
         entity.setInfo(entityInfo);
         EntityResource organizationRes = new EntityResource(entity);
         return new ResponseEntity<>(organizationRes, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = "application/jose")
+    @ResponseBody
+    public ResponseEntity signed(
+        @PathVariable("identifier") String identifier,
+        @RequestParam(name="notification", defaultValue="NOT_OBLIGATED") Notification obligation,
+        Authentication auth,
+        HttpServletRequest request) throws EntitySignerException {
+
+        ResponseEntity entity = entity(identifier, obligation, auth, request);
+        EntityResource body = (EntityResource) entity.getBody();
+
+        return ResponseEntity.ok(entitySigner.sign(body));
     }
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find certificate for requested organization")
