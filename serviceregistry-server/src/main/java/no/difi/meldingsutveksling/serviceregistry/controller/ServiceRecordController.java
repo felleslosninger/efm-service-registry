@@ -1,7 +1,5 @@
 package no.difi.meldingsutveksling.serviceregistry.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.nimbusds.jose.JOSEException;
 import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.logging.Audit;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
@@ -10,6 +8,7 @@ import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySigner;
+import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
 import org.jboss.logging.MDC;
@@ -25,7 +24,6 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.security.cert.CertificateEncodingException;
 
 import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.*;
 import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
@@ -111,7 +109,7 @@ public class ServiceRecordController {
         @PathVariable("identifier") String identifier,
         @RequestParam(name="notification", defaultValue="NOT_OBLIGATED") Notification obligation,
         Authentication auth,
-        HttpServletRequest request) throws JsonProcessingException, CertificateEncodingException, JOSEException {
+        HttpServletRequest request) throws EntitySignerException {
 
         ResponseEntity entity = entity(identifier, obligation, auth, request);
         EntityResource body = (EntityResource) entity.getBody();
