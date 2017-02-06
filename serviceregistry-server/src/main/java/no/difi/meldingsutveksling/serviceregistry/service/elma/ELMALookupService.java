@@ -29,7 +29,7 @@ public class ELMALookupService {
         this.transportProfile = transportProfile;
     }
 
-    public Endpoint lookup(String organisationNumber) {
+    public Endpoint lookup(String organisationNumber) throws EndpointUrlNotFound {
         try {
             return lookupClient.getEndpoint(ParticipantIdentifier.of(organisationNumber),
                     DocumentTypeIdentifier.of(props.getElma().getDocumentTypeIdentifier()),

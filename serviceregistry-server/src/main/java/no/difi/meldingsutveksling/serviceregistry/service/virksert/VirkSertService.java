@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 
 @Component
 public class VirkSertService {
@@ -31,7 +31,8 @@ public class VirkSertService {
                 .setUri(properties.getAr().getEndpointURL().toString()).build();
     }
 
-    public Certificate getCertificate(String orgNumber) throws VirksertClientException {
-        return virksertClient.fetch(orgNumber);
+    public String getCertificate(String orgNumber) throws VirksertClientException {
+        final X509Certificate fetch = virksertClient.fetch(orgNumber);
+        return CertificateToString.toString(fetch);
     }
 }
