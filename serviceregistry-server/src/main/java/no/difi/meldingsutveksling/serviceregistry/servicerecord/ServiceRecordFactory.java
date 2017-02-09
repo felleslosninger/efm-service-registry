@@ -12,7 +12,6 @@ import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
-import no.difi.meldingsutveksling.serviceregistry.service.ks.KSLookup;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.vefa.peppol.common.model.Endpoint;
 import no.difi.virksert.client.VirksertClientException;
@@ -38,7 +37,6 @@ public class ServiceRecordFactory {
     private ServiceregistryProperties properties;
     private VirkSertService virksertService;
     private ELMALookupService elmaLookupService;
-    private KSLookup ksLookup;
     private static final String NORWAY_PREFIX = "9908:";
     private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
 
@@ -48,31 +46,27 @@ public class ServiceRecordFactory {
      * @param properties - parameters needed to contact the provided services
      * @param virksertService - used to lookup virksomhetssertifikat (certificate)
      * @param elmaLookupService - used to lookup hostname of Altinn formidlingstjeneste
-     * @param ksLookup - used to lookup if ks should be used for transportation
      * @param krrService - used to lookup parameters needed to use DPI transportation
      */
     @Autowired
-    public ServiceRecordFactory(ServiceregistryProperties properties, VirkSertService virksertService, ELMALookupService elmaLookupService, KSLookup ksLookup, KrrService krrService) {
+    public ServiceRecordFactory(ServiceregistryProperties properties, VirkSertService virksertService, ELMALookupService elmaLookupService, KrrService krrService) {
         this.properties = properties;
         this.virksertService = virksertService;
         this.elmaLookupService = elmaLookupService;
-        this.ksLookup = ksLookup;
         this.krrService = krrService;
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpo.read')")
     public ServiceRecord createEduServiceRecord(String orgnr) {
-        String finalOrgNumber = ksLookup.mapOrganizationNumber(orgnr);
         Endpoint ep;
         try {
-            ep = elmaLookupService.lookup(NORWAY_PREFIX + finalOrgNumber);
+            ep = elmaLookupService.lookup(NORWAY_PREFIX + orgnr);
         } catch (EndpointUrlNotFound endpointUrlNotFound) {
             Audit.info("Does not exist in ELMA (no IP?) -> DPV will be used", MarkerFactory.receiverMarker(orgnr));
             logger.warn(MarkerFactory.receiverMarker(orgnr), "Attempted to lookup receiver in ELMA", endpointUrlNotFound);
             return createPostVirksomhetServiceRecord(orgnr);
         }
-
-        String pemCertificate = lookupPemCertificate(finalOrgNumber);
+        String pemCertificate = lookupPemCertificate(orgnr);
 
         EDUServiceRecord serviceRecord = new EDUServiceRecord(properties, pemCertificate, orgnr);
 

@@ -23,7 +23,7 @@ class ServiceRecordFactoryTest extends Specification {
 
     def setup() {
         krr = Mock(KrrService)
-        serviceRecordFactory = new ServiceRecordFactory(properties, virkSert, elma, kSLookup, krr)
+        serviceRecordFactory = new ServiceRecordFactory(properties, virkSert, elma, krr)
     }
 
     def "Given citizen has not chosen postbox provider and citizen is not reserved then service record should be DPV"() {

@@ -86,6 +86,8 @@ public class ServiceRecordController {
             Audit.info("Unauthorized lookup request", markerFrom(request.getRemoteAddr()));
         }
 
+
+
         if (shouldCreateServiceRecordForCititzen().test(entityInfo)) {
             if (auth == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No authentication provided.");
@@ -93,6 +95,7 @@ public class ServiceRecordController {
             entity.setServiceRecord(serviceRecordFactory.createServiceRecordForCititzen(identifier, clientOrgnr,
                     obligation));
         }
+
         if (usesFormidlingstjenesten().test(entityInfo)) {
             entity.setServiceRecord(serviceRecordFactory.createEduServiceRecord(identifier));
         }
