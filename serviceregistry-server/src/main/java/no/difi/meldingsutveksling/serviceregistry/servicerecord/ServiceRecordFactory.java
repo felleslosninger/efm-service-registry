@@ -12,6 +12,8 @@ import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
+import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdresseClient;
+import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdressing;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.vefa.peppol.common.model.Endpoint;
 import no.difi.virksert.client.VirksertClientException;
@@ -34,6 +36,7 @@ import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier
 public class ServiceRecordFactory {
 
     private final KrrService krrService;
+    private FiksAdresseClient fiksAdresseClient;
     private ServiceregistryProperties properties;
     private VirkSertService virksertService;
     private ELMALookupService elmaLookupService;
@@ -54,6 +57,11 @@ public class ServiceRecordFactory {
         this.virksertService = virksertService;
         this.elmaLookupService = elmaLookupService;
         this.krrService = krrService;
+        this.fiksAdresseClient = fiksAdresseClient;
+    }
+
+    public ServiceRecord createFiksServiceRecord(FiksAdressing fiksAdressing) {
+        return new FiksServiceRecord(fiksAdressing);
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpo.read')")

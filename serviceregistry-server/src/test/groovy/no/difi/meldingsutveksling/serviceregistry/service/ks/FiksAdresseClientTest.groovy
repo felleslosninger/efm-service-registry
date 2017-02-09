@@ -46,10 +46,10 @@ class FiksAdresseClientTest {
                 }"""
                 , MediaType.APPLICATION_JSON))
 
-        def organization = client.getOrganization("123456789")
+        def adressing = client.getFiksAdressing("123456789")
 
         server.verify()
-        organization != FiksContactInfo.EMPTY
+        assert adressing != FiksAdressing.EMPTY
     }
 
     @Test
@@ -59,9 +59,9 @@ class FiksAdresseClientTest {
             .andExpect(method(HttpMethod.GET))
             .andRespond(withStatus(HttpStatus.NOT_FOUND))
 
-        def contactInfo = client.getOrganization(identifier)
+        def contactInfo = client.getFiksAdressing(identifier)
 
         server.verify()
-        contactInfo == FiksContactInfo.EMPTY
+        assert contactInfo == FiksAdressing.EMPTY
     }
 }

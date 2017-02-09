@@ -31,6 +31,7 @@ public class ServiceregistryProperties {
     private ELMA elmaDPEData;
     @Valid
     private Sign sign;
+    @Valid
     private FIKS fiks;
 
     public FIKS getFiks() {
@@ -308,6 +309,7 @@ public class ServiceregistryProperties {
     }
 
     public static class FIKS {
+        @NotNull
         private URL adresseServiceURL;
 
         public URL getAdresseServiceURL() {

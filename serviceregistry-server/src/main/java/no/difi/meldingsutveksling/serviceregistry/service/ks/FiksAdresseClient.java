@@ -4,6 +4,7 @@ import net.logstash.logback.marker.Markers;
 import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -13,6 +14,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.OK;
 
 public class FiksAdresseClient {
     private RestTemplate restTemplate;
@@ -24,8 +26,9 @@ public class FiksAdresseClient {
         this.url = url;
     }
 
-    public FiksContactInfo getOrganization(String identifier) {
+    public FiksAdressing getFiksAdressing(String identifier) {
         final URI orgUrl;
+        final ResponseEntity<FiksAdressing> entity;
         try {
             URIBuilder builder;
             builder = new URIBuilder(url.toString());
@@ -34,14 +37,14 @@ public class FiksAdresseClient {
             throw new FiksAdresseServiceException("URL to MOVE FIKS adresse service is malformed", e);
         }
         try {
-            restTemplate.getForEntity(orgUrl, FiksContactInfo.class);
+            entity = restTemplate.getForEntity(orgUrl, FiksAdressing.class);
         } catch (HttpClientErrorException e) {
             if (NOT_FOUND != e.getStatusCode()) {
                 logger.error(Markers.append("receiver", identifier), "Failed to lookup in FIKS adresse service", e);
             }
-            return FiksContactInfo.EMPTY;
+            return FiksAdressing.EMPTY;
         }
-        return new FiksContactInfo();
+        return entity.getStatusCode() == OK ? entity.getBody() : FiksAdressing.EMPTY;
     }
 
     public RestTemplate getRestTemplate() {

@@ -62,7 +62,7 @@ class ServiceRecordFactoryTest extends Specification {
         record.class == PostVirksomhetServiceRecord
     }
 
-    def "Given organization has a integrasjonspunkt"() {
+    def "Given organization has an integrasjonspunkt"() {
         given:
         def endpoint = Mock(Endpoint)
         endpoint.address >> URI.create("")
