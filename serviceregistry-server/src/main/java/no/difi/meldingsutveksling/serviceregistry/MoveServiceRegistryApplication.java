@@ -5,10 +5,8 @@ import no.difi.meldingsutveksling.serviceregistry.spring.cloud.SpringCloudProtoc
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
-@EnableJpaRepositories
 @EnableConfigurationProperties({ServiceregistryProperties.class})
 public class MoveServiceRegistryApplication {
 
