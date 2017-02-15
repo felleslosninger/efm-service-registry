@@ -21,8 +21,12 @@ public class EntitySigner {
 
     private static final Logger log = LoggerFactory.getLogger(EntitySigner.class);
 
-    @Autowired
     private KeystoreHelper keystoreHelper;
+
+    @Autowired
+    public EntitySigner(KeystoreHelper keystoreHelper) {
+        this.keystoreHelper = keystoreHelper;
+    }
 
     public String sign(EntityResource entity) throws EntitySignerException {
 
