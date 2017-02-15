@@ -106,7 +106,7 @@ public class ServiceRecordControllerTest {
     }
 
     @Test
-    public void entityShouldReturnOK() throws Exception {
+    public void eduEntityShouldReturnOK() throws Exception {
         mvc.perform(get("/identifier/42").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecord.organisationNumber", is("42")))
