@@ -13,7 +13,7 @@ import javax.annotation.PostConstruct;
 public class KrrService {
 
     private ServiceregistryProperties properties;
-    private OppslagstjenesteClient client;
+    OppslagstjenesteClient client;
 
     @Autowired
     KrrService(ServiceregistryProperties properties) {
@@ -28,9 +28,11 @@ public class KrrService {
     public KontaktInfo getCitizenInfo(LookupParameters lookupParameters) {
 
         KontaktInfo kontaktInfo = client.hentKontaktInformasjon(lookupParameters);
-        if (!kontaktInfo.canReceiveDigitalPost() || !kontaktInfo.hasMailbox()) {
-            kontaktInfo.setPrintDetails(client.getPrintProviderDetails(lookupParameters));
+        if (kontaktInfo.canReceiveDigitalPost() &&
+                (kontaktInfo.isNotifiable() || !lookupParameters.isObligatedToBeNotified())) {
+            return kontaktInfo;
         }
+        kontaktInfo.setPrintDetails(client.getPrintProviderDetails(lookupParameters));
         return kontaktInfo;
     }
 
@@ -44,5 +46,9 @@ public class KrrService {
                 properties.getKrr().getServer().getKeystore());
         configuration.setPaaVegneAvEnabled(properties.getFeature().isPaaVegneAvOppslag());
         return configuration;
+    }
+
+    public void setClient(OppslagstjenesteClient client) {
+        this.client = client;
     }
 }

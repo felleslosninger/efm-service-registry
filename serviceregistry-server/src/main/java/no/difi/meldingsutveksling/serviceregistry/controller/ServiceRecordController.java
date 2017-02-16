@@ -1,10 +1,14 @@
 package no.difi.meldingsutveksling.serviceregistry.controller;
 
+import no.difi.meldingsutveksling.Notification;
+import no.difi.meldingsutveksling.logging.Audit;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
+import no.difi.meldingsutveksling.serviceregistry.security.EntitySigner;
+import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
 import org.jboss.logging.MDC;
@@ -15,27 +19,23 @@ import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.usesFormidlingstjenesten;
-import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.usesPostTilVirksomhet;
-import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.usesSikkerDigitalPost;
+import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.*;
+import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 
-@RequestMapping("/identifier")
 @ExposesResourceFor(EntityResource.class)
 @RestController
 public class ServiceRecordController {
 
+    private static final Logger logger = LoggerFactory.getLogger(ServiceRecordController.class);
     private final ServiceRecordFactory serviceRecordFactory;
     private EntityService entityService;
-    private static final Logger logger = LoggerFactory.getLogger(ServiceRecordController.class);
+    private EntitySigner entitySigner;
 
     /**
      * @param serviceRecordFactory for creation of the identifiers respective service record
@@ -43,9 +43,16 @@ public class ServiceRecordController {
      */
     @Autowired
     public ServiceRecordController(ServiceRecordFactory serviceRecordFactory,
-            EntityService entityService) {
+                                   EntityService entityService,
+                                   EntitySigner entitySigner) {
         this.entityService = entityService;
         this.serviceRecordFactory = serviceRecordFactory;
+        this.entitySigner = entitySigner;
+    }
+
+    @InitBinder
+    protected void initBinders(WebDataBinder binder) {
+        binder.registerCustomEditor(Notification.class, new NotificationEditor());
     }
 
     /**
@@ -53,21 +60,37 @@ public class ServiceRecordController {
      * identifier
      *
      * @param identifier of the organization/person to receive a message
+     * @param obligation determines service record based on the recipient being notifiable
      * @return JSON object with information needed to send a message
      */
-    @RequestMapping("/{identifier}")
+    @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = "application/json")
     @ResponseBody
-    public ResponseEntity entity(@PathVariable("identifier") String identifier, Authentication auth) {
+    public ResponseEntity entity(
+            @PathVariable("identifier") String identifier,
+            @RequestParam(name="notification", defaultValue="NOT_OBLIGATED") Notification obligation,
+            Authentication auth,
+            HttpServletRequest request) {
+
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
         EntityInfo entityInfo = entityService.getEntityInfo(identifier);
-        String clientOrgnr = auth == null ? null : (String) auth.getPrincipal();
         if (entityInfo == null) {
             throw new EntityNotFoundException("Could not find entity for identifier: " + identifier);
         }
 
-        if (usesSikkerDigitalPost().test(entityInfo)) {
-            entity.setServiceRecord(serviceRecordFactory.createSikkerDigitalPostRecord(identifier, clientOrgnr));
+        String clientOrgnr = auth == null ? null : (String) auth.getPrincipal();
+        if (clientOrgnr != null) {
+            String tokenValue = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
+            Audit.info("Authorized lookup request", markerFrom(request.getRemoteAddr(), clientOrgnr, tokenValue));
+        } else {
+            Audit.info("Unauthorized lookup request", markerFrom(request.getRemoteAddr()));
+        }
+
+        if (shouldCreateServiceRecordForCititzen().test(entityInfo)) {
+            if (auth == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No authentication provided.");
+            }
+            entity.setServiceRecord(serviceRecordFactory.createServiceRecordForCititzen(identifier, clientOrgnr, obligation));
         }
         if (usesFormidlingstjenesten().test(entityInfo)) {
             entity.setServiceRecord(serviceRecordFactory.createEduServiceRecord(identifier));
@@ -78,6 +101,20 @@ public class ServiceRecordController {
         entity.setInfo(entityInfo);
         EntityResource organizationRes = new EntityResource(entity);
         return new ResponseEntity<>(organizationRes, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = "application/jose")
+    @ResponseBody
+    public ResponseEntity signed(
+        @PathVariable("identifier") String identifier,
+        @RequestParam(name="notification", defaultValue="NOT_OBLIGATED") Notification obligation,
+        Authentication auth,
+        HttpServletRequest request) throws EntitySignerException {
+
+        ResponseEntity entity = entity(identifier, obligation, auth, request);
+        EntityResource body = (EntityResource) entity.getBody();
+
+        return ResponseEntity.ok(entitySigner.sign(body));
     }
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find certificate for requested organization")

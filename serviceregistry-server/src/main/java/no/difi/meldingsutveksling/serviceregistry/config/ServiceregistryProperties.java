@@ -8,6 +8,8 @@ package no.difi.meldingsutveksling.serviceregistry.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.io.Resource;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.net.URL;
 
 /**
@@ -25,6 +27,8 @@ public class ServiceregistryProperties {
     private Auth auth;
     private FeatureToggle feature;
     private ELMA elma;
+    @Valid
+    private Sign sign;
 
     public Auth getAuth() {
         return auth;
@@ -90,6 +94,14 @@ public class ServiceregistryProperties {
         this.elma = elma;
     }
 
+    public Sign getSign() {
+        return sign;
+    }
+
+    public void setSign(Sign sign) {
+        this.sign = sign;
+    }
+
     public static class ELMA {
 
         private String processIdentifier;
@@ -112,7 +124,22 @@ public class ServiceregistryProperties {
         }
     }
 
+    public static class Sign {
+
+        @NotNull
+        private Keystore jks;
+
+        public Keystore getJks() {
+            return jks;
+        }
+
+        public void setJks(Keystore jks) {
+            this.jks = jks;
+        }
+    }
+
     public static class Auth {
+
         private boolean enable;
 
         public boolean isEnable() {
@@ -122,7 +149,6 @@ public class ServiceregistryProperties {
         public void setEnable(boolean enable) {
             this.enable = enable;
         }
-
     }
 
     public static class DigitalPostInnbygger {
