@@ -3,7 +3,10 @@ package no.difi.meldingsutveksling.serviceregistry.service.krr;
 import no.difi.meldingsutveksling.ptp.KontaktInfo;
 import no.difi.meldingsutveksling.ptp.OppslagstjenesteClient;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import no.difi.meldingsutveksling.serviceregistry.krr.KRRClient;
+import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
 import no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters;
+import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,11 +16,13 @@ import javax.annotation.PostConstruct;
 public class KrrService {
 
     private ServiceregistryProperties properties;
-    OppslagstjenesteClient client;
+    private OppslagstjenesteClient client;
+    private KRRClient krrClient;
 
     @Autowired
     KrrService(ServiceregistryProperties properties) {
         this.properties = properties;
+        this.krrClient = new KRRClient(properties.getKrr().getEndpointURL());
     }
 
     @PostConstruct
@@ -34,6 +39,11 @@ public class KrrService {
         }
         kontaktInfo.setPrintDetails(client.getPrintProviderDetails(lookupParameters));
         return kontaktInfo;
+    }
+
+    public PersonResource getCizitenInfo(String identifier, String token) throws KRRClientException {
+
+        return krrClient.getPersonResource(identifier, token);
     }
 
     private OppslagstjenesteClient.Configuration createConfiguration() {
