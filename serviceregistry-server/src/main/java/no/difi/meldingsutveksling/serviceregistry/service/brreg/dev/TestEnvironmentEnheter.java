@@ -33,6 +33,8 @@ public class TestEnvironmentEnheter {
         createBrregEnhet("Nord-Lenangen og Sørumsand", "AS", "910195611");
         createBrregEnhet("Vallersund og Sandset", "AS", "910175300");
         createBrregEnhet("Hesseng og Våle Revisjon", "AS", "910219308");
+        // FIKS test user
+        createBrregEnhet("Sømådalen og Bessaker Revisjon", "KOMM", "910229028");
     }
 
     private void createBrregEnhet(String navn, String organisasjonsform, String organisasjonsnummer) {
