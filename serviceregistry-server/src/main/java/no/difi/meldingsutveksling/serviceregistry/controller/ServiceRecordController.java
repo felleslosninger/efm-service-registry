@@ -98,6 +98,9 @@ public class ServiceRecordController {
         if (usesPostTilVirksomhet().test(entityInfo)) {
             entity.setServiceRecord(serviceRecordFactory.createPostVirksomhetServiceRecord(identifier));
         }
+        if (entity.getServiceRecord() == null) {
+            entity.setServiceRecord(serviceRecordFactory.createPostVirksomhetServiceRecord(identifier));
+        }
         entity.setInfo(entityInfo);
         EntityResource organizationRes = new EntityResource(entity);
         return new ResponseEntity<>(organizationRes, HttpStatus.OK);
