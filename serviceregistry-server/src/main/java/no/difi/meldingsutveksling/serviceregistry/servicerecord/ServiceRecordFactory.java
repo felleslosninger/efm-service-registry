@@ -25,6 +25,8 @@ import org.springframework.stereotype.Component;
 import java.lang.invoke.MethodHandles;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
+import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.DPE_data;
+import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.DPE_innsyn;
 
 /**
  * Factory method class to create Service Records based on lookup endpoint urls and certificates corresponding to those services
@@ -67,21 +69,35 @@ public class ServiceRecordFactory {
         } catch (EndpointUrlNotFound endpointUrlNotFound) {
             Audit.info("Does not exist in ELMA (no IP?) -> DPV will be used", MarkerFactory.receiverMarker(orgnr));
             logger.warn(MarkerFactory.receiverMarker(orgnr), "Attempted to lookup receiver in ELMA", endpointUrlNotFound);
-
             return createPostVirksomhetServiceRecord(orgnr);
         }
+
         String pemCertificate = lookupPemCertificate(finalOrgNumber);
+
+        EDUServiceRecord serviceRecord = new EDUServiceRecord(properties, pemCertificate, orgnr);
 
         String adr = ep.getAddress().toString();
         if (adr.contains("#")) {
             String uri = adr.substring(0, adr.indexOf('#'));
-            String[] codes = adr.substring(adr.indexOf('#')+1).split("-");
+            String[] codes = adr.substring(adr.indexOf('#') + 1).split("-");
             String serviceCode = codes[0];
             String serviceEditionCode = codes[1];
-            return new EDUServiceRecord(properties, pemCertificate, uri, serviceCode, serviceEditionCode, orgnr);
+
+            serviceRecord.setEndpointUrl(uri);
+            serviceRecord.setServiceCode(serviceCode);
+            serviceRecord.setServiceEditionCode(serviceEditionCode);
+        } else {
+            serviceRecord.setEndpointUrl(adr);
         }
 
-        return new EDUServiceRecord(properties, pemCertificate, ep.getAddress().toString(), orgnr);
+        if (elmaLookupService.identifierHasInnsynskravCapability(NORWAY_PREFIX + finalOrgNumber)) {
+            serviceRecord.addDpeCapability(DPE_innsyn.toString());
+        }
+        if (elmaLookupService.identifierHasInnsynDataCapability(NORWAY_PREFIX + finalOrgNumber)) {
+            serviceRecord.addDpeCapability(DPE_data.toString());
+        }
+
+        return serviceRecord;
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpv.read')")

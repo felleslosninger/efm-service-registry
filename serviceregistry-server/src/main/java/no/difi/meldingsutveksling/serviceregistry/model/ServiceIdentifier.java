@@ -15,5 +15,7 @@ public enum ServiceIdentifier {
     /**
      * Identifies DIFI sikker digital post aka. Digital Post Innbygger
      */
-    DPI
+    DPI,
+    DPE_innsyn,
+    DPE_data
 }

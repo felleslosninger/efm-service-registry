@@ -11,6 +11,8 @@ import no.difi.vefa.peppol.security.lang.PeppolSecurityException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 /**
  * See configuraion beans for beans that might be injected as LookupClient and TransportProfile
  */
@@ -39,6 +41,34 @@ public class ELMALookupService {
             throw new ServiceRegistryException(e);
         } catch (LookupException | EndpointNotFoundException e) {
             throw new EndpointUrlNotFound(String.format("Failed lookup through ELMA of %s", organisationNumber), e);
+        }
+    }
+
+    public boolean identifierHasInnsynskravCapability(String identifier) {
+        try {
+            Endpoint ep = lookupClient.getEndpoint(ParticipantIdentifier.of(identifier),
+                    DocumentTypeIdentifier.of(props.getElmaDPEInnsyn().getDocumentTypeIdentifier()),
+                    ProcessIdentifier.of(props.getElmaDPEInnsyn().getProcessIdentifier()),
+                    transportProfile);
+            return !isNullOrEmpty(ep.getAddress().toString());
+        } catch (PeppolSecurityException e) {
+            throw new ServiceRegistryException(e);
+        } catch (LookupException | EndpointNotFoundException e) {
+            return false;
+        }
+    }
+
+    public boolean identifierHasInnsynDataCapability(String organisationNumber) {
+        try {
+            Endpoint ep = lookupClient.getEndpoint(ParticipantIdentifier.of(organisationNumber),
+                    DocumentTypeIdentifier.of(props.getElmaDPEData().getDocumentTypeIdentifier()),
+                    ProcessIdentifier.of(props.getElmaDPEData().getProcessIdentifier()),
+                    transportProfile);
+            return !isNullOrEmpty(ep.getAddress().toString());
+        } catch (PeppolSecurityException e) {
+            throw new ServiceRegistryException(e);
+        } catch (LookupException | EndpointNotFoundException e) {
+            return false;
         }
     }
 }

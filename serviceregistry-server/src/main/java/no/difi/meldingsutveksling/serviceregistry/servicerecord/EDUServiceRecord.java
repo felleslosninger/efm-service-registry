@@ -13,9 +13,8 @@ public class EDUServiceRecord extends ServiceRecord {
     private String serviceCode;
     private String serviceEditionCode;
 
-    public EDUServiceRecord(ServiceregistryProperties properties, String pemCertificate, String endpoint, String orgnr) {
+    public EDUServiceRecord(ServiceregistryProperties properties, String pemCertificate, String orgnr) {
         super(properties, pemCertificate, EDU, orgnr);
-        this.endpointUrl = endpoint;
     }
 
     public EDUServiceRecord(ServiceregistryProperties properties, String pemCertificate, String endpoint, String serviceCode,
