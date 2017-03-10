@@ -1,8 +1,11 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.Lists;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
+
+import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class ServiceRecord {
@@ -12,12 +15,14 @@ public abstract class ServiceRecord {
     private ServiceIdentifier serviceIdentifier;
     protected String endpointUrl;
     private String pemCertificate;
+    private List<String> dpeCapabilities;
 
     public ServiceRecord(ServiceregistryProperties e, String pemCertificate, ServiceIdentifier serviceIdentifier, String organisationNumber) {
         this.organisationNumber = organisationNumber;
         this.serviceIdentifier = serviceIdentifier;
         this.pemCertificate = pemCertificate;
         this.properties = e;
+        this.dpeCapabilities = Lists.newArrayList();
     }
 
     public String getOrganisationNumber() {
@@ -30,6 +35,10 @@ public abstract class ServiceRecord {
 
     public abstract String getEndPointURL();
 
+    public void setEndpointUrl(String endpointUrl) {
+        this.endpointUrl = endpointUrl;
+    }
+
     public ServiceIdentifier getServiceIdentifier() {
         return serviceIdentifier;
     }
@@ -40,6 +49,14 @@ public abstract class ServiceRecord {
 
     public String getPemCertificate() {
         return pemCertificate;
+    }
+
+    public List<String> getDpeCapabilities() {
+        return dpeCapabilities;
+    }
+
+    public void addDpeCapability(String capability) {
+        this.dpeCapabilities.add(capability);
     }
 
     @Override

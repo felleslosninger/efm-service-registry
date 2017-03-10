@@ -3,7 +3,6 @@ package no.difi.meldingsutveksling.serviceregistry.service;
 import no.difi.meldingsutveksling.serviceregistry.model.CitizenInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
-import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +16,10 @@ import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRe
 public class EntityService {
 
     private final BrregService brregService;
-    private final KrrService krrService;
 
     @Autowired
-    public EntityService(BrregService brregService, KrrService krrService) {
+    public EntityService(BrregService brregService) {
         this.brregService = brregService;
-        this.krrService = krrService;
     }
 
     /**

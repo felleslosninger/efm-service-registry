@@ -27,6 +27,8 @@ public class ServiceregistryProperties {
     private Auth auth;
     private FeatureToggle feature;
     private ELMA elma;
+    private ELMA elmaDPEInnsyn;
+    private ELMA elmaDPEData;
     @Valid
     private Sign sign;
 
@@ -92,6 +94,22 @@ public class ServiceregistryProperties {
 
     public void setElma(ELMA elma) {
         this.elma = elma;
+    }
+
+    public ELMA getElmaDPEInnsyn() {
+        return elmaDPEInnsyn;
+    }
+
+    public void setElmaDPEInnsyn(ELMA elmaDPEInnsyn) {
+        this.elmaDPEInnsyn = elmaDPEInnsyn;
+    }
+
+    public ELMA getElmaDPEData() {
+        return elmaDPEData;
+    }
+
+    public void setElmaDPEData(ELMA elmaDPEData) {
+        this.elmaDPEData = elmaDPEData;
     }
 
     public Sign getSign() {
