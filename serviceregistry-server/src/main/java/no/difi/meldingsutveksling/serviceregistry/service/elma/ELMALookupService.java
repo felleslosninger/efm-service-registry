@@ -45,24 +45,18 @@ public class ELMALookupService {
     }
 
     public boolean identifierHasInnsynskravCapability(String identifier) {
-        try {
-            Endpoint ep = lookupClient.getEndpoint(ParticipantIdentifier.of(identifier),
-                    DocumentTypeIdentifier.of(props.getElmaDPEInnsyn().getDocumentTypeIdentifier()),
-                    ProcessIdentifier.of(props.getElmaDPEInnsyn().getProcessIdentifier()),
-                    transportProfile);
-            return !isNullOrEmpty(ep.getAddress().toString());
-        } catch (PeppolSecurityException e) {
-            throw new ServiceRegistryException(e);
-        } catch (LookupException | EndpointNotFoundException e) {
-            return false;
-        }
+        return identifierHasCapability(identifier, props.getElmaDPEInnsyn());
     }
 
-    public boolean identifierHasInnsynDataCapability(String organisationNumber) {
+    public boolean identifierHasInnsynDataCapability(String identifier) {
+        return identifierHasCapability(identifier, props.getElmaDPEData());
+    }
+
+    private boolean identifierHasCapability(String identifier, ServiceregistryProperties.ELMA elmaProp) {
         try {
-            Endpoint ep = lookupClient.getEndpoint(ParticipantIdentifier.of(organisationNumber),
-                    DocumentTypeIdentifier.of(props.getElmaDPEData().getDocumentTypeIdentifier()),
-                    ProcessIdentifier.of(props.getElmaDPEData().getProcessIdentifier()),
+            Endpoint ep = lookupClient.getEndpoint(ParticipantIdentifier.of(identifier),
+                    DocumentTypeIdentifier.of(elmaProp.getDocumentTypeIdentifier()),
+                    ProcessIdentifier.of(elmaProp.getProcessIdentifier()),
                     transportProfile);
             return !isNullOrEmpty(ep.getAddress().toString());
         } catch (PeppolSecurityException e) {
