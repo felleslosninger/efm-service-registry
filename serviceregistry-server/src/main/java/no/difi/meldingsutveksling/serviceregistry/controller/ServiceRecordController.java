@@ -95,7 +95,7 @@ public class ServiceRecordController {
         if (usesFormidlingstjenesten().test(entityInfo)) {
             entity.setServiceRecord(serviceRecordFactory.createEduServiceRecord(identifier));
         }
-        if (usesPostTilVirksomhet().test(entityInfo)) {
+        if (usesPostTilVirksomhet().test(entityInfo) || entity.getServiceRecord() == null) {
             entity.setServiceRecord(serviceRecordFactory.createPostVirksomhetServiceRecord(identifier));
         }
         entity.setInfo(entityInfo);
