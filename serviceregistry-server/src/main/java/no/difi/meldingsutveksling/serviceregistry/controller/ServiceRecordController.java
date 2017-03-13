@@ -10,6 +10,8 @@ import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySigner;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
+import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdresseClient;
+import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdressing;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
 import org.jboss.logging.MDC;
 import org.slf4j.Logger;
@@ -36,6 +38,7 @@ public class ServiceRecordController {
     private final ServiceRecordFactory serviceRecordFactory;
     private EntityService entityService;
     private EntitySigner entitySigner;
+    private FiksAdresseClient fiksAdresseClient;
 
     /**
      * @param serviceRecordFactory for creation of the identifiers respective service record
@@ -44,10 +47,12 @@ public class ServiceRecordController {
     @Autowired
     public ServiceRecordController(ServiceRecordFactory serviceRecordFactory,
                                    EntityService entityService,
-                                   EntitySigner entitySigner) {
+                                   EntitySigner entitySigner,
+                                   FiksAdresseClient fiksAdresseClient) {
         this.entityService = entityService;
         this.serviceRecordFactory = serviceRecordFactory;
         this.entitySigner = entitySigner;
+        this.fiksAdresseClient = fiksAdresseClient;
     }
 
     @InitBinder
@@ -86,13 +91,20 @@ public class ServiceRecordController {
             Audit.info("Unauthorized lookup request", markerFrom(request.getRemoteAddr()));
         }
 
+        final FiksAdressing fiksAdressing = fiksAdresseClient.getFiksAdressing(entityInfo.getIdentifier());
+
         if (shouldCreateServiceRecordForCititzen().test(entityInfo)) {
             if (auth == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No authentication provided.");
             }
             entity.setServiceRecord(serviceRecordFactory.createServiceRecordForCititzen(identifier, clientOrgnr,
                     obligation));
+        } else if(fiksAdressing.shouldUseFIKS()) {
+            entity.setServiceRecord(serviceRecordFactory.createFiksServiceRecord(fiksAdressing));
+            entity.setInfoRecord(entityInfo);
+            return new ResponseEntity<>(entity, HttpStatus.OK);
         }
+
         if (usesFormidlingstjenesten().test(entityInfo)) {
             entity.setServiceRecord(serviceRecordFactory.createEduServiceRecord(identifier));
         }

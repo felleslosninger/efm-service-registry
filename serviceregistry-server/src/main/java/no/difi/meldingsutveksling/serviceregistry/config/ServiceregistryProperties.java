@@ -31,6 +31,16 @@ public class ServiceregistryProperties {
     private ELMA elmaDPEData;
     @Valid
     private Sign sign;
+    @Valid
+    private FIKS fiks = new FIKS();
+
+    public FIKS getFiks() {
+        return fiks;
+    }
+
+    public void setFiks(FIKS fiks) {
+        this.fiks = fiks;
+    }
 
     public Auth getAuth() {
         return auth;
@@ -296,5 +306,18 @@ public class ServiceregistryProperties {
             this.keystore = keystore;
         }
 
+    }
+
+    public static class FIKS {
+        @NotNull
+        private URL adresseServiceURL;
+
+        public URL getAdresseServiceURL() {
+            return adresseServiceURL;
+        }
+
+        public void setAdresseServiceURL(URL adresseServiceURL) {
+            this.adresseServiceURL = adresseServiceURL;
+        }
     }
 }
