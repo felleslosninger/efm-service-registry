@@ -7,15 +7,18 @@ public enum ServiceIdentifier {
     /**
      * Identifies archive-to-archive transportation
      */
-    EDU,
+    DPO,
     /**
      * Identifies using Altinn correspondence agency as transport
      */
-    POST_VIRKSOMHET,
+    DPV,
     /**
      * Identifies DIFI sikker digital post aka. Digital Post Innbygger
      */
     DPI,
+    /**
+     * Identifies eInnsyn
+     */
     DPE_innsyn,
     DPE_data
 }
