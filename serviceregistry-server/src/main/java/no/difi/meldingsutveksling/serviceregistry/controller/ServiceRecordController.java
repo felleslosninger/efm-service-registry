@@ -101,9 +101,8 @@ public class ServiceRecordController {
                     obligation));
         } else if(fiksAdressing.shouldUseFIKS()) {
             entity.setServiceRecord(serviceRecordFactory.createFiksServiceRecord(fiksAdressing));
-            entity.setInfo(entityInfo);
-            EntityResource organizationRes = new EntityResource(entity);
-            return new ResponseEntity<>(organizationRes, HttpStatus.OK);
+            entity.setInfoRecord(entityInfo);
+            return new ResponseEntity<>(entity, HttpStatus.OK);
         }
 
         if (usesFormidlingstjenesten().test(entityInfo)) {

@@ -8,7 +8,7 @@ import java.net.URL;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FiksAdressing {
-    static final FiksAdressing EMPTY = new FiksAdressing();
+    public static final FiksAdressing EMPTY = new FiksAdressing();
     private String organizationId;
     private URL url;
     private PemCertificate certificate;
