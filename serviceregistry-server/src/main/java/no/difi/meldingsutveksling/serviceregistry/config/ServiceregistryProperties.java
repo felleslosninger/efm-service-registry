@@ -32,7 +32,7 @@ public class ServiceregistryProperties {
     @Valid
     private Sign sign;
     @Valid
-    private FIKS fiks;
+    private FIKS fiks = new FIKS();
 
     public FIKS getFiks() {
         return fiks;
