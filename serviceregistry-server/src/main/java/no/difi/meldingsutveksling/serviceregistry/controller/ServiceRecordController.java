@@ -28,7 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.*;
 import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 
-@ExposesResourceFor(EntityResource.class)
+@ExposesResourceFor(Entity.class)
 @RestController
 public class ServiceRecordController {
 
@@ -90,17 +90,18 @@ public class ServiceRecordController {
             if (auth == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No authentication provided.");
             }
-            entity.setServiceRecord(serviceRecordFactory.createServiceRecordForCititzen(identifier, clientOrgnr, obligation));
+            entity.setServiceRecord(serviceRecordFactory.createServiceRecordForCititzen(identifier, clientOrgnr,
+                    obligation));
         }
         if (usesFormidlingstjenesten().test(entityInfo)) {
             entity.setServiceRecord(serviceRecordFactory.createEduServiceRecord(identifier));
         }
-        if (usesPostTilVirksomhet().test(entityInfo)) {
+        if (usesPostTilVirksomhet().test(entityInfo) || entity.getServiceRecord() == null) {
             entity.setServiceRecord(serviceRecordFactory.createPostVirksomhetServiceRecord(identifier));
         }
-        entity.setInfo(entityInfo);
-        EntityResource organizationRes = new EntityResource(entity);
-        return new ResponseEntity<>(organizationRes, HttpStatus.OK);
+
+        entity.setInfoRecord(entityInfo);
+        return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
     @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = "application/jose")
@@ -112,9 +113,8 @@ public class ServiceRecordController {
         HttpServletRequest request) throws EntitySignerException {
 
         ResponseEntity entity = entity(identifier, obligation, auth, request);
-        EntityResource body = (EntityResource) entity.getBody();
 
-        return ResponseEntity.ok(entitySigner.sign(body));
+        return ResponseEntity.ok(entitySigner.sign((Entity)entity.getBody()));
     }
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find certificate for requested organization")

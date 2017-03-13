@@ -6,7 +6,7 @@ import com.google.common.collect.Lists;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.util.Base64;
-import no.difi.meldingsutveksling.serviceregistry.controller.EntityResource;
+import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.move.common.oauth.KeystoreHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +28,7 @@ public class EntitySigner {
         this.keystoreHelper = keystoreHelper;
     }
 
-    public String sign(EntityResource entity) throws EntitySignerException {
+    public String sign(Entity entity) throws EntitySignerException {
 
         String json = null;
         try {

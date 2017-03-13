@@ -19,3 +19,9 @@ nbactions.xml
 
 ## Node
 serviceregistry-server/node_modules
+
+## h2 db
+serviceregistry-server/sr-db.mv.db
+serviceregistry-server/sr-db.trace.db
+sr-db.mv.db
+sr-db.trace.db
