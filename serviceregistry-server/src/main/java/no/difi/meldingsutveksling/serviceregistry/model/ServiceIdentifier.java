@@ -12,7 +12,8 @@ public enum ServiceIdentifier {
      * Identifies using Altinn correspondence agency as transport
      */
     DPV,
-    /**
+    FIKS,
+     /**
      * Identifies DIFI sikker digital post aka. Digital Post Innbygger
      */
     DPI,

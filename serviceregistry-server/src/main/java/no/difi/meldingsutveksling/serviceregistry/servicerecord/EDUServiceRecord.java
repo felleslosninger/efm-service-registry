@@ -1,6 +1,5 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
-import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 
 import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.DPO;
 
@@ -13,13 +12,14 @@ public class EDUServiceRecord extends ServiceRecord {
     private String serviceCode;
     private String serviceEditionCode;
 
-    public EDUServiceRecord(ServiceregistryProperties properties, String pemCertificate, String orgnr) {
-        super(properties, pemCertificate, DPO, orgnr);
+    public EDUServiceRecord(String pemCertificate, String endpoint, String orgnr) {
+        super(pemCertificate, DPO, orgnr);
+        this.endpointUrl = endpoint;
     }
 
-    public EDUServiceRecord(ServiceregistryProperties properties, String pemCertificate, String endpoint, String serviceCode,
-                     String serviceEditionCode, String orgnr) {
-        super(properties, pemCertificate, DPO, orgnr);
+    public EDUServiceRecord(String pemCertificate, String endpoint, String serviceCode,
+                            String serviceEditionCode, String orgnr) {
+        super(pemCertificate, DPO, orgnr);
         this.endpointUrl = endpoint;
         this.serviceCode = serviceCode;
         this.serviceEditionCode = serviceEditionCode;

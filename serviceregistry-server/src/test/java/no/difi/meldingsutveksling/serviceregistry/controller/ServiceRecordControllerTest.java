@@ -15,6 +15,8 @@ import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySigner;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
+import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdresseClient;
+import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdressing;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.EDUServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.PostVirksomhetServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
@@ -46,6 +48,7 @@ import java.security.interfaces.RSAPublicKey;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -68,11 +71,16 @@ public class ServiceRecordControllerTest {
     @MockBean
     private EntityService entityService;
 
+    @MockBean
+    private FiksAdresseClient fiksAdresseClient;
+
     @Autowired
     private EntitySigner entitySigner;
 
     @Before
     public void setup() throws EntitySignerException, MalformedURLException {
+        when(fiksAdresseClient.getFiksAdressing(anyString())).thenReturn(FiksAdressing.EMPTY);
+
         OrganizationInfo ORGLinfo = new OrganizationInfo("42", "foo", OrganizationType.from("ORGL"));
         when(entityService.getEntityInfo("42")).thenReturn(ORGLinfo);
         OrganizationInfo ASinfo = new OrganizationInfo("43", "foo", OrganizationType.from("AS"));
@@ -80,7 +88,7 @@ public class ServiceRecordControllerTest {
         CitizenInfo citizenInfo = new CitizenInfo("12345678901");
         when(entityService.getEntityInfo("12345678901")).thenReturn(citizenInfo);
 
-        EDUServiceRecord dpoServiceRecord = new EDUServiceRecord(null, "pem123", "http://foo", "123", "321", "42");
+        EDUServiceRecord dpoServiceRecord = new EDUServiceRecord("pem123", "http://foo", "123", "321", "42");
         when(serviceRecordFactory.createEduServiceRecord("42")).thenReturn(dpoServiceRecord);
 
         ServiceregistryProperties serviceregistryProperties = new ServiceregistryProperties();
