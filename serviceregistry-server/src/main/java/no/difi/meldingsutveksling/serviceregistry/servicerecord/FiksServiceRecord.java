@@ -5,7 +5,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdressing;
 
 public class FiksServiceRecord extends ServiceRecord {
     public FiksServiceRecord(FiksAdressing fiksAdressing) {
-        super(fiksAdressing.getCertificate().getValue(), ServiceIdentifier.FIKS, fiksAdressing.getOrganizationId());
+        super(fiksAdressing.getCertificate().getValue(), ServiceIdentifier.DPF, fiksAdressing.getOrganizationId());
         this.endpointUrl = fiksAdressing.getUrl().toString();
     }
 
