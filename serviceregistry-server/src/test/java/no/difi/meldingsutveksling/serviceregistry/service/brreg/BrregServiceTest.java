@@ -3,7 +3,6 @@ package no.difi.meldingsutveksling.serviceregistry.service.brreg;
 import no.difi.meldingsutveksling.serviceregistry.client.brreg.BrregClientImpl;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
 import no.difi.meldingsutveksling.serviceregistry.model.OrganizationInfo;
-import no.difi.meldingsutveksling.serviceregistry.model.OrganizationType;
 import no.difi.meldingsutveksling.serviceregistry.model.OrganizationTypes;
 import org.junit.Before;
 import org.junit.Test;

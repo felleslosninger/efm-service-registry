@@ -11,6 +11,7 @@ import static no.difi.meldingsutveksling.serviceregistry.krr.PersonResource.Vars
 
 public class SikkerDigitalPostServiceRecord extends ServiceRecord {
 
+    private final ServiceregistryProperties properties;
     private final String orgnrPostkasse;
     private final String postkasseAdresse;
     private final String mobilnummer;
@@ -21,7 +22,8 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
     private final PostAddress returnAddress;
 
     public SikkerDigitalPostServiceRecord(ServiceregistryProperties properties, KontaktInfo kontaktInfo, ServiceIdentifier serviceIdentifier, String organisationNumber, PostAddress postAddress, PostAddress returnAddress) {
-        super(properties, kontaktInfo.getCertificate(), serviceIdentifier, organisationNumber);
+        super(kontaktInfo.getCertificate(), serviceIdentifier, organisationNumber);
+        this.properties = properties;
         orgnrPostkasse = kontaktInfo.getOrgnrPostkasse();
         postkasseAdresse = kontaktInfo.getPostkasseAdresse();
         kanVarsles = kontaktInfo.isNotifiable();

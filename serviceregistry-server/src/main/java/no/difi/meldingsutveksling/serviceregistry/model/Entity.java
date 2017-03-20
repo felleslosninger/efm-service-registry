@@ -9,7 +9,7 @@ import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
  */
 public class Entity {
 
-    private EntityInfo info;
+    private EntityInfo infoRecord;
     private ServiceRecord serviceRecord;
 
     /**
@@ -26,18 +26,18 @@ public class Entity {
         return serviceRecord;
     }
 
-    public EntityInfo getInfo() {
-        return info;
+    public EntityInfo getInfoRecord() {
+        return infoRecord;
     }
 
-    public void setInfo(EntityInfo info) {
-        this.info = info;
+    public void setInfoRecord(EntityInfo info) {
+        this.infoRecord = info;
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-                .add("info", info)
+                .add("info", infoRecord)
                 .add("serviceRecord", serviceRecord)
                 .toString();
     }
