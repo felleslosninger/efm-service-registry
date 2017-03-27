@@ -3,10 +3,7 @@ package no.difi.meldingsutveksling.serviceregistry.service.krr;
 import no.difi.meldingsutveksling.ptp.KontaktInfo;
 import no.difi.meldingsutveksling.ptp.OppslagstjenesteClient;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
-import no.difi.meldingsutveksling.serviceregistry.krr.KRRClient;
-import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
-import no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters;
-import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
+import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,11 +15,13 @@ public class KrrService {
     private ServiceregistryProperties properties;
     private OppslagstjenesteClient client;
     private KRRClient krrClient;
+    private DSFClient dsfClient;
 
     @Autowired
     KrrService(ServiceregistryProperties properties) {
         this.properties = properties;
         this.krrClient = new KRRClient(properties.getKrr().getEndpointURL());
+        this.dsfClient = new DSFClient(properties.getKrr().getDsfEndpointURL());
     }
 
     @PostConstruct
@@ -42,8 +41,11 @@ public class KrrService {
     }
 
     public PersonResource getCizitenInfo(String identifier, String token) throws KRRClientException {
-
         return krrClient.getPersonResource(identifier, token);
+    }
+
+    public DSFResource getDSFInfo(String identifier, String token) throws KRRClientException {
+        return dsfClient.getDSFResource(identifier, token);
     }
 
     private OppslagstjenesteClient.Configuration createConfiguration() {

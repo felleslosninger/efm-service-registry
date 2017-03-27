@@ -17,7 +17,12 @@ class KrrServiceTest extends Specification {
     private kontaktInfo = Mock(KontaktInfo)
 
     def setup() {
-        service = new KrrService(Mock(ServiceregistryProperties))
+        def props = new ServiceregistryProperties()
+        def krr = new ServiceregistryProperties.KontaktOgReservasjonsRegister()
+        krr.setEndpointURL(new URL("http://foo"))
+        krr.setDsfEndpointURL(new URL("http://foo"))
+        props.setKrr(krr)
+        service = new KrrService(props)
         this.service.client = Mock(OppslagstjenesteClient)
     }
 

@@ -5,10 +5,10 @@ import no.difi.meldingsutveksling.logging.Audit;
 import no.difi.meldingsutveksling.logging.MarkerFactory;
 import no.difi.meldingsutveksling.ptp.KontaktInfo;
 import no.difi.meldingsutveksling.ptp.PostAddress;
-import no.difi.meldingsutveksling.ptp.Street;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
+import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
@@ -119,10 +119,19 @@ public class ServiceRecordFactory {
     public ServiceRecord createServiceRecordForCititzen(String identifier, String token) throws KRRClientException {
 
         PersonResource personResource = krrService.getCizitenInfo(identifier, token);
-        PostAddress postAddress = new PostAddress("DIFI", new Street("Grev Wedels plass 9", "", "", ""), "0151", "Oslo", "Norway");
+        DSFResource dsfResource = krrService.getDSFInfo(identifier, token);
+
         if (!personResource.hasMailbox() && NEI.name().equals(personResource.getReserved())) {
             return createPostVirksomhetServiceRecord(identifier);
         }
+
+        String[] codeArea = dsfResource.getPostAddress().split(" ");
+        PostAddress postAddress = new PostAddress(dsfResource.getName(),
+                dsfResource.getStreet(),
+                codeArea[0],
+                codeArea.length > 1 ? codeArea[1] : codeArea[0],
+                dsfResource.getCountry());
+
         return new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI, identifier,
                 postAddress, postAddress);
     }
@@ -134,7 +143,7 @@ public class ServiceRecordFactory {
                 lookup(identifier)
                         .onBehalfOf(clientOrgnr)
                         .require(obligation));
-        PostAddress postAddress = new PostAddress("DIFI", new Street("Grev Wedels plass 9", "", "", ""), "0151", "Oslo", "Norway");
+        PostAddress postAddress = new PostAddress("DIFI", "Grev Wedels plass 9", "0151", "Oslo", "Norway");
         if (!kontaktInfo.hasMailbox() && !kontaktInfo.isReservert()) {
             return createPostVirksomhetServiceRecord(identifier);
         }

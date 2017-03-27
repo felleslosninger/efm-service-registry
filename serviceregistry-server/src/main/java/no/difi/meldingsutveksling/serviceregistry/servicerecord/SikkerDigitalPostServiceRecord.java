@@ -37,7 +37,8 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
     public SikkerDigitalPostServiceRecord(ServiceregistryProperties properties, PersonResource personResource,
                                           ServiceIdentifier serviceIdentifier, String organisationNumber,
                                           PostAddress postAddress, PostAddress returnAddress) {
-        super(properties, personResource.getCertificate(), serviceIdentifier, organisationNumber);
+        super(personResource.getCertificate(), serviceIdentifier, organisationNumber);
+        this.properties = properties;
         orgnrPostkasse = personResource.getDigitalPost().getPostkasseleverandoeradresse();
         postkasseAdresse = personResource.getDigitalPost().getPostkasseadresse();
 
