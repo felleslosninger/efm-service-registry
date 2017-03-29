@@ -1,5 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord
 
+import no.difi.meldingsutveksling.Notification
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound
 import no.difi.meldingsutveksling.serviceregistry.krr.ContactInfoResource
@@ -31,10 +32,10 @@ class ServiceRecordFactoryTest extends Specification {
         def personResourceMock = Mock(PersonResource)
         personResourceMock.getReserved() >> "NEI"
         personResourceMock.hasMailbox() >> false
-        krr.getCizitenInfo(_, _) >> personResourceMock
+        krr.getCizitenInfo(_) >> personResourceMock
 
         when:
-        def serviceRecord = serviceRecordFactory.createServiceRecordForCititzen("1234", "4321")
+        def serviceRecord = serviceRecordFactory.createServiceRecordForCititzen("1234", "4321", "1234", Notification.NOT_OBLIGATED)
 
         then:
         serviceRecord.class == PostVirksomhetServiceRecord
@@ -46,13 +47,13 @@ class ServiceRecordFactoryTest extends Specification {
         personResourceMock.hasMailbox() >> true
         personResourceMock.getDigitalPost() >> Mock(DigitalPostResource)
         personResourceMock.getContactInfo() >> Mock(ContactInfoResource)
-        krr.getCizitenInfo(_, _) >> personResourceMock
+        krr.getCizitenInfo(_) >> personResourceMock
         def dsfResourceMock = Mock(DSFResource)
         dsfResourceMock.getPostAddress() >> "foo bar"
         krr.getDSFInfo(_, _) >> dsfResourceMock
 
         when:
-        def serviceRecord = serviceRecordFactory.createServiceRecordForCititzen("1234", "4321")
+        def serviceRecord = serviceRecordFactory.createServiceRecordForCititzen("1234", "4321", "1234", Notification.NOT_OBLIGATED)
 
         then:
         serviceRecord.class == SikkerDigitalPostServiceRecord

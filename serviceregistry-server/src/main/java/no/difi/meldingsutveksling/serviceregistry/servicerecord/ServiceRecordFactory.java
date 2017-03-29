@@ -3,7 +3,6 @@ package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.logging.Audit;
 import no.difi.meldingsutveksling.logging.MarkerFactory;
-import no.difi.meldingsutveksling.ptp.KontaktInfo;
 import no.difi.meldingsutveksling.ptp.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
@@ -116,15 +115,21 @@ public class ServiceRecordFactory {
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
-    public ServiceRecord createServiceRecordForCititzen(String identifier, String token) throws KRRClientException {
+    public ServiceRecord createServiceRecordForCititzen(String identifier,
+                                                        String token,
+                                                        String onBehalfOrgnr,
+                                                        Notification notification) throws KRRClientException {
 
-        PersonResource personResource = krrService.getCizitenInfo(identifier, token);
-        DSFResource dsfResource = krrService.getDSFInfo(identifier, token);
+        PersonResource personResource = krrService.getCizitenInfo(lookup(identifier)
+                .onBehalfOf(onBehalfOrgnr)
+                .require(notification)
+                .token(token));
 
         if (!personResource.hasMailbox() && NEI.name().equals(personResource.getReserved())) {
             return createPostVirksomhetServiceRecord(identifier);
         }
 
+        DSFResource dsfResource = krrService.getDSFInfo(identifier, token);
         String[] codeArea = dsfResource.getPostAddress().split(" ");
         PostAddress postAddress = new PostAddress(dsfResource.getName(),
                 dsfResource.getStreet(),
@@ -136,17 +141,4 @@ public class ServiceRecordFactory {
                 postAddress, postAddress);
     }
 
-    @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
-    public ServiceRecord createServiceRecordForCititzen(String identifier, String clientOrgnr, Notification obligation) {
-
-        final KontaktInfo kontaktInfo = krrService.getCitizenInfo(
-                lookup(identifier)
-                        .onBehalfOf(clientOrgnr)
-                        .require(obligation));
-        PostAddress postAddress = new PostAddress("DIFI", "Grev Wedels plass 9", "0151", "Oslo", "Norway");
-        if (!kontaktInfo.hasMailbox() && !kontaktInfo.isReservert()) {
-            return createPostVirksomhetServiceRecord(identifier);
-        }
-        return new SikkerDigitalPostServiceRecord(properties, kontaktInfo, ServiceIdentifier.DPI, identifier, postAddress, postAddress);
-    }
 }

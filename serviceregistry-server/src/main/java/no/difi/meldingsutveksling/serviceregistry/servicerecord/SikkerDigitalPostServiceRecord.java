@@ -39,8 +39,14 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
                                           PostAddress postAddress, PostAddress returnAddress) {
         super(personResource.getCertificate(), serviceIdentifier, organisationNumber);
         this.properties = properties;
-        orgnrPostkasse = personResource.getDigitalPost().getPostkasseleverandoeradresse();
-        postkasseAdresse = personResource.getDigitalPost().getPostkasseadresse();
+
+        if (personResource.hasMailbox()) {
+            orgnrPostkasse = personResource.getDigitalPost().getPostkasseleverandoeradresse();
+            postkasseAdresse = personResource.getDigitalPost().getPostkasseadresse();
+        } else {
+            orgnrPostkasse = personResource.getPrintPostkasseLeverandorAdr();
+            postkasseAdresse = null;
+        }
 
         kanVarsles = KAN_VARSLES.name().equals(personResource.getAlertStatus());
         epostAdresse = personResource.getContactInfo().getEmail();

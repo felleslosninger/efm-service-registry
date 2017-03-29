@@ -31,8 +31,18 @@ public class PersonResource {
     @JsonProperty(value = "sertifikat")
     private String certificate;
 
+    private String printPostkasseLeverandorAdr;
+
     public boolean hasMailbox() {
         return !isNullOrEmpty(certificate) && digitalPost != null;
+    }
+
+    public boolean canReceiveDigitalPost() {
+        return hasMailbox() && Reservasjon.NEI.name().equals(getReserved()) && Status.AKTIV.name().equals(getStatus());
+    }
+
+    public boolean isNotifiable() {
+        return Varslingsstatus.KAN_VARSLES.equals(getAlertStatus());
     }
 
     public enum Reservasjon {

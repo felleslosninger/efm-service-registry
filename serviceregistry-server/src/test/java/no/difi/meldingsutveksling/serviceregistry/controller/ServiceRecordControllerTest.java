@@ -110,7 +110,7 @@ public class ServiceRecordControllerTest {
         PostAddress postAddress = mock(PostAddress.class);
         PostAddress returnAddress = mock(PostAddress.class);
         SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(null, kontaktInfoMock, ServiceIdentifier.DPI, "12345678901", postAddress, returnAddress);
-        when(serviceRecordFactory.createServiceRecordForCititzen(eq("12345678901"), any())).thenReturn
+        when(serviceRecordFactory.createServiceRecordForCititzen(eq("12345678901"), any(), any(), any())).thenReturn
                 (dpiServiceRecord);
     }
 

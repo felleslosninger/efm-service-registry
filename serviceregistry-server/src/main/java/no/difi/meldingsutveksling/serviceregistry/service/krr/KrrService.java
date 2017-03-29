@@ -1,7 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.service.krr;
 
-import no.difi.meldingsutveksling.ptp.KontaktInfo;
 import no.difi.meldingsutveksling.ptp.OppslagstjenesteClient;
+import no.difi.meldingsutveksling.ptp.PrintProviderDetails;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,19 +29,19 @@ public class KrrService {
         client = new OppslagstjenesteClient(createConfiguration());
     }
 
-    public KontaktInfo getCitizenInfo(LookupParameters lookupParameters) {
-
-        KontaktInfo kontaktInfo = client.hentKontaktInformasjon(lookupParameters);
-        if (kontaktInfo.canReceiveDigitalPost() &&
-                (kontaktInfo.isNotifiable() || !lookupParameters.isObligatedToBeNotified())) {
-            return kontaktInfo;
+    public PersonResource getCizitenInfo(LookupParameters params) throws
+            KRRClientException {
+        PersonResource personResource = krrClient.getPersonResource(params.getIdentifier(), params.getToken());
+        if (personResource.canReceiveDigitalPost() &&
+                (personResource.isNotifiable() || !params.isObligatedToBeNotified())) {
+            return personResource;
         }
-        kontaktInfo.setPrintDetails(client.getPrintProviderDetails(lookupParameters));
-        return kontaktInfo;
-    }
 
-    public PersonResource getCizitenInfo(String identifier, String token) throws KRRClientException {
-        return krrClient.getPersonResource(identifier, token);
+        PrintProviderDetails printProviderDetails = client.getPrintProviderDetails(params.getClientOrgnr());
+        personResource.setCertificate(printProviderDetails.getPemCertificate());
+        personResource.setPrintPostkasseLeverandorAdr(printProviderDetails.getPostkasseleverandoerAdresse());
+
+        return personResource;
     }
 
     public DSFResource getDSFInfo(String identifier, String token) throws KRRClientException {
@@ -62,5 +62,13 @@ public class KrrService {
 
     public void setClient(OppslagstjenesteClient client) {
         this.client = client;
+    }
+
+    public void setKrrClient(KRRClient krrClient) {
+        this.krrClient = krrClient;
+    }
+
+    public void setDsfClient(DSFClient dsfClient) {
+        this.dsfClient = dsfClient;
     }
 }

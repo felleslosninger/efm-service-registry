@@ -99,7 +99,8 @@ public class ServiceRecordController {
             }
             String tokenValue = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
             try {
-                entity.setServiceRecord(serviceRecordFactory.createServiceRecordForCititzen(identifier, tokenValue));
+                entity.setServiceRecord(serviceRecordFactory.createServiceRecordForCititzen(identifier, tokenValue,
+                        clientOrgnr, obligation));
             } catch (KRRClientException e) {
                 log.error("Error looking up identifier in KRR", e);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
