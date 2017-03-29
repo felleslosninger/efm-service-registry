@@ -5,6 +5,7 @@ import no.difi.meldingsutveksling.logging.Audit;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
+import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySigner;
@@ -34,7 +35,7 @@ import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory
 @RestController
 public class ServiceRecordController {
 
-    private static final Logger logger = LoggerFactory.getLogger(ServiceRecordController.class);
+    private static final Logger log = LoggerFactory.getLogger(ServiceRecordController.class);
     private final ServiceRecordFactory serviceRecordFactory;
     private EntityService entityService;
     private EntitySigner entitySigner;
@@ -85,8 +86,7 @@ public class ServiceRecordController {
 
         String clientOrgnr = auth == null ? null : (String) auth.getPrincipal();
         if (clientOrgnr != null) {
-            String tokenValue = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
-            Audit.info("Authorized lookup request", markerFrom(request.getRemoteAddr(), clientOrgnr, tokenValue));
+            Audit.info("Authorized lookup request", markerFrom(request.getRemoteAddr(), clientOrgnr));
         } else {
             Audit.info("Unauthorized lookup request", markerFrom(request.getRemoteAddr()));
         }
@@ -97,8 +97,14 @@ public class ServiceRecordController {
             if (auth == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No authentication provided.");
             }
-            entity.setServiceRecord(serviceRecordFactory.createServiceRecordForCititzen(identifier, clientOrgnr,
-                    obligation));
+            String tokenValue = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
+            try {
+                entity.setServiceRecord(serviceRecordFactory.createServiceRecordForCititzen(identifier, tokenValue,
+                        clientOrgnr, obligation));
+            } catch (KRRClientException e) {
+                log.error("Error looking up identifier in KRR", e);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            }
         } else if(fiksAdressing.shouldUseFIKS()) {
             entity.setServiceRecord(serviceRecordFactory.createFiksServiceRecord(fiksAdressing));
             entity.setInfoRecord(entityInfo);
@@ -132,19 +138,19 @@ public class ServiceRecordController {
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find certificate for requested organization")
     @ExceptionHandler(CertificateNotFoundException.class)
     public void certificateNotFound(HttpServletRequest req, Exception e) {
-        logger.warn("Certificate not found for: " + req.getRequestURL().toString(), e);
+        log.warn("Certificate not found for: " + req.getRequestURL().toString(), e);
     }
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find endpoint url for service of requested organization")
     @ExceptionHandler(EndpointUrlNotFound.class)
     public void endpointNotFound(HttpServletRequest req, Exception e) {
-        logger.warn(String.format("Endpoint not found for %s", req.getRequestURL()), e);
+        log.warn(String.format("Endpoint not found for %s", req.getRequestURL()), e);
     }
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find entity for the requested identifier")
     @ExceptionHandler(EntityNotFoundException.class)
     public void entityNotFound(HttpServletRequest req, Exception e) {
-        logger.warn(String.format("Entity not found for %s", req.getRequestURL()), e);
+        log.warn(String.format("Entity not found for %s", req.getRequestURL()), e);
     }
 
 }

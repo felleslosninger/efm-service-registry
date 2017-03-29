@@ -8,6 +8,7 @@ import no.difi.meldingsutveksling.ptp.KontaktInfo;
 import no.difi.meldingsutveksling.ptp.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
 import no.difi.meldingsutveksling.serviceregistry.model.CitizenInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.OrganizationInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.OrganizationType;
@@ -78,7 +79,7 @@ public class ServiceRecordControllerTest {
     private EntitySigner entitySigner;
 
     @Before
-    public void setup() throws EntitySignerException, MalformedURLException {
+    public void setup() throws EntitySignerException, MalformedURLException, KRRClientException {
         when(fiksAdresseClient.getFiksAdressing(anyString())).thenReturn(FiksAdressing.EMPTY);
 
         OrganizationInfo ORGLinfo = new OrganizationInfo("42", "foo", OrganizationType.from("ORGL"));
@@ -109,7 +110,7 @@ public class ServiceRecordControllerTest {
         PostAddress postAddress = mock(PostAddress.class);
         PostAddress returnAddress = mock(PostAddress.class);
         SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(null, kontaktInfoMock, ServiceIdentifier.DPI, "12345678901", postAddress, returnAddress);
-        when(serviceRecordFactory.createServiceRecordForCititzen(eq("12345678901"), any(), any())).thenReturn
+        when(serviceRecordFactory.createServiceRecordForCititzen(eq("12345678901"), any(), any(), any())).thenReturn
                 (dpiServiceRecord);
     }
 

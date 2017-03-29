@@ -3,7 +3,11 @@ package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 import no.difi.meldingsutveksling.ptp.KontaktInfo;
 import no.difi.meldingsutveksling.ptp.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
+
+import static no.difi.meldingsutveksling.serviceregistry.krr.PersonResource.Reservasjon.JA;
+import static no.difi.meldingsutveksling.serviceregistry.krr.PersonResource.Varslingsstatus.KAN_VARSLES;
 
 public class SikkerDigitalPostServiceRecord extends ServiceRecord {
 
@@ -26,6 +30,29 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
         epostAdresse = kontaktInfo.getEpostadresse();
         mobilnummer = kontaktInfo.getMobiltelefonnummer();
         fysiskPost = kontaktInfo.isReservert();
+        this.postAddress = postAddress;
+        this.returnAddress = returnAddress;
+    }
+
+    public SikkerDigitalPostServiceRecord(ServiceregistryProperties properties, PersonResource personResource,
+                                          ServiceIdentifier serviceIdentifier, String organisationNumber,
+                                          PostAddress postAddress, PostAddress returnAddress) {
+        super(personResource.getCertificate(), serviceIdentifier, organisationNumber);
+        this.properties = properties;
+
+        if (personResource.hasMailbox()) {
+            orgnrPostkasse = personResource.getDigitalPost().getPostkasseleverandoeradresse();
+            postkasseAdresse = personResource.getDigitalPost().getPostkasseadresse();
+        } else {
+            orgnrPostkasse = personResource.getPrintPostkasseLeverandorAdr();
+            postkasseAdresse = null;
+        }
+
+        kanVarsles = KAN_VARSLES.name().equals(personResource.getAlertStatus());
+        epostAdresse = personResource.getContactInfo().getEmail();
+        mobilnummer = personResource.getContactInfo().getMobile();
+        fysiskPost = JA.name().equals(personResource.getReserved());
+
         this.postAddress = postAddress;
         this.returnAddress = returnAddress;
     }

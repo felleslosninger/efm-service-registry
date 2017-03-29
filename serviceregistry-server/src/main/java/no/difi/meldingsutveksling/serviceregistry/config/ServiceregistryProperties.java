@@ -5,6 +5,7 @@
  */
 package no.difi.meldingsutveksling.serviceregistry.config;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.io.Resource;
 
@@ -192,37 +193,14 @@ public class ServiceregistryProperties {
         }
     }
 
+    @Data
     public static class KontaktOgReservasjonsRegister {
 
         private URL endpointURL;
-
+        private URL dsfEndpointURL;
         private Keystore client;
-
         private Keystore server;
 
-        public URL getEndpointURL() {
-            return endpointURL;
-        }
-
-        public void setEndpointURL(URL endpointURL) {
-            this.endpointURL = endpointURL;
-        }
-
-        public Keystore getClient() {
-            return client;
-        }
-
-        public void setClient(Keystore client) {
-            this.client = client;
-        }
-
-        public Keystore getServer() {
-            return server;
-        }
-
-        public void setServer(Keystore server) {
-            this.server = server;
-        }
     }
 
     public static class FeatureToggle {

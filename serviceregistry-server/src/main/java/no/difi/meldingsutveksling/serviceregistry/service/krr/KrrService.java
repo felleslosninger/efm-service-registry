@@ -1,9 +1,9 @@
 package no.difi.meldingsutveksling.serviceregistry.service.krr;
 
-import no.difi.meldingsutveksling.ptp.KontaktInfo;
 import no.difi.meldingsutveksling.ptp.OppslagstjenesteClient;
+import no.difi.meldingsutveksling.ptp.PrintProviderDetails;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
-import no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters;
+import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,11 +13,15 @@ import javax.annotation.PostConstruct;
 public class KrrService {
 
     private ServiceregistryProperties properties;
-    OppslagstjenesteClient client;
+    private OppslagstjenesteClient client;
+    private KRRClient krrClient;
+    private DSFClient dsfClient;
 
     @Autowired
     KrrService(ServiceregistryProperties properties) {
         this.properties = properties;
+        this.krrClient = new KRRClient(properties.getKrr().getEndpointURL());
+        this.dsfClient = new DSFClient(properties.getKrr().getDsfEndpointURL());
     }
 
     @PostConstruct
@@ -25,15 +29,23 @@ public class KrrService {
         client = new OppslagstjenesteClient(createConfiguration());
     }
 
-    public KontaktInfo getCitizenInfo(LookupParameters lookupParameters) {
-
-        KontaktInfo kontaktInfo = client.hentKontaktInformasjon(lookupParameters);
-        if (kontaktInfo.canReceiveDigitalPost() &&
-                (kontaktInfo.isNotifiable() || !lookupParameters.isObligatedToBeNotified())) {
-            return kontaktInfo;
+    public PersonResource getCizitenInfo(LookupParameters params) throws
+            KRRClientException {
+        PersonResource personResource = krrClient.getPersonResource(params.getIdentifier(), params.getToken());
+        if (personResource.canReceiveDigitalPost() &&
+                (personResource.isNotifiable() || !params.isObligatedToBeNotified())) {
+            return personResource;
         }
-        kontaktInfo.setPrintDetails(client.getPrintProviderDetails(lookupParameters));
-        return kontaktInfo;
+
+        PrintProviderDetails printProviderDetails = client.getPrintProviderDetails(params.getClientOrgnr());
+        personResource.setCertificate(printProviderDetails.getPemCertificate());
+        personResource.setPrintPostkasseLeverandorAdr(printProviderDetails.getPostkasseleverandoerAdresse());
+
+        return personResource;
+    }
+
+    public DSFResource getDSFInfo(String identifier, String token) throws KRRClientException {
+        return dsfClient.getDSFResource(identifier, token);
     }
 
     private OppslagstjenesteClient.Configuration createConfiguration() {
@@ -50,5 +62,13 @@ public class KrrService {
 
     public void setClient(OppslagstjenesteClient client) {
         this.client = client;
+    }
+
+    public void setKrrClient(KRRClient krrClient) {
+        this.krrClient = krrClient;
+    }
+
+    public void setDsfClient(DSFClient dsfClient) {
+        this.dsfClient = dsfClient;
     }
 }

@@ -7,7 +7,6 @@ public class SRMarkerFactory {
 
     private static final String REMOTE_IP = "remote_ip";
     private static final String CLIENT_ID = "client_id";
-    private static final String AUTH_TOKEN = "auth_token";
 
     private SRMarkerFactory() {}
 
@@ -19,12 +18,8 @@ public class SRMarkerFactory {
         return Markers.append(CLIENT_ID, clientId);
     }
 
-    private static LogstashMarker authTokenMarker(String authToken) {
-        return Markers.append(AUTH_TOKEN, authToken);
-    }
-
-    public static LogstashMarker markerFrom(String remoteIp, String clientId, String authToken) {
-        return remoteIpMarker(remoteIp).and(clientIdMarker(clientId)).and(authTokenMarker(authToken));
+    public static LogstashMarker markerFrom(String remoteIp, String clientId) {
+        return remoteIpMarker(remoteIp).and(clientIdMarker(clientId));
     }
 
     public static LogstashMarker markerFrom(String remoteIp) {
