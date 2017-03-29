@@ -1,7 +1,5 @@
 package no.difi.meldingsutveksling.serviceregistry.krr;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -10,8 +8,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 public class KRRClient {
-
-    private static final Logger log = LoggerFactory.getLogger(KRRClient.class);
 
     private URL endpointURL;
 
