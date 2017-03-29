@@ -4,6 +4,10 @@ import no.difi.meldingsutveksling.ptp.KontaktInfo
 import no.difi.meldingsutveksling.ptp.OppslagstjenesteClient
 import no.difi.meldingsutveksling.ptp.PrintProviderDetails
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties
+import no.difi.meldingsutveksling.serviceregistry.krr.DSFClient
+import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource
+import no.difi.meldingsutveksling.serviceregistry.krr.KRRClient
+import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -15,25 +19,40 @@ class KrrServiceTest extends Specification {
     public static final String someIdentifier = "12345"
     private KrrService service
     private kontaktInfo = Mock(KontaktInfo)
+    def personResource = Mock(PersonResource)
+    def dsfResource = Mock(DSFResource)
 
     def setup() {
-        service = new KrrService(Mock(ServiceregistryProperties))
-        this.service.client = Mock(OppslagstjenesteClient)
+        def props = new ServiceregistryProperties()
+        def krr = new ServiceregistryProperties.KontaktOgReservasjonsRegister()
+        krr.setEndpointURL(new URL("http://foo"))
+        krr.setDsfEndpointURL(new URL("http://foo"))
+        props.setKrr(krr)
+        service = new KrrService(props)
     }
 
     @Unroll
     def "given recipient #scenario then KRRService should use print service"() {
         given:
-        kontaktInfo.isNotifiable() >> isNotifiable
-        kontaktInfo.canReceiveDigitalPost() >> true
-        def lookupParameters = lookup(someIdentifier).require(notificationObligation)
-        service.client.hentKontaktInformasjon(lookupParameters) >> kontaktInfo
+        personResource.isNotifiable() >> isNotifiable
+        personResource.canReceiveDigitalPost() >> true
+        def lookupParameters = lookup(someIdentifier).require(notificationObligation).onBehalfOf(someIdentifier)
+        def krrClient = Mock(KRRClient)
+        krrClient.getPersonResource(_, _) >> personResource
+        service.setKrrClient(krrClient)
+        def dsfClient = Mock(DSFClient)
+        dsfClient.getDSFResource(_, _) >> dsfResource
+        service.setDsfClient(dsfClient)
+
+        def details = new PrintProviderDetails("foo", "bar")
+        def oppslagstjenesteClient = Mock(OppslagstjenesteClient)
+        service.setClient(oppslagstjenesteClient)
 
         when:
-        service.getCitizenInfo(lookupParameters)
+        service.getCizitenInfo(lookupParameters)
 
         then:
-        times * kontaktInfo.setPrintDetails(_)
+        times * service.client.getPrintProviderDetails(_) >> details
 
         where:
         scenario                                                 | notificationObligation | isNotifiable | times
@@ -43,21 +62,4 @@ class KrrServiceTest extends Specification {
         "cannot be notified and is obligated to be notified"     | OBLIGATED              | true         | 0
     }
 
-    @Unroll
-    def "KontaktInfo for #scenario then getCitizenInfo should setPrintDetails #print times"() {
-        given:
-        kontaktInfo.canReceiveDigitalPost() >> receive
-        def lookupParameters = lookup(someIdentifier).require(NOT_OBLIGATED)
-        service.client.hentKontaktInformasjon(lookupParameters) >> kontaktInfo
-        service.client.getPrintProviderDetails(lookupParameters) >> new PrintProviderDetails("", "")
-
-        when:
-        service.getCitizenInfo(lookupParameters)
-        then:
-        print * kontaktInfo.setPrintDetails(_ as PrintProviderDetails)
-        where:
-        scenario                                   | receive | print
-        'can receive digital mail and has mailbox' | true    | 0
-        'cannot receive digital mail'              | false   | 1
-    }
 }

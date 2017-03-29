@@ -4,7 +4,7 @@
 
     <groupId>no.difi.meldingsutveksling</groupId>
     <artifactId>serviceregistry-parent</artifactId>
-    <version>1.0.38</version>
+    <version>1.0.39</version>
     <packaging>pom</packaging>
 
     <scm>
@@ -139,6 +139,11 @@
             <version>1.0-groovy-2.4</version>
             <scope>test</scope>
           </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>1.16.10</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

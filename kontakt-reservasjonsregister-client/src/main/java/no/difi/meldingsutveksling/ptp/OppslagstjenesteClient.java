@@ -80,15 +80,15 @@ public class OppslagstjenesteClient {
     /**
      * Tjenesten kan brukes for å sende forsendelser av brev til mottakere som har reservert seg eller ikke registrert/oppdatert sin kontaktinformasjon.
      *
-     * @param lookupParameters inneholder organisasjonsnummeret til virksomheten man gjør oppslag på vegne av
+     * @param clientOrgnr inneholder organisasjonsnummeret til virksomheten man gjør oppslag på vegne av
      * @return parametre for å sende melding til printtjenesten
      */
-    public PrintProviderDetails getPrintProviderDetails(LookupParameters lookupParameters) {
+    public PrintProviderDetails getPrintProviderDetails(String clientOrgnr) {
         HentPrintSertifikatForespoersel request = new HentPrintSertifikatForespoersel();
         WebServiceTemplate template = createWebServiceTemplate(HentPrintSertifikatRespons.class.getPackage().getName());
         WebServiceMessageCallback callback;
         if (conf.isPaaVegneAvEnabled()) {
-            callback = new SoapHeaderCallbackHandler(lookupParameters.getClientOrgnr());
+            callback = new SoapHeaderCallbackHandler(clientOrgnr);
         } else {
             callback = noopCallback -> {}; // only needed during development/test.
         }
