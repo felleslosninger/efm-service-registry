@@ -42,11 +42,9 @@ public class DSFClient {
         RestTemplate rt = new RestTemplate();
         ResponseEntity<String> response = rt.exchange(uri, HttpMethod.POST, httpEntity, String.class);
 
-        if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
-            throw new KRRClientException("KRR endpoint returned 404 (Not Found) for identifier " + identifier);
-        }
-        if (response.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-            throw new KRRClientException("KRR endpoint returned 401 (Unauthorized)");
+        if (response.getStatusCode() != HttpStatus.OK) {
+            throw new KRRClientException(String.format("DSF endpoint returned %s (%s)", response.getStatusCode().value(),
+                    response.getStatusCode().getReasonPhrase()));
         }
 
         String payload;

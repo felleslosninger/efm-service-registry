@@ -14,7 +14,6 @@ import javax.annotation.PostConstruct;
 public class KrrService {
 
     private ServiceregistryProperties properties;
-    private KeystoreHelper keystoreHelper;
     private OppslagstjenesteClient client;
     private KRRClient krrClient;
     private DSFClient dsfClient;
