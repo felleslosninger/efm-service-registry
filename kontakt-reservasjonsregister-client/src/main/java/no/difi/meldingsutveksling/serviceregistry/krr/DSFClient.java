@@ -1,18 +1,26 @@
 package no.difi.meldingsutveksling.serviceregistry.krr;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.proc.BadJWSException;
+import no.difi.move.common.oauth.JWTDecoder;
+import no.difi.move.common.oauth.KeystoreHelper;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.cert.CertificateException;
 
 public class DSFClient {
 
     private URL endpointURL;
+    private KeystoreHelper keystoreHelper;
 
-    public DSFClient(URL endpointURL) {
+    public DSFClient(URL endpointURL, KeystoreHelper keystoreHelper) {
         this.endpointURL= endpointURL;
+        this.keystoreHelper = keystoreHelper;
     }
 
     public DSFResource getDSFResource(String identifier, String token) throws KRRClientException {
@@ -28,11 +36,11 @@ public class DSFClient {
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer "+token);
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Accept", "application/jose");
         HttpEntity<Object> httpEntity = new HttpEntity<>(request, headers);
 
         RestTemplate rt = new RestTemplate();
-        ResponseEntity<DSFResponse> response = rt.exchange(uri, HttpMethod.POST, httpEntity, DSFResponse.class);
+        ResponseEntity<String> response = rt.exchange(uri, HttpMethod.POST, httpEntity, String.class);
 
         if (response.getStatusCode() == HttpStatus.NOT_FOUND) {
             throw new KRRClientException("KRR endpoint returned 404 (Not Found) for identifier " + identifier);
@@ -41,6 +49,22 @@ public class DSFClient {
             throw new KRRClientException("KRR endpoint returned 401 (Unauthorized)");
         }
 
-        return response.getBody().getPersons().get(0);
+        String payload;
+        try {
+            JWTDecoder jwtDecoder = new JWTDecoder(keystoreHelper);
+            payload = jwtDecoder.getPayload(response.getBody());
+        } catch (CertificateException | BadJWSException e) {
+            throw new KRRClientException("Error during decoding JWT response from KRR" ,e);
+        }
+
+        ObjectMapper om = new ObjectMapper();
+        DSFResponse dsfResponse;
+        try {
+            dsfResponse = om.readValue(payload, DSFResponse.class);
+        } catch (IOException e) {
+            throw new KRRClientException("Error mapping payload to " + DSFResponse.class.getName(), e);
+        }
+
+        return dsfResponse.getPersons().get(0);
     }
 }
