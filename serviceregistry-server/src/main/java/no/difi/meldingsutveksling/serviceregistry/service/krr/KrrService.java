@@ -4,6 +4,7 @@ import no.difi.meldingsutveksling.ptp.OppslagstjenesteClient;
 import no.difi.meldingsutveksling.ptp.PrintProviderDetails;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
+import no.difi.move.common.oauth.KeystoreHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,10 +19,10 @@ public class KrrService {
     private DSFClient dsfClient;
 
     @Autowired
-    KrrService(ServiceregistryProperties properties) {
+    KrrService(ServiceregistryProperties properties, KeystoreHelper keystoreHelper) {
         this.properties = properties;
-        this.krrClient = new KRRClient(properties.getKrr().getEndpointURL());
-        this.dsfClient = new DSFClient(properties.getKrr().getDsfEndpointURL());
+        this.krrClient = new KRRClient(properties.getKrr().getEndpointURL(), keystoreHelper);
+        this.dsfClient = new DSFClient(properties.getKrr().getDsfEndpointURL(), keystoreHelper);
     }
 
     @PostConstruct
