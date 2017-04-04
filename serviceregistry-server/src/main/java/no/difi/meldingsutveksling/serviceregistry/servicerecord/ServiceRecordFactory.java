@@ -69,8 +69,9 @@ public class ServiceRecordFactory {
         try {
             ep = elmaLookupService.lookup(NORWAY_PREFIX + orgnr);
         } catch (EndpointUrlNotFound endpointUrlNotFound) {
+            logger.info(MarkerFactory.receiverMarker(orgnr),
+                    String.format("Attempted to lookup receiver in ELMA: %s", endpointUrlNotFound.getMessage()));
             Audit.info("Does not exist in ELMA (no IP?) -> DPV will be used", MarkerFactory.receiverMarker(orgnr));
-            logger.warn(MarkerFactory.receiverMarker(orgnr), "Attempted to lookup receiver in ELMA", endpointUrlNotFound);
             return createPostVirksomhetServiceRecord(orgnr);
         }
         String pemCertificate = lookupPemCertificate(orgnr);
