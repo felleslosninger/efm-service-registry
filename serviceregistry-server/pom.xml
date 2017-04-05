@@ -294,6 +294,10 @@
             <groupId>no.difi.move-common</groupId>
             <artifactId>security</artifactId>
         </dependency>
+        <dependency>
+            <groupId>no.difi.move-common</groupId>
+            <artifactId>cloud</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.nimbusds</groupId>
