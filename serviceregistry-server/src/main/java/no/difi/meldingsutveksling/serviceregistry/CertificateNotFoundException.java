@@ -1,7 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry;
 
 
-import no.difi.virksert.client.VirksertClientException;
+import no.difi.virksert.client.lang.VirksertClientException;
 
 public class CertificateNotFoundException extends RuntimeException {
     public CertificateNotFoundException(Throwable cause) {
