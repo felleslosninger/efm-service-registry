@@ -3,12 +3,12 @@
     <parent>
         <artifactId>serviceregistry-parent</artifactId>
         <groupId>no.difi.meldingsutveksling</groupId>
-        <version>1.0.39</version>
+        <version>1.0.40</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>kontakt-reservasjonsregister-client</artifactId>
-    <version>1.0.39</version>
+    <version>1.0.40</version>
 
     <dependencies>
         <dependency>
@@ -22,6 +22,10 @@
         <dependency>
             <groupId>no.difi.move-common</groupId>
             <artifactId>webservice-tools</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>no.difi.move-common</groupId>
+            <artifactId>security</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.wss4j</groupId>

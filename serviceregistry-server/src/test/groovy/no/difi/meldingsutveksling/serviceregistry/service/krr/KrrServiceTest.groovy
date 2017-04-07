@@ -1,6 +1,5 @@
 package no.difi.meldingsutveksling.serviceregistry.service.krr
 
-import no.difi.meldingsutveksling.ptp.KontaktInfo
 import no.difi.meldingsutveksling.ptp.OppslagstjenesteClient
 import no.difi.meldingsutveksling.ptp.PrintProviderDetails
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties
@@ -8,6 +7,7 @@ import no.difi.meldingsutveksling.serviceregistry.krr.DSFClient
 import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClient
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource
+import no.difi.move.common.oauth.KeystoreHelper
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -18,7 +18,6 @@ import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lo
 class KrrServiceTest extends Specification {
     public static final String someIdentifier = "12345"
     private KrrService service
-    private kontaktInfo = Mock(KontaktInfo)
     def personResource = Mock(PersonResource)
     def dsfResource = Mock(DSFResource)
 
@@ -28,7 +27,7 @@ class KrrServiceTest extends Specification {
         krr.setEndpointURL(new URL("http://foo"))
         krr.setDsfEndpointURL(new URL("http://foo"))
         props.setKrr(krr)
-        service = new KrrService(props)
+        service = new KrrService(props, Mock(KeystoreHelper))
     }
 
     @Unroll

@@ -4,7 +4,7 @@
 
     <groupId>no.difi.meldingsutveksling</groupId>
     <artifactId>serviceregistry-parent</artifactId>
-    <version>1.0.39</version>
+    <version>1.0.40</version>
     <packaging>pom</packaging>
 
     <scm>
@@ -58,7 +58,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <move-common.version>1.0.8</move-common.version>
+        <move-common.version>1.0.12</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
     </properties>
 
@@ -79,6 +79,11 @@
             <dependency>
                 <groupId>no.difi.move-common</groupId>
                 <artifactId>audit</artifactId>
+                <version>${move-common.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>no.difi.move-common</groupId>
+                <artifactId>cloud</artifactId>
                 <version>${move-common.version}</version>
             </dependency>
             <dependency>
