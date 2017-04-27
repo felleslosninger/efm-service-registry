@@ -3,6 +3,7 @@ package no.difi.meldingsutveksling.serviceregistry.service.virksert;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.vefa.peppol.common.model.ParticipantIdentifier;
 import no.difi.vefa.peppol.common.model.ProcessIdentifier;
+import no.difi.vefa.peppol.common.model.Scheme;
 import no.difi.virksert.api.Mode;
 import no.difi.virksert.client.BusinessCertificateClient;
 import no.difi.virksert.client.lang.VirksertClientException;
@@ -38,13 +39,13 @@ public class VirkSertService {
         if (env.acceptsProfiles("production")) {
             virksertClient = BusinessCertificateClient.of(properties.getAr().getEndpointURL().toURI(), Mode.PRODUCTION);
         } else {
-            virksertClient = BusinessCertificateClient.of(properties.getAr().getEndpointURL().toURI(), Mode.TEST);
+            virksertClient = BusinessCertificateClient.of(properties.getAr().getEndpointURL().toURI(), "/recipe-move-difiSigned.xml");
         }
     }
 
     public String getCertificate(String orgNumber) throws VirksertClientException {
-        X509Certificate cert = virksertClient.fetchCertificate(ParticipantIdentifier.of(orgNumber),
-                ProcessIdentifier.of(properties.getAr().getProcessIdentifier()));
+        X509Certificate cert = virksertClient.fetchCertificate(ParticipantIdentifier.of("9908:"+orgNumber),
+                ProcessIdentifier.of(properties.getAr().getProcessIdentifier(), Scheme.of(properties.getAr().getSchema())));
         return CertificateToString.toString(cert);
     }
 }

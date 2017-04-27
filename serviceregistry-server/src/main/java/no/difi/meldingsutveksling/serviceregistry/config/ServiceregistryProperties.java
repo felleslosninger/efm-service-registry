@@ -246,6 +246,7 @@ public class ServiceregistryProperties {
 
         private URL endpointURL;
         private String processIdentifier;
+        private String schema;
 
     }
 

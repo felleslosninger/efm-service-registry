@@ -27,6 +27,17 @@
             </releases>
         </repository>
         <repository>
+            <id>DIFI MOVE Snapshots party</id>
+            <name>DIFI MOVE Snapshots party on Nexus</name>
+            <url>https://beta-meldingsutveksling.difi.no/content/repositories/snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </repository>
+        <repository>
             <id>DIFI Internal MOVE 3rd party</id>
             <name>DIFI Internal MOVE 3rd party on Nexus</name>
             <url>http://itest-move-app01.difi.local:8081/content/repositories/difi.meldingsutveksler/</url>
@@ -106,7 +117,7 @@
             <dependency>
                 <groupId>com.github.difi.vefa-peppol</groupId>
                 <artifactId>peppol-lookup</artifactId>
-                <version>22fcd032f9</version>
+                <version>d22aca8</version>
             </dependency>
             <dependency>
                 <groupId>no.difi.vefa</groupId>
