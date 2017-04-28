@@ -20,6 +20,6 @@ public enum ServiceIdentifier {
     /**
      * Identifies eInnsyn
      */
-    DPE_innsyn,
-    DPE_data
+    DPE_INNSYN,
+    DPE_DATA
 }
