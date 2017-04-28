@@ -16,7 +16,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdressing;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.vefa.peppol.common.model.Endpoint;
-import no.difi.virksert.client.VirksertClientException;
+import no.difi.virksert.client.lang.VirksertClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -241,17 +241,13 @@ public class ServiceregistryProperties {
         }
     }
 
+    @Data
     public static class Adresseregister {
 
         private URL endpointURL;
+        private String processIdentifier;
+        private String schema;
 
-        public URL getEndpointURL() {
-            return endpointURL;
-        }
-
-        public void setEndpointURL(URL endpointURL) {
-            this.endpointURL = endpointURL;
-        }
     }
 
     public static class Keystore {
