@@ -1,5 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.service.virksert;
 
+import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.vefa.peppol.common.model.ParticipantIdentifier;
 import no.difi.vefa.peppol.common.model.ProcessIdentifier;
@@ -13,6 +14,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.cert.X509Certificate;
 
@@ -35,11 +37,23 @@ public class VirkSertService {
     }
 
     @PostConstruct
-    public void init() throws URISyntaxException, BusinessCertificateException {
-        if (env.acceptsProfiles("production")) {
-            virksertClient = BusinessCertificateClient.of(properties.getAr().getEndpointURL().toURI(), Mode.PRODUCTION);
-        } else {
-            virksertClient = BusinessCertificateClient.of(properties.getAr().getEndpointURL().toURI(), "/recipe-move-difiSigned.xml");
+    public void init() {
+
+        URI virksertUrl = null;
+        try {
+            virksertUrl = properties.getAr().getEndpointURL().toURI();
+        } catch (URISyntaxException e) {
+            throw new ServiceRegistryException(e);
+        }
+
+        try {
+            if (env.acceptsProfiles("production")) {
+                virksertClient = BusinessCertificateClient.of(virksertUrl, Mode.PRODUCTION);
+            } else {
+                virksertClient = BusinessCertificateClient.of(virksertUrl, "/recipe-move-difiSigned.xml");
+            }
+        } catch (BusinessCertificateException e) {
+            throw new ServiceRegistryException(e);
         }
     }
 
