@@ -306,6 +306,12 @@
         </dependency>
 
         <dependency>
+            <groupId>no.difi.virksert</groupId>
+            <artifactId>virksert-move</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
         </dependency>
