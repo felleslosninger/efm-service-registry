@@ -167,17 +167,12 @@ public class ServiceregistryProperties {
         }
     }
 
+    @Data
     public static class Auth {
 
         private boolean enable;
+        private String sasToken;
 
-        public boolean isEnable() {
-            return enable;
-        }
-
-        public void setEnable(boolean enable) {
-            this.enable = enable;
-        }
     }
 
     public static class DigitalPostInnbygger {

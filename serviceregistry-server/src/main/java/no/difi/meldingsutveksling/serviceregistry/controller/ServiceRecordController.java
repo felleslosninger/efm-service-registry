@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
@@ -69,7 +70,7 @@ public class ServiceRecordController {
      * @param obligation determines service record based on the recipient being notifiable
      * @return JSON object with information needed to send a message
      */
-    @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity entity(
             @PathVariable("identifier") String identifier,
