@@ -33,7 +33,21 @@ public class BrregClientImpl implements BrregClient {
      */
     @Override
     public Optional<BrregEnhet> getBrregEnhetByOrgnr(String orgnr) {
-        URI currentURI = uri.resolve(String.format("enhetsregisteret/enhet/%s.json", orgnr));
+        return getEnhet("enhetsregisteret/enhet", orgnr);
+    }
+
+    /**
+     * Lookup a sub organization in BRREG
+     * @param orgnr organization number to lookup
+     * @return BRREG enhet or empty if none is found
+     */
+    @Override
+    public Optional<BrregEnhet> getBrregUnderenhetByOrgnr(String orgnr) {
+        return getEnhet("enhetsregisteret/underenhet", orgnr);
+    }
+
+    private Optional<BrregEnhet> getEnhet(String registerUriPart, String orgnr) {
+        URI currentURI = uri.resolve(String.format("%s/%s.json", registerUriPart, orgnr));
         RestTemplate rt = new RestTemplate();
         BrregEnhet enhet= null;
         try {

@@ -45,6 +45,7 @@ import java.net.URL;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
@@ -83,11 +84,12 @@ public class ServiceRecordControllerTest {
         when(fiksAdresseClient.getFiksAdressing(anyString())).thenReturn(FiksAdressing.EMPTY);
 
         OrganizationInfo ORGLinfo = new OrganizationInfo("42", "foo", OrganizationType.from("ORGL"));
-        when(entityService.getEntityInfo("42")).thenReturn(ORGLinfo);
+        when(entityService.getEntityInfo("42")).thenReturn(Optional.of(ORGLinfo));
         OrganizationInfo ASinfo = new OrganizationInfo("43", "foo", OrganizationType.from("AS"));
-        when(entityService.getEntityInfo("43")).thenReturn(ASinfo);
+        when(entityService.getEntityInfo("43")).thenReturn(Optional.of(ASinfo));
         CitizenInfo citizenInfo = new CitizenInfo("12345678901");
-        when(entityService.getEntityInfo("12345678901")).thenReturn(citizenInfo);
+        when(entityService.getEntityInfo("12345678901")).thenReturn(Optional.of(citizenInfo));
+        when(entityService.getEntityInfo("1337")).thenReturn(Optional.empty());
 
         EDUServiceRecord dpoServiceRecord = new EDUServiceRecord("pem123", "http://foo", "123", "321", "42");
         when(serviceRecordFactory.createEduServiceRecord("42")).thenReturn(dpoServiceRecord);

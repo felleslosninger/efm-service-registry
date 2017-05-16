@@ -28,6 +28,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 
+import java.util.Optional;
+
 import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.*;
 import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 
@@ -79,8 +81,8 @@ public class ServiceRecordController {
 
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
-        EntityInfo entityInfo = entityService.getEntityInfo(identifier);
-        if (entityInfo == null) {
+        Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
+        if (!entityInfo.isPresent()) {
             throw new EntityNotFoundException("Could not find entity for identifier: " + identifier);
         }
 
@@ -91,9 +93,9 @@ public class ServiceRecordController {
             Audit.info("Unauthorized lookup request", markerFrom(request.getRemoteAddr()));
         }
 
-        final FiksAdressing fiksAdressing = fiksAdresseClient.getFiksAdressing(entityInfo.getIdentifier());
+        final FiksAdressing fiksAdressing = fiksAdresseClient.getFiksAdressing(entityInfo.get().getIdentifier());
 
-        if (shouldCreateServiceRecordForCititzen().test(entityInfo)) {
+        if (shouldCreateServiceRecordForCititzen().test(entityInfo.get())) {
             if (auth == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No authentication provided.");
             }
@@ -107,18 +109,18 @@ public class ServiceRecordController {
             }
         } else if(fiksAdressing.shouldUseFIKS()) {
             entity.setServiceRecord(serviceRecordFactory.createFiksServiceRecord(fiksAdressing));
-            entity.setInfoRecord(entityInfo);
+            entity.setInfoRecord(entityInfo.get());
             return new ResponseEntity<>(entity, HttpStatus.OK);
         }
 
-        if (usesFormidlingstjenesten().test(entityInfo)) {
+        if (usesFormidlingstjenesten().test(entityInfo.get())) {
             entity.setServiceRecord(serviceRecordFactory.createEduServiceRecord(identifier));
         }
-        if (usesPostTilVirksomhet().test(entityInfo) || entity.getServiceRecord() == null) {
+        if (usesPostTilVirksomhet().test(entityInfo.get()) || entity.getServiceRecord() == null) {
             entity.setServiceRecord(serviceRecordFactory.createPostVirksomhetServiceRecord(identifier));
         }
 
-        entity.setInfoRecord(entityInfo);
+        entity.setInfoRecord(entityInfo.get());
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 

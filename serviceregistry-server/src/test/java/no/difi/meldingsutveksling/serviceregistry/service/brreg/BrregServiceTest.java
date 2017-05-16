@@ -30,7 +30,7 @@ public class BrregServiceTest {
 
     @Test
     public void brregHasOrganizationInfo() {
-        assertEquals(difi, brregService.getOrganizationInfo(difi.getIdentifier()));
+        assertEquals(difi, brregService.getOrganizationInfo(difi.getIdentifier()).get());
     }
 
     private BrregClientImpl setupMock(String orgNavn, String orgNr, String organisasjonsform) {
