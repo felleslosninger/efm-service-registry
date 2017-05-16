@@ -108,6 +108,7 @@ public class ServiceRecordFactory {
         return serviceRecord;
     }
 
+    @PreAuthorize("#oauth2.hasScope('move/dpe.read')")
     private ServiceRecord createDpeServiceRecord(String orgnr) {
         String pemCertificate = lookupPemCertificate(orgnr);
         DpeServiceRecord sr = DpeServiceRecord.of(pemCertificate, orgnr);
