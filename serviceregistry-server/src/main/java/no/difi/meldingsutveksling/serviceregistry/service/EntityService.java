@@ -6,6 +6,8 @@ import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.isCitizen;
 
 /**
@@ -27,9 +29,9 @@ public class EntityService {
      * @param identifier for an entity either an organization number or a fodselsnummer
      * @return info needed to send messages to the entity
      */
-    public EntityInfo getEntityInfo(String identifier) {
+    public Optional<EntityInfo> getEntityInfo(String identifier) {
         if (isCitizen().test(identifier)) {
-            return new CitizenInfo(identifier);
+            return Optional.of(new CitizenInfo(identifier));
         } else {
             return brregService.getOrganizationInfo(identifier);
         }

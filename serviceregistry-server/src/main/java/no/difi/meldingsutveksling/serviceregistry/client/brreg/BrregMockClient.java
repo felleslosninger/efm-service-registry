@@ -1,10 +1,11 @@
 package no.difi.meldingsutveksling.serviceregistry.client.brreg;
 
-import java.net.URISyntaxException;
-import java.util.Optional;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.dev.TestEnvironmentEnheter;
+
+import java.net.URISyntaxException;
+import java.util.Optional;
 
 public class BrregMockClient implements BrregClient {
 
@@ -27,5 +28,15 @@ public class BrregMockClient implements BrregClient {
         }
 
         return clientImpl.getBrregEnhetByOrgnr(orgnr);
+    }
+
+    @Override
+    public Optional<BrregEnhet> getBrregUnderenhetByOrgnr(String orgnr) {
+        Optional<BrregEnhet> enhet = enheter.getBrregEnhet(orgnr);
+        if (enhet.isPresent()) {
+            return enhet;
+        }
+
+        return clientImpl.getBrregUnderenhetByOrgnr(orgnr);
     }
 }
