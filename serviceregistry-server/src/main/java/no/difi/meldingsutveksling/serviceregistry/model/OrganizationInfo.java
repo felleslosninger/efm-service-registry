@@ -3,20 +3,17 @@ package no.difi.meldingsutveksling.serviceregistry.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
-import java.io.Serializable;
-
 /**
  * Contains information relevant for an organization
  */
 @Data
-public class OrganizationInfo implements Serializable, EntityInfo {
+public class OrganizationInfo implements EntityInfo {
 
     private String identifier;
     private String organizationName;
     @JsonIgnore
     private OrganizationType organizationType;
     private BrregPostadresse postadresse;
-    private static final long serialVersionUID = 7526471155622776555L;
 
     // Needed by the JSON marshaller?
     public OrganizationInfo() {
