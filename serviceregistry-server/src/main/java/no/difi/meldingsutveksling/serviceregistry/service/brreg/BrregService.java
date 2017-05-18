@@ -30,6 +30,7 @@ public class BrregService {
             enhet = brregClient.getBrregUnderenhetByOrgnr(orgNr);
         }
 
-        return enhet.map(x -> new OrganizationInfo(orgNr, x.getNavn(), OrganizationType.from(x.getOrganisasjonsform())));
+        return enhet.map(x -> new OrganizationInfo(orgNr, x.getNavn(), x.getPostadresse(),
+                OrganizationType.from(x.getOrganisasjonsform())));
     }
 }

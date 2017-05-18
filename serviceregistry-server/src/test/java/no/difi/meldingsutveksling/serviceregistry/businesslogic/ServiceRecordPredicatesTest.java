@@ -66,11 +66,11 @@ public class ServiceRecordPredicatesTest {
 
     private OrganizationInfo privateOrganization() {
         final OrganizationType privateType = new OrganizationTypes().privateOrganization().stream().findFirst().orElseThrow(() -> new RuntimeException("Could not find a private organization"));
-        return new OrganizationInfo.Builder().setOrganizationType(privateType).build();
+        return new OrganizationInfo.Builder().withOrganizationType(privateType).build();
     }
 
     private OrganizationInfo publicOrganization() {
         final OrganizationType publicType = new OrganizationTypes().publicOrganization().stream().findFirst().orElseThrow(() -> new RuntimeException("Could not find a public organization type"));
-        return new OrganizationInfo.Builder().setOrganizationType(publicType).build();
+        return new OrganizationInfo.Builder().withOrganizationType(publicType).build();
     }
 }
