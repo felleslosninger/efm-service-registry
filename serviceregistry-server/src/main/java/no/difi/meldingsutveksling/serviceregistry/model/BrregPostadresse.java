@@ -23,11 +23,6 @@ public class BrregPostadresse {
     private String poststed;
     private String land;
 
-    @JsonIgnore
-    public Integer getpId() {
-        return this.pId;
-    }
-
     BrregPostadresse() {
     }
 
@@ -37,4 +32,10 @@ public class BrregPostadresse {
         this.poststed = poststed;
         this.land = land;
     }
+
+    @JsonIgnore
+    public Integer getpId() {
+        return this.pId;
+    }
+
 }
