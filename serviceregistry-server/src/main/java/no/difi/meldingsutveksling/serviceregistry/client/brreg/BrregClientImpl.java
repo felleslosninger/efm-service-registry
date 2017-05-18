@@ -3,6 +3,9 @@ package no.difi.meldingsutveksling.serviceregistry.client.brreg;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
@@ -48,13 +51,19 @@ public class BrregClientImpl implements BrregClient {
 
     private Optional<BrregEnhet> getEnhet(String registerUriPart, String orgnr) {
         URI currentURI = uri.resolve(String.format("%s/%s.json", registerUriPart, orgnr));
+
         RestTemplate rt = new RestTemplate();
-        BrregEnhet enhet= null;
         try {
-            enhet= rt.getForObject(currentURI, BrregEnhet.class);
-        } catch (Exception e) {
-            log.info(String.format("Could not find entity for orgNr %s in path \'%s\'.", orgnr, registerUriPart));
+            ResponseEntity<BrregEnhet> response = rt.getForEntity(currentURI, BrregEnhet.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                return Optional.of(response.getBody());
+            }
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
+                log.error(String.format("Error looking up entity with identifier=%s", orgnr), e);
+            }
         }
-        return Optional.ofNullable(enhet);
+        return Optional.empty();
+
     }
 }
