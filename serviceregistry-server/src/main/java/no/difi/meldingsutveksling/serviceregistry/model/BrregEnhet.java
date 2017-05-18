@@ -1,53 +1,24 @@
 package no.difi.meldingsutveksling.serviceregistry.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.common.base.MoreObjects;
+import lombok.Data;
 
+import javax.persistence.*;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 
 /**
  * A POJO representing the JSON object returned from BRREG
  */
 @Entity
 @JsonIgnoreProperties
+@Data
 public class BrregEnhet {
+
     @Id
-    String organisasjonsnummer;
-    String navn;
-    String organisasjonsform;
+    private String organisasjonsnummer;
+    private String navn;
+    private String organisasjonsform;
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private BrregPostadresse postadresse;
 
-
-    public String getOrganisasjonsnummer() {
-        return organisasjonsnummer;
-    }
-
-    public void setOrganisasjonsnummer(String organisasjonsnummer) {
-        this.organisasjonsnummer = organisasjonsnummer;
-    }
-
-    public String getNavn() {
-        return navn;
-    }
-
-    public void setNavn(String navn) {
-        this.navn = navn;
-    }
-
-    public String getOrganisasjonsform() {
-        return organisasjonsform;
-    }
-
-    public void setOrganisasjonsform(String organisasjonsform) {
-        this.organisasjonsform = organisasjonsform;
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("organisasjonsnummer", organisasjonsnummer)
-                .add("navn", navn)
-                .add("organisasjonsform", organisasjonsform)
-                .toString();
-    }
 }

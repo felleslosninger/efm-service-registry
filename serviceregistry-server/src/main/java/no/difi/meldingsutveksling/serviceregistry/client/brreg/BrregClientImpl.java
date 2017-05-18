@@ -53,7 +53,7 @@ public class BrregClientImpl implements BrregClient {
         try {
             enhet= rt.getForObject(currentURI, BrregEnhet.class);
         } catch (Exception e) {
-            log.error(String.format("Could not find entity for orgNr %s.", orgnr), e);
+            log.info(String.format("Could not find entity for orgNr %s in path \'%s\'.", orgnr, registerUriPart));
         }
         return Optional.ofNullable(enhet);
     }
