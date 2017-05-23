@@ -22,7 +22,7 @@ public class BrregServiceTest {
         String orgNr = "991825827";
         final String organisasjonsform = "ORGL";
 
-        difi = new OrganizationInfo.Builder().setOrganizationType(OrganizationTypes.ORGL).withOrganizationName(orgNavn).withOrganizationNumber(orgNr).build();
+        difi = new OrganizationInfo.Builder().withOrganizationType(OrganizationTypes.ORGL).withOrganizationName(orgNavn).withOrganizationNumber(orgNr).build();
 
         BrregClientImpl brregClientMock = setupMock(orgNavn, orgNr, organisasjonsform);
         brregService = new BrregService(brregClientMock);
@@ -30,7 +30,7 @@ public class BrregServiceTest {
 
     @Test
     public void brregHasOrganizationInfo() {
-        assertEquals(difi, brregService.getOrganizationInfo(difi.getIdentifier()));
+        assertEquals(difi, brregService.getOrganizationInfo(difi.getIdentifier()).get());
     }
 
     private BrregClientImpl setupMock(String orgNavn, String orgNr, String organisasjonsform) {

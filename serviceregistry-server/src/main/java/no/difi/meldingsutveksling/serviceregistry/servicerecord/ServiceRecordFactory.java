@@ -16,7 +16,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdressing;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.vefa.peppol.common.model.Endpoint;
-import no.difi.virksert.client.VirksertClientException;
+import no.difi.virksert.client.lang.VirksertClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +27,8 @@ import java.lang.invoke.MethodHandles;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
 import static no.difi.meldingsutveksling.serviceregistry.krr.PersonResource.Reservasjon.NEI;
-import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.DPE_data;
-import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.DPE_innsyn;
+import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.DPE_DATA;
+import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.DPE_INNSYN;
 
 /**
  * Factory method class to create Service Records based on lookup endpoint urls and certificates corresponding to those services
@@ -69,10 +69,16 @@ public class ServiceRecordFactory {
         try {
             ep = elmaLookupService.lookup(NORWAY_PREFIX + orgnr);
         } catch (EndpointUrlNotFound endpointUrlNotFound) {
-            logger.info(MarkerFactory.receiverMarker(orgnr),
-                    String.format("Attempted to lookup receiver in ELMA: %s", endpointUrlNotFound.getMessage()));
-            Audit.info("Does not exist in ELMA (no IP?) -> DPV will be used", MarkerFactory.receiverMarker(orgnr));
-            return createPostVirksomhetServiceRecord(orgnr);
+            if (elmaLookupService.identifierHasInnsynskravCapability(NORWAY_PREFIX + orgnr)) {
+                Audit.info("Does not exist in ELMA with DPO profile, using DPE Innsynskrav",
+                        MarkerFactory.receiverMarker(orgnr));
+                return createDpeServiceRecord(orgnr);
+            } else {
+                logger.info(MarkerFactory.receiverMarker(orgnr),
+                        String.format("Attempted to lookup receiver in ELMA: %s", endpointUrlNotFound.getMessage()));
+                Audit.info("Does not exist in ELMA (no IP?) -> DPV will be used", MarkerFactory.receiverMarker(orgnr));
+                return createPostVirksomhetServiceRecord(orgnr);
+            }
         }
         String pemCertificate = lookupPemCertificate(orgnr);
 
@@ -93,13 +99,23 @@ public class ServiceRecordFactory {
         }
 
         if (elmaLookupService.identifierHasInnsynskravCapability(NORWAY_PREFIX + orgnr)) {
-            serviceRecord.addDpeCapability(DPE_innsyn.toString());
+            serviceRecord.addDpeCapability(DPE_INNSYN.toString());
         }
         if (elmaLookupService.identifierHasInnsynDataCapability(NORWAY_PREFIX + orgnr)) {
-            serviceRecord.addDpeCapability(DPE_data.toString());
+            serviceRecord.addDpeCapability(DPE_DATA.toString());
         }
 
         return serviceRecord;
+    }
+
+    @PreAuthorize("#oauth2.hasScope('move/dpe.read')")
+    private ServiceRecord createDpeServiceRecord(String orgnr) {
+        String pemCertificate = lookupPemCertificate(orgnr);
+        DpeServiceRecord sr = DpeServiceRecord.of(pemCertificate, orgnr);
+        if (elmaLookupService.identifierHasInnsynDataCapability(NORWAY_PREFIX + orgnr)) {
+            sr.addDpeCapability(DPE_DATA.toString());
+        }
+        return sr;
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpv.read')")

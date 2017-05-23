@@ -1,8 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.model;
 
-import java.io.Serializable;
-
-public class CitizenInfo implements Serializable, EntityInfo {
+public class CitizenInfo implements EntityInfo {
     private final String identifier;
 
     public CitizenInfo(String identifier) {
