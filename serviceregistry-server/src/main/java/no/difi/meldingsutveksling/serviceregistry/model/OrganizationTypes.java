@@ -14,6 +14,7 @@ public class OrganizationTypes {
     public static final OrganizationType ORGL = new OrganizationType("Organisasjonsledd", "ORGL");
     public static final OrganizationType KOMM = new OrganizationType("Kommune", "KOMM");
     public static final OrganizationType BEDR = new OrganizationType("Bedrift", "BEDR");
+    public static final OrganizationType SAR = new OrganizationType("Annet foretak iflg. særskilt lov", "SÆR");
 
 
     static final Map<String, OrganizationType> all =
@@ -22,6 +23,7 @@ public class OrganizationTypes {
                     .put(ORGL.getAcronym(), ORGL)
                     .put(KOMM.getAcronym(), KOMM)
                     .put(BEDR.getAcronym(), BEDR)
+                    .put(SAR.getAcronym(), SAR)
                     .build();
 
     /**
@@ -35,6 +37,6 @@ public class OrganizationTypes {
      * @return collection of all known public organization types
      */
     public Set<OrganizationType> publicOrganization() {
-        return Sets.newHashSet(ORGL);
+        return Sets.newHashSet(ORGL, SAR);
     }
 }
