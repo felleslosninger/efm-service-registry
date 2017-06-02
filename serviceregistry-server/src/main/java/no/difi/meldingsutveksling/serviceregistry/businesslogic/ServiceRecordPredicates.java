@@ -1,8 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.businesslogic;
 
-import no.difi.meldingsutveksling.serviceregistry.model.*;
+import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -14,24 +13,6 @@ public class ServiceRecordPredicates {
     private static final Predicate<String> exactly_11_numbers = Pattern.compile(String.format("\\d{%d}", 11)).asPredicate();
 
     private ServiceRecordPredicates() {
-    }
-
-    /**
-     * Predicate to test whether Post til virksomheter is a valid service for sending messages
-     * @return predicate that evaluates true if able to use post til virksomhet
-     */
-    public static Predicate<EntityInfo> usesPostTilVirksomhet() {
-        Set<? extends EntityType> privateOrganizationTypes = new OrganizationTypes().privateOrganization();
-        return o -> privateOrganizationTypes.contains(o.getEntityType());
-    }
-
-    /**
-     * Predicate to test whether Formidlingstjenesten is a valid service for sending messages
-     * @return predicate that evaluates true if able to use formidlingstjenesten
-     */
-    public static Predicate<EntityInfo> usesFormidlingstjenesten() {
-        Set<? extends EntityType> publicOrganizationTypes = new OrganizationTypes().publicOrganization();
-        return o -> publicOrganizationTypes.contains(o.getEntityType());
     }
 
     /**
