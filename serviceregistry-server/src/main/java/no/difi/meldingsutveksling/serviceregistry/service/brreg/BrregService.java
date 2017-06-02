@@ -4,7 +4,6 @@ import no.difi.meldingsutveksling.serviceregistry.client.brreg.BrregClient;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.OrganizationInfo;
-import no.difi.meldingsutveksling.serviceregistry.model.OrganizationType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +29,6 @@ public class BrregService {
             enhet = brregClient.getBrregUnderenhetByOrgnr(orgNr);
         }
 
-        return enhet.map(x -> new OrganizationInfo(orgNr, x.getNavn(), x.getPostadresse(),
-                OrganizationType.from(x.getOrganisasjonsform())));
+        return enhet.map(OrganizationInfo::of);
     }
 }
