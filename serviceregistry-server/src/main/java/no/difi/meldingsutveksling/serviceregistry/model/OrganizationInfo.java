@@ -32,6 +32,11 @@ public class OrganizationInfo implements EntityInfo {
         this.postadresse = postadresse;
     }
 
+    public static OrganizationInfo of(BrregEnhet brregEnhet) {
+        return new OrganizationInfo(brregEnhet.getOrganisasjonsnummer(), brregEnhet.getNavn(), brregEnhet
+                .getPostadresse(), new OrganizationType(brregEnhet.getOrganisasjonsform()));
+    }
+
     @Override
     public EntityType getEntityType() {
         return organizationType;
@@ -64,8 +69,8 @@ public class OrganizationInfo implements EntityInfo {
             return this;
         }
 
-        public Builder withOrganizationType(OrganizationType organizationType) {
-            organizationInfo.organizationType = organizationType;
+        public Builder withOrganizationType(String organizationType) {
+            organizationInfo.organizationType = new OrganizationType(organizationType);
             return this;
         }
 
