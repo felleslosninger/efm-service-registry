@@ -69,6 +69,7 @@ public class ServiceRecordFactory {
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpo.read')")
+    @SuppressWarnings("squid:S1166") // Suppress Sonar due to no rethrow/log from certificate ex.
     public Optional<ServiceRecord> createEduServiceRecord(String orgnr) {
         Endpoint ep;
         try {
@@ -115,6 +116,7 @@ public class ServiceRecordFactory {
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpe.read')")
+    @SuppressWarnings("squid:S1166") // Suppress Sonar due to no rethrow/log from certificate ex.
     public Optional<ServiceRecord> createDpeServiceRecord(String orgnr) {
         if (elmaLookupService.identifierHasInnsynskravCapability(NORWAY_PREFIX + orgnr)) {
             String pemCertificate;
