@@ -9,10 +9,7 @@ import no.difi.meldingsutveksling.ptp.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
-import no.difi.meldingsutveksling.serviceregistry.model.CitizenInfo;
-import no.difi.meldingsutveksling.serviceregistry.model.OrganizationInfo;
-import no.difi.meldingsutveksling.serviceregistry.model.OrganizationType;
-import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
+import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySigner;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
@@ -45,12 +42,11 @@ import java.net.URL;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -80,24 +76,34 @@ public class ServiceRecordControllerTest {
 
     @Before
     public void setup() throws EntitySignerException, MalformedURLException, KRRClientException {
+        when(serviceRecordFactory.createEduServiceRecord(anyString())).thenReturn(Optional.empty());
+        when(serviceRecordFactory.createDpeServiceRecord(anyString())).thenReturn(Optional.empty());
+        when(serviceRecordFactory.createPostVirksomhetServiceRecord(anyString())).thenReturn(Optional.empty());
+        when(serviceRecordFactory.createDpeServiceRecord(anyString())).thenReturn(Optional.empty());
+        when(serviceRecordFactory.createFiksServiceRecord(FiksAdressing.EMPTY)).thenReturn(Optional.empty());
+
         when(fiksAdresseClient.getFiksAdressing(anyString())).thenReturn(FiksAdressing.EMPTY);
 
-        OrganizationInfo ORGLinfo = new OrganizationInfo("42", "foo", OrganizationType.from("ORGL"));
-        when(entityService.getEntityInfo("42")).thenReturn(ORGLinfo);
-        OrganizationInfo ASinfo = new OrganizationInfo("43", "foo", OrganizationType.from("AS"));
-        when(entityService.getEntityInfo("43")).thenReturn(ASinfo);
+        BrregPostadresse testAdr = new BrregPostadresse("testadresse", "1337", "teststed", "testland");
+        OrganizationInfo ORGLinfo = new OrganizationInfo("42", "foo",
+                testAdr, new OrganizationType("ORGL"));
+        when(entityService.getEntityInfo("42")).thenReturn(Optional.of(ORGLinfo));
+        OrganizationInfo ASinfo = new OrganizationInfo("43", "foo",
+                testAdr, new OrganizationType("AS"));
+        when(entityService.getEntityInfo("43")).thenReturn(Optional.of(ASinfo));
         CitizenInfo citizenInfo = new CitizenInfo("12345678901");
-        when(entityService.getEntityInfo("12345678901")).thenReturn(citizenInfo);
+        when(entityService.getEntityInfo("12345678901")).thenReturn(Optional.of(citizenInfo));
+        when(entityService.getEntityInfo("1337")).thenReturn(Optional.empty());
 
         EDUServiceRecord dpoServiceRecord = new EDUServiceRecord("pem123", "http://foo", "123", "321", "42");
-        when(serviceRecordFactory.createEduServiceRecord("42")).thenReturn(dpoServiceRecord);
+        when(serviceRecordFactory.createEduServiceRecord("42")).thenReturn(Optional.of(dpoServiceRecord));
 
         ServiceregistryProperties serviceregistryProperties = new ServiceregistryProperties();
         ServiceregistryProperties.PostVirksomhet postVirksomhet = new ServiceregistryProperties.PostVirksomhet();
         postVirksomhet.setEndpointURL(new URL("http://foo"));
         serviceregistryProperties.setDpv(postVirksomhet);
         PostVirksomhetServiceRecord dpvServiceRecord = new PostVirksomhetServiceRecord(serviceregistryProperties, "43");
-        when(serviceRecordFactory.createPostVirksomhetServiceRecord("43")).thenReturn(dpvServiceRecord);
+        when(serviceRecordFactory.createPostVirksomhetServiceRecord("43")).thenReturn(Optional.of(dpvServiceRecord));
 
         KontaktInfo kontaktInfoMock = mock(KontaktInfo.class);
         when(kontaktInfoMock.getCertificate()).thenReturn("cert123");
@@ -111,7 +117,7 @@ public class ServiceRecordControllerTest {
         PostAddress returnAddress = mock(PostAddress.class);
         SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(null, kontaktInfoMock, ServiceIdentifier.DPI, "12345678901", postAddress, returnAddress);
         when(serviceRecordFactory.createServiceRecordForCititzen(eq("12345678901"), any(), any(), any())).thenReturn
-                (dpiServiceRecord);
+                (Optional.of(dpiServiceRecord));
     }
 
     @Test
@@ -125,8 +131,7 @@ public class ServiceRecordControllerTest {
                 .andExpect(jsonPath("$.serviceRecord.serviceEditionCode", is("321")))
                 .andExpect(jsonPath("$.serviceRecord.endPointURL", is("http://foo")))
                 .andExpect(jsonPath("$.infoRecord.identifier", is("42")))
-                .andExpect(jsonPath("$.infoRecord.entityType.name", is("Organisasjonsledd")))
-                .andExpect(jsonPath("$.infoRecord.entityType.acronym", is("ORGL")));
+                .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")));
     }
 
     @Test
@@ -139,8 +144,7 @@ public class ServiceRecordControllerTest {
                 .andExpect(jsonPath("$.serviceRecord.endPointURL", is("http://foo")))
                 .andExpect(jsonPath("$.infoRecord.identifier", is("43")))
                 .andExpect(jsonPath("$.infoRecord.organizationName", is("foo")))
-                .andExpect(jsonPath("$.infoRecord.entityType.name", is("Aksjeselskap")))
-                .andExpect(jsonPath("$.infoRecord.entityType.acronym", is("AS")));
+                .andExpect(jsonPath("$.infoRecord.entityType.name", is("AS")));
     }
 
     @Test

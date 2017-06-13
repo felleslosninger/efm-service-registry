@@ -2,7 +2,6 @@ package no.difi.meldingsutveksling.serviceregistry.controller;
 
 import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.logging.Audit;
-import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
@@ -13,6 +12,7 @@ import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdresseClient;
 import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdressing;
+import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
 import org.jboss.logging.MDC;
 import org.slf4j.Logger;
@@ -23,13 +23,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Optional;
 
-import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.*;
+import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.shouldCreateServiceRecordForCititzen;
 import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 
 @ExposesResourceFor(Entity.class)
@@ -80,8 +80,8 @@ public class ServiceRecordController {
 
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
-        EntityInfo entityInfo = entityService.getEntityInfo(identifier);
-        if (entityInfo == null) {
+        Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
+        if (!entityInfo.isPresent()) {
             throw new EntityNotFoundException("Could not find entity for identifier: " + identifier);
         }
 
@@ -92,34 +92,41 @@ public class ServiceRecordController {
             Audit.info("Unauthorized lookup request", markerFrom(request.getRemoteAddr()));
         }
 
-        final FiksAdressing fiksAdressing = fiksAdresseClient.getFiksAdressing(entityInfo.getIdentifier());
+        final FiksAdressing fiksAdressing = fiksAdresseClient.getFiksAdressing(entityInfo.get().getIdentifier());
 
-        if (shouldCreateServiceRecordForCititzen().test(entityInfo)) {
+        Optional<ServiceRecord> serviceRecord = Optional.empty();
+
+        if (shouldCreateServiceRecordForCititzen().test(entityInfo.get())) {
             if (auth == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No authentication provided.");
             }
-            String tokenValue = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
             try {
-                entity.setServiceRecord(serviceRecordFactory.createServiceRecordForCititzen(identifier, tokenValue,
-                        clientOrgnr, obligation));
+                serviceRecord = serviceRecordFactory.createServiceRecordForCititzen(identifier, auth, clientOrgnr, obligation);
             } catch (KRRClientException e) {
                 log.error("Error looking up identifier in KRR", e);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
             }
-        } else if(fiksAdressing.shouldUseFIKS()) {
-            entity.setServiceRecord(serviceRecordFactory.createFiksServiceRecord(fiksAdressing));
-            entity.setInfoRecord(entityInfo);
-            return new ResponseEntity<>(entity, HttpStatus.OK);
         }
 
-        if (usesFormidlingstjenesten().test(entityInfo)) {
-            entity.setServiceRecord(serviceRecordFactory.createEduServiceRecord(identifier));
-        }
-        if (usesPostTilVirksomhet().test(entityInfo) || entity.getServiceRecord() == null) {
-            entity.setServiceRecord(serviceRecordFactory.createPostVirksomhetServiceRecord(identifier));
+        if(!serviceRecord.isPresent()) {
+            serviceRecord = serviceRecordFactory.createFiksServiceRecord(fiksAdressing);
         }
 
-        entity.setInfoRecord(entityInfo);
+        if (!serviceRecord.isPresent()) {
+            serviceRecord = serviceRecordFactory.createEduServiceRecord(identifier);
+        }
+
+        if (!serviceRecord.isPresent()) {
+            serviceRecord = serviceRecordFactory.createDpeServiceRecord(identifier);
+        }
+
+        if (!serviceRecord.isPresent()) {
+            serviceRecord = serviceRecordFactory.createPostVirksomhetServiceRecord(identifier);
+        }
+
+        serviceRecord.ifPresent(entity::setServiceRecord);
+        entity.setInfoRecord(entityInfo.get());
+
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
@@ -134,12 +141,6 @@ public class ServiceRecordController {
         ResponseEntity entity = entity(identifier, obligation, auth, request);
 
         return ResponseEntity.ok(entitySigner.sign((Entity)entity.getBody()));
-    }
-
-    @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find certificate for requested organization")
-    @ExceptionHandler(CertificateNotFoundException.class)
-    public void certificateNotFound(HttpServletRequest req, Exception e) {
-        log.warn("Certificate not found for: " + req.getRequestURL().toString(), e);
     }
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find endpoint url for service of requested organization")

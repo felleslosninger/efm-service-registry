@@ -1,7 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 import no.difi.meldingsutveksling.Notification;
-import no.difi.meldingsutveksling.logging.Audit;
 import no.difi.meldingsutveksling.logging.MarkerFactory;
 import no.difi.meldingsutveksling.ptp.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
@@ -21,9 +20,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.stereotype.Component;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Optional;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
 import static no.difi.meldingsutveksling.serviceregistry.krr.PersonResource.Reservasjon.NEI;
@@ -59,28 +61,33 @@ public class ServiceRecordFactory {
         this.krrService = krrService;
     }
 
-    public ServiceRecord createFiksServiceRecord(FiksAdressing fiksAdressing) {
-        return new FiksServiceRecord(fiksAdressing);
+    public Optional<ServiceRecord> createFiksServiceRecord(FiksAdressing fiksAdressing) {
+        if (fiksAdressing.shouldUseFIKS()) {
+            return Optional.of(new FiksServiceRecord(fiksAdressing));
+        }
+        return Optional.empty();
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpo.read')")
-    public ServiceRecord createEduServiceRecord(String orgnr) {
+    @SuppressWarnings("squid:S1166") // Suppress Sonar due to no rethrow/log from certificate ex.
+    public Optional<ServiceRecord> createEduServiceRecord(String orgnr) {
         Endpoint ep;
         try {
             ep = elmaLookupService.lookup(NORWAY_PREFIX + orgnr);
         } catch (EndpointUrlNotFound endpointUrlNotFound) {
-            if (elmaLookupService.identifierHasInnsynskravCapability(NORWAY_PREFIX + orgnr)) {
-                Audit.info("Does not exist in ELMA with DPO profile, using DPE Innsynskrav",
-                        MarkerFactory.receiverMarker(orgnr));
-                return createDpeServiceRecord(orgnr);
-            } else {
-                logger.info(MarkerFactory.receiverMarker(orgnr),
-                        String.format("Attempted to lookup receiver in ELMA: %s", endpointUrlNotFound.getMessage()));
-                Audit.info("Does not exist in ELMA (no IP?) -> DPV will be used", MarkerFactory.receiverMarker(orgnr));
-                return createPostVirksomhetServiceRecord(orgnr);
-            }
+            logger.info(MarkerFactory.receiverMarker(orgnr),
+                    String.format("Attempted to lookup receiver in ELMA: %s", endpointUrlNotFound.getMessage()));
+            return Optional.empty();
         }
-        String pemCertificate = lookupPemCertificate(orgnr);
+
+        String pemCertificate;
+        try {
+            pemCertificate = lookupPemCertificate(orgnr);
+        } catch (CertificateNotFoundException e) {
+            logger.info(MarkerFactory.receiverMarker(orgnr), String.format("Identifier %s found in ELMA with " +
+                    "DPO profile, but certificate not found in Virksert.", orgnr));
+            return Optional.empty();
+        }
 
         EDUServiceRecord serviceRecord = new EDUServiceRecord(pemCertificate, ep.getAddress().toString(), orgnr);
 
@@ -105,24 +112,36 @@ public class ServiceRecordFactory {
             serviceRecord.addDpeCapability(DPE_DATA.toString());
         }
 
-        return serviceRecord;
+        return Optional.of(serviceRecord);
     }
 
-    private ServiceRecord createDpeServiceRecord(String orgnr) {
-        String pemCertificate = lookupPemCertificate(orgnr);
-        DpeServiceRecord sr = DpeServiceRecord.of(pemCertificate, orgnr);
-        if (elmaLookupService.identifierHasInnsynDataCapability(NORWAY_PREFIX + orgnr)) {
-            sr.addDpeCapability(DPE_DATA.toString());
+    @PreAuthorize("#oauth2.hasScope('move/dpe.read')")
+    @SuppressWarnings("squid:S1166") // Suppress Sonar due to no rethrow/log from certificate ex.
+    public Optional<ServiceRecord> createDpeServiceRecord(String orgnr) {
+        if (elmaLookupService.identifierHasInnsynskravCapability(NORWAY_PREFIX + orgnr)) {
+            String pemCertificate;
+            try {
+                pemCertificate = lookupPemCertificate(orgnr);
+            } catch (CertificateNotFoundException e) {
+                logger.info(MarkerFactory.receiverMarker(orgnr), String.format("Identifier %s found in ELMA with " +
+                        "DPE profile, but certificate not found in Virksert.", orgnr));
+                return Optional.empty();
+            }
+            DpeServiceRecord sr = DpeServiceRecord.of(pemCertificate, orgnr);
+            if (elmaLookupService.identifierHasInnsynDataCapability(NORWAY_PREFIX + orgnr)) {
+                sr.addDpeCapability(DPE_DATA.toString());
+            }
+            return Optional.of(sr);
         }
-        return sr;
+        return Optional.empty();
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpv.read')")
-    public ServiceRecord createPostVirksomhetServiceRecord(String orgnr) {
-        return new PostVirksomhetServiceRecord(properties, orgnr);
+    public Optional<ServiceRecord> createPostVirksomhetServiceRecord(String orgnr) {
+        return Optional.of(new PostVirksomhetServiceRecord(properties, orgnr));
     }
 
-    private String lookupPemCertificate(String orgnumber) {
+    private String lookupPemCertificate(String orgnumber) throws CertificateNotFoundException {
         try {
             return virksertService.getCertificate(orgnumber);
         } catch (VirksertClientException e) {
@@ -131,10 +150,12 @@ public class ServiceRecordFactory {
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
-    public ServiceRecord createServiceRecordForCititzen(String identifier,
-                                                        String token,
-                                                        String onBehalfOrgnr,
-                                                        Notification notification) throws KRRClientException {
+    public Optional<ServiceRecord> createServiceRecordForCititzen(String identifier,
+                                                                 Authentication auth,
+                                                                 String onBehalfOrgnr,
+                                                                 Notification notification) throws KRRClientException {
+
+        String token = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
 
         PersonResource personResource = krrService.getCizitenInfo(lookup(identifier)
                 .onBehalfOf(onBehalfOrgnr)
@@ -153,8 +174,8 @@ public class ServiceRecordFactory {
                 codeArea.length > 1 ? codeArea[1] : codeArea[0],
                 dsfResource.getCountry());
 
-        return new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI, identifier,
-                postAddress, postAddress);
+        return Optional.of(new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
+                identifier, postAddress, postAddress));
     }
 
 }

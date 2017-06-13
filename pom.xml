@@ -4,7 +4,7 @@
 
     <groupId>no.difi.meldingsutveksling</groupId>
     <artifactId>serviceregistry-parent</artifactId>
-    <version>1.0.41-SNAPSHOT</version>
+    <version>1.0.44-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <scm>
@@ -159,6 +159,11 @@
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>1.16.10</version>
+            </dependency>
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>6.0.6</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
