@@ -7,7 +7,6 @@ import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -37,7 +36,7 @@ public class SasTokenController {
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpe.read')")
-    @RequestMapping(value = "/sastoken", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
+    @RequestMapping(value = "/sastoken", method = RequestMethod.GET, produces = "application/jose")
     public ResponseEntity getToken(Authentication auth) throws EntitySignerException {
 
         if (auth == null) {
