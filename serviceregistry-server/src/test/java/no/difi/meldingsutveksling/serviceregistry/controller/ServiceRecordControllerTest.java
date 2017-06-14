@@ -10,7 +10,7 @@ import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
-import no.difi.meldingsutveksling.serviceregistry.security.EntitySigner;
+import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdresseClient;
@@ -56,7 +56,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RunWith(SpringRunner.class)
 @WebMvcTest(value = ServiceRecordController.class)
 @TestPropertySource("classpath:controller-test.properties")
-@Import({EntitySigner.class, SRConfig.class})
+@Import({PayloadSigner.class, SRConfig.class})
 public class ServiceRecordControllerTest {
 
     @Autowired
@@ -72,7 +72,7 @@ public class ServiceRecordControllerTest {
     private FiksAdresseClient fiksAdresseClient;
 
     @Autowired
-    private EntitySigner entitySigner;
+    private PayloadSigner payloadSigner;
 
     @Before
     public void setup() throws EntitySignerException, MalformedURLException, KRRClientException {

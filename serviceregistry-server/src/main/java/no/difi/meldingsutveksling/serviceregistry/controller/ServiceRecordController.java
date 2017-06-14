@@ -1,14 +1,17 @@
 package no.difi.meldingsutveksling.serviceregistry.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.logging.Audit;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
-import no.difi.meldingsutveksling.serviceregistry.security.EntitySigner;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
+import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdresseClient;
 import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdressing;
@@ -39,7 +42,7 @@ public class ServiceRecordController {
     private static final Logger log = LoggerFactory.getLogger(ServiceRecordController.class);
     private final ServiceRecordFactory serviceRecordFactory;
     private EntityService entityService;
-    private EntitySigner entitySigner;
+    private PayloadSigner payloadSigner;
     private FiksAdresseClient fiksAdresseClient;
 
     /**
@@ -49,11 +52,11 @@ public class ServiceRecordController {
     @Autowired
     public ServiceRecordController(ServiceRecordFactory serviceRecordFactory,
                                    EntityService entityService,
-                                   EntitySigner entitySigner,
+                                   PayloadSigner payloadSigner,
                                    FiksAdresseClient fiksAdresseClient) {
         this.entityService = entityService;
         this.serviceRecordFactory = serviceRecordFactory;
-        this.entitySigner = entitySigner;
+        this.payloadSigner = payloadSigner;
         this.fiksAdresseClient = fiksAdresseClient;
     }
 
@@ -140,7 +143,15 @@ public class ServiceRecordController {
 
         ResponseEntity entity = entity(identifier, obligation, auth, request);
 
-        return ResponseEntity.ok(entitySigner.sign((Entity)entity.getBody()));
+        String json;
+        try {
+            json = new ObjectMapper().writeValueAsString(entity.getBody());
+        } catch (JsonProcessingException e) {
+            log.error("Failed to convert entity to json", e);
+            throw new ServiceRegistryException(e);
+        }
+
+        return ResponseEntity.ok(payloadSigner.sign(json));
     }
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find endpoint url for service of requested organization")
