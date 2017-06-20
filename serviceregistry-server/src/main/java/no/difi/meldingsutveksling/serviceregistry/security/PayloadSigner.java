@@ -1,12 +1,9 @@
 package no.difi.meldingsutveksling.serviceregistry.security;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.util.Base64;
-import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.move.common.oauth.KeystoreHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,27 +14,20 @@ import java.security.cert.CertificateEncodingException;
 import java.util.List;
 
 @Component
-public class EntitySigner {
+public class PayloadSigner {
 
-    private static final Logger log = LoggerFactory.getLogger(EntitySigner.class);
+    private static final Logger log = LoggerFactory.getLogger(PayloadSigner.class);
 
     private KeystoreHelper keystoreHelper;
 
     @Autowired
-    public EntitySigner(KeystoreHelper keystoreHelper) {
+    public PayloadSigner(KeystoreHelper keystoreHelper) {
         this.keystoreHelper = keystoreHelper;
     }
 
-    public String sign(Entity entity) throws EntitySignerException {
+    public String sign(String input) throws EntitySignerException {
 
-        String json = null;
-        try {
-            json = new ObjectMapper().writeValueAsString(entity);
-        } catch (JsonProcessingException e) {
-            log.error("Failed to convert entity to json", e);
-            throw new EntitySignerException(e);
-        }
-        Payload payload = new Payload(json);
+        Payload payload = new Payload(input);
 
         List<Base64> certChain = Lists.newArrayList();
         try {
