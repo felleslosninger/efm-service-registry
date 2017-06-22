@@ -63,8 +63,8 @@ public class ServiceregistryProperties {
     public static class KontaktOgReservasjonsRegister {
         private URL endpointURL;
         private URL dsfEndpointURL;
-        private Keystore client;
-        private Keystore server;
+        private String printAdress;
+        private String printCertificate;
     }
 
     @Data
