@@ -4,14 +4,16 @@ import com.jayway.jsonpath.JsonPath;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
-import no.difi.meldingsutveksling.ptp.KontaktInfo;
-import no.difi.meldingsutveksling.ptp.PostAddress;
+import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import no.difi.meldingsutveksling.serviceregistry.krr.ContactInfoResource;
+import no.difi.meldingsutveksling.serviceregistry.krr.DigitalPostResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
+import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
-import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
+import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdresseClient;
 import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdressing;
@@ -46,7 +48,9 @@ import java.util.Optional;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -105,17 +109,17 @@ public class ServiceRecordControllerTest {
         PostVirksomhetServiceRecord dpvServiceRecord = new PostVirksomhetServiceRecord(serviceregistryProperties, "43");
         when(serviceRecordFactory.createPostVirksomhetServiceRecord("43")).thenReturn(Optional.of(dpvServiceRecord));
 
-        KontaktInfo kontaktInfoMock = mock(KontaktInfo.class);
-        when(kontaktInfoMock.getCertificate()).thenReturn("cert123");
-        when(kontaktInfoMock.getOrgnrPostkasse()).thenReturn("post123");
-        when(kontaktInfoMock.getPostkasseAdresse()).thenReturn("adr123");
-        when(kontaktInfoMock.isNotifiable()).thenReturn(false);
-        when(kontaktInfoMock.getEpostadresse()).thenReturn("post@post.foo");
-        when(kontaktInfoMock.getMobiltelefonnummer()).thenReturn("123456789");
-        when(kontaktInfoMock.isReservert()).thenReturn(false);
         PostAddress postAddress = mock(PostAddress.class);
-        PostAddress returnAddress = mock(PostAddress.class);
-        SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(null, kontaktInfoMock, ServiceIdentifier.DPI, "12345678901", postAddress, returnAddress);
+        PersonResource personResource = new PersonResource();
+        personResource.setCertificate("cert123");
+        personResource.setDigitalPost(DigitalPostResource.of("adr123", "post123"));
+        personResource.setAlertStatus("KAN_VARSLES");
+        personResource.setContactInfo(ContactInfoResource.of("post@post.foo", "", "123", ""));
+        personResource.setReserved("NEI");
+        personResource.setPrintPostkasseLeverandorAdr("postkasse123");
+
+        SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(null, personResource,
+                ServiceIdentifier.DPI, "12345678901", postAddress, postAddress);
         when(serviceRecordFactory.createServiceRecordForCititzen(eq("12345678901"), any(), any(), any())).thenReturn
                 (Optional.of(dpiServiceRecord));
     }

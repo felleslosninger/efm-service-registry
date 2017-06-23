@@ -2,7 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.logging.MarkerFactory;
-import no.difi.meldingsutveksling.ptp.PostAddress;
+import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;

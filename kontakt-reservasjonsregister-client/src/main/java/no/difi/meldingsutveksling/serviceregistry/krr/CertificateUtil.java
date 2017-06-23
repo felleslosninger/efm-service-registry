@@ -1,4 +1,4 @@
-package no.difi.meldingsutveksling.ptp;
+package no.difi.meldingsutveksling.serviceregistry.krr;
 
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 

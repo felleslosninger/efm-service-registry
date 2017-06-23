@@ -1,7 +1,5 @@
 package no.difi.meldingsutveksling.serviceregistry.service.krr
 
-import no.difi.meldingsutveksling.ptp.OppslagstjenesteClient
-import no.difi.meldingsutveksling.ptp.PrintProviderDetails
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties
 import no.difi.meldingsutveksling.serviceregistry.krr.DSFClient
 import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource
@@ -17,7 +15,7 @@ import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lo
 
 class KrrServiceTest extends Specification {
     public static final String someIdentifier = "12345"
-    private KrrService service
+    def service
     def personResource = Mock(PersonResource)
     def dsfResource = Mock(DSFResource)
 
@@ -27,7 +25,7 @@ class KrrServiceTest extends Specification {
         krr.setEndpointURL(new URL("http://foo"))
         krr.setDsfEndpointURL(new URL("http://foo"))
         props.setKrr(krr)
-        service = new KrrService(props, Mock(KeystoreHelper))
+        service = Spy(KrrService, constructorArgs: [props, Mock(KeystoreHelper)])
     }
 
     @Unroll
@@ -43,15 +41,11 @@ class KrrServiceTest extends Specification {
         dsfClient.getDSFResource(_, _) >> dsfResource
         service.setDsfClient(dsfClient)
 
-        def details = new PrintProviderDetails("foo", "bar")
-        def oppslagstjenesteClient = Mock(OppslagstjenesteClient)
-        service.setClient(oppslagstjenesteClient)
-
         when:
         service.getCizitenInfo(lookupParameters)
 
         then:
-        times * service.client.getPrintProviderDetails(_) >> details
+        times * service.setPrintDetails(personResource)
 
         where:
         scenario                                                 | notificationObligation | isNotifiable | times

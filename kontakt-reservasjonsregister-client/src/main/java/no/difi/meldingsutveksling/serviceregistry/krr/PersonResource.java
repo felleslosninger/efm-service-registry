@@ -38,7 +38,7 @@ public class PersonResource {
     }
 
     public boolean canReceiveDigitalPost() {
-        return hasMailbox() && Reservasjon.NEI.name().equals(getReserved()) && Status.AKTIV.name().equals(getStatus());
+        return hasMailbox() && Reservasjon.NEI.toString().equals(getReserved()) && Status.AKTIV.toString().equals(getStatus());
     }
 
     public boolean isNotifiable() {
