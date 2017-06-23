@@ -1,7 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
-import no.difi.meldingsutveksling.ptp.KontaktInfo;
-import no.difi.meldingsutveksling.ptp.PostAddress;
+import lombok.Data;
+import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
@@ -9,6 +9,7 @@ import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 import static no.difi.meldingsutveksling.serviceregistry.krr.PersonResource.Reservasjon.JA;
 import static no.difi.meldingsutveksling.serviceregistry.krr.PersonResource.Varslingsstatus.KAN_VARSLES;
 
+@Data
 public class SikkerDigitalPostServiceRecord extends ServiceRecord {
 
     private final ServiceregistryProperties properties;
@@ -20,19 +21,6 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
     private final boolean fysiskPost;
     private final PostAddress postAddress;
     private final PostAddress returnAddress;
-
-    public SikkerDigitalPostServiceRecord(ServiceregistryProperties properties, KontaktInfo kontaktInfo, ServiceIdentifier serviceIdentifier, String organisationNumber, PostAddress postAddress, PostAddress returnAddress) {
-        super(kontaktInfo.getCertificate(), serviceIdentifier, organisationNumber);
-        this.properties = properties;
-        orgnrPostkasse = kontaktInfo.getOrgnrPostkasse();
-        postkasseAdresse = kontaktInfo.getPostkasseAdresse();
-        kanVarsles = kontaktInfo.isNotifiable();
-        epostAdresse = kontaktInfo.getEpostadresse();
-        mobilnummer = kontaktInfo.getMobiltelefonnummer();
-        fysiskPost = kontaktInfo.isReservert();
-        this.postAddress = postAddress;
-        this.returnAddress = returnAddress;
-    }
 
     public SikkerDigitalPostServiceRecord(ServiceregistryProperties properties, PersonResource personResource,
                                           ServiceIdentifier serviceIdentifier, String organisationNumber,
@@ -62,35 +50,4 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
         return properties.getDpi().getEndpointURL().toString();
     }
 
-    public String getOrgnrPostkasse() {
-        return orgnrPostkasse;
-    }
-
-    public String getPostkasseAdresse() {
-        return postkasseAdresse;
-    }
-
-    public String getMobilnummer() {
-        return mobilnummer;
-    }
-
-    public boolean getKanVarsles() {
-        return kanVarsles;
-    }
-
-    public String getEpostAdresse() {
-        return epostAdresse;
-    }
-
-    public boolean isFysiskPost() {
-        return fysiskPost;
-    }
-
-    public PostAddress getPostAddress() {
-        return postAddress;
-    }
-
-    public PostAddress getReturnAddress() {
-        return returnAddress;
-    }
 }
