@@ -3,7 +3,6 @@ package no.difi.meldingsutveksling.serviceregistry.krr;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.proc.BadJWSException;
 import no.difi.move.common.oauth.JWTDecoder;
-import no.difi.move.common.oauth.KeystoreHelper;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -16,11 +15,9 @@ import java.security.cert.CertificateException;
 public class KRRClient {
 
     private URL endpointURL;
-    private KeystoreHelper keystoreHelper;
 
-    public KRRClient(URL endpointURL, KeystoreHelper keystoreHelper) {
+    public KRRClient(URL endpointURL) {
         this.endpointURL= endpointURL;
-        this.keystoreHelper = keystoreHelper;
     }
 
     public PersonResource getPersonResource(String identifier, String token) throws KRRClientException {

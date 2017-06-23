@@ -5,7 +5,6 @@ import no.difi.meldingsutveksling.serviceregistry.krr.DSFClient
 import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClient
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource
-import no.difi.move.common.oauth.KeystoreHelper
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -25,7 +24,7 @@ class KrrServiceTest extends Specification {
         krr.setEndpointURL(new URL("http://foo"))
         krr.setDsfEndpointURL(new URL("http://foo"))
         props.setKrr(krr)
-        service = Spy(KrrService, constructorArgs: [props, Mock(KeystoreHelper)])
+        service = Spy(KrrService, constructorArgs: [props])
     }
 
     @Unroll
