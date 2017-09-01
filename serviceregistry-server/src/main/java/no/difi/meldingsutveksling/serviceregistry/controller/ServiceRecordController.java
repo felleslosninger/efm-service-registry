@@ -25,6 +25,7 @@ import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
@@ -168,6 +169,12 @@ public class ServiceRecordController {
     @ExceptionHandler(EntityNotFoundException.class)
     public void entityNotFound(HttpServletRequest req, Exception e) {
         log.warn(String.format("Entity not found for %s", req.getRequestURL()), e);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity accessDenied(HttpServletRequest req, Exception e) {
+        log.warn("Access denied on resource {}", req.getRequestURL(), e);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized scope");
     }
 
 }
