@@ -1,5 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
@@ -12,6 +13,7 @@ import static no.difi.meldingsutveksling.serviceregistry.krr.PersonResource.Vars
 @Data
 public class SikkerDigitalPostServiceRecord extends ServiceRecord {
 
+    @JsonIgnore
     private final ServiceregistryProperties properties;
     private final String orgnrPostkasse;
     private final String postkasseAdresse;
