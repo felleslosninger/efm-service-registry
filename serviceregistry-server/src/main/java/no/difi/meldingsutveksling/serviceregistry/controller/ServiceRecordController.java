@@ -85,7 +85,8 @@ public class ServiceRecordController {
         Entity entity = new Entity();
         Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
         if (!entityInfo.isPresent()) {
-            throw new EntityNotFoundException("Could not find entity for identifier: " + identifier);
+            log.warn("Could not find entity for the requeste identifier={}", identifier);
+            return ResponseEntity.notFound().build();
         }
 
         String clientOrgnr = auth == null ? null : (String) auth.getPrincipal();
@@ -142,6 +143,9 @@ public class ServiceRecordController {
         HttpServletRequest request) throws EntitySignerException {
 
         ResponseEntity entity = entity(identifier, obligation, auth, request);
+        if (entity.getStatusCode() != HttpStatus.OK) {
+            return entity;
+        }
 
         String json;
         try {
