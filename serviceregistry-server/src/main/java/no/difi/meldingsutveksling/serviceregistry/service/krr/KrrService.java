@@ -2,7 +2,6 @@ package no.difi.meldingsutveksling.serviceregistry.service.krr;
 
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
-import no.difi.move.common.oauth.KeystoreHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +13,10 @@ public class KrrService {
     private DSFClient dsfClient;
 
     @Autowired
-    KrrService(ServiceregistryProperties properties, KeystoreHelper keystoreHelper) {
+    KrrService(ServiceregistryProperties properties) {
         this.properties = properties;
-        this.krrClient = new KRRClient(properties.getKrr().getEndpointURL(), keystoreHelper);
-        this.dsfClient = new DSFClient(properties.getKrr().getDsfEndpointURL(), keystoreHelper);
+        this.krrClient = new KRRClient(properties.getKrr().getEndpointURL());
+        this.dsfClient = new DSFClient(properties.getKrr().getDsfEndpointURL());
     }
 
     public PersonResource getCizitenInfo(LookupParameters params) throws
