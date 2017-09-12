@@ -97,7 +97,6 @@ public class ServiceRecordController {
             Audit.info("Unauthorized lookup request", markerFrom(request.getRemoteAddr()));
         }
 
-        final FiksAdressing fiksAdressing = fiksAdresseClient.getFiksAdressing(entityInfo.get().getIdentifier());
 
         Optional<ServiceRecord> serviceRecord = Optional.empty();
 
@@ -113,12 +112,13 @@ public class ServiceRecordController {
             }
         }
 
-        if(!serviceRecord.isPresent()) {
-            serviceRecord = serviceRecordFactory.createFiksServiceRecord(fiksAdressing);
-        }
-
         if (!serviceRecord.isPresent()) {
             serviceRecord = serviceRecordFactory.createEduServiceRecord(identifier);
+        }
+
+        if(!serviceRecord.isPresent()) {
+            final FiksAdressing fiksAdressing = fiksAdresseClient.getFiksAdressing(entityInfo.get().getIdentifier());
+            serviceRecord = serviceRecordFactory.createFiksServiceRecord(fiksAdressing);
         }
 
         if (!serviceRecord.isPresent()) {
