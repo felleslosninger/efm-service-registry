@@ -6,6 +6,8 @@ import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 
 import java.util.List;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class ServiceRecord {
 
@@ -45,7 +47,13 @@ public abstract class ServiceRecord {
     }
 
     public String getPemCertificate() {
-        return pemCertificate;
+        if (isNullOrEmpty(this.pemCertificate) || this.pemCertificate.contains("BEGIN CERTIFICATE")) {
+            return pemCertificate;
+        }
+
+        String begin = "-----BEGIN CERTIFICATE-----\n";
+        String end = "\n-----END CERTIFICATE-----\n";
+        return begin+pemCertificate+end;
     }
 
     public List<String> getDpeCapabilities() {
