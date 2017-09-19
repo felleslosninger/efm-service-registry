@@ -130,7 +130,7 @@ public class ServiceRecordControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecord.organisationNumber", is("42")))
                 .andExpect(jsonPath("$.serviceRecord.serviceIdentifier", is("DPO")))
-                .andExpect(jsonPath("$.serviceRecord.pemCertificate", is("pem123")))
+                .andExpect(jsonPath("$.serviceRecord.pemCertificate", is("-----BEGIN CERTIFICATE-----\npem123\n-----END CERTIFICATE-----\n")))
                 .andExpect(jsonPath("$.serviceRecord.serviceCode", is("123")))
                 .andExpect(jsonPath("$.serviceRecord.serviceEditionCode", is("321")))
                 .andExpect(jsonPath("$.serviceRecord.endPointURL", is("http://foo")))
