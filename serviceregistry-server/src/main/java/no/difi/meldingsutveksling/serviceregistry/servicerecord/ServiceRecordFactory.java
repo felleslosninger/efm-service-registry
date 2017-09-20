@@ -68,7 +68,6 @@ public class ServiceRecordFactory {
         return Optional.empty();
     }
 
-    @PreAuthorize("#oauth2.hasScope('move/dpo.read')")
     @SuppressWarnings("squid:S1166") // Suppress Sonar due to no rethrow/log from certificate ex.
     public Optional<ServiceRecord> createEduServiceRecord(String orgnr) {
         Endpoint ep;
@@ -115,7 +114,6 @@ public class ServiceRecordFactory {
         return Optional.of(serviceRecord);
     }
 
-    @PreAuthorize("#oauth2.hasScope('move/dpe.read')")
     @SuppressWarnings("squid:S1166") // Suppress Sonar due to no rethrow/log from certificate ex.
     public Optional<ServiceRecord> createDpeServiceRecord(String orgnr) {
         if (elmaLookupService.identifierHasInnsynskravCapability(NORWAY_PREFIX + orgnr)) {
@@ -136,7 +134,6 @@ public class ServiceRecordFactory {
         return Optional.empty();
     }
 
-    @PreAuthorize("#oauth2.hasScope('move/dpv.read')")
     public Optional<ServiceRecord> createPostVirksomhetServiceRecord(String orgnr) {
         return Optional.of(new PostVirksomhetServiceRecord(properties, orgnr));
     }
