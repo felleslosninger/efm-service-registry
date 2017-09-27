@@ -137,7 +137,7 @@ public class ServiceRecordController {
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = {"application/jose", MediaType.APPLICATION_JSON_VALUE})
+    @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = "application/jose")
     @ResponseBody
     public ResponseEntity signed(
             @PathVariable("identifier") String identifier,
