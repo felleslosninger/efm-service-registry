@@ -48,7 +48,7 @@ public class ServiceRecordController {
 
     /**
      * @param serviceRecordFactory for creation of the identifiers respective service record
-     * @param entityService needed to lookup and retrieve organization or citizen information using an identifier number
+     * @param entityService        needed to lookup and retrieve organization or citizen information using an identifier number
      */
     @Autowired
     public ServiceRecordController(ServiceRecordFactory serviceRecordFactory,
@@ -78,7 +78,7 @@ public class ServiceRecordController {
     @ResponseBody
     public ResponseEntity entity(
             @PathVariable("identifier") String identifier,
-            @RequestParam(name="notification", defaultValue="NOT_OBLIGATED") Notification obligation,
+            @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
             Authentication auth,
             HttpServletRequest request) {
 
@@ -92,9 +92,11 @@ public class ServiceRecordController {
 
         String clientOrgnr = auth == null ? null : (String) auth.getPrincipal();
         if (clientOrgnr != null) {
-            Audit.info("Authorized lookup request", markerFrom(request.getRemoteAddr(), clientOrgnr));
+            Audit.info(String.format("Authorized lookup request by %s", clientOrgnr),
+                    markerFrom(request.getRemoteAddr(), request.getRemoteHost(), clientOrgnr));
         } else {
-            Audit.info("Unauthorized lookup request", markerFrom(request.getRemoteAddr()));
+            Audit.info(String.format("Unauthorized lookup request from %s", request.getRemoteAddr()),
+                    markerFrom(request.getRemoteAddr()));
         }
 
 
@@ -116,7 +118,7 @@ public class ServiceRecordController {
             serviceRecord = serviceRecordFactory.createEduServiceRecord(identifier);
         }
 
-        if(!serviceRecord.isPresent()) {
+        if (!serviceRecord.isPresent()) {
             final FiksAdressing fiksAdressing = fiksAdresseClient.getFiksAdressing(entityInfo.get().getIdentifier());
             serviceRecord = serviceRecordFactory.createFiksServiceRecord(fiksAdressing);
         }
@@ -138,10 +140,10 @@ public class ServiceRecordController {
     @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = "application/jose")
     @ResponseBody
     public ResponseEntity signed(
-        @PathVariable("identifier") String identifier,
-        @RequestParam(name="notification", defaultValue="NOT_OBLIGATED") Notification obligation,
-        Authentication auth,
-        HttpServletRequest request) throws EntitySignerException {
+            @PathVariable("identifier") String identifier,
+            @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
+            Authentication auth,
+            HttpServletRequest request) throws EntitySignerException {
 
         ResponseEntity entity = entity(identifier, obligation, auth, request);
         if (entity.getStatusCode() != HttpStatus.OK) {
