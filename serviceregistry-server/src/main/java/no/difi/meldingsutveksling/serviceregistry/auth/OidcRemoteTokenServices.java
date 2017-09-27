@@ -43,10 +43,6 @@ public class OidcRemoteTokenServices implements ResourceServerTokenServices {
 
     private AccessTokenConverter tokenConverter = new DefaultAccessTokenConverter();
 
-    public void setAccessTokenConverter(AccessTokenConverter accessTokenConverter) {
-        this.tokenConverter = accessTokenConverter;
-    }
-
     @Autowired
     public OidcRemoteTokenServices(ResourceServerProperties props) {
         restTemplate = new RestTemplate();
@@ -66,9 +62,14 @@ public class OidcRemoteTokenServices implements ResourceServerTokenServices {
 
     }
 
+    public void setAccessTokenConverter(AccessTokenConverter accessTokenConverter) {
+        this.tokenConverter = accessTokenConverter;
+    }
+
+
     @Override
     public OAuth2Authentication loadAuthentication(String accessToken) throws AuthenticationException, InvalidTokenException {
-        MultiValueMap<String, String> formData = new LinkedMultiValueMap<String, String>();
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add(tokenName, accessToken);
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", getAuthorizationHeader(clientId, clientSecret));
@@ -103,19 +104,16 @@ public class OidcRemoteTokenServices implements ResourceServerTokenServices {
             return "Basic " + new String(Base64.encode(creds.getBytes("UTF-8")));
         }
         catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("Could not convert String");
+            throw new IllegalStateException("Could not convert String", e);
         }
     }
 
+    @SuppressWarnings("unchecked")
     private Map<String, Object> postForMap(String path, MultiValueMap<String, String> formData, HttpHeaders headers) {
         if (headers.getContentType() == null) {
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         }
-        @SuppressWarnings("rawtypes")
-        Map map = restTemplate.exchange(path, HttpMethod.POST,
+        return restTemplate.exchange(path, HttpMethod.POST,
                 new HttpEntity<MultiValueMap<String, String>>(formData, headers), Map.class).getBody();
-        @SuppressWarnings("unchecked")
-        Map<String, Object> result = map;
-        return result;
     }
 }
