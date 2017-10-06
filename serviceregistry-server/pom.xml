@@ -261,7 +261,7 @@
             <artifactId>peppol-lookup</artifactId>
         </dependency> -->
         <dependency>
-            <groupId>com.github.difi.vefa-peppol</groupId>
+            <groupId>no.difi.vefa</groupId>
             <artifactId>peppol-lookup</artifactId>
         </dependency>
         <dependency>

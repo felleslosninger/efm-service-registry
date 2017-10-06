@@ -120,9 +120,9 @@
                 <version>0.9.5</version>
             </dependency> -->
             <dependency>
-                <groupId>com.github.difi.vefa-peppol</groupId>
+                <groupId>no.difi.vefa</groupId>
                 <artifactId>peppol-lookup</artifactId>
-                <version>d22aca8</version>
+                <version>0.9.9</version>
             </dependency>
             <dependency>
                 <groupId>no.difi.vefa</groupId>
