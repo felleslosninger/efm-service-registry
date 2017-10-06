@@ -5,7 +5,6 @@ import no.difi.vefa.peppol.common.model.TransportProfile;
 import no.difi.vefa.peppol.lookup.LookupClient;
 import no.difi.vefa.peppol.lookup.LookupClientBuilder;
 import no.difi.vefa.peppol.lookup.locator.StaticLocator;
-import no.difi.vefa.peppol.mode.Mode;
 import no.difi.vefa.peppol.security.util.EmptyCertificateValidator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +26,6 @@ public class ElmaStagingConfig {
 
     @Bean
     public LookupClient getElmaLookupClient() throws PeppolLoadingException {
-        Mode mode = Mode.of(Mode.TEST);
         return LookupClientBuilder.forTest()
                 .locator(new StaticLocator("http://test-smp.difi.no.publisher.acc.edelivery.tech.ec.europa.eu"))
                 .certificateValidator(EmptyCertificateValidator.INSTANCE)
