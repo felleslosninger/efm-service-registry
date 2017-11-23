@@ -2,13 +2,13 @@ package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.logging.MarkerFactory;
-import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
+import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
@@ -29,8 +29,7 @@ import java.util.Optional;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
 import static no.difi.meldingsutveksling.serviceregistry.krr.PersonResource.Reservasjon.NEI;
-import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.DPE_DATA;
-import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.DPE_INNSYN;
+import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.*;
 
 /**
  * Factory method class to create Service Records based on lookup endpoint urls and certificates corresponding to those services
@@ -115,23 +114,50 @@ public class ServiceRecordFactory {
     }
 
     @SuppressWarnings("squid:S1166") // Suppress Sonar due to no rethrow/log from certificate ex.
-    public Optional<ServiceRecord> createDpeServiceRecord(String orgnr) {
+    public Optional<ServiceRecord> createDpeInnsynServiceRecord(String orgnr) {
         if (elmaLookupService.identifierHasInnsynskravCapability(NORWAY_PREFIX + orgnr)) {
             String pemCertificate;
             try {
                 pemCertificate = lookupPemCertificate(orgnr);
             } catch (CertificateNotFoundException e) {
                 logger.info(MarkerFactory.receiverMarker(orgnr), String.format("Identifier %s found in ELMA with " +
-                        "DPE profile, but certificate not found in Virksert.", orgnr));
+                        "DPE Innsyn profile, but certificate not found in Virksert.", orgnr));
                 return Optional.empty();
             }
-            DpeServiceRecord sr = DpeServiceRecord.of(pemCertificate, orgnr);
-            if (elmaLookupService.identifierHasInnsynDataCapability(NORWAY_PREFIX + orgnr)) {
-                sr.addDpeCapability(DPE_DATA.toString());
-            }
+            DpeServiceRecord sr = DpeServiceRecord.of(pemCertificate, orgnr, DPE_INNSYN);
             return Optional.of(sr);
         }
         return Optional.empty();
+    }
+
+    @SuppressWarnings("squid:S1166") // Suppress Sonar due to no rethrow/log from certificate ex.
+    public Optional<ServiceRecord> createDpeDataServiceRecord(String orgnr) {
+        if (elmaLookupService.identifierHasInnsynDataCapability(NORWAY_PREFIX + orgnr)) {
+            String pemCertificate;
+            try {
+                pemCertificate = lookupPemCertificate(orgnr);
+            } catch (CertificateNotFoundException e) {
+                logger.info(MarkerFactory.receiverMarker(orgnr), String.format("Identifier %s found in ELMA with " +
+                        "DPE Data profile, but certificate not found in Virksert.", orgnr));
+                return Optional.empty();
+            }
+            DpeServiceRecord sr = DpeServiceRecord.of(pemCertificate, orgnr, DPE_DATA);
+            return Optional.of(sr);
+        }
+        return Optional.empty();
+    }
+
+    @SuppressWarnings("squid:S1166") // Suppress Sonar due to no rethrow/log from certificate ex.
+    public Optional<ServiceRecord> createDpeReceiptServiceRecord(String orgnr) {
+        String pemCertificate;
+        try {
+            pemCertificate = lookupPemCertificate(orgnr);
+        } catch (CertificateNotFoundException e) {
+            logger.info(MarkerFactory.receiverMarker(orgnr), String.format("Certificate for %s not found in Virksert.", orgnr));
+            return Optional.empty();
+        }
+        DpeServiceRecord sr = DpeServiceRecord.of(pemCertificate, orgnr, DPE_RECEIPT);
+        return Optional.of(sr);
     }
 
     public Optional<ServiceRecord> createPostVirksomhetServiceRecord(String orgnr) {

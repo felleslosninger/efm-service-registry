@@ -81,9 +81,11 @@ public class ServiceRecordControllerTest {
     @Before
     public void setup() throws EntitySignerException, MalformedURLException, KRRClientException {
         when(serviceRecordFactory.createEduServiceRecord(anyString())).thenReturn(Optional.empty());
-        when(serviceRecordFactory.createDpeServiceRecord(anyString())).thenReturn(Optional.empty());
+        when(serviceRecordFactory.createDpeInnsynServiceRecord(anyString())).thenReturn(Optional.empty());
         when(serviceRecordFactory.createPostVirksomhetServiceRecord(anyString())).thenReturn(Optional.empty());
-        when(serviceRecordFactory.createDpeServiceRecord(anyString())).thenReturn(Optional.empty());
+        when(serviceRecordFactory.createDpeInnsynServiceRecord(anyString())).thenReturn(Optional.empty());
+        when(serviceRecordFactory.createDpeDataServiceRecord(anyString())).thenReturn(Optional.empty());
+        when(serviceRecordFactory.createDpeReceiptServiceRecord(anyString())).thenReturn(Optional.empty());
         when(serviceRecordFactory.createFiksServiceRecord(FiksAdressing.EMPTY)).thenReturn(Optional.empty());
 
         when(fiksAdresseClient.getFiksAdressing(anyString())).thenReturn(FiksAdressing.EMPTY);

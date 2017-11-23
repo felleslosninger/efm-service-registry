@@ -3,7 +3,6 @@ package no.difi.meldingsutveksling.serviceregistry.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import no.difi.meldingsutveksling.Notification;
-import no.difi.meldingsutveksling.logging.Audit;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
@@ -92,10 +91,10 @@ public class ServiceRecordController {
 
         String clientOrgnr = auth == null ? null : (String) auth.getPrincipal();
         if (clientOrgnr != null) {
-            Audit.info(String.format("Authorized lookup request by %s", clientOrgnr),
+            log.debug(String.format("Authorized lookup request by %s", clientOrgnr),
                     markerFrom(request.getRemoteAddr(), request.getRemoteHost(), clientOrgnr));
         } else {
-            Audit.info(String.format("Unauthorized lookup request from %s", request.getRemoteAddr()),
+            log.debug(String.format("Unauthorized lookup request from %s", request.getRemoteAddr()),
                     markerFrom(request.getRemoteAddr()));
         }
 
@@ -124,7 +123,7 @@ public class ServiceRecordController {
         }
 
         if (!serviceRecord.isPresent()) {
-            serviceRecord = serviceRecordFactory.createDpeServiceRecord(identifier);
+            serviceRecord = serviceRecordFactory.createDpeInnsynServiceRecord(identifier);
         }
 
         if (!serviceRecord.isPresent()) {
@@ -133,8 +132,48 @@ public class ServiceRecordController {
 
         serviceRecord.ifPresent(entity::setServiceRecord);
         entity.setInfoRecord(entityInfo.get());
+        // TODO: temporary solution for multiple servicerecords
+        addServiceRecords(entityInfo.get(), entity, auth, clientOrgnr, obligation);
 
         return new ResponseEntity<>(entity, HttpStatus.OK);
+    }
+
+    private void addServiceRecords(EntityInfo entityInfo, Entity entity, Authentication auth, String clientOrgnr,
+                                   Notification obligation) {
+
+        if (shouldCreateServiceRecordForCititzen().test(entityInfo)) {
+            Optional<ServiceRecord> serviceRecord = Optional.empty();
+            try {
+                serviceRecord = serviceRecordFactory.createServiceRecordForCititzen(entityInfo.getIdentifier(), auth, clientOrgnr, obligation);
+            } catch (KRRClientException e) {
+                log.error("Error looking up identifier in KRR", e);
+            }
+            if (serviceRecord.isPresent()) {
+                return;
+            }
+        }
+
+        Optional<ServiceRecord> eduServiceRecord = serviceRecordFactory.createEduServiceRecord(entityInfo.getIdentifier());
+        eduServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
+
+        final FiksAdressing fiksAdressing = fiksAdresseClient.getFiksAdressing(entityInfo.getIdentifier());
+        Optional<ServiceRecord> fiksServiceRecord = serviceRecordFactory.createFiksServiceRecord(fiksAdressing);
+        fiksServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
+
+        Optional<ServiceRecord> dpeInnsynServiceRecord = serviceRecordFactory.createDpeInnsynServiceRecord(entityInfo.getIdentifier());
+        dpeInnsynServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
+
+        Optional<ServiceRecord> dpeDataServiceRecord = serviceRecordFactory.createDpeDataServiceRecord(entityInfo.getIdentifier());
+        dpeDataServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
+
+        if (dpeInnsynServiceRecord.isPresent() || dpeDataServiceRecord.isPresent()) {
+            Optional<ServiceRecord> dpeReceiptServiceRecord = serviceRecordFactory.createDpeReceiptServiceRecord(entityInfo.getIdentifier());
+            dpeReceiptServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
+        }
+
+        Optional<ServiceRecord> dpvServiceRecord = serviceRecordFactory.createPostVirksomhetServiceRecord(entityInfo.getIdentifier());
+        dpvServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
+
     }
 
     @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = "application/jose")
