@@ -1,44 +1,26 @@
 package no.difi.meldingsutveksling.serviceregistry.model;
 
 
-import com.google.common.base.MoreObjects;
+import com.google.common.collect.Lists;
+import lombok.Data;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
+
+import java.util.List;
 
 /**
  * Represents an organization or a citizen
  */
+@Data
 public class Entity {
 
     private EntityInfo infoRecord;
     private ServiceRecord serviceRecord;
+    private List<ServiceRecord> serviceRecords;
 
     /**
      * Creates an empty Entity
      */
     public Entity() {
-    }
-
-    public void setServiceRecord(ServiceRecord s) {
-        this.serviceRecord = s;
-    }
-
-    public ServiceRecord getServiceRecord() {
-        return serviceRecord;
-    }
-
-    public EntityInfo getInfoRecord() {
-        return infoRecord;
-    }
-
-    public void setInfoRecord(EntityInfo info) {
-        this.infoRecord = info;
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("info", infoRecord)
-                .add("serviceRecord", serviceRecord)
-                .toString();
+        serviceRecords = Lists.newArrayList();
     }
 }

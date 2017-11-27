@@ -8,9 +8,9 @@ public class DpeServiceRecord extends ServiceRecord {
         super(pemCertificate, serviceIdentifier, organisationNumber);
     }
 
-    public static DpeServiceRecord of(String pemCertificate, String organizationNumber) {
-        DpeServiceRecord dpeServiceRecord = new DpeServiceRecord(pemCertificate, ServiceIdentifier.DPE_INNSYN, organizationNumber);
-        dpeServiceRecord.addDpeCapability(ServiceIdentifier.DPE_INNSYN.toString());
+    public static DpeServiceRecord of(String pemCertificate, String organizationNumber, ServiceIdentifier serviceIdentifier) {
+        DpeServiceRecord dpeServiceRecord = new DpeServiceRecord(pemCertificate, serviceIdentifier, organizationNumber);
+        dpeServiceRecord.addDpeCapability(serviceIdentifier.toString());
         return dpeServiceRecord;
     }
 
