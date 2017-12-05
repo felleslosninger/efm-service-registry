@@ -149,6 +149,7 @@ public class ServiceRecordController {
                 log.error("Error looking up identifier in KRR", e);
             }
             if (serviceRecord.isPresent()) {
+                entity.getServiceRecords().add(serviceRecord.get());
                 return;
             }
         }
