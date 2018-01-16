@@ -61,7 +61,7 @@ public class DSFClient {
             throw new KRRClientException("Error mapping payload to " + DSFResponse.class.getName(), e);
         }
 
-        if (dsfResponse.getPersons() == null || dsfResponse.getPersons().size() == 0) {
+        if (dsfResponse.getPersons() == null || dsfResponse.getPersons().isEmpty()) {
             return Optional.empty();
         }
 
