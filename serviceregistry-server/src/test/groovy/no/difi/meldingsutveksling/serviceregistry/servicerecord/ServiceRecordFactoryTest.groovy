@@ -60,7 +60,7 @@ class ServiceRecordFactoryTest extends Specification {
         krr.getCizitenInfo(_) >> personResourceMock
         def dsfResourceMock = Mock(DSFResource)
         dsfResourceMock.getPostAddress() >> "foo bar"
-        krr.getDSFInfo(_, _) >> dsfResourceMock
+        krr.getDSFInfo(_, _) >> Optional.of(dsfResourceMock)
 
         when:
         def serviceRecord = serviceRecordFactory.createServiceRecordForCititzen("1234", auth, "1234", Notification.NOT_OBLIGATED)

@@ -5,6 +5,8 @@ import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class KrrService {
 
@@ -36,7 +38,7 @@ public class KrrService {
         personResource.setPrintPostkasseLeverandorAdr(properties.getKrr().getPrintAdress());
     }
 
-    public DSFResource getDSFInfo(String identifier, String token) throws KRRClientException {
+    public Optional<DSFResource> getDSFInfo(String identifier, String token) throws KRRClientException {
         return dsfClient.getDSFResource(identifier, token);
     }
 
