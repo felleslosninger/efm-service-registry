@@ -189,13 +189,17 @@ public class ServiceRecordFactory {
             return createPostVirksomhetServiceRecord(identifier);
         }
 
-        DSFResource dsfResource = krrService.getDSFInfo(identifier, token);
-        String[] codeArea = dsfResource.getPostAddress().split(" ");
-        PostAddress postAddress = new PostAddress(dsfResource.getName(),
-                dsfResource.getStreet(),
+        Optional<DSFResource> dsfResource = krrService.getDSFInfo(identifier, token);
+        if (!dsfResource.isPresent()) {
+            logger.error("Identifier found in KRR but not in DSF, defaulting to DPV.");
+            return Optional.empty();
+        }
+        String[] codeArea = dsfResource.get().getPostAddress().split(" ");
+        PostAddress postAddress = new PostAddress(dsfResource.get().getName(),
+                dsfResource.get().getStreet(),
                 codeArea[0],
                 codeArea.length > 1 ? codeArea[1] : codeArea[0],
-                dsfResource.getCountry());
+                dsfResource.get().getCountry());
 
         return Optional.of(new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
                 identifier, postAddress, postAddress));

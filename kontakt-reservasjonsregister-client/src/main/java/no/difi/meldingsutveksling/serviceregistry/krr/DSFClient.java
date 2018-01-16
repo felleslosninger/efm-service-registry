@@ -11,6 +11,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.cert.CertificateException;
+import java.util.Optional;
 
 public class DSFClient {
 
@@ -20,7 +21,7 @@ public class DSFClient {
         this.endpointURL= endpointURL;
     }
 
-    public DSFResource getDSFResource(String identifier, String token) throws KRRClientException {
+    public Optional<DSFResource> getDSFResource(String identifier, String token) throws KRRClientException {
 
         URI uri;
         try {
@@ -60,6 +61,10 @@ public class DSFClient {
             throw new KRRClientException("Error mapping payload to " + DSFResponse.class.getName(), e);
         }
 
-        return dsfResponse.getPersons().get(0);
+        if (dsfResponse.getPersons() == null || dsfResponse.getPersons().size() == 0) {
+            return Optional.empty();
+        }
+
+        return Optional.of(dsfResponse.getPersons().get(0));
     }
 }
