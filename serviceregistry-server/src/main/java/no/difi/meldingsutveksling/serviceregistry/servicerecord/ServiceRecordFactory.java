@@ -9,7 +9,10 @@ import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
+import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
+import no.difi.meldingsutveksling.serviceregistry.model.OrganizationInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
+import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdressing;
@@ -41,6 +44,7 @@ public class ServiceRecordFactory {
     private ServiceregistryProperties properties;
     private VirkSertService virksertService;
     private ELMALookupService elmaLookupService;
+    private EntityService entityService;
     private static final String NORWAY_PREFIX = "9908:";
     private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
 
@@ -53,11 +57,16 @@ public class ServiceRecordFactory {
      * @param krrService - used to lookup parameters needed to use DPI transportation
      */
     @Autowired
-    public ServiceRecordFactory(ServiceregistryProperties properties, VirkSertService virksertService, ELMALookupService elmaLookupService, KrrService krrService) {
+    public ServiceRecordFactory(ServiceregistryProperties properties,
+                                VirkSertService virksertService,
+                                ELMALookupService elmaLookupService,
+                                KrrService krrService,
+                                EntityService entityService) {
         this.properties = properties;
         this.virksertService = virksertService;
         this.elmaLookupService = elmaLookupService;
         this.krrService = krrService;
+        this.entityService = entityService;
     }
 
     public Optional<ServiceRecord> createFiksServiceRecord(FiksAdressing fiksAdressing) {
@@ -201,8 +210,21 @@ public class ServiceRecordFactory {
                 codeArea.length > 1 ? codeArea[1] : codeArea[0],
                 dsfResource.get().getCountry());
 
+        Optional<EntityInfo> senderEntity = entityService.getEntityInfo(onBehalfOrgnr);
+        PostAddress returnAddress;
+        if (senderEntity.isPresent() && senderEntity.get() instanceof OrganizationInfo) {
+            OrganizationInfo orginfo = (OrganizationInfo) senderEntity.get();
+            returnAddress = new PostAddress(orginfo.getOrganizationName(),
+                    orginfo.getPostadresse().getAdresse(),
+                    orginfo.getPostadresse().getPostnummer(),
+                    orginfo.getPostadresse().getPoststed(),
+                    orginfo.getPostadresse().getLand());
+        } else {
+            return Optional.empty();
+        }
+
         return Optional.of(new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
-                identifier, postAddress, postAddress));
+                identifier, postAddress, returnAddress));
     }
 
 }
