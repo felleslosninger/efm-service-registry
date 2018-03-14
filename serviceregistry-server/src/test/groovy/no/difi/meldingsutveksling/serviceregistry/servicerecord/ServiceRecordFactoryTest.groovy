@@ -7,6 +7,9 @@ import no.difi.meldingsutveksling.serviceregistry.krr.ContactInfoResource
 import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource
 import no.difi.meldingsutveksling.serviceregistry.krr.DigitalPostResource
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource
+import no.difi.meldingsutveksling.serviceregistry.model.BrregPostadresse
+import no.difi.meldingsutveksling.serviceregistry.model.OrganizationInfo
+import no.difi.meldingsutveksling.serviceregistry.service.EntityService
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService
@@ -20,13 +23,14 @@ class ServiceRecordFactoryTest extends Specification {
     private ServiceregistryProperties properties = Mock(ServiceregistryProperties)
     private VirkSertService virkSert = Mock(VirkSertService)
     private ELMALookupService elma = Mock(ELMALookupService)
+    private EntityService entityService = Mock(EntityService)
     private KrrService krr
     private ServiceRecordFactory serviceRecordFactory
 
 
     def setup() {
         krr = Mock(KrrService)
-        serviceRecordFactory = new ServiceRecordFactory(properties, virkSert, elma, krr)
+        serviceRecordFactory = new ServiceRecordFactory(properties, virkSert, elma, krr, entityService)
     }
 
     def "Given citizen has not chosen postbox provider and citizen is not reserved then service record should be DPV"() {
@@ -57,6 +61,11 @@ class ServiceRecordFactoryTest extends Specification {
         personResourceMock.hasMailbox() >> true
         personResourceMock.getDigitalPost() >> Mock(DigitalPostResource)
         personResourceMock.getContactInfo() >> Mock(ContactInfoResource)
+        def orginfoMock = Mock(OrganizationInfo)
+        orginfoMock.getOrganizationName() >> "foo"
+        def postadr = new BrregPostadresse("adr1", "123", "sted", "NOR")
+        orginfoMock.getPostadresse() >> postadr
+        entityService.getEntityInfo(_) >> Optional.of(orginfoMock)
         krr.getCizitenInfo(_) >> personResourceMock
         def dsfResourceMock = Mock(DSFResource)
         dsfResourceMock.getPostAddress() >> "foo bar"
