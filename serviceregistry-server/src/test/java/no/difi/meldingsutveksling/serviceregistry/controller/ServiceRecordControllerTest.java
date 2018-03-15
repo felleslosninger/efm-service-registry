@@ -48,9 +48,7 @@ import java.util.Optional;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -122,7 +120,7 @@ public class ServiceRecordControllerTest {
 
         SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(null, personResource,
                 ServiceIdentifier.DPI, "12345678901", postAddress, postAddress);
-        when(serviceRecordFactory.createServiceRecordForCititzen(eq("12345678901"), any(), any(), any(), any())).thenReturn
+        when(serviceRecordFactory.createServiceRecordForCititzen(eq("12345678901"), anyBoolean(), any(), any(), any())).thenReturn
                 (Optional.of(dpiServiceRecord));
     }
 
