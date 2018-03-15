@@ -106,7 +106,7 @@ public class ServiceRecordController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No authentication provided.");
             }
             try {
-                serviceRecord = serviceRecordFactory.createServiceRecordForCititzen(identifier, auth, clientOrgnr, obligation);
+                serviceRecord = serviceRecordFactory.createServiceRecordForCititzen(identifier, false, auth, clientOrgnr, obligation);
             } catch (KRRClientException e) {
                 log.error("Error looking up identifier in KRR", e);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -144,13 +144,12 @@ public class ServiceRecordController {
         if (shouldCreateServiceRecordForCititzen().test(entityInfo)) {
             Optional<ServiceRecord> serviceRecord = Optional.empty();
             try {
-                serviceRecord = serviceRecordFactory.createServiceRecordForCititzen(entityInfo.getIdentifier(), auth, clientOrgnr, obligation);
+                serviceRecord = serviceRecordFactory.createServiceRecordForCititzen(entityInfo.getIdentifier(), true, auth, clientOrgnr, obligation);
             } catch (KRRClientException e) {
                 log.error("Error looking up identifier in KRR", e);
             }
             if (serviceRecord.isPresent()) {
                 entity.getServiceRecords().add(serviceRecord.get());
-                return;
             }
         }
 

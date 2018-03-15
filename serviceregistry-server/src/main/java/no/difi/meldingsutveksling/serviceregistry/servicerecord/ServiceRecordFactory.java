@@ -183,6 +183,7 @@ public class ServiceRecordFactory {
 
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
     public Optional<ServiceRecord> createServiceRecordForCititzen(String identifier,
+                                                                 boolean createIfMissingMailbox,
                                                                  Authentication auth,
                                                                  String onBehalfOrgnr,
                                                                  Notification notification) throws KRRClientException {
@@ -194,7 +195,9 @@ public class ServiceRecordFactory {
                 .require(notification)
                 .token(token));
 
-        if (!personResource.hasMailbox() && NEI.name().equals(personResource.getReserved())) {
+        if (!personResource.hasMailbox() &&
+                NEI.name().equals(personResource.getReserved()) &&
+                !createIfMissingMailbox) {
             return createPostVirksomhetServiceRecord(identifier);
         }
 

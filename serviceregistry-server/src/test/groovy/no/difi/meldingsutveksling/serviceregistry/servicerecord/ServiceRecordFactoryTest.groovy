@@ -45,7 +45,7 @@ class ServiceRecordFactoryTest extends Specification {
         krr.getCizitenInfo(_) >> personResourceMock
 
         when:
-        def serviceRecord = serviceRecordFactory.createServiceRecordForCititzen("1234", auth, "1234", Notification.NOT_OBLIGATED)
+        def serviceRecord = serviceRecordFactory.createServiceRecordForCititzen("1234", false, auth, "1234", Notification.NOT_OBLIGATED)
 
         then:
         serviceRecord.get().class == PostVirksomhetServiceRecord
@@ -72,7 +72,7 @@ class ServiceRecordFactoryTest extends Specification {
         krr.getDSFInfo(_, _) >> Optional.of(dsfResourceMock)
 
         when:
-        def serviceRecord = serviceRecordFactory.createServiceRecordForCititzen("1234", auth, "1234", Notification.NOT_OBLIGATED)
+        def serviceRecord = serviceRecordFactory.createServiceRecordForCititzen("1234", false, auth, "1234", Notification.NOT_OBLIGATED)
 
         then:
         serviceRecord.get().class == SikkerDigitalPostServiceRecord
