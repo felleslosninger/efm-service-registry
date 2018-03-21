@@ -39,8 +39,13 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
         }
 
         kanVarsles = KAN_VARSLES.name().equals(personResource.getAlertStatus());
-        epostAdresse = personResource.getContactInfo().getEmail();
-        mobilnummer = personResource.getContactInfo().getMobile();
+        if (personResource.getContactInfo() != null) {
+            epostAdresse = personResource.getContactInfo().getEmail();
+            mobilnummer = personResource.getContactInfo().getMobile();
+        } else {
+            epostAdresse = null;
+            mobilnummer = null;
+        }
         fysiskPost = JA.name().equals(personResource.getReserved());
 
         this.postAddress = postAddress;
