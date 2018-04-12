@@ -1,8 +1,10 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
+import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.logging.MarkerFactory;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource;
@@ -15,19 +17,19 @@ import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
-import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdressing;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
+import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import no.difi.vefa.peppol.common.model.Endpoint;
 import no.difi.virksert.client.lang.VirksertClientException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.stereotype.Component;
 
-import java.lang.invoke.MethodHandles;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
@@ -38,6 +40,7 @@ import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier
  * Factory method class to create Service Records based on lookup endpoint urls and certificates corresponding to those services
  */
 @Component
+@Slf4j
 public class ServiceRecordFactory {
 
     private final KrrService krrService;
@@ -45,8 +48,8 @@ public class ServiceRecordFactory {
     private VirkSertService virksertService;
     private ELMALookupService elmaLookupService;
     private EntityService entityService;
+    private SvarUtService svarUtService;
     private static final String NORWAY_PREFIX = "9908:";
-    private static final Logger logger = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass().getName());
 
     /**
      * Creates factory to create ServiceRecord using provided environment and services
@@ -61,17 +64,26 @@ public class ServiceRecordFactory {
                                 VirkSertService virksertService,
                                 ELMALookupService elmaLookupService,
                                 KrrService krrService,
-                                EntityService entityService) {
+                                EntityService entityService,
+                                SvarUtService svarUtService) {
         this.properties = properties;
         this.virksertService = virksertService;
         this.elmaLookupService = elmaLookupService;
         this.krrService = krrService;
         this.entityService = entityService;
+        this.svarUtService = svarUtService;
     }
 
-    public Optional<ServiceRecord> createFiksServiceRecord(FiksAdressing fiksAdressing) {
-        if (fiksAdressing.shouldUseFIKS()) {
-            return Optional.of(new FiksServiceRecord(fiksAdressing));
+    public Optional<ServiceRecord> createFiksServiceRecord(String orgnr) {
+        if (svarUtService.getSvarUtAdressering(orgnr)) {
+            String pem;
+            try {
+                pem = IOUtils.toString(properties.getSvarut().getCertificate().getInputStream(), StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                log.error("Could not read certificate from {}", properties.getSvarut().getCertificate().toString());
+                throw new ServiceRegistryException(e);
+            }
+            return Optional.of(new FiksServiceRecord(orgnr, pem, properties.getSvarut().getForsendelsesserviceUrl().toString()));
         }
         return Optional.empty();
     }
@@ -82,7 +94,7 @@ public class ServiceRecordFactory {
         try {
             ep = elmaLookupService.lookup(NORWAY_PREFIX + orgnr);
         } catch (EndpointUrlNotFound endpointUrlNotFound) {
-            logger.info(MarkerFactory.receiverMarker(orgnr),
+            log.info(MarkerFactory.receiverMarker(orgnr),
                     String.format("Attempted to lookup receiver in ELMA: %s", endpointUrlNotFound.getMessage()));
             return Optional.empty();
         }
@@ -91,7 +103,7 @@ public class ServiceRecordFactory {
         try {
             pemCertificate = lookupPemCertificate(orgnr);
         } catch (CertificateNotFoundException e) {
-            logger.info(MarkerFactory.receiverMarker(orgnr), String.format("Identifier %s found in ELMA with " +
+            log.info(MarkerFactory.receiverMarker(orgnr), String.format("Identifier %s found in ELMA with " +
                     "DPO profile, but certificate not found in Virksert.", orgnr));
             return Optional.empty();
         }
@@ -129,7 +141,7 @@ public class ServiceRecordFactory {
             try {
                 pemCertificate = lookupPemCertificate(orgnr);
             } catch (CertificateNotFoundException e) {
-                logger.info(MarkerFactory.receiverMarker(orgnr), String.format("Identifier %s found in ELMA with " +
+                log.info(MarkerFactory.receiverMarker(orgnr), String.format("Identifier %s found in ELMA with " +
                         "DPE Innsyn profile, but certificate not found in Virksert.", orgnr));
                 return Optional.empty();
             }
@@ -146,7 +158,7 @@ public class ServiceRecordFactory {
             try {
                 pemCertificate = lookupPemCertificate(orgnr);
             } catch (CertificateNotFoundException e) {
-                logger.info(MarkerFactory.receiverMarker(orgnr), String.format("Identifier %s found in ELMA with " +
+                log.info(MarkerFactory.receiverMarker(orgnr), String.format("Identifier %s found in ELMA with " +
                         "DPE Data profile, but certificate not found in Virksert.", orgnr));
                 return Optional.empty();
             }
@@ -162,7 +174,7 @@ public class ServiceRecordFactory {
         try {
             pemCertificate = lookupPemCertificate(orgnr);
         } catch (CertificateNotFoundException e) {
-            logger.info(MarkerFactory.receiverMarker(orgnr), String.format("Certificate for %s not found in Virksert.", orgnr));
+            log.info(MarkerFactory.receiverMarker(orgnr), String.format("Certificate for %s not found in Virksert.", orgnr));
             return Optional.empty();
         }
         DpeServiceRecord sr = DpeServiceRecord.of(pemCertificate, orgnr, DPE_RECEIPT);
@@ -203,7 +215,7 @@ public class ServiceRecordFactory {
 
         Optional<DSFResource> dsfResource = krrService.getDSFInfo(identifier, token);
         if (!dsfResource.isPresent()) {
-            logger.error("Identifier found in KRR but not in DSF, defaulting to DPV.");
+            log.error("Identifier found in KRR but not in DSF, defaulting to DPV.");
             return Optional.empty();
         }
         String[] codeArea = dsfResource.get().getPostAddress().split(" ");
