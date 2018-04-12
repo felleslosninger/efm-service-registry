@@ -13,6 +13,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.EntityService
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService
+import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService
 import no.difi.vefa.peppol.common.lang.PeppolException
 import no.difi.vefa.peppol.common.model.Endpoint
 import org.springframework.security.core.Authentication
@@ -26,11 +27,12 @@ class ServiceRecordFactoryTest extends Specification {
     private EntityService entityService = Mock(EntityService)
     private KrrService krr
     private ServiceRecordFactory serviceRecordFactory
+    private SvarUtService svarUtService = Mock(SvarUtService)
 
 
     def setup() {
         krr = Mock(KrrService)
-        serviceRecordFactory = new ServiceRecordFactory(properties, virkSert, elma, krr, entityService)
+        serviceRecordFactory = new ServiceRecordFactory(properties, virkSert, elma, krr, entityService, svarUtService)
     }
 
     def "Given citizen has not chosen postbox provider and citizen is not reserved then service record should be DPV"() {

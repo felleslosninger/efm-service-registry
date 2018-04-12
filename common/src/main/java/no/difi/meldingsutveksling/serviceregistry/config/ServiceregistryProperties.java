@@ -35,6 +35,8 @@ public class ServiceregistryProperties {
     private Sign sign;
     @Valid
     private FIKS fiks = new FIKS();
+    @Valid
+    private SvarUt svarut;
 
     @Data
     public static class ELMA {
@@ -100,5 +102,22 @@ public class ServiceregistryProperties {
     public static class FIKS {
         @NotNull
         private URL adresseServiceURL;
+        @Valid
+        private SvarUt svarut;
+
+    }
+
+    @Data
+    public static class SvarUt {
+        @NotNull
+        private String user;
+        @NotNull
+        private String password;
+        @NotNull
+        private URL forsendelsesserviceUrl;
+        @NotNull
+        private URL serviceRecordUrl;
+        @NotNull
+        private Resource certificate;
     }
 }

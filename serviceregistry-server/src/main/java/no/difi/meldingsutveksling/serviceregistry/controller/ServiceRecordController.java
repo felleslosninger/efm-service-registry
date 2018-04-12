@@ -12,8 +12,6 @@ import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
-import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdresseClient;
-import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdressing;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
 import org.jboss.logging.MDC;
@@ -43,7 +41,6 @@ public class ServiceRecordController {
     private final ServiceRecordFactory serviceRecordFactory;
     private EntityService entityService;
     private PayloadSigner payloadSigner;
-    private FiksAdresseClient fiksAdresseClient;
 
     /**
      * @param serviceRecordFactory for creation of the identifiers respective service record
@@ -52,12 +49,10 @@ public class ServiceRecordController {
     @Autowired
     public ServiceRecordController(ServiceRecordFactory serviceRecordFactory,
                                    EntityService entityService,
-                                   PayloadSigner payloadSigner,
-                                   FiksAdresseClient fiksAdresseClient) {
+                                   PayloadSigner payloadSigner) {
         this.entityService = entityService;
         this.serviceRecordFactory = serviceRecordFactory;
         this.payloadSigner = payloadSigner;
-        this.fiksAdresseClient = fiksAdresseClient;
     }
 
     @InitBinder
@@ -118,8 +113,7 @@ public class ServiceRecordController {
         }
 
         if (!serviceRecord.isPresent()) {
-            final FiksAdressing fiksAdressing = fiksAdresseClient.getFiksAdressing(entityInfo.get().getIdentifier());
-            serviceRecord = serviceRecordFactory.createFiksServiceRecord(fiksAdressing);
+            serviceRecord = serviceRecordFactory.createFiksServiceRecord(identifier);
         }
 
         if (!serviceRecord.isPresent()) {
@@ -148,16 +142,13 @@ public class ServiceRecordController {
             } catch (KRRClientException e) {
                 log.error("Error looking up identifier in KRR", e);
             }
-            if (serviceRecord.isPresent()) {
-                entity.getServiceRecords().add(serviceRecord.get());
-            }
+            serviceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
         }
 
         Optional<ServiceRecord> eduServiceRecord = serviceRecordFactory.createEduServiceRecord(entityInfo.getIdentifier());
         eduServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
 
-        final FiksAdressing fiksAdressing = fiksAdresseClient.getFiksAdressing(entityInfo.getIdentifier());
-        Optional<ServiceRecord> fiksServiceRecord = serviceRecordFactory.createFiksServiceRecord(fiksAdressing);
+        Optional<ServiceRecord> fiksServiceRecord = serviceRecordFactory.createFiksServiceRecord(entityInfo.getIdentifier());
         fiksServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
 
         Optional<ServiceRecord> dpeInnsynServiceRecord = serviceRecordFactory.createDpeInnsynServiceRecord(entityInfo.getIdentifier());

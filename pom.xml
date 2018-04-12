@@ -76,7 +76,9 @@
     <modules>
         <module>serviceregistry-server</module>
         <module>kontakt-reservasjonsregister-client</module>
+        <module>svarut-client</module>
         <module>domain</module>
+        <module>common</module>
     </modules>
 
 

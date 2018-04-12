@@ -4,19 +4,13 @@ import com.jayway.jsonpath.JsonPath;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
-import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
-import no.difi.meldingsutveksling.serviceregistry.krr.ContactInfoResource;
-import no.difi.meldingsutveksling.serviceregistry.krr.DigitalPostResource;
-import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
-import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
+import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
-import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdresseClient;
-import no.difi.meldingsutveksling.serviceregistry.service.ks.FiksAdressing;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.EDUServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.PostVirksomhetServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
@@ -70,9 +64,6 @@ public class ServiceRecordControllerTest {
     @MockBean
     private EntityService entityService;
 
-    @MockBean
-    private FiksAdresseClient fiksAdresseClient;
-
     @Autowired
     private PayloadSigner payloadSigner;
 
@@ -84,9 +75,7 @@ public class ServiceRecordControllerTest {
         when(serviceRecordFactory.createDpeInnsynServiceRecord(anyString())).thenReturn(Optional.empty());
         when(serviceRecordFactory.createDpeDataServiceRecord(anyString())).thenReturn(Optional.empty());
         when(serviceRecordFactory.createDpeReceiptServiceRecord(anyString())).thenReturn(Optional.empty());
-        when(serviceRecordFactory.createFiksServiceRecord(FiksAdressing.EMPTY)).thenReturn(Optional.empty());
-
-        when(fiksAdresseClient.getFiksAdressing(anyString())).thenReturn(FiksAdressing.EMPTY);
+        when(serviceRecordFactory.createFiksServiceRecord(anyString())).thenReturn(Optional.empty());
 
         BrregPostadresse testAdr = new BrregPostadresse("testadresse", "1337", "teststed", "testland");
         OrganizationInfo ORGLinfo = new OrganizationInfo("42", "foo",
