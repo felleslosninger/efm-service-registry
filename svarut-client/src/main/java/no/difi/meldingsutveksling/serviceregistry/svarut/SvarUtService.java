@@ -13,9 +13,9 @@ public class SvarUtService {
         this.svarUtClient = svarUtClient;
     }
 
-    public boolean getSvarUtAdressering(String orgnr) {
+    public boolean hasSvarUtAdressering(String orgnr) {
         RetrieveMottakerSystemForOrgnr request = RetrieveMottakerSystemForOrgnr.builder().withOrganisasjonsnr(orgnr).build();
         RetrieveMottakerSystemForOrgnrResponse response = svarUtClient.retrieveMottakerSystemForOrgnr(request);
-        return response.getReturn().size() > 0;
+        return !response.getReturn().isEmpty();
     }
 }

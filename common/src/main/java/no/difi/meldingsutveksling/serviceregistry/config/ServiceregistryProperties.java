@@ -116,6 +116,8 @@ public class ServiceregistryProperties {
         @NotNull
         private URL forsendelsesserviceUrl;
         @NotNull
+        private URL serviceRecordUrl;
+        @NotNull
         private Resource certificate;
     }
 }

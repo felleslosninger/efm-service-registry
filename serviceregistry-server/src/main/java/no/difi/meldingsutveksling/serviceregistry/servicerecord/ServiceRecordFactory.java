@@ -75,7 +75,7 @@ public class ServiceRecordFactory {
     }
 
     public Optional<ServiceRecord> createFiksServiceRecord(String orgnr) {
-        if (svarUtService.getSvarUtAdressering(orgnr)) {
+        if (svarUtService.hasSvarUtAdressering(orgnr)) {
             String pem;
             try {
                 pem = IOUtils.toString(properties.getSvarut().getCertificate().getInputStream(), StandardCharsets.UTF_8);
@@ -83,7 +83,7 @@ public class ServiceRecordFactory {
                 log.error("Could not read certificate from {}", properties.getSvarut().getCertificate().toString());
                 throw new ServiceRegistryException(e);
             }
-            return Optional.of(new FiksServiceRecord(orgnr, pem, properties.getSvarut().getForsendelsesserviceUrl().toString()));
+            return Optional.of(new FiksServiceRecord(orgnr, pem, properties.getSvarut().getServiceRecordUrl().toString()));
         }
         return Optional.empty();
     }
