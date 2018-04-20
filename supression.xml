@@ -210,4 +210,11 @@
         <sha1>63e7293b8a7ebc035133c91da4fcdfdc8d35fa56</sha1>
         <cve>CVE-2016-3720</cve>
     </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2017-8046 false positive, neither Pivotal or spring-data-rest used
+      ]]></notes>
+        <cve>CVE-2017-8046</cve>
+    </suppress>
+
 </suppressions>
