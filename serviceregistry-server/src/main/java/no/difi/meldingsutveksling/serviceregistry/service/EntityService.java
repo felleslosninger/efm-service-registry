@@ -3,6 +3,7 @@ package no.difi.meldingsutveksling.serviceregistry.service;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.model.CitizenInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
@@ -21,6 +22,7 @@ import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRe
  * An entity can be a citizen or an organization
  */
 @Service
+@Slf4j
 public class EntityService {
 
     LoadingCache<String, Optional<EntityInfo>> entityCache;
@@ -67,6 +69,7 @@ public class EntityService {
         try {
             return entityCache.get(identifier);
         } catch (ExecutionException e) {
+            log.error("Could not find entity for the requested identifier={}", identifier, e);
             return Optional.empty();
         }
     }
