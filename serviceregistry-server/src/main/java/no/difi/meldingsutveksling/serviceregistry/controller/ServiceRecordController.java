@@ -80,7 +80,6 @@ public class ServiceRecordController {
         Entity entity = new Entity();
         Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
         if (!entityInfo.isPresent()) {
-            log.warn("Could not find entity for the requeste identifier={}", identifier);
             return ResponseEntity.notFound().build();
         }
 
