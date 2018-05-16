@@ -216,5 +216,11 @@
       ]]></notes>
         <cve>CVE-2017-8046</cve>
     </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2018-1270 Upgraded to spring boot dependencies 1.5.13, waiting for further upgrades
+      ]]></notes>
+        <cve>CVE-2018-1270</cve>
+    </suppress>
 
 </suppressions>
