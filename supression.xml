@@ -234,5 +234,59 @@
       ]]></notes>
         <cve>CVE-2016-3720</cve>
     </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2003-0043 Only affects older tomcat version (<5.x)
+      ]]></notes>
+        <cve>CVE-2003-0043</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2003-0044 Only affects older tomcat version (<5.x)
+      ]]></notes>
+        <cve>CVE-2003-0044</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2003-0045 Only affects older tomcat version (<5.x)
+      ]]></notes>
+        <cve>CVE-2003-0045</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2005-0808 Only affects older tomcat version (<5.x)
+      ]]></notes>
+        <cve>CVE-2005-0808</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2005-4838 Only affects older tomcat version (<5.x)
+      ]]></notes>
+        <cve>CVE-2005-4838</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2006-7196 Only affects older tomcat version (<5.x)
+      ]]></notes>
+        <cve>CVE-2006-7196</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2007-0450 Only affects older tomcat version (<5.x)
+      ]]></notes>
+        <cve>CVE-2007-0450</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2007-2449 Only affects older tomcat version (<5.x)
+      ]]></notes>
+        <cve>CVE-2007-2449</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2008-0128 Only affects older tomcat version (<5.x)
+      ]]></notes>
+        <cve>CVE-2008-0128</cve>
+    </suppress>
 
 </suppressions>
