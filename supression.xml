@@ -236,6 +236,48 @@
     </suppress>
     <suppress>
         <notes><![CDATA[
+        CVE-2002-2006 Only affects older tomcat version (<5.x)
+      ]]></notes>
+        <cve>CVE-2002-2006</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2002-1148 Only affects older tomcat version (<5.x)
+      ]]></notes>
+        <cve>CVE-2002-1148</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2001-0590 Only affects older tomcat version (<5.x)
+      ]]></notes>
+        <cve>CVE-2001-0590</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2000-1210 Only affects older tomcat version (<5.x)
+      ]]></notes>
+        <cve>CVE-2000-1210</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2000-0760 Only affects older tomcat version (<5.x)
+      ]]></notes>
+        <cve>CVE-2000-0760</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2000-0672 Only affects older tomcat version (<5.x)
+      ]]></notes>
+        <cve>CVE-2000-0672</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2003-0042 Only affects older tomcat version (<5.x)
+      ]]></notes>
+        <cve>CVE-2003-0042</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
         CVE-2003-0043 Only affects older tomcat version (<5.x)
       ]]></notes>
         <cve>CVE-2003-0043</cve>
@@ -287,6 +329,12 @@
         CVE-2008-0128 Only affects older tomcat version (<5.x)
       ]]></notes>
         <cve>CVE-2008-0128</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        CVE-2016-7051 False positive, using jackson 2.8.11
+      ]]></notes>
+        <cve>CVE-2016-7051</cve>
     </suppress>
 
 </suppressions>
