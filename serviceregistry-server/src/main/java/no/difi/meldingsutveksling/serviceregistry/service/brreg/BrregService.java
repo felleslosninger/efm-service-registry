@@ -1,11 +1,10 @@
 package no.difi.meldingsutveksling.serviceregistry.service.brreg;
 
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import no.difi.meldingsutveksling.serviceregistry.client.brreg.BrregClient;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.OrganizationInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,21 +13,33 @@ import java.util.Optional;
 @Service
 public class BrregService {
 
-    private static final Logger log = LoggerFactory.getLogger(BrregService.class);
-
     private BrregClient brregClient;
 
+    private DatahotellClient datahotellClient;
+
     @Autowired
-    public BrregService(BrregClient brregClient) {
-        this.brregClient= brregClient;
+    public BrregService(BrregClient brregClient,
+                        DatahotellClient datahotellClient) {
+        this.brregClient = brregClient;
+        this.datahotellClient = datahotellClient;
     }
 
-    public Optional<EntityInfo> getOrganizationInfo(String orgNr) {
-        Optional<BrregEnhet> enhet = brregClient.getBrregEnhetByOrgnr(orgNr);
-        if (!enhet.isPresent()) {
-            enhet = brregClient.getBrregUnderenhetByOrgnr(orgNr);
+    @HystrixCommand(
+            fallbackMethod = "getOrgInfoFromDatahotell"
+    )
+    public Optional<EntityInfo> getOrganizationInfo(String orgnr) throws BrregNotFoundException {
+        Optional<BrregEnhet> entity = brregClient.getBrregEnhetByOrgnr(orgnr);
+        if (!entity.isPresent()) {
+            entity = brregClient.getBrregUnderenhetByOrgnr(orgnr);
+        }
+        if (!entity.isPresent()) {
+            throw new BrregNotFoundException(String.format("Identifier %s not found in brreg", orgnr));
         }
 
-        return enhet.map(OrganizationInfo::of);
+        return entity.map(OrganizationInfo::of);
+    }
+
+    public Optional<EntityInfo> getOrgInfoFromDatahotell(String orgnr) throws BrregNotFoundException {
+        return datahotellClient.getOrganizationInfo(orgnr);
     }
 }

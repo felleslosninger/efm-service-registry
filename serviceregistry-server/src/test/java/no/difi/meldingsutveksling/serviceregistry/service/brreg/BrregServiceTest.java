@@ -10,6 +10,7 @@ import org.mockito.Mockito;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
 public class BrregServiceTest {
     private BrregService brregService;
@@ -25,11 +26,12 @@ public class BrregServiceTest {
                 (orgNavn).withOrganizationNumber(orgNr).build();
 
         BrregClientImpl brregClientMock = setupMock(orgNavn, orgNr, organisasjonsform);
-        brregService = new BrregService(brregClientMock);
+        DatahotellClient datahotellMock = mock(DatahotellClient.class);
+        brregService = new BrregService(brregClientMock, datahotellMock);
     }
 
     @Test
-    public void brregHasOrganizationInfo() {
+    public void brregHasOrganizationInfo() throws BrregNotFoundException {
         assertEquals(difi, brregService.getOrganizationInfo(difi.getIdentifier()).get());
     }
 
@@ -39,7 +41,7 @@ public class BrregServiceTest {
         enhet.setNavn(orgNavn);
         enhet.setOrganisasjonsform(organisasjonsform);
 
-        BrregClientImpl brregClientMock = Mockito.mock(BrregClientImpl.class);
+        BrregClientImpl brregClientMock = mock(BrregClientImpl.class);
         Mockito.when(brregClientMock.getBrregEnhetByOrgnr(Mockito.anyString())).thenReturn(Optional.empty());
         Mockito.when(brregClientMock.getBrregEnhetByOrgnr(String.valueOf(orgNr))).thenReturn(Optional.of(enhet));
         return brregClientMock;

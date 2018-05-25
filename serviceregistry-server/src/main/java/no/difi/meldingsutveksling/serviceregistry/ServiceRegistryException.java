@@ -13,4 +13,8 @@ public class ServiceRegistryException extends RuntimeException {
     public ServiceRegistryException(String s) {
         super(s);
     }
+
+    public ServiceRegistryException(String s, Throwable e) {
+
+    }
 }
