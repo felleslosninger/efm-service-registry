@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
@@ -58,10 +57,8 @@ public class BrregClientImpl implements BrregClient {
             if (response.getStatusCode() == HttpStatus.OK) {
                 return Optional.of(response.getBody());
             }
-        } catch (HttpClientErrorException e) {
-            if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
-                log.error(String.format("Error looking up entity with identifier=%s", orgnr), e);
-            }
+        } catch (Exception e) {
+            log.error(String.format("Error looking up entity with identifier=%s in brreg", orgnr), e);
         }
         return Optional.empty();
 

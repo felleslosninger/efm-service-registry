@@ -8,6 +8,7 @@ import no.difi.meldingsutveksling.serviceregistry.model.CitizenInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
+import no.difi.meldingsutveksling.serviceregistry.service.brreg.DatahotellClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +31,7 @@ public class EntityService {
     private final BrregService brregService;
 
     @Autowired
-    public EntityService(BrregService brregService) {
+    public EntityService(BrregService brregService, DatahotellClient datahotellClient) {
         this.brregService = brregService;
 
         this.entityCache = CacheBuilder.newBuilder()
@@ -48,15 +49,11 @@ public class EntityService {
      * @param identifier for an entity either an organization number or a fodselsnummer
      * @return info needed to send messages to the entity
      */
-    private Optional<EntityInfo> loadEntityInfo(String identifier) throws BrregNotFoundException {
+    public Optional<EntityInfo> loadEntityInfo(String identifier) throws BrregNotFoundException {
         if (isCitizen().test(identifier)) {
             return Optional.of(new CitizenInfo(identifier));
         } else {
-            Optional<EntityInfo> entity = brregService.getOrganizationInfo(identifier);
-            if (!entity.isPresent()) {
-                throw new BrregNotFoundException(String.format("Identifier %s not found in brreg", identifier));
-            }
-            return entity;
+            return brregService.getOrganizationInfo(identifier);
         }
     }
 
