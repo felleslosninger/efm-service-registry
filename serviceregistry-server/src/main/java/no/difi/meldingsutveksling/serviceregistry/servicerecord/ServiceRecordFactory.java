@@ -90,11 +90,13 @@ public class ServiceRecordFactory {
         return Optional.empty();
     }
 
+    @SuppressWarnings("squid:S1172")
     public Optional<ServiceRecord> createFiksErrorRecord(String orgnr) {
         return Optional.of(ErrorServiceRecord.create(DPF));
     }
 
     @HystrixCommand(fallbackMethod = "createEduErrorRecord")
+    @SuppressWarnings("squid:S1166")
     public Optional<ServiceRecord> createEduServiceRecord(String orgnr) {
         Endpoint ep;
         try {
@@ -132,6 +134,7 @@ public class ServiceRecordFactory {
         return Optional.of(serviceRecord);
     }
 
+    @SuppressWarnings("squid:S1172")
     public Optional<ServiceRecord> createEduErrorRecord(String orgnr) {
         return Optional.of(ErrorServiceRecord.create(DPO));
     }
@@ -145,6 +148,7 @@ public class ServiceRecordFactory {
         return Optional.empty();
     }
 
+    @SuppressWarnings("squid:S1172")
     public Optional<ServiceRecord> createDpeInnsynErrorRecord(String orgnr) {
         return Optional.of(ErrorServiceRecord.create(DPE_INNSYN));
     }
@@ -158,6 +162,7 @@ public class ServiceRecordFactory {
         return Optional.empty();
     }
 
+    @SuppressWarnings("squid:S1172")
     public Optional<ServiceRecord> createDpeDataErrorRecord(String orgnr) {
         return Optional.of(ErrorServiceRecord.create(DPE_DATA));
     }
@@ -169,6 +174,7 @@ public class ServiceRecordFactory {
         return Optional.of(sr);
     }
 
+    @SuppressWarnings("squid:S1172")
     public Optional<ServiceRecord> createDpeReceiptErrorRecord(String orgnr) {
         return Optional.of(ErrorServiceRecord.create(DPE_RECEIPT));
     }
