@@ -17,12 +17,7 @@ public class SvarUtService {
 
     public boolean hasSvarUtAdressering(String orgnr) {
         RetrieveMottakerSystemForOrgnr request = RetrieveMottakerSystemForOrgnr.builder().withOrganisasjonsnr(orgnr).build();
-        try {
-            RetrieveMottakerSystemForOrgnrResponse response = svarUtClient.retrieveMottakerSystemForOrgnr(request);
-            return !response.getReturn().isEmpty();
-        } catch (Exception e) {
-            log.error("Caught exception while looking up receiver in SvarUt", e);
-            return false;
-        }
+        RetrieveMottakerSystemForOrgnrResponse response = svarUtClient.retrieveMottakerSystemForOrgnr(request);
+        return !response.getReturn().isEmpty();
     }
 }

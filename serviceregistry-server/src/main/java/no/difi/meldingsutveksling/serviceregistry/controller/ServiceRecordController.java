@@ -12,6 +12,7 @@ import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
+import no.difi.meldingsutveksling.serviceregistry.servicerecord.ErrorServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
 import org.jboss.logging.MDC;
@@ -108,19 +109,19 @@ public class ServiceRecordController {
         }
 
         if (!serviceRecord.isPresent()) {
-            serviceRecord = serviceRecordFactory.createEduServiceRecord(identifier);
+            serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createEduServiceRecord(identifier), entity);
         }
 
         if (!serviceRecord.isPresent()) {
-            serviceRecord = serviceRecordFactory.createFiksServiceRecord(identifier);
+            serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createFiksServiceRecord(identifier), entity);
         }
 
         if (!serviceRecord.isPresent()) {
-            serviceRecord = serviceRecordFactory.createDpeInnsynServiceRecord(identifier);
+            serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createDpeInnsynServiceRecord(identifier), entity);
         }
 
         if (!serviceRecord.isPresent()) {
-            serviceRecord = serviceRecordFactory.createPostVirksomhetServiceRecord(identifier);
+            serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createPostVirksomhetServiceRecord(identifier), entity);
         }
 
         serviceRecord.ifPresent(entity::setServiceRecord);
@@ -134,34 +135,35 @@ public class ServiceRecordController {
     private void addServiceRecords(EntityInfo entityInfo, Entity entity, Authentication auth, String clientOrgnr,
                                    Notification obligation) {
 
+        String orgnr = entityInfo.getIdentifier();
         if (shouldCreateServiceRecordForCititzen().test(entityInfo)) {
             Optional<ServiceRecord> serviceRecord = Optional.empty();
             try {
-                serviceRecord = serviceRecordFactory.createServiceRecordForCititzen(entityInfo.getIdentifier(), auth, clientOrgnr, obligation);
+                serviceRecord = serviceRecordFactory.createServiceRecordForCititzen(orgnr, auth, clientOrgnr, obligation);
             } catch (KRRClientException e) {
                 log.error("Error looking up identifier in KRR", e);
             }
             serviceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
         }
 
-        Optional<ServiceRecord> eduServiceRecord = serviceRecordFactory.createEduServiceRecord(entityInfo.getIdentifier());
+        Optional<ServiceRecord> eduServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createEduServiceRecord(orgnr), entity);
         eduServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
 
-        Optional<ServiceRecord> fiksServiceRecord = serviceRecordFactory.createFiksServiceRecord(entityInfo.getIdentifier());
+        Optional<ServiceRecord> fiksServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createFiksServiceRecord(orgnr), entity);
         fiksServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
 
-        Optional<ServiceRecord> dpeInnsynServiceRecord = serviceRecordFactory.createDpeInnsynServiceRecord(entityInfo.getIdentifier());
+        Optional<ServiceRecord> dpeInnsynServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createDpeInnsynServiceRecord(orgnr), entity);
         dpeInnsynServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
 
-        Optional<ServiceRecord> dpeDataServiceRecord = serviceRecordFactory.createDpeDataServiceRecord(entityInfo.getIdentifier());
+        Optional<ServiceRecord> dpeDataServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createDpeDataServiceRecord(orgnr), entity);
         dpeDataServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
 
         if (dpeInnsynServiceRecord.isPresent() || dpeDataServiceRecord.isPresent()) {
-            Optional<ServiceRecord> dpeReceiptServiceRecord = serviceRecordFactory.createDpeReceiptServiceRecord(entityInfo.getIdentifier());
+            Optional<ServiceRecord> dpeReceiptServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createDpeReceiptServiceRecord(orgnr), entity);
             dpeReceiptServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
         }
 
-        Optional<ServiceRecord> dpvServiceRecord = serviceRecordFactory.createPostVirksomhetServiceRecord(entityInfo.getIdentifier());
+        Optional<ServiceRecord> dpvServiceRecord = serviceRecordFactory.createPostVirksomhetServiceRecord(orgnr);
         dpvServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
 
     }
@@ -189,6 +191,26 @@ public class ServiceRecordController {
 
         return ResponseEntity.ok(payloadSigner.sign(json));
     }
+
+    /**
+     * Checks if the returned service record is of type ErrorServiceRecord.
+     * If so, add the service identifier to the list of failed services and
+     * return empty {@code Optional}. Else, return the service record.
+     *
+     * @param serviceRecord to check
+     * @param entity to add failed serviceIdentifiers to
+     * @return {@code Optional} if present, empty otherwise
+     */
+    private Optional<ServiceRecord> serviceRecordResponseHandler(Optional<ServiceRecord> serviceRecord, Entity entity) {
+        if (serviceRecord.filter(r -> r instanceof ErrorServiceRecord).isPresent()) {
+            if (!entity.getFailedServiceIdentifiers().contains(serviceRecord.get().getServiceIdentifier())) {
+                entity.getFailedServiceIdentifiers().add(serviceRecord.get().getServiceIdentifier());
+            }
+            return Optional.empty();
+        }
+        return serviceRecord;
+    }
+
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find endpoint url for service of requested organization")
     @ExceptionHandler(EndpointUrlNotFound.class)
