@@ -16,6 +16,7 @@ public class Entity {
     private EntityInfo infoRecord;
     private ServiceRecord serviceRecord;
     private List<ServiceRecord> serviceRecords;
+    private List<ServiceIdentifier> failedServiceIdentifiers = Lists.newArrayList();
 
     /**
      * Creates an empty Entity

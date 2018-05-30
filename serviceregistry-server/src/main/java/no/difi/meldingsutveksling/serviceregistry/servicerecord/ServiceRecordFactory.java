@@ -1,5 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.logging.MarkerFactory;
@@ -74,6 +75,7 @@ public class ServiceRecordFactory {
         this.svarUtService = svarUtService;
     }
 
+    @HystrixCommand(fallbackMethod = "createFiksErrorRecord")
     public Optional<ServiceRecord> createFiksServiceRecord(String orgnr) {
         if (svarUtService.hasSvarUtAdressering(orgnr)) {
             String pem;
@@ -88,26 +90,22 @@ public class ServiceRecordFactory {
         return Optional.empty();
     }
 
-    @SuppressWarnings("squid:S1166") // Suppress Sonar due to no rethrow/log from certificate ex.
+    public Optional<ServiceRecord> createFiksErrorRecord(String orgnr) {
+        return Optional.of(ErrorServiceRecord.create(DPF));
+    }
+
+    @HystrixCommand(fallbackMethod = "createEduErrorRecord")
     public Optional<ServiceRecord> createEduServiceRecord(String orgnr) {
         Endpoint ep;
         try {
             ep = elmaLookupService.lookup(NORWAY_PREFIX + orgnr);
         } catch (EndpointUrlNotFound endpointUrlNotFound) {
-            log.info(MarkerFactory.receiverMarker(orgnr),
+            log.debug(MarkerFactory.receiverMarker(orgnr),
                     String.format("Attempted to lookup receiver in ELMA: %s", endpointUrlNotFound.getMessage()));
             return Optional.empty();
         }
 
-        String pemCertificate;
-        try {
-            pemCertificate = lookupPemCertificate(orgnr);
-        } catch (CertificateNotFoundException e) {
-            log.info(MarkerFactory.receiverMarker(orgnr), String.format("Identifier %s found in ELMA with " +
-                    "DPO profile, but certificate not found in Virksert.", orgnr));
-            return Optional.empty();
-        }
-
+        String pemCertificate = lookupPemCertificate(orgnr);
         EDUServiceRecord serviceRecord = new EDUServiceRecord(pemCertificate, ep.getAddress().toString(), orgnr);
 
         String adr = ep.getAddress().toString();
@@ -134,58 +132,52 @@ public class ServiceRecordFactory {
         return Optional.of(serviceRecord);
     }
 
-    @SuppressWarnings("squid:S1166") // Suppress Sonar due to no rethrow/log from certificate ex.
+    public Optional<ServiceRecord> createEduErrorRecord(String orgnr) {
+        return Optional.of(ErrorServiceRecord.create(DPO));
+    }
+
+    @HystrixCommand(fallbackMethod = "createDpeInnsynErrorRecord")
     public Optional<ServiceRecord> createDpeInnsynServiceRecord(String orgnr) {
         if (elmaLookupService.identifierHasInnsynskravCapability(NORWAY_PREFIX + orgnr)) {
-            String pemCertificate;
-            try {
-                pemCertificate = lookupPemCertificate(orgnr);
-            } catch (CertificateNotFoundException e) {
-                log.info(MarkerFactory.receiverMarker(orgnr), String.format("Identifier %s found in ELMA with " +
-                        "DPE Innsyn profile, but certificate not found in Virksert.", orgnr));
-                return Optional.empty();
-            }
-            DpeServiceRecord sr = DpeServiceRecord.of(pemCertificate, orgnr, DPE_INNSYN);
-            return Optional.of(sr);
+            String pemCertificate = lookupPemCertificate(orgnr);
+            return Optional.of(DpeServiceRecord.of(pemCertificate, orgnr, DPE_INNSYN));
         }
         return Optional.empty();
     }
 
-    @SuppressWarnings("squid:S1166") // Suppress Sonar due to no rethrow/log from certificate ex.
+    public Optional<ServiceRecord> createDpeInnsynErrorRecord(String orgnr) {
+        return Optional.of(ErrorServiceRecord.create(DPE_INNSYN));
+    }
+
+    @HystrixCommand(fallbackMethod = "createDpeDataErrorRecord")
     public Optional<ServiceRecord> createDpeDataServiceRecord(String orgnr) {
         if (elmaLookupService.identifierHasInnsynDataCapability(NORWAY_PREFIX + orgnr)) {
-            String pemCertificate;
-            try {
-                pemCertificate = lookupPemCertificate(orgnr);
-            } catch (CertificateNotFoundException e) {
-                log.info(MarkerFactory.receiverMarker(orgnr), String.format("Identifier %s found in ELMA with " +
-                        "DPE Data profile, but certificate not found in Virksert.", orgnr));
-                return Optional.empty();
-            }
-            DpeServiceRecord sr = DpeServiceRecord.of(pemCertificate, orgnr, DPE_DATA);
-            return Optional.of(sr);
+            String pemCertificate = lookupPemCertificate(orgnr);
+            return Optional.of(DpeServiceRecord.of(pemCertificate, orgnr, DPE_DATA));
         }
         return Optional.empty();
     }
 
-    @SuppressWarnings("squid:S1166") // Suppress Sonar due to no rethrow/log from certificate ex.
+    public Optional<ServiceRecord> createDpeDataErrorRecord(String orgnr) {
+        return Optional.of(ErrorServiceRecord.create(DPE_DATA));
+    }
+
+    @HystrixCommand(fallbackMethod = "createDpeReceiptErrorRecord")
     public Optional<ServiceRecord> createDpeReceiptServiceRecord(String orgnr) {
-        String pemCertificate;
-        try {
-            pemCertificate = lookupPemCertificate(orgnr);
-        } catch (CertificateNotFoundException e) {
-            log.info(MarkerFactory.receiverMarker(orgnr), String.format("Certificate for %s not found in Virksert.", orgnr));
-            return Optional.empty();
-        }
+        String pemCertificate = lookupPemCertificate(orgnr);
         DpeServiceRecord sr = DpeServiceRecord.of(pemCertificate, orgnr, DPE_RECEIPT);
         return Optional.of(sr);
+    }
+
+    public Optional<ServiceRecord> createDpeReceiptErrorRecord(String orgnr) {
+        return Optional.of(ErrorServiceRecord.create(DPE_RECEIPT));
     }
 
     public Optional<ServiceRecord> createPostVirksomhetServiceRecord(String orgnr) {
         return Optional.of(new PostVirksomhetServiceRecord(properties, orgnr));
     }
 
-    private String lookupPemCertificate(String orgnumber) throws CertificateNotFoundException {
+    private String lookupPemCertificate(String orgnumber) {
         try {
             return virksertService.getCertificate(orgnumber);
         } catch (VirksertClientException e) {
