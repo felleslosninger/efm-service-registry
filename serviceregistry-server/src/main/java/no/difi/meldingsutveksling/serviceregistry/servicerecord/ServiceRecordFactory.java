@@ -34,7 +34,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
-import static no.difi.meldingsutveksling.serviceregistry.krr.PersonResource.Reservasjon.NEI;
 import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.*;
 
 /**
@@ -193,9 +192,10 @@ public class ServiceRecordFactory {
 
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
     public Optional<ServiceRecord> createServiceRecordForCititzen(String identifier,
-                                                                 Authentication auth,
-                                                                 String onBehalfOrgnr,
-                                                                 Notification notification) throws KRRClientException {
+                                                                  Authentication auth,
+                                                                  String onBehalfOrgnr,
+                                                                  Notification notification,
+                                                                  boolean forcePrint) throws KRRClientException {
 
         String token = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
 
@@ -204,16 +204,25 @@ public class ServiceRecordFactory {
                 .require(notification)
                 .token(token));
 
-        if (!personResource.hasMailbox() &&
-                NEI.name().equals(personResource.getReserved())) {
+        switch (DpiMessageRouter.route(personResource, notification, forcePrint)) {
+            case DPI:
+                return Optional.of(new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
+                        identifier, null, null));
+            case PRINT:
+                return createPrintServiceRecord(identifier, onBehalfOrgnr, token, personResource);
+            case DPV:
             return createPostVirksomhetServiceRecord(identifier);
+            default:
+                return createPostVirksomhetServiceRecord(identifier);
         }
 
-        if (NEI.name().equals(personResource.getReserved())) {
-            return Optional.of(new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
-                    identifier, null, null));
-        }
+    }
 
+    private Optional<ServiceRecord> createPrintServiceRecord(String identifier,
+                                                             String onBehalfOrgnr,
+                                                             String token,
+                                                             PersonResource personResource) throws KRRClientException {
+        krrService.setPrintDetails(personResource);
         Optional<DSFResource> dsfResource = krrService.getDSFInfo(identifier, token);
         if (!dsfResource.isPresent()) {
             log.error("Identifier found in KRR but not in DSF, defaulting to DPV.");

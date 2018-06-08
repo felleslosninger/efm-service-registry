@@ -1,7 +1,16 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
+import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
+import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource;
+import no.difi.meldingsutveksling.serviceregistry.krr.DigitalPostResource;
+import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
+import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
+import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
+import no.difi.meldingsutveksling.serviceregistry.model.BrregPostadresse;
+import no.difi.meldingsutveksling.serviceregistry.model.OrganizationInfo;
+import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
@@ -17,6 +26,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.HttpClientErrorException;
 
@@ -24,15 +35,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 
-import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.DPE_INNSYN;
-import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.DPF;
-import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.DPO;
+import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.*;
 import static org.assertj.core.util.Strings.isNullOrEmpty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -152,5 +160,83 @@ public class ServiceRecordFactoryJavaTest {
         ServiceRecord record = serviceRecord.get();
         assertTrue(record instanceof ErrorServiceRecord);
         assertEquals(DPE_INNSYN, record.getServiceIdentifier());
+    }
+
+    @Test
+    public void citizenShouldReturnDpiServiceRecord() throws KRRClientException {
+        PersonResource personResource = new PersonResource();
+        personResource.setCertificate("foo");
+        personResource.setAlertStatus("KAN_VARSLES");
+        personResource.setReserved("NEI");
+        personResource.setStatus("AKTIV");
+        DigitalPostResource dpr = DigitalPostResource.of("adr123", "adr321");
+        personResource.setDigitalPost(dpr);
+        when(krrService.getCizitenInfo(any())).thenReturn(personResource);
+
+        Authentication authMock = mock(Authentication.class);
+        OAuth2AuthenticationDetails detailsMock = mock(OAuth2AuthenticationDetails.class);
+        when(detailsMock.getTokenValue()).thenReturn("token");
+        when(authMock.getDetails()).thenReturn(detailsMock);
+
+        Optional<ServiceRecord> record = factory.createServiceRecordForCititzen("123", authMock, "123", Notification.OBLIGATED, false);
+        assertTrue(record.isPresent());
+        assertTrue(record.get() instanceof SikkerDigitalPostServiceRecord);
+    }
+
+    @Test
+    public void citizenShouldReturnDpiPrintServiceRecord_UserReserved() throws KRRClientException, BrregNotFoundException {
+        PersonResource personResource = new PersonResource();
+        personResource.setCertificate("foo");
+        personResource.setAlertStatus("KAN_VARSLES");
+        personResource.setReserved("JA");
+        personResource.setStatus("AKTIV");
+        DigitalPostResource dpr = DigitalPostResource.of("adr123", "adr321");
+        personResource.setDigitalPost(dpr);
+        when(krrService.getCizitenInfo(any())).thenReturn(personResource);
+
+        DSFResource dsf = new DSFResource();
+        dsf.setPostAddress("0101");
+        dsf.setName("foobar");
+        dsf.setStreet("foo road");
+        dsf.setCountry("Norway");
+        when(krrService.getDSFInfo(any(), any())).thenReturn(Optional.of(dsf));
+        BrregEnhet brregEnhet = new BrregEnhet();
+        brregEnhet.setNavn("foo");
+        brregEnhet.setOrganisasjonsform("ORGL");
+        brregEnhet.setOrganisasjonsnummer("123");
+        brregEnhet.setPostadresse(new BrregPostadresse("foo road 123", "0001", "Oslo", "Norway"));
+        OrganizationInfo orginfo = OrganizationInfo.of(brregEnhet);
+        when(brregService.getOrganizationInfo("123")).thenReturn(Optional.of(orginfo));
+
+        Authentication authMock = mock(Authentication.class);
+        OAuth2AuthenticationDetails detailsMock = mock(OAuth2AuthenticationDetails.class);
+        when(detailsMock.getTokenValue()).thenReturn("token");
+        when(authMock.getDetails()).thenReturn(detailsMock);
+
+        Optional<ServiceRecord> record = factory.createServiceRecordForCititzen("123", authMock, "123", Notification.OBLIGATED, false);
+        verify(krrService).setPrintDetails(any());
+        assertTrue(record.isPresent());
+        assertTrue(record.get() instanceof SikkerDigitalPostServiceRecord);
+    }
+
+    @Test
+    public void citizenShouldReturnDpvServiceRecord_UserNotRegistered() throws KRRClientException {
+        PersonResource personResource = new PersonResource();
+        personResource.setCertificate("foo");
+        personResource.setAlertStatus("KAN_VARSLES");
+        personResource.setReserved("NEI");
+        personResource.setStatus("IKKE_REGISTRERT");
+        DigitalPostResource dpr = DigitalPostResource.of("adr123", "adr321");
+        personResource.setDigitalPost(dpr);
+        when(krrService.getCizitenInfo(any())).thenReturn(personResource);
+
+        Authentication authMock = mock(Authentication.class);
+        OAuth2AuthenticationDetails detailsMock = mock(OAuth2AuthenticationDetails.class);
+        when(detailsMock.getTokenValue()).thenReturn("token");
+        when(authMock.getDetails()).thenReturn(detailsMock);
+
+        Optional<ServiceRecord> record = factory.createServiceRecordForCititzen("123", authMock, "123", Notification.OBLIGATED, false);
+        assertTrue(record.isPresent());
+        assertTrue(record.get() instanceof PostVirksomhetServiceRecord);
     }
 }

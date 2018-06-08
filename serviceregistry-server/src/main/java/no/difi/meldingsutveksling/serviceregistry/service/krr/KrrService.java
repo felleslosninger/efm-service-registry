@@ -21,19 +21,11 @@ public class KrrService {
         this.dsfClient = new DSFClient(properties.getKrr().getDsfEndpointURL());
     }
 
-    public PersonResource getCizitenInfo(LookupParameters params) throws
-            KRRClientException {
-        PersonResource personResource = krrClient.getPersonResource(params.getIdentifier(), params.getToken());
-        if (personResource.canReceiveDigitalPost() &&
-                (personResource.isNotifiable() || !params.isObligatedToBeNotified())) {
-            return personResource;
-        }
-
-        setPrintDetails(personResource);
-        return personResource;
+    public PersonResource getCizitenInfo(LookupParameters params) throws KRRClientException {
+        return krrClient.getPersonResource(params.getIdentifier(), params.getToken());
     }
 
-    void setPrintDetails(PersonResource personResource) {
+    public void setPrintDetails(PersonResource personResource) {
         personResource.setCertificate(properties.getKrr().getPrintCertificate());
         personResource.setPrintPostkasseLeverandorAdr(properties.getKrr().getPrintAdress());
     }

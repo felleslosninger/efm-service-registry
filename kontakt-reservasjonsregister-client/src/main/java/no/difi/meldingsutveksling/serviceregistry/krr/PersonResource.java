@@ -41,8 +41,16 @@ public class PersonResource {
         return hasMailbox() && Reservasjon.NEI.toString().equals(getReserved()) && Status.AKTIV.toString().equals(getStatus());
     }
 
+    public boolean isReserved() {
+        return Reservasjon.JA.toString().equals(getReserved());
+    }
+
+    public boolean isActive() {
+        return Status.AKTIV.toString().equals(getStatus());
+    }
+
     public boolean isNotifiable() {
-        return Varslingsstatus.KAN_VARSLES.equals(getAlertStatus());
+        return Varslingsstatus.KAN_VARSLES.toString().equals(getAlertStatus());
     }
 
     public enum Reservasjon {
