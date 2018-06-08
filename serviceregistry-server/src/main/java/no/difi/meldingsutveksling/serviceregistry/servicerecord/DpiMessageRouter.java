@@ -44,20 +44,14 @@ public class DpiMessageRouter {
         if (person.isNotifiable()) {
             return checkActiveMailbox(person, forcePrint);
         }
-        return checkForcePrint(person, forcePrint);
+        return (forcePrint) ? PRINT : DPV;
     }
 
     private static TargetRecord checkActiveMailbox(PersonResource person, boolean forcePrint) {
         if (person.hasMailbox() && person.isActive()) {
             return DPI;
         }
-        return checkForcePrint(person, forcePrint);
+        return (forcePrint) ? PRINT : DPV;
     }
 
-    private static TargetRecord checkForcePrint(PersonResource person, boolean forcePrint) {
-        if (forcePrint) {
-            return PRINT;
-        }
-        return DPV;
-    }
 }
