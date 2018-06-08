@@ -8,7 +8,6 @@ import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
-import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.EDUServiceRecord;
@@ -68,7 +67,7 @@ public class ServiceRecordControllerTest {
     private PayloadSigner payloadSigner;
 
     @Before
-    public void setup() throws EntitySignerException, MalformedURLException, KRRClientException {
+    public void setup() throws MalformedURLException, KRRClientException {
         when(serviceRecordFactory.createEduServiceRecord(anyString())).thenReturn(Optional.empty());
         when(serviceRecordFactory.createDpeInnsynServiceRecord(anyString())).thenReturn(Optional.empty());
         when(serviceRecordFactory.createPostVirksomhetServiceRecord(anyString())).thenReturn(Optional.empty());
@@ -109,7 +108,7 @@ public class ServiceRecordControllerTest {
 
         SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(null, personResource,
                 ServiceIdentifier.DPI, "12345678901", postAddress, postAddress);
-        when(serviceRecordFactory.createServiceRecordForCititzen(eq("12345678901"), any(), any(), any(), any())).thenReturn
+        when(serviceRecordFactory.createServiceRecordForCititzen(eq("12345678901"), any(), any(), any(), anyBoolean())).thenReturn
                 (Optional.of(dpiServiceRecord));
     }
 

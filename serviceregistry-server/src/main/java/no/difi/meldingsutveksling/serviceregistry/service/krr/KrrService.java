@@ -34,11 +34,4 @@ public class KrrService {
         return dsfClient.getDSFResource(identifier, token);
     }
 
-    public void setKrrClient(KRRClient krrClient) {
-        this.krrClient = krrClient;
-    }
-
-    public void setDsfClient(DSFClient dsfClient) {
-        this.dsfClient = dsfClient;
-    }
 }
