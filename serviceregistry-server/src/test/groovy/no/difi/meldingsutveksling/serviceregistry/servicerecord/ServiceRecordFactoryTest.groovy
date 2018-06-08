@@ -61,6 +61,9 @@ class ServiceRecordFactoryTest extends Specification {
         details.getTokenValue() >> "4321"
         auth.getDetails() >> details
         personResourceMock.hasMailbox() >> true
+        personResourceMock.isNotifiable() >> true
+        personResourceMock.isActive() >> true
+        personResourceMock.isReserved() >> false
         personResourceMock.getDigitalPost() >> Mock(DigitalPostResource)
         personResourceMock.getContactInfo() >> Mock(ContactInfoResource)
         def orginfoMock = Mock(OrganizationInfo)
