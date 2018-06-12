@@ -74,6 +74,7 @@ public class ServiceRecordController {
     public ResponseEntity entity(
             @PathVariable("identifier") String identifier,
             @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
+            @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
             Authentication auth,
             HttpServletRequest request) {
 
@@ -101,7 +102,7 @@ public class ServiceRecordController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No authentication provided.");
             }
             try {
-                serviceRecord = serviceRecordFactory.createServiceRecordForCititzen(identifier, auth, clientOrgnr, obligation);
+                serviceRecord = serviceRecordFactory.createServiceRecordForCititzen(identifier, auth, clientOrgnr, obligation, forcePrint);
             } catch (KRRClientException e) {
                 log.error("Error looking up identifier in KRR", e);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -127,19 +128,19 @@ public class ServiceRecordController {
         serviceRecord.ifPresent(entity::setServiceRecord);
         entity.setInfoRecord(entityInfo.get());
         // TODO: temporary solution for multiple servicerecords
-        addServiceRecords(entityInfo.get(), entity, auth, clientOrgnr, obligation);
+        addServiceRecords(entityInfo.get(), entity, auth, clientOrgnr, obligation, forcePrint);
 
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
     private void addServiceRecords(EntityInfo entityInfo, Entity entity, Authentication auth, String clientOrgnr,
-                                   Notification obligation) {
+                                   Notification obligation, boolean forcePrint) {
 
         String orgnr = entityInfo.getIdentifier();
         if (shouldCreateServiceRecordForCititzen().test(entityInfo)) {
             Optional<ServiceRecord> serviceRecord = Optional.empty();
             try {
-                serviceRecord = serviceRecordFactory.createServiceRecordForCititzen(orgnr, auth, clientOrgnr, obligation);
+                serviceRecord = serviceRecordFactory.createServiceRecordForCititzen(orgnr, auth, clientOrgnr, obligation, forcePrint);
             } catch (KRRClientException e) {
                 log.error("Error looking up identifier in KRR", e);
             }
@@ -173,10 +174,11 @@ public class ServiceRecordController {
     public ResponseEntity signed(
             @PathVariable("identifier") String identifier,
             @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
+            @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
             Authentication auth,
             HttpServletRequest request) throws EntitySignerException {
 
-        ResponseEntity entity = entity(identifier, obligation, auth, request);
+        ResponseEntity entity = entity(identifier, obligation, forcePrint, auth, request);
         if (entity.getStatusCode() != HttpStatus.OK) {
             return entity;
         }
