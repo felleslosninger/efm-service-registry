@@ -199,7 +199,7 @@ public class ServiceRecordFactoryJavaTest {
         dsf.setName("foobar");
         dsf.setStreet("foo road");
         dsf.setCountry("Norway");
-        when(krrService.getDSFInfo(any(), any())).thenReturn(Optional.of(dsf));
+        when(krrService.getDSFInfo(any())).thenReturn(Optional.of(dsf));
         BrregEnhet brregEnhet = new BrregEnhet();
         brregEnhet.setNavn("foo");
         brregEnhet.setOrganisasjonsform("ORGL");

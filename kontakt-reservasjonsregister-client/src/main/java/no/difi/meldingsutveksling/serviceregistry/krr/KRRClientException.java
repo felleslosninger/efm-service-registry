@@ -6,6 +6,10 @@ public class KRRClientException extends Exception {
         super(s, e);
     }
 
+    public KRRClientException(Exception e) {
+        super(e);
+    }
+
     KRRClientException(String s) {
         super(s);
     }

@@ -8,10 +8,7 @@ import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
-import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource;
-import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
-import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
-import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
+import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.OrganizationInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
@@ -223,7 +220,7 @@ public class ServiceRecordFactory {
                                                              String token,
                                                              PersonResource personResource) throws KRRClientException {
         krrService.setPrintDetails(personResource);
-        Optional<DSFResource> dsfResource = krrService.getDSFInfo(identifier, token);
+        Optional<DSFResource> dsfResource = krrService.getDSFInfo(lookup(identifier).token(token));
         if (!dsfResource.isPresent()) {
             log.error("Identifier found in KRR but not in DSF, defaulting to DPV.");
             return Optional.empty();
