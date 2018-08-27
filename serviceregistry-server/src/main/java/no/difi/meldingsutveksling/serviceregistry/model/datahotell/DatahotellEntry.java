@@ -14,4 +14,8 @@ public class DatahotellEntry {
     String ppostnr;
     String ppoststed;
     String ppostland;
+    String forretningsadr;
+    String forradrpostnr;
+    String forradrpoststed;
+    String forradrland;
 }
