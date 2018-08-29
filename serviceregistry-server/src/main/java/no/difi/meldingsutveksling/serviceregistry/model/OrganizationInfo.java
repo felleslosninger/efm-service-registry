@@ -1,7 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Strings;
 import lombok.Data;
 import no.difi.meldingsutveksling.serviceregistry.model.datahotell.DatahotellEntry;
 
