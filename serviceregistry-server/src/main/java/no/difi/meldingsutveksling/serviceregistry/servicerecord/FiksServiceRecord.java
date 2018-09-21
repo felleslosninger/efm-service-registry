@@ -6,12 +6,9 @@ import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 @Data
 public class FiksServiceRecord extends ServiceRecord {
 
-    private Integer sikkerhetsnivaa;
-
-    public FiksServiceRecord(String orgnr, Integer sikkerhetsnivaa, String pemCertificate, String endpointUrl) {
+    public FiksServiceRecord(String orgnr, String pemCertificate, String endpointUrl) {
         super(pemCertificate, ServiceIdentifier.DPF, orgnr);
         this.endpointUrl = endpointUrl;
-        this.sikkerhetsnivaa = sikkerhetsnivaa;
     }
 
     @Override

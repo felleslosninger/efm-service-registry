@@ -75,7 +75,7 @@ public class ServiceRecordFactory {
     }
 
     @HystrixCommand(fallbackMethod = "createFiksErrorRecord")
-    public Optional<ServiceRecord> createFiksServiceRecord(String orgnr) {
+    public Optional<FiksWrapper> createFiksServiceRecord(String orgnr) {
         Optional<Integer> adresseringNivaa = svarUtService.hasSvarUtAdressering(orgnr);
         if (adresseringNivaa.isPresent()) {
             String pem;
@@ -85,14 +85,15 @@ public class ServiceRecordFactory {
                 log.error("Could not read certificate from {}", properties.getSvarut().getCertificate().toString());
                 throw new ServiceRegistryException(e);
             }
-            return Optional.of(new FiksServiceRecord(orgnr, adresseringNivaa.get(), pem, properties.getSvarut().getServiceRecordUrl().toString()));
+            FiksServiceRecord fiksServiceRecord = new FiksServiceRecord(orgnr, pem, properties.getSvarut().getServiceRecordUrl().toString());
+            return Optional.of(FiksWrapper.of(fiksServiceRecord, adresseringNivaa.get()));
         }
         return Optional.empty();
     }
 
     @SuppressWarnings("squid:S1172")
-    public Optional<ServiceRecord> createFiksErrorRecord(String orgnr) {
-        return Optional.of(ErrorServiceRecord.create(DPF));
+    public Optional<FiksWrapper> createFiksErrorRecord(String orgnr) {
+        return Optional.of(FiksWrapper.of(ErrorServiceRecord.create(DPF), 0));
     }
 
     @HystrixCommand(fallbackMethod = "createEduErrorRecord")

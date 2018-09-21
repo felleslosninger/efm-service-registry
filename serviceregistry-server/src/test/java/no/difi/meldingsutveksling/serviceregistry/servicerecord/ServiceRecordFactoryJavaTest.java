@@ -106,9 +106,9 @@ public class ServiceRecordFactoryJavaTest {
     public void fiksShouldReturnServiceRecord() {
         when(svarUtService.hasSvarUtAdressering(ORGNR)).thenReturn(Optional.of(3));
 
-        Optional<ServiceRecord> serviceRecord = factory.createFiksServiceRecord(ORGNR);
+        Optional<FiksWrapper> serviceRecord = factory.createFiksServiceRecord(ORGNR);
         assertTrue(serviceRecord.isPresent());
-        ServiceRecord record = serviceRecord.get();
+        ServiceRecord record = serviceRecord.get().getServiceRecord();
         assertTrue(record instanceof FiksServiceRecord);
         assertEquals(ORGNR, record.getOrganisationNumber());
         assertTrue(!isNullOrEmpty(record.getPemCertificate()));
@@ -124,9 +124,9 @@ public class ServiceRecordFactoryJavaTest {
     public void fiksShouldReturnErrorRecord() {
         when(svarUtService.hasSvarUtAdressering(any())).thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
 
-        Optional<ServiceRecord> serviceRecord = factory.createFiksServiceRecord(ORGNR);
+        Optional<FiksWrapper> serviceRecord = factory.createFiksServiceRecord(ORGNR);
         assertTrue(serviceRecord.isPresent());
-        ServiceRecord record = serviceRecord.get();
+        ServiceRecord record = serviceRecord.get().getServiceRecord();
         assertTrue(record instanceof ErrorServiceRecord);
         assertEquals(DPF, record.getServiceIdentifier());
     }

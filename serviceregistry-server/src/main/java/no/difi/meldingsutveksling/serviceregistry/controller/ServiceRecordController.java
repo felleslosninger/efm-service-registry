@@ -9,12 +9,15 @@ import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
+import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ErrorServiceRecord;
+import no.difi.meldingsutveksling.serviceregistry.servicerecord.FiksWrapper;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
+import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import org.jboss.logging.MDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,18 +45,22 @@ public class ServiceRecordController {
     private final ServiceRecordFactory serviceRecordFactory;
     private EntityService entityService;
     private PayloadSigner payloadSigner;
+    private SvarUtService svarUtService;
 
     /**
      * @param serviceRecordFactory for creation of the identifiers respective service record
      * @param entityService        needed to lookup and retrieve organization or citizen information using an identifier number
+     * @param svarUtService
      */
     @Autowired
     public ServiceRecordController(ServiceRecordFactory serviceRecordFactory,
                                    EntityService entityService,
-                                   PayloadSigner payloadSigner) {
+                                   PayloadSigner payloadSigner,
+                                   SvarUtService svarUtService) {
         this.entityService = entityService;
         this.serviceRecordFactory = serviceRecordFactory;
         this.payloadSigner = payloadSigner;
+        this.svarUtService = svarUtService;
     }
 
     @InitBinder
@@ -114,7 +121,13 @@ public class ServiceRecordController {
         }
 
         if (!serviceRecord.isPresent()) {
-            serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createFiksServiceRecord(identifier), entity);
+            Optional<FiksWrapper> fiksWrapper = serviceRecordFactory.createFiksServiceRecord(identifier);
+            if (fiksWrapper.isPresent()) {
+                serviceRecord = serviceRecordResponseHandler(Optional.of(fiksWrapper.get().getServiceRecord()), entity);
+                if (serviceRecord.isPresent()) {
+                    entity.getSecuritylevels().put(ServiceIdentifier.DPF, fiksWrapper.get().getSecuritylevel());
+                }
+            }
         }
 
         if (!serviceRecord.isPresent()) {
@@ -150,8 +163,14 @@ public class ServiceRecordController {
         Optional<ServiceRecord> eduServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createEduServiceRecord(orgnr), entity);
         eduServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
 
-        Optional<ServiceRecord> fiksServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createFiksServiceRecord(orgnr), entity);
-        fiksServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
+        Optional<FiksWrapper> fiksWrapper = serviceRecordFactory.createFiksServiceRecord(orgnr);
+        if (fiksWrapper.isPresent()) {
+            Optional<ServiceRecord> fiksServiceRecord = serviceRecordResponseHandler(Optional.of(fiksWrapper.get().getServiceRecord()), entity);
+            if (fiksServiceRecord.isPresent()) {
+                entity.getServiceRecords().add(fiksServiceRecord.get());
+                entity.getSecuritylevels().put(ServiceIdentifier.DPF, fiksWrapper.get().getSecuritylevel());
+            }
+        }
 
         Optional<ServiceRecord> dpeInnsynServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createDpeInnsynServiceRecord(orgnr), entity);
         dpeInnsynServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
