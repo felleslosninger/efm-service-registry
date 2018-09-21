@@ -14,6 +14,7 @@ import no.difi.meldingsutveksling.serviceregistry.servicerecord.EDUServiceRecord
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.PostVirksomhetServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.SikkerDigitalPostServiceRecord;
+import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -62,6 +63,9 @@ public class ServiceRecordControllerTest {
 
     @MockBean
     private EntityService entityService;
+
+    @MockBean
+    private SvarUtService svarUtService;
 
     @Autowired
     private PayloadSigner payloadSigner;
