@@ -17,7 +17,6 @@ import no.difi.meldingsutveksling.serviceregistry.servicerecord.ErrorServiceReco
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.FiksWrapper;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
-import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import org.jboss.logging.MDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,22 +44,18 @@ public class ServiceRecordController {
     private final ServiceRecordFactory serviceRecordFactory;
     private EntityService entityService;
     private PayloadSigner payloadSigner;
-    private SvarUtService svarUtService;
 
     /**
      * @param serviceRecordFactory for creation of the identifiers respective service record
      * @param entityService        needed to lookup and retrieve organization or citizen information using an identifier number
-     * @param svarUtService
      */
     @Autowired
     public ServiceRecordController(ServiceRecordFactory serviceRecordFactory,
                                    EntityService entityService,
-                                   PayloadSigner payloadSigner,
-                                   SvarUtService svarUtService) {
+                                   PayloadSigner payloadSigner) {
         this.entityService = entityService;
         this.serviceRecordFactory = serviceRecordFactory;
         this.payloadSigner = payloadSigner;
-        this.svarUtService = svarUtService;
     }
 
     @InitBinder
@@ -78,6 +73,7 @@ public class ServiceRecordController {
      */
     @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
+    @SuppressWarnings("squid:S2583")
     public ResponseEntity entity(
             @PathVariable("identifier") String identifier,
             @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
@@ -146,6 +142,7 @@ public class ServiceRecordController {
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
+    @SuppressWarnings("squid:S2583")
     private void addServiceRecords(EntityInfo entityInfo, Entity entity, Authentication auth, String clientOrgnr,
                                    Notification obligation, boolean forcePrint) {
 
