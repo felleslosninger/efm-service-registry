@@ -9,10 +9,12 @@ import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
+import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ErrorServiceRecord;
+import no.difi.meldingsutveksling.serviceregistry.servicerecord.FiksWrapper;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
 import org.jboss.logging.MDC;
@@ -71,6 +73,7 @@ public class ServiceRecordController {
      */
     @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
+    @SuppressWarnings("squid:S2583")
     public ResponseEntity entity(
             @PathVariable("identifier") String identifier,
             @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
@@ -114,7 +117,13 @@ public class ServiceRecordController {
         }
 
         if (!serviceRecord.isPresent()) {
-            serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createFiksServiceRecord(identifier), entity);
+            Optional<FiksWrapper> fiksWrapper = serviceRecordFactory.createFiksServiceRecord(identifier);
+            if (fiksWrapper.isPresent()) {
+                serviceRecord = serviceRecordResponseHandler(Optional.of(fiksWrapper.get().getServiceRecord()), entity);
+                if (serviceRecord.isPresent()) {
+                    entity.getSecuritylevels().put(ServiceIdentifier.DPF, fiksWrapper.get().getSecuritylevel());
+                }
+            }
         }
 
         if (!serviceRecord.isPresent()) {
@@ -133,6 +142,7 @@ public class ServiceRecordController {
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
+    @SuppressWarnings("squid:S2583")
     private void addServiceRecords(EntityInfo entityInfo, Entity entity, Authentication auth, String clientOrgnr,
                                    Notification obligation, boolean forcePrint) {
 
@@ -150,8 +160,14 @@ public class ServiceRecordController {
         Optional<ServiceRecord> eduServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createEduServiceRecord(orgnr), entity);
         eduServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
 
-        Optional<ServiceRecord> fiksServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createFiksServiceRecord(orgnr), entity);
-        fiksServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
+        Optional<FiksWrapper> fiksWrapper = serviceRecordFactory.createFiksServiceRecord(orgnr);
+        if (fiksWrapper.isPresent()) {
+            Optional<ServiceRecord> fiksServiceRecord = serviceRecordResponseHandler(Optional.of(fiksWrapper.get().getServiceRecord()), entity);
+            if (fiksServiceRecord.isPresent()) {
+                entity.getServiceRecords().add(fiksServiceRecord.get());
+                entity.getSecuritylevels().put(ServiceIdentifier.DPF, fiksWrapper.get().getSecuritylevel());
+            }
+        }
 
         Optional<ServiceRecord> dpeInnsynServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createDpeInnsynServiceRecord(orgnr), entity);
         dpeInnsynServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));

@@ -4,6 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
+import java.util.Optional;
+
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 @Component
@@ -17,9 +20,12 @@ public class SvarUtService {
         this.svarUtClient = svarUtClient;
     }
 
-    public boolean hasSvarUtAdressering(String orgnr) {
+    public Optional<Integer> hasSvarUtAdressering(String orgnr) {
         RetrieveMottakerSystemForOrgnr request = RetrieveMottakerSystemForOrgnr.builder().withOrganisasjonsnr(orgnr).build();
         RetrieveMottakerSystemForOrgnrResponse response = svarUtClient.retrieveMottakerSystemForOrgnr(request);
-        return response.getReturn().stream().anyMatch(m -> isNullOrEmpty(m.forsendelseType));
+        return response.getReturn().stream()
+                .filter(m -> isNullOrEmpty(m.forsendelseType))
+                .map(t -> t.niva)
+                .max(Comparator.naturalOrder());
     }
 }
