@@ -104,7 +104,7 @@ public class ServiceRecordFactoryJavaTest {
 
     @Test
     public void fiksShouldReturnServiceRecord() {
-        when(svarUtService.hasSvarUtAdressering(ORGNR)).thenReturn(true);
+        when(svarUtService.hasSvarUtAdressering(ORGNR)).thenReturn(Optional.of(3));
 
         Optional<ServiceRecord> serviceRecord = factory.createFiksServiceRecord(ORGNR);
         assertTrue(serviceRecord.isPresent());
@@ -116,7 +116,7 @@ public class ServiceRecordFactoryJavaTest {
 
     @Test
     public void fiksShouldReturnEmptyRecord() {
-        when(svarUtService.hasSvarUtAdressering(ORGNR)).thenReturn(false);
+        when(svarUtService.hasSvarUtAdressering(ORGNR)).thenReturn(Optional.of(3));
         assertTrue(!factory.createFiksServiceRecord(ORGNR).isPresent());
     }
 

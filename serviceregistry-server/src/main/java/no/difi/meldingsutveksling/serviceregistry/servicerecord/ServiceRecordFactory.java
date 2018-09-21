@@ -8,7 +8,10 @@ import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
-import no.difi.meldingsutveksling.serviceregistry.krr.*;
+import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource;
+import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
+import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
+import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.OrganizationInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
@@ -73,7 +76,8 @@ public class ServiceRecordFactory {
 
     @HystrixCommand(fallbackMethod = "createFiksErrorRecord")
     public Optional<ServiceRecord> createFiksServiceRecord(String orgnr) {
-        if (svarUtService.hasSvarUtAdressering(orgnr)) {
+        Optional<Integer> adresseringNivaa = svarUtService.hasSvarUtAdressering(orgnr);
+        if (adresseringNivaa.isPresent()) {
             String pem;
             try {
                 pem = IOUtils.toString(properties.getSvarut().getCertificate().getInputStream(), StandardCharsets.UTF_8);
@@ -81,7 +85,7 @@ public class ServiceRecordFactory {
                 log.error("Could not read certificate from {}", properties.getSvarut().getCertificate().toString());
                 throw new ServiceRegistryException(e);
             }
-            return Optional.of(new FiksServiceRecord(orgnr, pem, properties.getSvarut().getServiceRecordUrl().toString()));
+            return Optional.of(new FiksServiceRecord(orgnr, adresseringNivaa.get(), pem, properties.getSvarut().getServiceRecordUrl().toString()));
         }
         return Optional.empty();
     }
