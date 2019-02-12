@@ -92,7 +92,8 @@ public class ServiceRecordFactory {
     }
 
     @SuppressWarnings("squid:S1172")
-    public Optional<FiksWrapper> createFiksErrorRecord(String orgnr) {
+    public Optional<FiksWrapper> createFiksErrorRecord(String orgnr, Throwable e) {
+        log.error("DPF service record failed", e);
         return Optional.of(FiksWrapper.of(ErrorServiceRecord.create(DPF), 0));
     }
 
@@ -136,7 +137,8 @@ public class ServiceRecordFactory {
     }
 
     @SuppressWarnings("squid:S1172")
-    public Optional<ServiceRecord> createEduErrorRecord(String orgnr) {
+    public Optional<ServiceRecord> createEduErrorRecord(String orgnr, Throwable e) {
+        log.error("DPO service record failed", e);
         return Optional.of(ErrorServiceRecord.create(DPO));
     }
 
@@ -150,7 +152,8 @@ public class ServiceRecordFactory {
     }
 
     @SuppressWarnings("squid:S1172")
-    public Optional<ServiceRecord> createDpeInnsynErrorRecord(String orgnr) {
+    public Optional<ServiceRecord> createDpeInnsynErrorRecord(String orgnr, Throwable e) {
+        log.error("DPE_INNSYN service record failed", e);
         return Optional.of(ErrorServiceRecord.create(DPE_INNSYN));
     }
 
@@ -164,7 +167,8 @@ public class ServiceRecordFactory {
     }
 
     @SuppressWarnings("squid:S1172")
-    public Optional<ServiceRecord> createDpeDataErrorRecord(String orgnr) {
+    public Optional<ServiceRecord> createDpeDataErrorRecord(String orgnr, Throwable e) {
+        log.error("DPE_DATA service record failed", e);
         return Optional.of(ErrorServiceRecord.create(DPE_DATA));
     }
 
@@ -176,7 +180,8 @@ public class ServiceRecordFactory {
     }
 
     @SuppressWarnings("squid:S1172")
-    public Optional<ServiceRecord> createDpeReceiptErrorRecord(String orgnr) {
+    public Optional<ServiceRecord> createDpeReceiptErrorRecord(String orgnr, Throwable e) {
+        log.error("DPE_RECEIPT service record failed", e);
         return Optional.of(ErrorServiceRecord.create(DPE_RECEIPT));
     }
 

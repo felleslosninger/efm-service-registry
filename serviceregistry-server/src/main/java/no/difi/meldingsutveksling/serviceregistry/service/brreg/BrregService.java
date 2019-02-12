@@ -1,6 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.service.brreg;
 
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.client.brreg.BrregClient;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
+@Slf4j
 public class BrregService {
 
     private BrregClient brregClient;
@@ -24,9 +26,7 @@ public class BrregService {
         this.datahotellClient = datahotellClient;
     }
 
-    @HystrixCommand(
-            fallbackMethod = "getOrgInfoFromDatahotell"
-    )
+    @HystrixCommand(fallbackMethod = "getOrgInfoFromDatahotell")
     public Optional<EntityInfo> getOrganizationInfo(String orgnr) throws BrregNotFoundException {
         Optional<BrregEnhet> entity = brregClient.getBrregEnhetByOrgnr(orgnr);
         if (!entity.isPresent()) {
@@ -39,7 +39,8 @@ public class BrregService {
         return entity.map(OrganizationInfo::of);
     }
 
-    public Optional<EntityInfo> getOrgInfoFromDatahotell(String orgnr) throws BrregNotFoundException {
+    public Optional<EntityInfo> getOrgInfoFromDatahotell(String orgnr, Throwable e) throws BrregNotFoundException {
+        log.info("Brreg lookup failed, using hotell.difi.no instead", e);
         return datahotellClient.getOrganizationInfo(orgnr);
     }
 }
