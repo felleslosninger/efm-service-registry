@@ -54,10 +54,12 @@ public class ServiceRecordFactory {
     /**
      * Creates factory to create ServiceRecord using provided environment and services
      *
-     * @param properties - parameters needed to contact the provided services
-     * @param virksertService - used to lookup virksomhetssertifikat (certificate)
+     * @param properties        - parameters needed to contact the provided services
+     * @param virksertService   - used to lookup virksomhetssertifikat (certificate)
      * @param elmaLookupService - used to lookup hostname of Altinn formidlingstjeneste
-     * @param krrService - used to lookup parameters needed to use DPI transportation
+     * @param krrService        - used to lookup parameters needed to use DPI transportation
+     * @param entityService     - used to look up information about citizens and organizations in Brønnøysundregisteret and Datahotellet.
+     * @param svarUtService     - used to determine whether an organization utilizes FIKS.
      */
     @Autowired
     public ServiceRecordFactory(ServiceregistryProperties properties,
@@ -218,7 +220,7 @@ public class ServiceRecordFactory {
             case PRINT:
                 return createPrintServiceRecord(identifier, onBehalfOrgnr, token, personResource);
             case DPV:
-            return createPostVirksomhetServiceRecord(identifier);
+                return createPostVirksomhetServiceRecord(identifier);
             default:
                 return createPostVirksomhetServiceRecord(identifier);
         }
