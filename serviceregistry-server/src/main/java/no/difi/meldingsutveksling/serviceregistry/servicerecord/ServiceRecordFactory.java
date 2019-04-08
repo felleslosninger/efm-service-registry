@@ -200,11 +200,11 @@ public class ServiceRecordFactory {
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
-    public Optional<ServiceRecord> createServiceRecordForCititzen(String identifier,
-                                                                  Authentication auth,
-                                                                  String onBehalfOrgnr,
-                                                                  Notification notification,
-                                                                  boolean forcePrint) throws KRRClientException {
+    public Optional<ServiceRecord> createServiceRecordForCitizen(String identifier,
+                                                                 Authentication auth,
+                                                                 String onBehalfOrgnr,
+                                                                 Notification notification,
+                                                                 boolean forcePrint) throws KRRClientException {
 
         String token = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
 

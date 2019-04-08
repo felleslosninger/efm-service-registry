@@ -112,7 +112,7 @@ public class ServiceRecordControllerTest {
 
         SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(null, personResource,
                 ServiceIdentifier.DPI, "12345678901", postAddress, postAddress);
-        when(serviceRecordFactory.createServiceRecordForCititzen(eq("12345678901"), any(), any(), any(), anyBoolean())).thenReturn
+        when(serviceRecordFactory.createServiceRecordForCitizen(eq("12345678901"), any(), any(), any(), anyBoolean())).thenReturn
                 (Optional.of(dpiServiceRecord));
     }
 

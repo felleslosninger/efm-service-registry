@@ -178,7 +178,7 @@ public class ServiceRecordFactoryJavaTest {
         when(detailsMock.getTokenValue()).thenReturn("token");
         when(authMock.getDetails()).thenReturn(detailsMock);
 
-        Optional<ServiceRecord> record = factory.createServiceRecordForCititzen("123", authMock, "123", Notification.OBLIGATED, false);
+        Optional<ServiceRecord> record = factory.createServiceRecordForCitizen("123", authMock, "123", Notification.OBLIGATED, false);
         assertTrue(record.isPresent());
         assertTrue(record.get() instanceof SikkerDigitalPostServiceRecord);
     }
@@ -213,7 +213,7 @@ public class ServiceRecordFactoryJavaTest {
         when(detailsMock.getTokenValue()).thenReturn("token");
         when(authMock.getDetails()).thenReturn(detailsMock);
 
-        Optional<ServiceRecord> record = factory.createServiceRecordForCititzen("123", authMock, "123", Notification.OBLIGATED, false);
+        Optional<ServiceRecord> record = factory.createServiceRecordForCitizen("123", authMock, "123", Notification.OBLIGATED, false);
         verify(krrService).setPrintDetails(any());
         assertTrue(record.isPresent());
         assertTrue(record.get() instanceof SikkerDigitalPostServiceRecord);
@@ -235,7 +235,7 @@ public class ServiceRecordFactoryJavaTest {
         when(detailsMock.getTokenValue()).thenReturn("token");
         when(authMock.getDetails()).thenReturn(detailsMock);
 
-        Optional<ServiceRecord> record = factory.createServiceRecordForCititzen("123", authMock, "123", Notification.OBLIGATED, false);
+        Optional<ServiceRecord> record = factory.createServiceRecordForCitizen("123", authMock, "123", Notification.OBLIGATED, false);
         assertTrue(record.isPresent());
         assertTrue(record.get() instanceof PostVirksomhetServiceRecord);
     }
