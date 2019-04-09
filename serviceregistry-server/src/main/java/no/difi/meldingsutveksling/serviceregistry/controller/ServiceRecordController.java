@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
 
-import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.shouldCreateServiceRecordForCititzen;
+import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.shouldCreateServiceRecordForCitizen;
 import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 
 @ExposesResourceFor(Entity.class)
@@ -100,7 +100,7 @@ public class ServiceRecordController {
 
         Optional<ServiceRecord> serviceRecord = Optional.empty();
 
-        if (shouldCreateServiceRecordForCititzen().test(entityInfo.get())) {
+        if (shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
             if (auth == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No authentication provided.");
             }
@@ -147,7 +147,7 @@ public class ServiceRecordController {
                                    Notification obligation, boolean forcePrint) {
 
         String orgnr = entityInfo.getIdentifier();
-        if (shouldCreateServiceRecordForCititzen().test(entityInfo)) {
+        if (shouldCreateServiceRecordForCitizen().test(entityInfo)) {
             Optional<ServiceRecord> serviceRecord = Optional.empty();
             try {
                 serviceRecord = serviceRecordFactory.createServiceRecordForCitizen(orgnr, auth, clientOrgnr, obligation, forcePrint);
