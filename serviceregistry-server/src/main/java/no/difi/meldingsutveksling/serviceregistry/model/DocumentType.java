@@ -1,7 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.model;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.ToString;
 
@@ -13,7 +12,6 @@ import java.util.List;
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = "identifier"))
 @Data
 @ToString(exclude = "processes")
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class DocumentType {
 
     @Id
@@ -23,6 +21,7 @@ public class DocumentType {
     private String identifier;
 
     @ManyToMany(mappedBy = "documentTypes", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("documentTypes")
     private List<Process> processes;
 
 }
