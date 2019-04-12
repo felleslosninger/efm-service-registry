@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ProcessService {
@@ -18,8 +19,8 @@ public class ProcessService {
     }
 
     @Transactional(readOnly = true)
-    public Process findByIdentifier(String identifier) {
-        return repository.findByIdentifier(identifier);
+    public Optional<Process> findByIdentifier(String identifier) {
+        return Optional.ofNullable(repository.findByIdentifier(identifier));
     }
 
     @Transactional
@@ -43,6 +44,29 @@ public class ProcessService {
             existing.setDocumentTypes(updatedProcess.getDocumentTypes());
         }
         return repository.save(existing);
+    }
+
+    @Transactional
+    public Boolean updateProcess(String processIdentifier, Process updatedProcess) {
+        try {
+            Optional<Process> optionalProcess = findByIdentifier(processIdentifier);
+            if (!optionalProcess.isPresent()) {
+                return false;
+            }
+            Process process = optionalProcess.get();
+            if (updatedProcess.getDocumentTypes() != null) {
+                process.setDocumentTypes(updatedProcess.getDocumentTypes());
+            }
+            if (updatedProcess.getServiceCode() != null) {
+                process.setServiceCode(updatedProcess.getServiceCode());
+            }
+            if (updatedProcess.getServiceCode() != null) {
+                process.setServiceEditionCode(updatedProcess.getServiceEditionCode());
+            }
+            return true;
+        } catch (Exception e) {
+            throw new EntityNotFoundException(updatedProcess.getIdentifier());
+        }
     }
 
     @Transactional
