@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ProcessService {
@@ -18,8 +19,8 @@ public class ProcessService {
     }
 
     @Transactional(readOnly = true)
-    public Process findByIdentifier(String identifier) {
-        return repository.findByIdentifier(identifier);
+    public Optional<Process> findByIdentifier(String identifier) {
+        return Optional.ofNullable(repository.findByIdentifier(identifier));
     }
 
     @Transactional

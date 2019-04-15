@@ -13,6 +13,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -28,18 +29,23 @@ public class AdminController {
 
     @GetMapping(value = "/processes/{identifier:.+}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Process> getProcess(@PathVariable String identifier) {
-        Process process = processService.findByIdentifier(identifier);
-        return null != process
-                ? ResponseEntity.ok(process)
+        Optional<Process> process = processService.findByIdentifier(identifier);
+        return process.isPresent()
+                ? ResponseEntity.ok(process.get())
                 : ResponseEntity.notFound().build();
     }
 
     @PostMapping(value = "/processes", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addProcess(@RequestBody Process process) {
         try {
-            Process existingProcess = processService.findByIdentifier(process.getIdentifier());
-            if (null != existingProcess) {
+            Optional<Process> existingProcess = processService.findByIdentifier(process.getIdentifier());
+            if (existingProcess.isPresent()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            }
+            for (DocumentType type : process.getDocumentTypes()) {
+                if (!documentTypeService.findByIdentifier(type.getIdentifier()).isPresent()) {
+                    documentTypeService.add(type);
+                }
             }
             processService.add(process);
             UriComponents uriComponents = UriComponentsBuilder.fromUriString("/processes")
@@ -54,9 +60,9 @@ public class AdminController {
     @DeleteMapping(value = "/processes/{identifier:.+}")
     public ResponseEntity<?> deleteProcess(@PathVariable String identifier) {
         try {
-            Process process = processService.findByIdentifier(identifier);
-            if (process != null) {
-                processService.delete(process);
+            Optional<Process> process = processService.findByIdentifier(identifier);
+            if (process.isPresent()) {
+                processService.delete(process.get());
                 return ResponseEntity.noContent().build();
             }
             return ResponseEntity.notFound().build();
@@ -77,14 +83,18 @@ public class AdminController {
     @PutMapping(value = "/processes/{processIdentifier:.+}/documentTypes", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addDocumentTypes(@PathVariable String processIdentifier, @RequestBody List<String> documentTypeIdentifiers) {
         try {
-            Process process = processService.findByIdentifier(processIdentifier);
-            if (null == process) {
+            Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
+            if (!optionalProcess.isPresent()) {
                 return ResponseEntity.notFound().build();
             }
+            Process process = optionalProcess.get();
             List<DocumentType> documentTypes = new ArrayList<>();
             for (String identifier : documentTypeIdentifiers) {
-                DocumentType documentType = documentTypeService.findByIdentifier(identifier);
-                if (null == documentType) {
+                Optional<DocumentType> existingDocumentType = documentTypeService.findByIdentifier(identifier);
+                DocumentType documentType;
+                if (existingDocumentType.isPresent()) {
+                    documentType = existingDocumentType.get();
+                } else {
                     documentType = new DocumentType();
                     documentType.setIdentifier(identifier);
                     documentTypeService.add(documentType);
@@ -101,17 +111,17 @@ public class AdminController {
 
     @GetMapping(value = "/documentTypes/{identifier}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DocumentType> getDocumentType(@PathVariable String identifier) {
-        DocumentType documentType = documentTypeService.findByIdentifier(identifier);
-        return null != documentType
-                ? ResponseEntity.ok(documentType)
+        Optional<DocumentType> documentType = documentTypeService.findByIdentifier(identifier);
+        return documentType.isPresent()
+                ? ResponseEntity.ok(documentType.get())
                 : ResponseEntity.notFound().build();
     }
 
     @PostMapping(value = "/documentTypes", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addDocumentType(@RequestBody DocumentType documentType) {
         try {
-            DocumentType existingDocumentType = documentTypeService.findByIdentifier(documentType.getIdentifier());
-            if (null != existingDocumentType) {
+            Optional<DocumentType> existingDocumentType = documentTypeService.findByIdentifier(documentType.getIdentifier());
+            if (existingDocumentType.isPresent()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).build();
             }
             documentTypeService.add(documentType);
@@ -127,9 +137,9 @@ public class AdminController {
     @DeleteMapping(value = "/documentTypes/{identifier:.+}")
     public ResponseEntity<?> deleteDocumentType(@PathVariable String identifier) {
         try {
-            DocumentType documentType = documentTypeService.findByIdentifier(identifier);
-            if (documentType != null) {
-                documentTypeService.delete(documentType);
+            Optional<DocumentType> documentType = documentTypeService.findByIdentifier(identifier);
+            if (documentType.isPresent()) {
+                documentTypeService.delete(documentType.get());
                 return ResponseEntity.noContent().build();
             }
             return ResponseEntity.notFound().build();

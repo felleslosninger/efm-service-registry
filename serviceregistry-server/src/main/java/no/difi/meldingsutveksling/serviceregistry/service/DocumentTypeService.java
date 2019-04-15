@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class DocumentTypeService {
@@ -18,8 +19,8 @@ public class DocumentTypeService {
     }
 
     @Transactional(readOnly = true)
-    public DocumentType findByIdentifier(String identifier) {
-        return repository.findByIdentifier(identifier);
+    public Optional<DocumentType> findByIdentifier(String identifier) {
+        return Optional.ofNullable(repository.findByIdentifier(identifier));
     }
 
     @Transactional
