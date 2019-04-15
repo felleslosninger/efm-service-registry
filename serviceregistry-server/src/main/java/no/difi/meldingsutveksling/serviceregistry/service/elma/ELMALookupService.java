@@ -44,6 +44,19 @@ public class ELMALookupService {
         }
     }
 
+    public Endpoint lookup(String organisationNumber, String documentTypeIdentifier, String processIdentifier) throws EndpointUrlNotFound {
+        try {
+            return lookupClient.getEndpoint(ParticipantIdentifier.of(organisationNumber),
+                    DocumentTypeIdentifier.of(documentTypeIdentifier),
+                    ProcessIdentifier.of(processIdentifier),
+                    transportProfile);
+        } catch (PeppolSecurityException e) {
+            throw new ServiceRegistryException(e);
+        } catch (LookupException | EndpointNotFoundException e) {
+            throw new EndpointUrlNotFound(String.format("Failed lookup through ELMA of %s with document type %s and process %s.", organisationNumber, documentTypeIdentifier, processIdentifier), e);
+        }
+    }
+
     public boolean identifierHasInnsynskravCapability(String identifier) {
         return identifierHasCapability(identifier, props.getElmaDPEInnsyn());
     }

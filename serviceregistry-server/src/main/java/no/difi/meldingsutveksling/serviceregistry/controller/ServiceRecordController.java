@@ -7,12 +7,12 @@ import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
-import no.difi.meldingsutveksling.serviceregistry.model.Entity;
-import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
-import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
+import no.difi.meldingsutveksling.serviceregistry.model.Process;
+import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
+import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ErrorServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.FiksWrapper;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
@@ -42,25 +42,102 @@ public class ServiceRecordController {
 
     private static final Logger log = LoggerFactory.getLogger(ServiceRecordController.class);
     private final ServiceRecordFactory serviceRecordFactory;
+    private final ProcessService processService;
     private EntityService entityService;
     private PayloadSigner payloadSigner;
 
     /**
      * @param serviceRecordFactory for creation of the identifiers respective service record
      * @param entityService        needed to lookup and retrieve organization or citizen information using an identifier number
+     * @param processService
      */
     @Autowired
     public ServiceRecordController(ServiceRecordFactory serviceRecordFactory,
                                    EntityService entityService,
-                                   PayloadSigner payloadSigner) {
+                                   PayloadSigner payloadSigner, ProcessService processService) {
         this.entityService = entityService;
         this.serviceRecordFactory = serviceRecordFactory;
         this.payloadSigner = payloadSigner;
+        this.processService = processService;
     }
 
     @InitBinder
     protected void initBinders(WebDataBinder binder) {
         binder.registerCustomEditor(Notification.class, new NotificationEditor());
+    }
+
+    /**
+     * Used to retrieve information needed to send a message within the provided process
+     * to an entity with the provided identifier.
+     *
+     * @param entityIdentifier  specifies the target entity.
+     * @param processIdentifier specifies the target process.
+     * @param obligation        determines service record based on the recipient being notifiable
+     * @param forcePrint
+     * @param auth              provides the authentication object.
+     * @param request           is the servlet request.
+     * @return JSON object with information needed to send a message.
+     */
+    @GetMapping(value = "/entity/{entity}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity entity(@PathVariable("entity") String entityIdentifier,
+                                 @RequestParam(name = "process") String processIdentifier,
+                                 @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
+                                 @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
+                                 Authentication auth,
+                                 HttpServletRequest request) {
+        MDC.put("entity", entityIdentifier);
+        Optional<EntityInfo> entityInfo = entityService.getEntityInfo(entityIdentifier);
+        if (!entityInfo.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+        Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
+        if (!optionalProcess.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Optional<ServiceRecord> serviceRecord = Optional.empty();
+        Process process = optionalProcess.get();
+        ProcessCategory processCategory = process.getCategory();
+        if (processCategory.equals(ProcessCategory.DIGITALPOST) && shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
+            String clientOrgnr = getAuthorizedClientIdentifier(auth, request);
+            if (auth == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No authentication provided.");
+            }
+            try {
+                serviceRecord = serviceRecordFactory.createServiceRecordForCitizen(entityIdentifier, auth, clientOrgnr, obligation, forcePrint);
+            } catch (KRRClientException e) {
+                log.error("Error looking up identifier in KRR", e);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            }
+        }
+
+        Entity entity = new Entity();
+        if (!serviceRecord.isPresent()) {
+            serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createDpoServiceRecord(entityIdentifier, process), entity);
+        }
+
+        if (!serviceRecord.isPresent()) {
+            Optional<FiksWrapper> fiksWrapper = serviceRecordFactory.createFiksServiceRecord(entityIdentifier);
+            if (fiksWrapper.isPresent()) {
+                serviceRecord = serviceRecordResponseHandler(Optional.of(fiksWrapper.get().getServiceRecord()), entity);
+                if (serviceRecord.isPresent()) {
+                    entity.getSecuritylevels().put(ServiceIdentifier.DPF, fiksWrapper.get().getSecuritylevel());
+                }
+            }
+        }
+
+        if (!serviceRecord.isPresent() && processCategory.equals(ProcessCategory.EINNSYN)) {
+            serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createDpeInnsynServiceRecord(entityIdentifier), entity);
+        }
+
+        if (!serviceRecord.isPresent()) {
+            serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createPostVirksomhetServiceRecord(entityIdentifier), entity);
+        }
+
+        serviceRecord.ifPresent(entity::setServiceRecord);
+        entity.setInfoRecord(entityInfo.get());
+        return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
     /**
@@ -71,7 +148,7 @@ public class ServiceRecordController {
      * @param obligation determines service record based on the recipient being notifiable
      * @return JSON object with information needed to send a message
      */
-    @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/identifier/{identifier}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     @SuppressWarnings("squid:S2583")
     public ResponseEntity entity(
@@ -88,18 +165,8 @@ public class ServiceRecordController {
             return ResponseEntity.notFound().build();
         }
 
-        String clientOrgnr = auth == null ? null : (String) auth.getPrincipal();
-        if (clientOrgnr != null) {
-            log.debug(String.format("Authorized lookup request by %s", clientOrgnr),
-                    markerFrom(request.getRemoteAddr(), request.getRemoteHost(), clientOrgnr));
-        } else {
-            log.debug(String.format("Unauthorized lookup request from %s", request.getRemoteAddr()),
-                    markerFrom(request.getRemoteAddr()));
-        }
-
-
+        String clientOrgnr = getAuthorizedClientIdentifier(auth, request);
         Optional<ServiceRecord> serviceRecord = Optional.empty();
-
         if (shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
             if (auth == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No authentication provided.");
@@ -140,6 +207,18 @@ public class ServiceRecordController {
         addServiceRecords(entityInfo.get(), entity, auth, clientOrgnr, obligation, forcePrint);
 
         return new ResponseEntity<>(entity, HttpStatus.OK);
+    }
+
+    private String getAuthorizedClientIdentifier(Authentication auth, HttpServletRequest request) {
+        String clientOrgnr = auth == null ? null : (String) auth.getPrincipal();
+        if (clientOrgnr != null) {
+            log.debug(String.format("Authorized lookup request by %s", clientOrgnr),
+                    markerFrom(request.getRemoteAddr(), request.getRemoteHost(), clientOrgnr));
+        } else {
+            log.debug(String.format("Unauthorized lookup request from %s", request.getRemoteAddr()),
+                    markerFrom(request.getRemoteAddr()));
+        }
+        return clientOrgnr;
     }
 
     @SuppressWarnings("squid:S2583")
@@ -216,7 +295,7 @@ public class ServiceRecordController {
      * return empty {@code Optional}. Else, return the service record.
      *
      * @param serviceRecord to check
-     * @param entity to add failed serviceIdentifiers to
+     * @param entity        to add failed serviceIdentifiers to
      * @return {@code Optional} if present, empty otherwise
      */
     private Optional<ServiceRecord> serviceRecordResponseHandler(Optional<ServiceRecord> serviceRecord, Entity entity) {

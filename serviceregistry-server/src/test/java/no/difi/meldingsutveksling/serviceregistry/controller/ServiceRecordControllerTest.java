@@ -7,9 +7,11 @@ import com.nimbusds.jose.crypto.RSASSAVerifier;
 import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
+import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
+import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.EDUServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.PostVirksomhetServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
@@ -66,6 +68,9 @@ public class ServiceRecordControllerTest {
 
     @MockBean
     private SvarUtService svarUtService;
+
+    @MockBean
+    private ProcessService processService;
 
     @Autowired
     private PayloadSigner payloadSigner;
@@ -178,5 +183,33 @@ public class ServiceRecordControllerTest {
 
         String payload = jwsObject.getPayload().toString();
         Assert.assertEquals("42", JsonPath.read(payload, "$.serviceRecord.organisationNumber"));
+    }
+
+    @Test
+    public void entityAndProcessLookup_MissingEntity_ShouldReturn404() throws Exception {
+        mvc.perform(get("/entity/1337?process=n/a")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void entityAndProcessLookup_MissingProcess_ShouldReturn404() throws Exception {
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.empty());
+        mvc.perform(get("/entity/42?process=notFound")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void entityAndProcessLookup_MatchFoundInElma_ShouldReturnDpoRecord() throws Exception {
+        Process dpoProcess = mock(Process.class);
+        when(dpoProcess.getCategory()).thenReturn(ProcessCategory.ARKIVMELDING);
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(dpoProcess));
+        mvc.perform(get("/identifier/42").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.serviceRecord.organisationNumber", is("42")))
+                .andExpect(jsonPath("$.serviceRecord.serviceIdentifier", is("DPO")))
+                .andExpect(jsonPath("$.serviceRecord.pemCertificate", is("-----BEGIN CERTIFICATE-----\npem123\n-----END CERTIFICATE-----\n")))
+                .andExpect(jsonPath("$.serviceRecord.serviceCode", is("123")))
+                .andExpect(jsonPath("$.serviceRecord.serviceEditionCode", is("321")))
+                .andExpect(jsonPath("$.serviceRecord.endPointURL", is("http://foo")))
+                .andExpect(jsonPath("$.infoRecord.identifier", is("42")))
+                .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")));
     }
 }

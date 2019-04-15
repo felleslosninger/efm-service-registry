@@ -12,9 +12,8 @@ import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
-import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
-import no.difi.meldingsutveksling.serviceregistry.model.OrganizationInfo;
-import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
+import no.difi.meldingsutveksling.serviceregistry.model.Process;
+import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
@@ -31,6 +30,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
@@ -111,6 +111,12 @@ public class ServiceRecordFactory {
             return Optional.empty();
         }
 
+        EDUServiceRecord serviceRecord = createEduServiceRecord(orgnr, ep);
+
+        return Optional.of(serviceRecord);
+    }
+
+    private EDUServiceRecord createEduServiceRecord(String orgnr, Endpoint ep) {
         String pemCertificate = lookupPemCertificate(orgnr);
         EDUServiceRecord serviceRecord = new EDUServiceRecord(pemCertificate, ep.getAddress().toString(), orgnr);
 
@@ -134,12 +140,43 @@ public class ServiceRecordFactory {
         if (elmaLookupService.identifierHasInnsynDataCapability(NORWAY_PREFIX + orgnr)) {
             serviceRecord.addDpeCapability(DPE_DATA.toString());
         }
-
-        return Optional.of(serviceRecord);
+        return serviceRecord;
     }
 
     @SuppressWarnings("squid:S1172")
     public Optional<ServiceRecord> createEduErrorRecord(String orgnr, Throwable e) {
+        log.error("DPO service record failed", e);
+        return Optional.of(ErrorServiceRecord.create(DPO));
+    }
+
+    @HystrixCommand(fallbackMethod = "createDpoServiceRecordErrorRecord")
+    public Optional<ServiceRecord> createDpoServiceRecord(String organizationNumber, Process process) {
+        List<DocumentType> documentTypes = process.getDocumentTypes();
+        if (documentTypes.isEmpty()) {
+            return Optional.empty();
+        }
+        Endpoint endpoint = null;
+        for (DocumentType type : documentTypes) {
+            try {
+                endpoint = elmaLookupService.lookup(NORWAY_PREFIX + organizationNumber, type.getIdentifier(), process.getIdentifier());
+                if (null != endpoint) {
+                    break;
+                }
+            } catch (EndpointUrlNotFound endpointUrlNotFound) {
+                log.debug(MarkerFactory.receiverMarker(organizationNumber),
+                        String.format("Attempted to lookup receiver in ELMA: %s", endpointUrlNotFound.getMessage()));
+            }
+        }
+        if (null != endpoint) {
+            EDUServiceRecord serviceRecord = createEduServiceRecord(organizationNumber, endpoint);
+            return Optional.of(serviceRecord);
+        }
+        return Optional.empty();
+    }
+
+
+    @SuppressWarnings("squid:S1172")
+    public Optional<ServiceRecord> createDpoServiceRecordErrorRecord(String orgnr, Process process, Throwable e) {
         log.error("DPO service record failed", e);
         return Optional.of(ErrorServiceRecord.create(DPO));
     }
@@ -208,7 +245,6 @@ public class ServiceRecordFactory {
 
         String token = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
 
-        PersonResource personResource = krrService.getCizitenInfo(lookup(identifier)
         PersonResource personResource = krrService.getCitizenInfo(lookup(identifier)
                 .onBehalfOf(onBehalfOrgnr)
                 .require(notification)

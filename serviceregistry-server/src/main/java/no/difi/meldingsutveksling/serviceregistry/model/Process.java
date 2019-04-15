@@ -22,8 +22,12 @@ public class Process {
     private String serviceCode;
     private String serviceEditionCode;
 
+    @Enumerated(EnumType.STRING)
+    private ProcessCategory category;
+
     @ManyToMany
     @JsonIgnoreProperties("processes")
     private List<DocumentType> documentTypes;
+
 
 }
