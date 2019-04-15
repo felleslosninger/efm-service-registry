@@ -209,6 +209,7 @@ public class ServiceRecordFactory {
         String token = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
 
         PersonResource personResource = krrService.getCizitenInfo(lookup(identifier)
+        PersonResource personResource = krrService.getCitizenInfo(lookup(identifier)
                 .onBehalfOf(onBehalfOrgnr)
                 .require(notification)
                 .token(token));

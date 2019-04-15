@@ -171,7 +171,7 @@ public class ServiceRecordFactoryJavaTest {
         personResource.setStatus("AKTIV");
         DigitalPostResource dpr = DigitalPostResource.of("adr123", "adr321");
         personResource.setDigitalPost(dpr);
-        when(krrService.getCizitenInfo(any())).thenReturn(personResource);
+        when(krrService.getCitizenInfo(any())).thenReturn(personResource);
 
         Authentication authMock = mock(Authentication.class);
         OAuth2AuthenticationDetails detailsMock = mock(OAuth2AuthenticationDetails.class);
@@ -192,7 +192,7 @@ public class ServiceRecordFactoryJavaTest {
         personResource.setStatus("AKTIV");
         DigitalPostResource dpr = DigitalPostResource.of("adr123", "adr321");
         personResource.setDigitalPost(dpr);
-        when(krrService.getCizitenInfo(any())).thenReturn(personResource);
+        when(krrService.getCitizenInfo(any())).thenReturn(personResource);
 
         DSFResource dsf = new DSFResource();
         dsf.setPostAddress("0101");
@@ -228,7 +228,7 @@ public class ServiceRecordFactoryJavaTest {
         personResource.setStatus("IKKE_REGISTRERT");
         DigitalPostResource dpr = DigitalPostResource.of("adr123", "adr321");
         personResource.setDigitalPost(dpr);
-        when(krrService.getCizitenInfo(any())).thenReturn(personResource);
+        when(krrService.getCitizenInfo(any())).thenReturn(personResource);
 
         Authentication authMock = mock(Authentication.class);
         OAuth2AuthenticationDetails detailsMock = mock(OAuth2AuthenticationDetails.class);

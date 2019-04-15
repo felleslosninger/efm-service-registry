@@ -44,7 +44,7 @@ class ServiceRecordFactoryTest extends Specification {
         auth.getDetails() >> details
         personResourceMock.getReserved() >> "NEI"
         personResourceMock.hasMailbox() >> false
-        krr.getCizitenInfo(_) >> personResourceMock
+        krr.getCitizenInfo(_) >> personResourceMock
 
         when:
         def serviceRecord = serviceRecordFactory.createServiceRecordForCitizen("1234", auth, "1234", Notification.OBLIGATED, false)
@@ -71,7 +71,7 @@ class ServiceRecordFactoryTest extends Specification {
         def postadr = new BrregPostadresse("adr1", "123", "sted", "NOR")
         orginfoMock.getPostadresse() >> postadr
         entityService.getEntityInfo(_) >> Optional.of(orginfoMock)
-        krr.getCizitenInfo(_) >> personResourceMock
+        krr.getCitizenInfo(_) >> personResourceMock
         def dsfResourceMock = Mock(DSFResource)
         dsfResourceMock.getPostAddress() >> "foo bar"
         krr.getDSFInfo(_, _) >> Optional.of(dsfResourceMock)

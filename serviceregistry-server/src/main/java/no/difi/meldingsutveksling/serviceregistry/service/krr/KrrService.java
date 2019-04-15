@@ -31,11 +31,11 @@ public class KrrService {
         this.krrCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(1, TimeUnit.HOURS)
                 .build(new CacheLoader<LookupParameters, PersonResource>() {
-            @Override
-            public PersonResource load(LookupParameters params) throws Exception {
-                return loadCizitenInfo(params);
-            }
-        });
+                    @Override
+                    public PersonResource load(LookupParameters params) throws Exception {
+                        return loadCitizenInfo(params);
+                    }
+                });
         this.dsfCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(1, TimeUnit.HOURS)
                 .build(new CacheLoader<LookupParameters, Optional<DSFResource>>() {
@@ -46,7 +46,7 @@ public class KrrService {
                 });
     }
 
-    public PersonResource getCizitenInfo(LookupParameters params) throws KRRClientException {
+    public PersonResource getCitizenInfo(LookupParameters params) throws KRRClientException {
         try {
             return this.krrCache.get(params);
         } catch (ExecutionException e) {
@@ -54,7 +54,7 @@ public class KrrService {
         }
     }
 
-    private PersonResource loadCizitenInfo(LookupParameters params) throws KRRClientException {
+    private PersonResource loadCitizenInfo(LookupParameters params) throws KRRClientException {
         return krrClient.getPersonResource(params.getIdentifier(), params.getToken());
     }
 
