@@ -108,6 +108,20 @@ public class AdminController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    @PutMapping(value = "/processes/{processIdentifier:.+}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> updateProcess(@PathVariable String processIdentifier, @RequestBody Process processWithValuesForUpdate) {
+        try {
+            if (processService.updateProcess(processIdentifier, processWithValuesForUpdate)) {
+                return ResponseEntity.ok().build();
+            }
+            else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 
     @GetMapping(value = "/documentTypes/{identifier}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DocumentType> getDocumentType(@PathVariable String identifier) {

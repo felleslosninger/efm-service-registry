@@ -47,6 +47,29 @@ public class ProcessService {
     }
 
     @Transactional
+    public Boolean updateProcess(String processIdentifier, Process updatedProcess) {
+        try {
+            Optional<Process> optionalProcess = findByIdentifier(processIdentifier);
+            if (!optionalProcess.isPresent()) {
+                return false;
+            }
+            Process process = optionalProcess.get();
+            if (updatedProcess.getDocumentTypes() != null) {
+                process.setDocumentTypes(updatedProcess.getDocumentTypes());
+            }
+            if (updatedProcess.getServiceCode() != null) {
+                process.setServiceCode(updatedProcess.getServiceCode());
+            }
+            if (updatedProcess.getServiceCode() != null) {
+                process.setServiceEditionCode(updatedProcess.getServiceEditionCode());
+            }
+            return true;
+        } catch (Exception e) {
+            throw new EntityNotFoundException(updatedProcess.getIdentifier());
+        }
+    }
+
+    @Transactional
     public void delete(Process process) {
         repository.delete(process);
     }
