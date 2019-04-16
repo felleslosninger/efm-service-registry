@@ -114,6 +114,13 @@ public class AdminControllerTest {
     }
 
     @Test
+    public void getProcesses_Success_ResponseShouldBeOk() throws Exception {
+        MockHttpServletResponse response = doGet(PROCESSES_ENDPOINT_URI);
+        assertEquals(HttpStatus.OK.value(), response.getStatus());
+        verify(processServiceMock).findAll();
+    }
+
+    @Test
     public void deleteProcess_ProcessNotFound_ResponseShouldBeNotFound() throws Exception {
         when(processServiceMock.findByIdentifier(anyString())).thenReturn(Optional.empty());
         URI processUri = UriComponentsBuilder.fromUri(PROCESSES_ENDPOINT_URI)
@@ -129,7 +136,7 @@ public class AdminControllerTest {
         Process processToDelete = mock(Process.class);
         when(processServiceMock.findByIdentifier(anyString())).thenReturn(Optional.of(processToDelete));
         URI processUri = UriComponentsBuilder.fromUri(PROCESSES_ENDPOINT_URI)
-                .pathSegment("NoProcess").build().toUri();
+                .pathSegment("Process").build().toUri();
 
         MockHttpServletResponse response = doDelete(processUri);
 
@@ -167,6 +174,87 @@ public class AdminControllerTest {
         MockHttpServletResponse response = doPut(processUri, updatedValues);
 
         assertEquals(HttpStatus.NOT_FOUND.value(), response.getStatus());
+    }
+
+    @Test
+    public void addDocumentType_EmptyRequestBody_ResponseShouldBeBadRequest() throws Exception {
+        MockHttpServletResponse response = doPost(DOCUMENT_TYPES_ENDPOINT_URI, null);
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus());
+    }
+
+    @Test
+    public void addDocumentType_OccupiedIdentifier_ResponseShouldBeConflict() throws Exception {
+        when(documentTypeServiceMock.findByIdentifier(anyString())).thenReturn(Optional.of(mock(DocumentType.class)));
+        DocumentType documentType = createDocumentType("DocumentTypeID");
+
+        MockHttpServletResponse response = doPost(DOCUMENT_TYPES_ENDPOINT_URI, documentType);
+
+        assertEquals(HttpStatus.CONFLICT.value(), response.getStatus());
+    }
+
+    @Test
+    public void addDocumentType_Success_ResponseShouldBeCreated() throws Exception {
+        when(documentTypeServiceMock.findByIdentifier(anyString())).thenReturn(Optional.empty());
+        DocumentType documentType = createDocumentType("DocumentTypeID");
+
+        MockHttpServletResponse response = doPost(DOCUMENT_TYPES_ENDPOINT_URI, documentType);
+
+        assertEquals(HttpStatus.CREATED.value(), response.getStatus());
+        verify(documentTypeServiceMock).add(any(DocumentType.class));
+    }
+
+    @Test
+    public void getDocumentType_DocumentTypeNotFound_ResponseShouldBeNotFound() throws Exception {
+        when(documentTypeServiceMock.findByIdentifier(anyString())).thenReturn(Optional.empty());
+        URI uri = UriComponentsBuilder.fromUri(DOCUMENT_TYPES_ENDPOINT_URI)
+                .pathSegment("ProcessIdentifier").build().toUri();
+
+        MockHttpServletResponse response = doGet(uri);
+
+        assertEquals(HttpStatus.NOT_FOUND.value(), response.getStatus());
+    }
+
+    @Test
+    public void getDocumentType_DocumentTypeFound_ResponseShouldBeOk() throws Exception {
+        DocumentType documentType = createDocumentType("identifier");
+        when(documentTypeServiceMock.findByIdentifier(anyString())).thenReturn(Optional.of(documentType));
+        URI uri = UriComponentsBuilder.fromUri(DOCUMENT_TYPES_ENDPOINT_URI)
+                .pathSegment("ProcessIdentifier").build().toUri();
+
+        MockHttpServletResponse response = doGet(uri);
+
+        assertEquals(HttpStatus.OK.value(), response.getStatus());
+    }
+
+    @Test
+    public void getDocumentTypes_Success_ResponseShouldBeOk() throws Exception {
+        MockHttpServletResponse response = doGet(DOCUMENT_TYPES_ENDPOINT_URI);
+        assertEquals(HttpStatus.OK.value(), response.getStatus());
+        verify(documentTypeServiceMock).findAll();
+    }
+
+    @Test
+    public void deleteDocumentType_DocumentTypeNotFound_ResponseShouldBeNotFound() throws Exception {
+        when(documentTypeServiceMock.findByIdentifier(anyString())).thenReturn(Optional.empty());
+        URI uri = UriComponentsBuilder.fromUri(DOCUMENT_TYPES_ENDPOINT_URI)
+                .pathSegment("NoProcess").build().toUri();
+
+        MockHttpServletResponse response = doDelete(uri);
+
+        assertEquals(HttpStatus.NOT_FOUND.value(), response.getStatus());
+    }
+
+    @Test
+    public void deleteDocumentType_DocumentTypeFound_ResponseShouldBeNoContent() throws Exception {
+        DocumentType documentTypeToDelete = mock(DocumentType.class);
+        when(documentTypeServiceMock.findByIdentifier(anyString())).thenReturn(Optional.of(documentTypeToDelete));
+        URI uri = UriComponentsBuilder.fromUri(DOCUMENT_TYPES_ENDPOINT_URI)
+                .pathSegment("DocumentType").build().toUri();
+
+        MockHttpServletResponse response = doDelete(uri);
+
+        assertEquals(HttpStatus.NO_CONTENT.value(), response.getStatus());
+        verify(documentTypeServiceMock).delete(documentTypeToDelete);
     }
 
     private DocumentType createDocumentType(String identifier) {
