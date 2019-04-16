@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -80,38 +79,10 @@ public class AdminController {
         }
     }
 
-    @PutMapping(value = "/processes/{processIdentifier:.+}/documentTypes", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> addDocumentTypes(@PathVariable String processIdentifier, @RequestBody List<String> documentTypeIdentifiers) {
-        try {
-            Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
-            if (!optionalProcess.isPresent()) {
-                return ResponseEntity.notFound().build();
-            }
-            Process process = optionalProcess.get();
-            List<DocumentType> documentTypes = new ArrayList<>();
-            for (String identifier : documentTypeIdentifiers) {
-                Optional<DocumentType> existingDocumentType = documentTypeService.findByIdentifier(identifier);
-                DocumentType documentType;
-                if (existingDocumentType.isPresent()) {
-                    documentType = existingDocumentType.get();
-                } else {
-                    documentType = new DocumentType();
-                    documentType.setIdentifier(identifier);
-                    documentTypeService.add(documentType);
-                }
-                documentTypes.add(documentType);
-            }
-            process.setDocumentTypes(documentTypes);
-            processService.update(process);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
     @PutMapping(value = "/processes/{processIdentifier:.+}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateProcess(@PathVariable String processIdentifier, @RequestBody Process processWithValuesForUpdate) {
         try {
-            if (processService.updateProcess(processIdentifier, processWithValuesForUpdate)) {
+            if (processService.update(processIdentifier, processWithValuesForUpdate)) {
                 return ResponseEntity.ok().build();
             }
             else {
