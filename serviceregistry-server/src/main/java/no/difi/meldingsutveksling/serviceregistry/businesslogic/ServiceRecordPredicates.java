@@ -11,12 +11,14 @@ import java.util.regex.Pattern;
 public class ServiceRecordPredicates {
 
     private static final Predicate<String> exactly_11_numbers = Pattern.compile(String.format("\\d{%d}", 11)).asPredicate();
+    private static final String ALTINN_URL_SEPARATOR = "#";
 
     private ServiceRecordPredicates() {
     }
 
     /**
      * Predicate to test whether Sikker digital post is a valid service for sending messages
+     *
      * @return predicate that evaluates true if able to use sikker digital post
      */
     public static Predicate<EntityInfo> shouldCreateServiceRecordForCititzen() {
@@ -33,5 +35,9 @@ public class ServiceRecordPredicates {
         // which is sufficient for the time being
 
         return exactly_11_numbers;
+    }
+
+    public static Predicate<String> containsAltinnChannelInfo() {
+        return address -> address.contains(ALTINN_URL_SEPARATOR);
     }
 }

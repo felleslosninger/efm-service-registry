@@ -6,6 +6,7 @@ import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.logging.MarkerFactory;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
+import no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource;
@@ -54,10 +55,10 @@ public class ServiceRecordFactory {
     /**
      * Creates factory to create ServiceRecord using provided environment and services
      *
-     * @param properties - parameters needed to contact the provided services
-     * @param virksertService - used to lookup virksomhetssertifikat (certificate)
+     * @param properties        - parameters needed to contact the provided services
+     * @param virksertService   - used to lookup virksomhetssertifikat (certificate)
      * @param elmaLookupService - used to lookup hostname of Altinn formidlingstjeneste
-     * @param krrService - used to lookup parameters needed to use DPI transportation
+     * @param krrService        - used to lookup parameters needed to use DPI transportation
      */
     @Autowired
     public ServiceRecordFactory(ServiceregistryProperties properties,
@@ -108,32 +109,32 @@ public class ServiceRecordFactory {
                     String.format("Attempted to lookup receiver in ELMA: %s", endpointUrlNotFound.getMessage()));
             return Optional.empty();
         }
-
         String pemCertificate = lookupPemCertificate(orgnr);
         EDUServiceRecord serviceRecord = new EDUServiceRecord(pemCertificate, ep.getAddress().toString(), orgnr);
-
         String adr = ep.getAddress().toString();
-        if (adr.contains("#")) {
-            String uri = adr.substring(0, adr.indexOf('#'));
-            String[] codes = adr.substring(adr.indexOf('#') + 1).split("-");
-            String serviceCode = codes[0];
-            String serviceEditionCode = codes[1];
-
-            serviceRecord.setEndpointUrl(uri);
-            serviceRecord.setServiceCode(serviceCode);
-            serviceRecord.setServiceEditionCode(serviceEditionCode);
+        if (ServiceRecordPredicates.containsAltinnChannelInfo().test(adr)) {
+            setAltinnUrlAndServiceCodes(serviceRecord, adr);
         } else {
             serviceRecord.setEndpointUrl(adr);
         }
-
         if (elmaLookupService.identifierHasInnsynskravCapability(NORWAY_PREFIX + orgnr)) {
             serviceRecord.addDpeCapability(DPE_INNSYN.toString());
         }
         if (elmaLookupService.identifierHasInnsynDataCapability(NORWAY_PREFIX + orgnr)) {
             serviceRecord.addDpeCapability(DPE_DATA.toString());
         }
-
         return Optional.of(serviceRecord);
+    }
+
+    private void setAltinnUrlAndServiceCodes(EDUServiceRecord serviceRecord, String altinnUri) {
+        String uri = altinnUri.substring(0, altinnUri.indexOf('#'));
+        String[] codes = altinnUri.substring(altinnUri.indexOf('#') + 1).split("-");
+        String serviceCode = codes[0];
+        String serviceEditionCode = codes[1];
+
+        serviceRecord.setEndpointUrl(uri);
+        serviceRecord.setServiceCode(serviceCode);
+        serviceRecord.setServiceEditionCode(serviceEditionCode);
     }
 
     @SuppressWarnings("squid:S1172")
@@ -218,7 +219,7 @@ public class ServiceRecordFactory {
             case PRINT:
                 return createPrintServiceRecord(identifier, onBehalfOrgnr, token, personResource);
             case DPV:
-            return createPostVirksomhetServiceRecord(identifier);
+                return createPostVirksomhetServiceRecord(identifier);
             default:
                 return createPostVirksomhetServiceRecord(identifier);
         }

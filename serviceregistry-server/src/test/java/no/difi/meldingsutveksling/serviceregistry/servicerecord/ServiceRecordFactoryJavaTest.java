@@ -86,6 +86,22 @@ public class ServiceRecordFactoryJavaTest {
     }
 
     @Test
+    public void createEduServiceRecord_ElmaResponseContainsAltinnChannelInfo_ServiceRecordShouldContainAltinnInfo() throws EndpointUrlNotFound, URISyntaxException, VirksertClientException {
+        Endpoint ep = mock(Endpoint.class);
+        when(ep.getAddress()).thenReturn(new URI("http://altinn.uri.here#AltinnServiceCode-AltinnServiceEditionCode"));
+        when(lookupService.lookup(any())).thenReturn(ep);
+        when(virkSertService.getCertificate(any())).thenReturn("pem123");
+
+        Optional<ServiceRecord> result = factory.createEduServiceRecord(ORGNR);
+
+        assertTrue(result.isPresent());
+        EDUServiceRecord serviceRecord = (EDUServiceRecord) result.get();
+        assertEquals("http://altinn.uri.here", serviceRecord.getEndPointURL());
+        assertEquals("AltinnServiceCode", serviceRecord.getServiceCode());
+        assertEquals("AltinnServiceEditionCode", serviceRecord.getServiceEditionCode());
+    }
+
+    @Test
     public void eduShouldReturnEmptyRecord() throws EndpointUrlNotFound {
         when(lookupService.lookup(any())).thenThrow(new EndpointUrlNotFound("not found in ELMA", mock(PeppolException.class)));
         assertTrue(!factory.createEduServiceRecord(ORGNR).isPresent());
