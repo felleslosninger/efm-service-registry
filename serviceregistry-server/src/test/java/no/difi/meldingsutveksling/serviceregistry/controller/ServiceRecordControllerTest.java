@@ -84,6 +84,7 @@ public class ServiceRecordControllerTest {
         when(serviceRecordFactory.createDpeDataServiceRecord(anyString())).thenReturn(Optional.empty());
         when(serviceRecordFactory.createDpeReceiptServiceRecord(anyString())).thenReturn(Optional.empty());
         when(serviceRecordFactory.createFiksServiceRecord(anyString())).thenReturn(Optional.empty());
+        when(serviceRecordFactory.createDpoServiceRecord(anyString(), any(Process.class))).thenReturn(Optional.empty());
 
         BrregPostadresse testAdr = new BrregPostadresse("testadresse", "1337", "teststed", "testland");
         OrganizationInfo ORGLinfo = new OrganizationInfo("42", "foo",
@@ -197,11 +198,14 @@ public class ServiceRecordControllerTest {
     }
 
     @Test
-    public void entityAndProcessLookup_MatchFoundInElma_ShouldReturnDpoRecord() throws Exception {
+    public void entityAndProcessLookup_DpoRecordCreated_ShouldReturnOk() throws Exception {
         Process dpoProcess = mock(Process.class);
         when(dpoProcess.getCategory()).thenReturn(ProcessCategory.ARKIVMELDING);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(dpoProcess));
-        mvc.perform(get("/identifier/42").accept(MediaType.APPLICATION_JSON))
+        EDUServiceRecord eduServiceRecord = new EDUServiceRecord("pem123", "http://foo", "123", "321", "42");
+        when(serviceRecordFactory.createDpoServiceRecord(anyString(), any(Process.class))).thenReturn(Optional.of(eduServiceRecord));
+        
+        mvc.perform(get("/entity/42?process=ProcessID").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecord.organisationNumber", is("42")))
                 .andExpect(jsonPath("$.serviceRecord.serviceIdentifier", is("DPO")))

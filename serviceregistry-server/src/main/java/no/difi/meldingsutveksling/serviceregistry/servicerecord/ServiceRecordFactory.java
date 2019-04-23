@@ -193,12 +193,6 @@ public class ServiceRecordFactory {
             serviceRecord.setEndpointUrl(adr);
         }
 
-        if (elmaLookupService.identifierHasInnsynskravCapability(NORWAY_PREFIX + orgnr)) {
-            serviceRecord.addDpeCapability(DPE_INNSYN.toString());
-        }
-        if (elmaLookupService.identifierHasInnsynDataCapability(NORWAY_PREFIX + orgnr)) {
-            serviceRecord.addDpeCapability(DPE_DATA.toString());
-        }
         return serviceRecord;
     }
 
