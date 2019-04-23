@@ -31,6 +31,8 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.shouldCreateServiceRecordForCitizen;
@@ -178,7 +180,16 @@ public class ServiceRecordController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
             }
         }
+// må også lage dpf og slikt her
+        //Dette er tilfeller der det blir DPO, må sende til DPO
+        List<ServiceRecord> arkivmeldingRecords = serviceRecordFactory.createDpoServiceRecords(identifier);
+        if (!arkivmeldingRecords.isEmpty()){
+            for (ServiceRecord sr : arkivmeldingRecords) {
 
+            }
+        }
+
+        // blir erstatta av den over... slett.
         if (!serviceRecord.isPresent()) {
             serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createEduServiceRecord(identifier), entity);
         }

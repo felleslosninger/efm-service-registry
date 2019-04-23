@@ -2,6 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.service;
 
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
+import no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory;
 import no.difi.meldingsutveksling.serviceregistry.persistence.ProcessRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -77,5 +78,10 @@ public class ProcessService {
     @Transactional(readOnly = true)
     public List<Process> findAll() {
         return repository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Process> findAll(ProcessCategory processCategory) {
+        return repository.findAllByCategory();
     }
 }

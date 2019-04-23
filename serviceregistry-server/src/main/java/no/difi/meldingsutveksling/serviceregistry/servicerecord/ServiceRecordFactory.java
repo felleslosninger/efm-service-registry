@@ -15,14 +15,17 @@ import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
+import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import no.difi.vefa.peppol.common.model.Endpoint;
+import no.difi.vefa.peppol.common.model.ProcessIdentifier;
+import no.difi.vefa.peppol.common.model.ProcessMetadata;
+import no.difi.vefa.peppol.common.model.ServiceMetadata;
 import no.difi.virksert.client.lang.VirksertClientException;
 import org.apache.commons.io.IOUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
@@ -30,8 +33,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
 import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.*;
@@ -49,6 +51,7 @@ public class ServiceRecordFactory {
     private ELMALookupService elmaLookupService;
     private EntityService entityService;
     private SvarUtService svarUtService;
+    private ProcessService processService;
     private static final String NORWAY_PREFIX = "9908:";
 
     /**
@@ -61,19 +64,20 @@ public class ServiceRecordFactory {
      * @param entityService     - used to look up information about citizens and organizations in Brønnøysundregisteret and Datahotellet.
      * @param svarUtService     - used to determine whether an organization utilizes FIKS.
      */
-    @Autowired
     public ServiceRecordFactory(ServiceregistryProperties properties,
                                 VirkSertService virksertService,
                                 ELMALookupService elmaLookupService,
                                 KrrService krrService,
                                 EntityService entityService,
-                                SvarUtService svarUtService) {
+                                SvarUtService svarUtService,
+                                ProcessService processService) {
         this.properties = properties;
         this.virksertService = virksertService;
         this.elmaLookupService = elmaLookupService;
         this.krrService = krrService;
         this.entityService = entityService;
         this.svarUtService = svarUtService;
+        this.processService = processService;
     }
 
     @HystrixCommand(fallbackMethod = "createFiksErrorRecord")
@@ -97,6 +101,61 @@ public class ServiceRecordFactory {
     public Optional<FiksWrapper> createFiksErrorRecord(String orgnr, Throwable e) {
         log.error("DPF service record failed", e);
         return Optional.of(FiksWrapper.of(ErrorServiceRecord.create(DPF), 0));
+    }
+
+    @HystrixCommand(fallbackMethod = "createEduErrorRecord")
+    @SuppressWarnings("squid:S1166")
+    public List<ServiceRecord> createDpoServiceRecords(String orgnr) {
+        ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
+        List<Process> arkivmeldingProcesses = processService.findAll(ProcessCategory.ARKIVMELDING);
+        List<String> documentTypeIdentifiers = new ArrayList<>();
+        HashMap<ProcessIdentifier, Process> identifierProcessHashMap = new HashMap<>();
+        for (Process p : arkivmeldingProcesses) {
+            identifierProcessHashMap.put(ProcessIdentifier.of(p.getIdentifier()), p);
+            p.getDocumentTypes().forEach(t -> {
+                String identifier = t.getIdentifier();
+                if (!documentTypeIdentifiers.contains(identifier)) {
+                    documentTypeIdentifiers.add(identifier);
+                }
+            });
+        }
+
+        try {
+            List<ServiceMetadata> serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, documentTypeIdentifiers);
+            HashMap<ProcessIdentifier, Endpoint> elmaProcessIdToEndpointMap = new HashMap<>();
+            for (ServiceMetadata data : serviceMetadataList) {
+                for (ProcessMetadata processMetadata : data.getProcesses()) {
+                    elmaProcessIdToEndpointMap.put(processMetadata.getProcessIdentifier(), elmaLookupService.lookupEndpoint(data, processMetadata.getProcessIdentifier()));
+                }
+            }
+            if (elmaProcessIdToEndpointMap.size() == 0) {
+                return serviceRecords;
+            }
+            //sjekk arkivmeldinglista om endpointUrl har samme identifier i Map.
+            // lag dpo i dette tilfelle, ellers lag dpv
+
+            
+            elmaProcessIdToEndpointMap.values().forEach(e -> {
+                EDUServiceRecord eduServiceRecord = createEduServiceRecord(orgnr, e);
+            });
+            Iterator it = elmaProcessIdToEndpointMap.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry pair = (Map.Entry) it.next();
+                EDUServiceRecord record = createEduServiceRecord(orgnr, (Endpoint) pair.getValue());
+                ProcessIdentifier key = (ProcessIdentifier) pair.getKey();
+                Process srProcess = identifierProcessHashMap.get(key);
+                record.setServiceCode(srProcess.getServiceCode());
+                record.setServiceEditionCode(srProcess.getServiceEditionCode());
+                serviceRecords.add(record);
+                it.remove();
+            }
+        } catch (EndpointUrlNotFound endpointUrlNotFound) {
+            log.debug(MarkerFactory.receiverMarker(orgnr),
+                    String.format("Attempted to lookup receiver in ELMA: %s", endpointUrlNotFound.getMessage()));
+            return serviceRecords;
+        }
+
+        return serviceRecords;
     }
 
     @HystrixCommand(fallbackMethod = "createEduErrorRecord")

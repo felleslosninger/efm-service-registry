@@ -3,6 +3,7 @@ package no.difi.meldingsutveksling.serviceregistry.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.ToString;
+import no.difi.vefa.peppol.common.model.ProcessIdentifier;
 
 import javax.persistence.Entity;
 import javax.persistence.*;
@@ -29,5 +30,8 @@ public class Process {
     @JsonIgnoreProperties("processes")
     private List<DocumentType> documentTypes;
 
+    public ProcessIdentifier asProcessIdentifier() {
+        return ProcessIdentifier.of(identifier);
+    }
 
 }

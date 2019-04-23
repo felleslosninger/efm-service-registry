@@ -12,4 +12,6 @@ public interface ProcessRepository extends CrudRepository<Process, Long> {
     Process findByIdentifier(String identifier);
 
     List<Process> findAll();
+
+    List<Process> findAllByCategory();
 }
