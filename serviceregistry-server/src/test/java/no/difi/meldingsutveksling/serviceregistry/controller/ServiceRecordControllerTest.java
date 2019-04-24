@@ -8,7 +8,6 @@ import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
-import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
@@ -181,20 +180,23 @@ public class ServiceRecordControllerTest {
         mvc.perform(get("/entity/42?process=notFound")).andExpect(status().isNotFound());
     }
 
-    @Test
-    public void entityAndProcessLookup_MatchFoundInElma_ShouldReturnDpoRecord() throws Exception {
-        Process dpoProcess = mock(Process.class);
-        when(dpoProcess.getCategory()).thenReturn(ProcessCategory.ARKIVMELDING);
-        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(dpoProcess));
-        mvc.perform(get("/identifier/42").accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.serviceRecord.organisationNumber", is("42")))
-                .andExpect(jsonPath("$.serviceRecord.serviceIdentifier", is("DPO")))
-                .andExpect(jsonPath("$.serviceRecord.pemCertificate", is("-----BEGIN CERTIFICATE-----\npem123\n-----END CERTIFICATE-----\n")))
-                .andExpect(jsonPath("$.serviceRecord.serviceCode", is("123")))
-                .andExpect(jsonPath("$.serviceRecord.serviceEditionCode", is("321")))
-                .andExpect(jsonPath("$.serviceRecord.endPointURL", is("http://foo")))
-                .andExpect(jsonPath("$.infoRecord.identifier", is("42")))
-                .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")));
-    }
+//    @Test
+//    public void entityAndProcessLookup_DpoRecordCreated_ShouldReturnOk() throws Exception {
+//        Process dpoProcess = mock(Process.class);
+//        when(dpoProcess.getCategory()).thenReturn(ProcessCategory.ARKIVMELDING);
+//        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(dpoProcess));
+//        EDUServiceRecord eduServiceRecord = new EDUServiceRecord("pem123", "http://foo", "123", "321", "42");
+//        when(serviceRecordFactory.createDpoServiceRecord(anyString(), any(Process.class))).thenReturn(Optional.of(eduServiceRecord));
+//
+//        mvc.perform(get("/entity/42?process=ProcessID").accept(MediaType.APPLICATION_JSON))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.serviceRecord.organisationNumber", is("42")))
+//                .andExpect(jsonPath("$.serviceRecord.serviceIdentifier", is("DPO")))
+//                .andExpect(jsonPath("$.serviceRecord.pemCertificate", is("-----BEGIN CERTIFICATE-----\npem123\n-----END CERTIFICATE-----\n")))
+//                .andExpect(jsonPath("$.serviceRecord.serviceCode", is("123")))
+//                .andExpect(jsonPath("$.serviceRecord.serviceEditionCode", is("321")))
+//                .andExpect(jsonPath("$.serviceRecord.endPointURL", is("http://foo")))
+//                .andExpect(jsonPath("$.infoRecord.identifier", is("42")))
+//                .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")));
+//    }
 }

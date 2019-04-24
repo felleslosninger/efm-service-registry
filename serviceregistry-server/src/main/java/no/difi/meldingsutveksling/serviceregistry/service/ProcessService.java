@@ -34,25 +34,7 @@ public class ProcessService {
     }
 
     @Transactional
-    public Process update(Process updatedProcess) {
-        Process existing = repository.findByIdentifier(updatedProcess.getIdentifier());
-        if (null == existing) {
-            throw new EntityNotFoundException(updatedProcess.getIdentifier());
-        }
-        if (updatedProcess.getServiceCode() != null) {
-            existing.setServiceCode(updatedProcess.getServiceCode());
-        }
-        if (updatedProcess.getServiceEditionCode() != null) {
-            existing.setServiceEditionCode(updatedProcess.getServiceEditionCode());
-        }
-        if (updatedProcess.getDocumentTypes() != null) {
-            existing.setDocumentTypes(updatedProcess.getDocumentTypes());
-        }
-        return repository.save(existing);
-    }
-
-    @Transactional
-    public Boolean updateProcess(String processIdentifier, Process updatedProcess) {
+    public Boolean update(String processIdentifier, Process updatedProcess) {
         try {
             Optional<Process> optionalProcess = findByIdentifier(processIdentifier);
             if (!optionalProcess.isPresent()) {
@@ -65,10 +47,11 @@ public class ProcessService {
             if (updatedProcess.getServiceCode() != null) {
                 process.setServiceCode(updatedProcess.getServiceCode());
             }
-            if (updatedProcess.getServiceCode() != null) {
+            if (updatedProcess.getServiceEditionCode() != null) {
                 process.setServiceEditionCode(updatedProcess.getServiceEditionCode());
             }
-            return true;
+            Process updated = repository.save(process);
+            return updated != null;
         } catch (Exception e) {
             throw new EntityNotFoundException(updatedProcess.getIdentifier());
         }
