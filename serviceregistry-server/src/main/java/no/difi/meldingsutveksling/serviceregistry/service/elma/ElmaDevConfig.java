@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Profile;
 @Configuration
 @Profile("dev")
 public class ElmaDevConfig {
-    private static final String ELMA_ENDPOINT_KEY = "bdxr-transport-altinn-dev";
+    private static final String ELMA_ENDPOINT_KEY = "Altinn dev";
     private static final TransportProfile TRANSPORT_PROFILE_ALTINN_DEV = TransportProfile.of(ELMA_ENDPOINT_KEY);
 
     @Bean

@@ -1,6 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.service;
 
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory;
 import no.difi.meldingsutveksling.serviceregistry.persistence.ProcessRepository;
@@ -14,9 +15,12 @@ import java.util.Optional;
 public class ProcessService {
 
     private final ProcessRepository repository;
+    private final ServiceregistryProperties props;
 
-    public ProcessService(ProcessRepository repository) {
+    public ProcessService(ProcessRepository repository,
+                          ServiceregistryProperties props) {
         this.repository = repository;
+        this.props = props;
     }
 
     @Transactional(readOnly = true)
@@ -82,6 +86,11 @@ public class ProcessService {
 
     @Transactional(readOnly = true)
     public List<Process> findAll(ProcessCategory processCategory) {
-        return repository.findAllByCategory();
+        return repository.findAllByCategory(processCategory);
+    }
+
+    @Transactional(readOnly = true)
+    public Process getDefaultArkivmeldingProcess() {
+        return repository.findByIdentifier(props.getElma().getDefaultProcessIdentifier());
     }
 }

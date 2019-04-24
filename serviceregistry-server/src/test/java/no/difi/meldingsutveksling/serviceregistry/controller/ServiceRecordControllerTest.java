@@ -7,13 +7,11 @@ import com.nimbusds.jose.crypto.RSASSAVerifier;
 import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
-import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
+import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
-import no.difi.meldingsutveksling.serviceregistry.servicerecord.EDUServiceRecord;
-import no.difi.meldingsutveksling.serviceregistry.servicerecord.PostVirksomhetServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.SikkerDigitalPostServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
@@ -44,7 +42,7 @@ import java.util.Optional;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -77,13 +75,6 @@ public class ServiceRecordControllerTest {
 
     @Before
     public void setup() throws MalformedURLException, KRRClientException {
-        when(serviceRecordFactory.createEduServiceRecord(anyString())).thenReturn(Optional.empty());
-        when(serviceRecordFactory.createDpeInnsynServiceRecord(anyString())).thenReturn(Optional.empty());
-        when(serviceRecordFactory.createPostVirksomhetServiceRecord(anyString())).thenReturn(Optional.empty());
-        when(serviceRecordFactory.createDpeInnsynServiceRecord(anyString())).thenReturn(Optional.empty());
-        when(serviceRecordFactory.createDpeDataServiceRecord(anyString())).thenReturn(Optional.empty());
-        when(serviceRecordFactory.createDpeReceiptServiceRecord(anyString())).thenReturn(Optional.empty());
-        when(serviceRecordFactory.createFiksServiceRecord(anyString())).thenReturn(Optional.empty());
 
         BrregPostadresse testAdr = new BrregPostadresse("testadresse", "1337", "teststed", "testland");
         OrganizationInfo ORGLinfo = new OrganizationInfo("42", "foo",
@@ -96,15 +87,11 @@ public class ServiceRecordControllerTest {
         when(entityService.getEntityInfo("12345678901")).thenReturn(Optional.of(citizenInfo));
         when(entityService.getEntityInfo("1337")).thenReturn(Optional.empty());
 
-        EDUServiceRecord dpoServiceRecord = new EDUServiceRecord("pem123", "http://foo", "123", "321", "42");
-        when(serviceRecordFactory.createEduServiceRecord("42")).thenReturn(Optional.of(dpoServiceRecord));
 
         ServiceregistryProperties serviceregistryProperties = new ServiceregistryProperties();
         ServiceregistryProperties.PostVirksomhet postVirksomhet = new ServiceregistryProperties.PostVirksomhet();
         postVirksomhet.setEndpointURL(new URL("http://foo"));
         serviceregistryProperties.setDpv(postVirksomhet);
-        PostVirksomhetServiceRecord dpvServiceRecord = new PostVirksomhetServiceRecord(serviceregistryProperties, "43");
-        when(serviceRecordFactory.createPostVirksomhetServiceRecord("43")).thenReturn(Optional.of(dpvServiceRecord));
 
         PostAddress postAddress = mock(PostAddress.class);
         PersonResource personResource = new PersonResource();
@@ -117,8 +104,6 @@ public class ServiceRecordControllerTest {
 
         SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(null, personResource,
                 ServiceIdentifier.DPI, "12345678901", postAddress, postAddress);
-        when(serviceRecordFactory.createServiceRecordForCitizen(eq("12345678901"), any(), any(), any(), anyBoolean())).thenReturn
-                (Optional.of(dpiServiceRecord));
     }
 
     @Test

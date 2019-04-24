@@ -1,5 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.web;
 
+import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.model.DocumentType;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.service.DocumentTypeService;
@@ -7,6 +9,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -17,6 +20,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1")
+@Slf4j
 public class AdminController {
 
     private final ProcessService processService;
@@ -36,23 +40,30 @@ public class AdminController {
     }
 
     @PostMapping(value = "/processes", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Transactional
     public ResponseEntity<?> addProcess(@RequestBody Process process) {
         try {
             Optional<Process> existingProcess = processService.findByIdentifier(process.getIdentifier());
             if (existingProcess.isPresent()) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).build();
             }
+            List<DocumentType> persistedDoctypes = Lists.newArrayList();
             for (DocumentType type : process.getDocumentTypes()) {
-                if (!documentTypeService.findByIdentifier(type.getIdentifier()).isPresent()) {
-                    documentTypeService.add(type);
+                Optional<DocumentType> docFind = documentTypeService.findByIdentifier(type.getIdentifier());
+                if (!docFind.isPresent()) {
+                    persistedDoctypes.add(documentTypeService.add(type));
+                } else {
+                    persistedDoctypes.add(docFind.get());
                 }
             }
+            process.setDocumentTypes(persistedDoctypes);
             processService.add(process);
             UriComponents uriComponents = UriComponentsBuilder.fromUriString("/processes")
                     .path(process.getIdentifier())
                     .build();
             return ResponseEntity.created(uriComponents.toUri()).build();
         } catch (Exception e) {
+            log.error("Exception during process save", e);
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

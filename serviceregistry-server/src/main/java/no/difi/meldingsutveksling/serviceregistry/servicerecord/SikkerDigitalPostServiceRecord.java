@@ -27,7 +27,7 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
     public SikkerDigitalPostServiceRecord(ServiceregistryProperties properties, PersonResource personResource,
                                           ServiceIdentifier serviceIdentifier, String organisationNumber,
                                           PostAddress postAddress, PostAddress returnAddress) {
-        super(personResource.getCertificate(), serviceIdentifier, organisationNumber);
+        super(serviceIdentifier, organisationNumber, properties.getDpi().getEndpointURL().toString());
         this.properties = properties;
 
         if (personResource.hasMailbox()) {
@@ -50,11 +50,6 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
 
         this.postAddress = postAddress;
         this.returnAddress = returnAddress;
-    }
-
-    @Override
-    public String getEndPointURL() {
-        return properties.getDpi().getEndpointURL().toString();
     }
 
 }

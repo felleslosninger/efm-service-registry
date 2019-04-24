@@ -26,6 +26,7 @@ public class ServiceregistryProperties {
     private Brønnøysundregistrene brreg;
     private Datahotell datahotell;
     private PostVirksomhet dpv;
+    private Altinn dpo;
     private Adresseregister ar;
     private Auth auth;
     private FeatureToggle feature;
@@ -41,6 +42,7 @@ public class ServiceregistryProperties {
 
     @Data
     public static class ELMA {
+        private String defaultProcessIdentifier;
         private String processIdentifier;
         private String documentTypeIdentifier;
     }
@@ -88,6 +90,13 @@ public class ServiceregistryProperties {
     @Data
     public static class PostVirksomhet {
         private URL endpointURL;
+    }
+
+    @Data
+    public static class Altinn {
+        private URL endpointURL;
+        private String serviceCode;
+        private String serviceEditionCode;
     }
 
     @Data

@@ -7,14 +7,15 @@ import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
+import no.difi.meldingsutveksling.serviceregistry.model.Entity;
+import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
-import no.difi.meldingsutveksling.serviceregistry.model.*;
+import no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ErrorServiceRecord;
-import no.difi.meldingsutveksling.serviceregistry.servicerecord.FiksWrapper;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
 import org.jboss.logging.MDC;
@@ -31,8 +32,6 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.shouldCreateServiceRecordForCitizen;
@@ -72,7 +71,7 @@ public class ServiceRecordController {
      * Used to retrieve information needed to send a message within the provided process
      * to an entity with the provided identifier.
      *
-     * @param entityIdentifier  specifies the target entity.
+     * @param identifier  specifies the target entity.
      * @param processIdentifier specifies the target process.
      * @param obligation        determines service record based on the recipient being notifiable
      * @param forcePrint
@@ -80,16 +79,16 @@ public class ServiceRecordController {
      * @param request           is the servlet request.
      * @return JSON object with information needed to send a message.
      */
-    @GetMapping(value = "/entity/{entity}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/identifier/{identifier}/process/{processIdentifier}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity entity(@PathVariable("entity") String entityIdentifier,
-                                 @RequestParam(name = "process") String processIdentifier,
+    public ResponseEntity entity(@PathVariable("identifier") String identifier,
+                                 @PathVariable("processIdentifier") String processIdentifier,
                                  @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
                                  @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
                                  Authentication auth,
                                  HttpServletRequest request) {
-        MDC.put("entity", entityIdentifier);
-        Optional<EntityInfo> entityInfo = entityService.getEntityInfo(entityIdentifier);
+        MDC.put("entity", identifier);
+        Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
         if (!entityInfo.isPresent()) {
             return ResponseEntity.notFound().build();
         }
@@ -98,7 +97,7 @@ public class ServiceRecordController {
             return ResponseEntity.notFound().build();
         }
 
-        Optional<ServiceRecord> serviceRecord = Optional.empty();
+        ServiceRecord serviceRecord = null;
         Process process = optionalProcess.get();
         ProcessCategory processCategory = process.getCategory();
         if (processCategory.equals(ProcessCategory.DIGITALPOST) && shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
@@ -107,7 +106,10 @@ public class ServiceRecordController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No authentication provided.");
             }
             try {
-                serviceRecord = serviceRecordFactory.createServiceRecordForCitizen(entityIdentifier, auth, clientOrgnr, obligation, forcePrint);
+                Entity entity = new Entity();
+                entity.getServiceRecords().add(serviceRecordFactory.createServiceRecordForCitizen(identifier, auth, clientOrgnr, obligation, forcePrint));
+                entity.setInfoRecord(entityInfo.get());
+                return new ResponseEntity<>(entity, HttpStatus.OK);
             } catch (KRRClientException e) {
                 log.error("Error looking up identifier in KRR", e);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -115,30 +117,20 @@ public class ServiceRecordController {
         }
 
         Entity entity = new Entity();
-        if (!serviceRecord.isPresent()) {
-            serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createDpoServiceRecord(entityIdentifier, process), entity);
+        if (processCategory == ProcessCategory.ARKIVMELDING) {
+            serviceRecord = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier);
         }
 
-        if (!serviceRecord.isPresent()) {
-            Optional<FiksWrapper> fiksWrapper = serviceRecordFactory.createFiksServiceRecord(entityIdentifier);
-            if (fiksWrapper.isPresent()) {
-                serviceRecord = serviceRecordResponseHandler(Optional.of(fiksWrapper.get().getServiceRecord()), entity);
-                if (serviceRecord.isPresent()) {
-                    entity.getSecuritylevels().put(ServiceIdentifier.DPF, fiksWrapper.get().getSecuritylevel());
-                }
+        if (processCategory == ProcessCategory.EINNSYN) {
+            Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createDpeServiceRecord(identifier, processIdentifier);
+            if (!dpeServiceRecord.isPresent()) {
+                return ResponseEntity.badRequest().body(String.format("Process %s not found for receiver %s", processIdentifier, identifier));
             }
+            serviceRecord = dpeServiceRecord.get();
         }
 
-        if (!serviceRecord.isPresent() && processCategory.equals(ProcessCategory.EINNSYN)) {
-            serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createDpeInnsynServiceRecord(entityIdentifier), entity);
-        }
-
-        if (!serviceRecord.isPresent()) {
-            serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createPostVirksomhetServiceRecord(entityIdentifier), entity);
-        }
-
-        serviceRecord.ifPresent(entity::setServiceRecord);
         entity.setInfoRecord(entityInfo.get());
+        entity.getServiceRecords().add(serviceRecord);
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
@@ -168,54 +160,21 @@ public class ServiceRecordController {
         }
 
         String clientOrgnr = getAuthorizedClientIdentifier(auth, request);
-        Optional<ServiceRecord> serviceRecord = Optional.empty();
-        if (shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
-            if (auth == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No authentication provided.");
-            }
-            try {
-                serviceRecord = serviceRecordFactory.createServiceRecordForCitizen(identifier, auth, clientOrgnr, obligation, forcePrint);
-            } catch (KRRClientException e) {
-                log.error("Error looking up identifier in KRR", e);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-            }
-        }
-// må også lage dpf og slikt her
-        //Dette er tilfeller der det blir DPO, må sende til DPO
-        List<ServiceRecord> arkivmeldingRecords = serviceRecordFactory.createDpoServiceRecords(identifier);
-        if (!arkivmeldingRecords.isEmpty()){
-            for (ServiceRecord sr : arkivmeldingRecords) {
-
-            }
-        }
-
-        // blir erstatta av den over... slett.
-        if (!serviceRecord.isPresent()) {
-            serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createEduServiceRecord(identifier), entity);
-        }
-
-        if (!serviceRecord.isPresent()) {
-            Optional<FiksWrapper> fiksWrapper = serviceRecordFactory.createFiksServiceRecord(identifier);
-            if (fiksWrapper.isPresent()) {
-                serviceRecord = serviceRecordResponseHandler(Optional.of(fiksWrapper.get().getServiceRecord()), entity);
-                if (serviceRecord.isPresent()) {
-                    entity.getSecuritylevels().put(ServiceIdentifier.DPF, fiksWrapper.get().getSecuritylevel());
-                }
-            }
-        }
-
-        if (!serviceRecord.isPresent()) {
-            serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createDpeInnsynServiceRecord(identifier), entity);
-        }
-
-        if (!serviceRecord.isPresent()) {
-            serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createPostVirksomhetServiceRecord(identifier), entity);
-        }
-
-        serviceRecord.ifPresent(entity::setServiceRecord);
         entity.setInfoRecord(entityInfo.get());
-        // TODO: temporary solution for multiple servicerecords
-        addServiceRecords(entityInfo.get(), entity, auth, clientOrgnr, obligation, forcePrint);
+
+        if (shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
+            try {
+                ServiceRecord serviceRecord = serviceRecordFactory.createServiceRecordForCitizen(identifier, auth, clientOrgnr, obligation, forcePrint);
+                entity.getServiceRecords().add(serviceRecord);
+            } catch (KRRClientException e) {
+                String errorMsg = "Error looking up identifier in KRR";
+                log.error(errorMsg, e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMsg);
+            }
+        }
+
+        entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier));
+        entity.getServiceRecords().addAll(serviceRecordFactory.createDpeServiceRecords(identifier));
 
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
@@ -230,49 +189,6 @@ public class ServiceRecordController {
                     markerFrom(request.getRemoteAddr()));
         }
         return clientOrgnr;
-    }
-
-    @SuppressWarnings("squid:S2583")
-    private void addServiceRecords(EntityInfo entityInfo, Entity entity, Authentication auth, String clientOrgnr,
-                                   Notification obligation, boolean forcePrint) {
-
-        String orgnr = entityInfo.getIdentifier();
-        if (shouldCreateServiceRecordForCitizen().test(entityInfo)) {
-            Optional<ServiceRecord> serviceRecord = Optional.empty();
-            try {
-                serviceRecord = serviceRecordFactory.createServiceRecordForCitizen(orgnr, auth, clientOrgnr, obligation, forcePrint);
-            } catch (KRRClientException e) {
-                log.error("Error looking up identifier in KRR", e);
-            }
-            serviceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
-        }
-
-        Optional<ServiceRecord> eduServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createEduServiceRecord(orgnr), entity);
-        eduServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
-
-        Optional<FiksWrapper> fiksWrapper = serviceRecordFactory.createFiksServiceRecord(orgnr);
-        if (fiksWrapper.isPresent()) {
-            Optional<ServiceRecord> fiksServiceRecord = serviceRecordResponseHandler(Optional.of(fiksWrapper.get().getServiceRecord()), entity);
-            if (fiksServiceRecord.isPresent()) {
-                entity.getServiceRecords().add(fiksServiceRecord.get());
-                entity.getSecuritylevels().put(ServiceIdentifier.DPF, fiksWrapper.get().getSecuritylevel());
-            }
-        }
-
-        Optional<ServiceRecord> dpeInnsynServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createDpeInnsynServiceRecord(orgnr), entity);
-        dpeInnsynServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
-
-        Optional<ServiceRecord> dpeDataServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createDpeDataServiceRecord(orgnr), entity);
-        dpeDataServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
-
-        if (dpeInnsynServiceRecord.isPresent() || dpeDataServiceRecord.isPresent()) {
-            Optional<ServiceRecord> dpeReceiptServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createDpeReceiptServiceRecord(orgnr), entity);
-            dpeReceiptServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
-        }
-
-        Optional<ServiceRecord> dpvServiceRecord = serviceRecordFactory.createPostVirksomhetServiceRecord(orgnr);
-        dpvServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
-
     }
 
     @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = "application/jose")
@@ -311,8 +227,8 @@ public class ServiceRecordController {
      */
     private Optional<ServiceRecord> serviceRecordResponseHandler(Optional<ServiceRecord> serviceRecord, Entity entity) {
         if (serviceRecord.filter(r -> r instanceof ErrorServiceRecord).isPresent()) {
-            if (!entity.getFailedServiceIdentifiers().contains(serviceRecord.get().getServiceIdentifier())) {
-                entity.getFailedServiceIdentifiers().add(serviceRecord.get().getServiceIdentifier());
+            if (!entity.getFailedServiceIdentifiers().contains(serviceRecord.get().getService().getIdentifier())) {
+                entity.getFailedServiceIdentifiers().add(serviceRecord.get().getService().getIdentifier());
             }
             return Optional.empty();
         }

@@ -27,6 +27,11 @@ public class Process {
     private ProcessCategory category;
 
     @ManyToMany
+    @JoinTable(
+            name = "process_document_type",
+            joinColumns = @JoinColumn(name = "proc_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "doctype_id", referencedColumnName = "id")
+    )
     @JsonIgnoreProperties("processes")
     private List<DocumentType> documentTypes;
 

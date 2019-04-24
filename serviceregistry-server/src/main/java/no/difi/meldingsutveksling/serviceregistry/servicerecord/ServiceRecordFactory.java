@@ -1,6 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.logging.MarkerFactory;
@@ -12,17 +13,15 @@ import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
-import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
+import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
-import no.difi.vefa.peppol.common.model.Endpoint;
 import no.difi.vefa.peppol.common.model.ProcessIdentifier;
-import no.difi.vefa.peppol.common.model.ProcessMetadata;
 import no.difi.vefa.peppol.common.model.ServiceMetadata;
 import no.difi.virksert.client.lang.VirksertClientException;
 import org.apache.commons.io.IOUtils;
@@ -33,7 +32,11 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
 import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.*;
@@ -80,38 +83,17 @@ public class ServiceRecordFactory {
         this.processService = processService;
     }
 
-    @HystrixCommand(fallbackMethod = "createFiksErrorRecord")
-    public Optional<FiksWrapper> createFiksServiceRecord(String orgnr) {
-        Optional<Integer> adresseringNivaa = svarUtService.hasSvarUtAdressering(orgnr);
-        if (adresseringNivaa.isPresent()) {
-            String pem;
-            try {
-                pem = IOUtils.toString(properties.getSvarut().getCertificate().getInputStream(), StandardCharsets.UTF_8);
-            } catch (IOException e) {
-                log.error("Could not read certificate from {}", properties.getSvarut().getCertificate().toString());
-                throw new ServiceRegistryException(e);
-            }
-            FiksServiceRecord fiksServiceRecord = new FiksServiceRecord(orgnr, pem, properties.getSvarut().getServiceRecordUrl().toString());
-            return Optional.of(FiksWrapper.of(fiksServiceRecord, adresseringNivaa.get()));
-        }
-        return Optional.empty();
+    public ServiceRecord createArkivmeldingServiceRecord(String orgnr, String processIdentifier) {
+        // TODO implementere
+        throw new UnsupportedOperationException();
     }
 
-    @SuppressWarnings("squid:S1172")
-    public Optional<FiksWrapper> createFiksErrorRecord(String orgnr, Throwable e) {
-        log.error("DPF service record failed", e);
-        return Optional.of(FiksWrapper.of(ErrorServiceRecord.create(DPF), 0));
-    }
-
-    @HystrixCommand(fallbackMethod = "createEduErrorRecord")
     @SuppressWarnings("squid:S1166")
-    public List<ServiceRecord> createDpoServiceRecords(String orgnr) {
+    public List<ServiceRecord> createArkivmeldingServiceRecords(String orgnr) {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
         List<Process> arkivmeldingProcesses = processService.findAll(ProcessCategory.ARKIVMELDING);
         List<String> documentTypeIdentifiers = new ArrayList<>();
-        HashMap<ProcessIdentifier, Process> identifierProcessHashMap = new HashMap<>();
         for (Process p : arkivmeldingProcesses) {
-            identifierProcessHashMap.put(ProcessIdentifier.of(p.getIdentifier()), p);
             p.getDocumentTypes().forEach(t -> {
                 String identifier = t.getIdentifier();
                 if (!documentTypeIdentifiers.contains(identifier)) {
@@ -122,33 +104,48 @@ public class ServiceRecordFactory {
 
         try {
             List<ServiceMetadata> serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, documentTypeIdentifiers);
-            HashMap<ProcessIdentifier, Endpoint> elmaProcessIdToEndpointMap = new HashMap<>();
-            for (ServiceMetadata data : serviceMetadataList) {
-                for (ProcessMetadata processMetadata : data.getProcesses()) {
-                    elmaProcessIdToEndpointMap.put(processMetadata.getProcessIdentifier(), elmaLookupService.lookupEndpoint(data, processMetadata.getProcessIdentifier()));
+            Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
+            serviceMetadataList.forEach(smd ->
+                    smd.getProcesses().forEach(p -> processIdentifiers.add(p.getProcessIdentifier()) )
+            );
+            if (processIdentifiers.isEmpty()) {
+                Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr);
+                if (hasSvarUt.isPresent()) {
+                    arkivmeldingProcesses.forEach(p -> {
+                        String pem;
+                        try {
+                            pem = IOUtils.toString(properties.getSvarut().getCertificate().getInputStream(), StandardCharsets.UTF_8);
+                        } catch (IOException e) {
+                            log.error("Could not read certificate from {}", properties.getSvarut().getCertificate().toString());
+                            throw new ServiceRegistryException(e);
+                        }
+                        ArkivmeldingServiceRecord dpfServiceRecord = ArkivmeldingServiceRecord.of(DPF, orgnr, properties.getSvarut().getServiceRecordUrl().toString(), pem);
+                        dpfServiceRecord.setProcess(p.getIdentifier());
+                        dpfServiceRecord.setDocumentTypes(p.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+                        serviceRecords.add(dpfServiceRecord);
+                    });
+                } else {
+                    arkivmeldingProcesses.forEach(p -> serviceRecords.add(createDpvServiceRecord(orgnr, p)));
                 }
-            }
-            if (elmaProcessIdToEndpointMap.size() == 0) {
                 return serviceRecords;
+            } else {
+                arkivmeldingProcesses.forEach(p -> {
+                    if (processIdentifiers.stream()
+                            .map(ProcessIdentifier::getIdentifier)
+                            .anyMatch(identifier -> identifier.equals(p.getIdentifier()))) {
+                        String pemCertificate = lookupPemCertificate(orgnr);
+                        ArkivmeldingServiceRecord dpoServiceRecord = ArkivmeldingServiceRecord.of(DPO, orgnr, properties.getDpo().getEndpointURL().toString(), pemCertificate);
+                        dpoServiceRecord.getService().setServiceCode(properties.getDpo().getServiceCode());
+                        dpoServiceRecord.getService().setServiceEditionCode(properties.getDpo().getServiceEditionCode());
+                        dpoServiceRecord.setProcess(p.getIdentifier());
+                        dpoServiceRecord.setDocumentTypes(p.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+                        serviceRecords.add(dpoServiceRecord);
+                    } else {
+                        serviceRecords.add(createDpvServiceRecord(orgnr, p));
+                    }
+                });
             }
-            //sjekk arkivmeldinglista om endpointUrl har samme identifier i Map.
-            // lag dpo i dette tilfelle, ellers lag dpv
 
-            
-            elmaProcessIdToEndpointMap.values().forEach(e -> {
-                EDUServiceRecord eduServiceRecord = createEduServiceRecord(orgnr, e);
-            });
-            Iterator it = elmaProcessIdToEndpointMap.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry pair = (Map.Entry) it.next();
-                EDUServiceRecord record = createEduServiceRecord(orgnr, (Endpoint) pair.getValue());
-                ProcessIdentifier key = (ProcessIdentifier) pair.getKey();
-                Process srProcess = identifierProcessHashMap.get(key);
-                record.setServiceCode(srProcess.getServiceCode());
-                record.setServiceEditionCode(srProcess.getServiceEditionCode());
-                serviceRecords.add(record);
-                it.remove();
-            }
         } catch (EndpointUrlNotFound endpointUrlNotFound) {
             log.debug(MarkerFactory.receiverMarker(orgnr),
                     String.format("Attempted to lookup receiver in ELMA: %s", endpointUrlNotFound.getMessage()));
@@ -158,133 +155,61 @@ public class ServiceRecordFactory {
         return serviceRecords;
     }
 
-    @HystrixCommand(fallbackMethod = "createEduErrorRecord")
-    @SuppressWarnings("squid:S1166")
-    public Optional<ServiceRecord> createEduServiceRecord(String orgnr) {
-        Endpoint ep;
+    public Optional<ServiceRecord> createDpeServiceRecord(String orgnr, String processIdentifier) {
+        // TODO implementere
+        throw new UnsupportedOperationException();
+    }
+
+    public List<ServiceRecord> createDpeServiceRecords(String orgnr) {
+        ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
+        List<Process> einnsynProcesses = processService.findAll(ProcessCategory.EINNSYN);
+        Set<String> documentTypeIdentifiers = einnsynProcesses.stream()
+                .map(Process::getDocumentTypes)
+                .flatMap(List::stream)
+                .map(DocumentType::getIdentifier)
+                .collect(Collectors.toSet());
+
+        List<ServiceMetadata> serviceMetadataList = null;
         try {
-            ep = elmaLookupService.lookup(NORWAY_PREFIX + orgnr);
+            serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, Lists.newArrayList(documentTypeIdentifiers));
+            Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
+            serviceMetadataList.forEach(smd ->
+                    smd.getProcesses().forEach(p -> processIdentifiers.add(p.getProcessIdentifier()) )
+            );
+
+            if (processIdentifiers.isEmpty()) {
+                return serviceRecords;
+            }
+            einnsynProcesses.forEach(p -> {
+                if (processIdentifiers.stream()
+                        .map(ProcessIdentifier::getIdentifier)
+                        .anyMatch(identifier -> identifier.equals(p.getIdentifier()))) {
+                    String pemCertificate = lookupPemCertificate(orgnr);
+                    DpeServiceRecord dpeServiceRecord = DpeServiceRecord.of(pemCertificate, orgnr, DPE, p.getServiceCode());
+                    dpeServiceRecord.setProcess(p.getIdentifier());
+                    dpeServiceRecord.setDocumentTypes(p.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+                    serviceRecords.add(dpeServiceRecord);
+                } else {
+                    serviceRecords.add(createDpvServiceRecord(orgnr, p));
+                }
+            });
+
         } catch (EndpointUrlNotFound endpointUrlNotFound) {
             log.debug(MarkerFactory.receiverMarker(orgnr),
                     String.format("Attempted to lookup receiver in ELMA: %s", endpointUrlNotFound.getMessage()));
-            return Optional.empty();
+            return serviceRecords;
         }
 
-        EDUServiceRecord serviceRecord = createEduServiceRecord(orgnr, ep);
-
-        return Optional.of(serviceRecord);
+        return null;
     }
 
-    private EDUServiceRecord createEduServiceRecord(String orgnr, Endpoint ep) {
-        String pemCertificate = lookupPemCertificate(orgnr);
-        EDUServiceRecord serviceRecord = new EDUServiceRecord(pemCertificate, ep.getAddress().toString(), orgnr);
-
-        String adr = ep.getAddress().toString();
-        if (adr.contains("#")) {
-            String uri = adr.substring(0, adr.indexOf('#'));
-            String[] codes = adr.substring(adr.indexOf('#') + 1).split("-");
-            String serviceCode = codes[0];
-            String serviceEditionCode = codes[1];
-
-            serviceRecord.setEndpointUrl(uri);
-            serviceRecord.setServiceCode(serviceCode);
-            serviceRecord.setServiceEditionCode(serviceEditionCode);
-        } else {
-            serviceRecord.setEndpointUrl(adr);
-        }
-
-        if (elmaLookupService.identifierHasInnsynskravCapability(NORWAY_PREFIX + orgnr)) {
-            serviceRecord.addDpeCapability(DPE_INNSYN.toString());
-        }
-        if (elmaLookupService.identifierHasInnsynDataCapability(NORWAY_PREFIX + orgnr)) {
-            serviceRecord.addDpeCapability(DPE_DATA.toString());
-        }
-        return serviceRecord;
-    }
-
-    @SuppressWarnings("squid:S1172")
-    public Optional<ServiceRecord> createEduErrorRecord(String orgnr, Throwable e) {
-        log.error("DPO service record failed", e);
-        return Optional.of(ErrorServiceRecord.create(DPO));
-    }
-
-    @HystrixCommand(fallbackMethod = "createDpoServiceRecordErrorRecord")
-    public Optional<ServiceRecord> createDpoServiceRecord(String organizationNumber, Process process) {
-        List<DocumentType> documentTypes = process.getDocumentTypes();
-        if (documentTypes.isEmpty()) {
-            return Optional.empty();
-        }
-        Endpoint endpoint = null;
-        for (DocumentType type : documentTypes) {
-            try {
-                endpoint = elmaLookupService.lookup(NORWAY_PREFIX + organizationNumber, type.getIdentifier(), process.getIdentifier());
-                if (null != endpoint) {
-                    break;
-                }
-            } catch (EndpointUrlNotFound endpointUrlNotFound) {
-                log.debug(MarkerFactory.receiverMarker(organizationNumber),
-                        String.format("Attempted to lookup receiver in ELMA: %s", endpointUrlNotFound.getMessage()));
-            }
-        }
-        if (null != endpoint) {
-            EDUServiceRecord serviceRecord = createEduServiceRecord(organizationNumber, endpoint);
-            return Optional.of(serviceRecord);
-        }
-        return Optional.empty();
-    }
-
-
-    @SuppressWarnings("squid:S1172")
-    public Optional<ServiceRecord> createDpoServiceRecordErrorRecord(String orgnr, Process process, Throwable e) {
-        log.error("DPO service record failed", e);
-        return Optional.of(ErrorServiceRecord.create(DPO));
-    }
-
-    @HystrixCommand(fallbackMethod = "createDpeInnsynErrorRecord")
-    public Optional<ServiceRecord> createDpeInnsynServiceRecord(String orgnr) {
-        if (elmaLookupService.identifierHasInnsynskravCapability(NORWAY_PREFIX + orgnr)) {
-            String pemCertificate = lookupPemCertificate(orgnr);
-            return Optional.of(DpeServiceRecord.of(pemCertificate, orgnr, DPE_INNSYN));
-        }
-        return Optional.empty();
-    }
-
-    @SuppressWarnings("squid:S1172")
-    public Optional<ServiceRecord> createDpeInnsynErrorRecord(String orgnr, Throwable e) {
-        log.error("DPE_INNSYN service record failed", e);
-        return Optional.of(ErrorServiceRecord.create(DPE_INNSYN));
-    }
-
-    @HystrixCommand(fallbackMethod = "createDpeDataErrorRecord")
-    public Optional<ServiceRecord> createDpeDataServiceRecord(String orgnr) {
-        if (elmaLookupService.identifierHasInnsynDataCapability(NORWAY_PREFIX + orgnr)) {
-            String pemCertificate = lookupPemCertificate(orgnr);
-            return Optional.of(DpeServiceRecord.of(pemCertificate, orgnr, DPE_DATA));
-        }
-        return Optional.empty();
-    }
-
-    @SuppressWarnings("squid:S1172")
-    public Optional<ServiceRecord> createDpeDataErrorRecord(String orgnr, Throwable e) {
-        log.error("DPE_DATA service record failed", e);
-        return Optional.of(ErrorServiceRecord.create(DPE_DATA));
-    }
-
-    @HystrixCommand(fallbackMethod = "createDpeReceiptErrorRecord")
-    public Optional<ServiceRecord> createDpeReceiptServiceRecord(String orgnr) {
-        String pemCertificate = lookupPemCertificate(orgnr);
-        DpeServiceRecord sr = DpeServiceRecord.of(pemCertificate, orgnr, DPE_RECEIPT);
-        return Optional.of(sr);
-    }
-
-    @SuppressWarnings("squid:S1172")
-    public Optional<ServiceRecord> createDpeReceiptErrorRecord(String orgnr, Throwable e) {
-        log.error("DPE_RECEIPT service record failed", e);
-        return Optional.of(ErrorServiceRecord.create(DPE_RECEIPT));
-    }
-
-    public Optional<ServiceRecord> createPostVirksomhetServiceRecord(String orgnr) {
-        return Optional.of(new PostVirksomhetServiceRecord(properties, orgnr));
+    private ArkivmeldingServiceRecord createDpvServiceRecord(String orgnr, Process process) {
+        ArkivmeldingServiceRecord dpvServiceRecord = ArkivmeldingServiceRecord.of(DPV, orgnr,  properties.getDpv().getEndpointURL().toString());
+        dpvServiceRecord.getService().setServiceCode(process.getServiceCode());
+        dpvServiceRecord.getService().setServiceEditionCode(process.getServiceEditionCode());
+        dpvServiceRecord.setProcess(process.getIdentifier());
+        dpvServiceRecord.setDocumentTypes(process.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+        return dpvServiceRecord;
     }
 
     private String lookupPemCertificate(String orgnumber) {
@@ -296,7 +221,7 @@ public class ServiceRecordFactory {
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
-    public Optional<ServiceRecord> createServiceRecordForCitizen(String identifier,
+    public ServiceRecord createServiceRecordForCitizen(String identifier,
                                                                  Authentication auth,
                                                                  String onBehalfOrgnr,
                                                                  Notification notification,
@@ -309,29 +234,29 @@ public class ServiceRecordFactory {
                 .require(notification)
                 .token(token));
 
+        // TODO sette prosesser for DPI print og digital
         switch (DpiMessageRouter.route(personResource, notification, forcePrint)) {
             case DPI:
-                return Optional.of(new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
-                        identifier, null, null));
+                return new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
+                        identifier, null, null);
             case PRINT:
                 return createPrintServiceRecord(identifier, onBehalfOrgnr, token, personResource);
             case DPV:
-                return createPostVirksomhetServiceRecord(identifier);
             default:
-                return createPostVirksomhetServiceRecord(identifier);
+                return createDpvServiceRecord(identifier, processService.getDefaultArkivmeldingProcess());
         }
 
     }
 
-    private Optional<ServiceRecord> createPrintServiceRecord(String identifier,
+    private ServiceRecord createPrintServiceRecord(String identifier,
                                                              String onBehalfOrgnr,
                                                              String token,
                                                              PersonResource personResource) throws KRRClientException {
         krrService.setPrintDetails(personResource);
         Optional<DSFResource> dsfResource = krrService.getDSFInfo(lookup(identifier).token(token));
         if (!dsfResource.isPresent()) {
-            log.error("Identifier found in KRR but not in DSF, defaulting to DPV.");
-            return Optional.empty();
+            log.error("Receiver found in KRR on behalf of {}, but not in DSF. Defaulting to DPV.", onBehalfOrgnr);
+            return createDpvServiceRecord(identifier, processService.getDefaultArkivmeldingProcess());
         }
         String[] codeArea = dsfResource.get().getPostAddress().split(" ");
         PostAddress postAddress = new PostAddress(dsfResource.get().getName(),
@@ -350,11 +275,12 @@ public class ServiceRecordFactory {
                     orginfo.getPostadresse().getPoststed(),
                     orginfo.getPostadresse().getLand());
         } else {
-            return Optional.empty();
+            log.error("Sender {} not found in BRREG, could not get post address. Defaulting to DPV.", onBehalfOrgnr);
+            return createDpvServiceRecord(identifier, processService.getDefaultArkivmeldingProcess());
         }
 
-        return Optional.of(new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
-                identifier, postAddress, returnAddress));
+        return new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
+                identifier, postAddress, returnAddress);
     }
 
 }

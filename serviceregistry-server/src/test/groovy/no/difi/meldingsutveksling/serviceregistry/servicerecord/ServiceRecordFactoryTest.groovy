@@ -104,6 +104,6 @@ class ServiceRecordFactoryTest extends Specification {
         def record = serviceRecordFactory.createEduServiceRecord("1234")
 
         then:
-        record.get().class == EDUServiceRecord
+        record.get().class == ArkivmeldingServiceRecord
     }
 }
