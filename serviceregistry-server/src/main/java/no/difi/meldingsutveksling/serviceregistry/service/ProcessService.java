@@ -1,7 +1,9 @@
 package no.difi.meldingsutveksling.serviceregistry.service;
 
+import com.google.common.collect.Lists;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import no.difi.meldingsutveksling.serviceregistry.model.DocumentType;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory;
 import no.difi.meldingsutveksling.serviceregistry.persistence.ProcessRepository;
@@ -16,11 +18,12 @@ public class ProcessService {
 
     private final ProcessRepository repository;
     private final ServiceregistryProperties props;
+    private final DocumentTypeService documentTypeService;
 
-    public ProcessService(ProcessRepository repository,
-                          ServiceregistryProperties props) {
+    public ProcessService(ProcessRepository repository, ServiceregistryProperties props, DocumentTypeService documentTypeService) {
         this.repository = repository;
         this.props = props;
+        this.documentTypeService = documentTypeService;
     }
 
     @Transactional(readOnly = true)
@@ -41,8 +44,18 @@ public class ProcessService {
                 return false;
             }
             Process process = optionalProcess.get();
-            if (updatedProcess.getDocumentTypes() != null) {
-                process.setDocumentTypes(updatedProcess.getDocumentTypes());
+            List<DocumentType> documentTypes = updatedProcess.getDocumentTypes();
+            if (documentTypes != null) {
+                List<DocumentType> persistedTypes = Lists.newArrayList();
+                for (DocumentType documentType : documentTypes) {
+                    Optional<DocumentType> type = documentTypeService.findByIdentifier(documentType.getIdentifier());
+                    if (!type.isPresent()) {
+                        persistedTypes.add(documentTypeService.add(documentType));
+                    } else {
+                        persistedTypes.add(type.get());
+                    }
+                }
+                process.setDocumentTypes(persistedTypes);
             }
             if (updatedProcess.getServiceCode() != null) {
                 process.setServiceCode(updatedProcess.getServiceCode());

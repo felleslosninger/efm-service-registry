@@ -11,6 +11,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -24,6 +25,9 @@ public class ProcessServiceTest {
 
     @Mock
     private ProcessRepository repositoryMock;
+
+    @Mock
+    private DocumentTypeService documentTypeServiceMock;
 
     @Test
     public void update_ProcessNotFound_ResponseShouldBeFalse() {
@@ -71,7 +75,9 @@ public class ProcessServiceTest {
         Process existingProcessMock = mock(Process.class);
         when(repositoryMock.findByIdentifier(anyString())).thenReturn(existingProcessMock);
         List<DocumentType> newTypes = new ArrayList<>();
-        newTypes.add(new DocumentType());
+        DocumentType documentTypeMock = mock(DocumentType.class);
+        newTypes.add(documentTypeMock);
+        when(documentTypeServiceMock.findByIdentifier(anyString())).thenReturn(Optional.of(documentTypeMock));
         Process updatedProcess = createProcess(null, null, newTypes);
         when(repositoryMock.save(existingProcessMock)).thenReturn(existingProcessMock);
 
@@ -80,6 +86,23 @@ public class ProcessServiceTest {
         assertTrue(result);
         verify(repositoryMock).save(any(Process.class));
         verify(existingProcessMock).setDocumentTypes(newTypes);
+    }
+
+    @Test
+    public void update_ProcessContainsNonExistingDocumentType_ShouldAddDocumentTypeAndSucceed() {
+        Process existingProcessMock = mock(Process.class);
+        when(repositoryMock.findByIdentifier(anyString())).thenReturn(existingProcessMock);
+        List<DocumentType> newTypes = new ArrayList<>();
+        DocumentType documentTypeMock = mock(DocumentType.class);
+        newTypes.add(documentTypeMock);
+        when(documentTypeServiceMock.findByIdentifier(anyString())).thenReturn(Optional.empty());
+        Process updatedProcess = createProcess(null, null, newTypes);
+        when(repositoryMock.save(existingProcessMock)).thenReturn(existingProcessMock);
+
+        boolean result = target.update("process", updatedProcess);
+
+        assertTrue(result);
+        verify(documentTypeServiceMock).add(documentTypeMock);
     }
 
     private Process createProcess(String serviceCode, String serviceEditionCode, List<DocumentType> documentTypes) {
