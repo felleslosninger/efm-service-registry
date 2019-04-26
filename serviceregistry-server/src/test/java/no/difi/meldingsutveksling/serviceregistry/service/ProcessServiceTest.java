@@ -105,7 +105,7 @@ public class ProcessServiceTest {
         verify(documentTypeServiceMock).add(documentTypeMock);
     }
 
-    private Process createProcess(String serviceCode, String serviceEditionCode, List<DocumentType> documentTypes) {
+    private static Process createProcess(String serviceCode, String serviceEditionCode, List<DocumentType> documentTypes) {
         Process updatedProcess = new Process();
         updatedProcess.setServiceCode(serviceCode);
         updatedProcess.setServiceEditionCode(serviceEditionCode);

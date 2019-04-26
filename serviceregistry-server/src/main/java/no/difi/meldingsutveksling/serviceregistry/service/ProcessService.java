@@ -33,6 +33,8 @@ public class ProcessService {
 
     @Transactional
     public Process add(Process process) {
+        List<DocumentType> persistedTypes = persistDocumentTypes(process.getDocumentTypes());
+        process.setDocumentTypes(persistedTypes);
         return repository.save(process);
     }
 
@@ -46,15 +48,7 @@ public class ProcessService {
             Process process = optionalProcess.get();
             List<DocumentType> documentTypes = updatedProcess.getDocumentTypes();
             if (documentTypes != null) {
-                List<DocumentType> persistedTypes = Lists.newArrayList();
-                for (DocumentType documentType : documentTypes) {
-                    Optional<DocumentType> type = documentTypeService.findByIdentifier(documentType.getIdentifier());
-                    if (!type.isPresent()) {
-                        persistedTypes.add(documentTypeService.add(documentType));
-                    } else {
-                        persistedTypes.add(type.get());
-                    }
-                }
+                List<DocumentType> persistedTypes = persistDocumentTypes(documentTypes);
                 process.setDocumentTypes(persistedTypes);
             }
             if (updatedProcess.getServiceCode() != null) {
@@ -68,6 +62,19 @@ public class ProcessService {
         } catch (Exception e) {
             throw new EntityNotFoundException(updatedProcess.getIdentifier());
         }
+    }
+
+    private List<DocumentType> persistDocumentTypes(List<DocumentType> documentTypes) {
+        List<DocumentType> persistedTypes = Lists.newArrayList();
+        for (DocumentType documentType : documentTypes) {
+            Optional<DocumentType> type = documentTypeService.findByIdentifier(documentType.getIdentifier());
+            if (!type.isPresent()) {
+                persistedTypes.add(documentTypeService.add(documentType));
+            } else {
+                persistedTypes.add(type.get());
+            }
+        }
+        return persistedTypes;
     }
 
     @Transactional
