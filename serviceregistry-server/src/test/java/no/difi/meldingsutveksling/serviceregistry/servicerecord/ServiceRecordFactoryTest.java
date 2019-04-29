@@ -120,9 +120,9 @@ public class ServiceRecordFactoryTest {
         when(processService.findAll(ProcessCategory.ARKIVMELDING)).thenReturn(Lists.newArrayList(processAdmin, processSkatt));
 
         ProcessMetadata<Endpoint> pmd = ProcessMetadata.of(ProcessIdentifier.of(ARKIVMELDING_PROCESS_ADMIN), Endpoint.of(null, null, null));
-        ServiceMetadata smd = ServiceMetadata.of(ParticipantIdentifier.of("9908:"+ORGNR), DocumentTypeIdentifier.of(ARKIVMELDING_DOCTYPE), Arrays.asList(pmd));
-        when(lookupService.lookup(Matchers.eq(ORGNR), any(List.class))).thenReturn(Lists.newArrayList(smd));
-        when(lookupService.lookup(Matchers.eq(ORGNR_FIKS), any(List.class))).thenReturn(Lists.newArrayList());
+        ServiceMetadata smd = ServiceMetadata.of(ParticipantIdentifier.of("9908:" + ORGNR), DocumentTypeIdentifier.of(ARKIVMELDING_DOCTYPE), Arrays.asList(pmd));
+        when(lookupService.lookup(Matchers.eq("9908:" + ORGNR), any(List.class))).thenReturn(Lists.newArrayList(smd));
+        when(lookupService.lookup(Matchers.eq("9908:" + ORGNR_FIKS), any(List.class))).thenReturn(Lists.newArrayList());
 
     }
 
