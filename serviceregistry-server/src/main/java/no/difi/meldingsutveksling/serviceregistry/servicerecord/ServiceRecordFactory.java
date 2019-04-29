@@ -29,6 +29,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -84,8 +85,37 @@ public class ServiceRecordFactory {
     }
 
     public ServiceRecord createArkivmeldingServiceRecord(String orgnr, String processIdentifier) {
-        // TODO implementere
-        throw new UnsupportedOperationException();
+        Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
+        Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr);
+        if (!optionalProcess.isPresent()) {
+            return null;
+        }
+        ServiceRecord arkivmeldingServiceRecord ;
+        Process p = optionalProcess.get();
+
+        try {
+            List<ServiceMetadata> serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, p.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+            Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
+            serviceMetadataList.forEach(smd ->
+                    smd.getProcesses().forEach(s -> processIdentifiers.add(s.getProcessIdentifier()))
+            );
+            if (processIdentifiers.isEmpty()) {
+                if (hasSvarUt.isPresent()) {
+                    arkivmeldingServiceRecord = createDpfServiceRecord(orgnr, p);
+                }
+                //DPV
+                else {
+                    arkivmeldingServiceRecord = createDpvServiceRecord(orgnr, p);
+                }
+                // dpo
+            } else {
+                arkivmeldingServiceRecord = createDpoServiceRecord(orgnr, p);
+            }
+        } catch (Exception e) {
+            log.error("Unable to create Service Record of type Arkivmelding", e);
+            throw new UnsupportedOperationException();
+        }
+        return arkivmeldingServiceRecord;
     }
 
     @SuppressWarnings("squid:S1166")
@@ -106,22 +136,13 @@ public class ServiceRecordFactory {
             List<ServiceMetadata> serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, documentTypeIdentifiers);
             Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
             serviceMetadataList.forEach(smd ->
-                    smd.getProcesses().forEach(p -> processIdentifiers.add(p.getProcessIdentifier()) )
+                    smd.getProcesses().forEach(p -> processIdentifiers.add(p.getProcessIdentifier()))
             );
             if (processIdentifiers.isEmpty()) {
                 Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr);
                 if (hasSvarUt.isPresent()) {
                     arkivmeldingProcesses.forEach(p -> {
-                        String pem;
-                        try {
-                            pem = IOUtils.toString(properties.getSvarut().getCertificate().getInputStream(), StandardCharsets.UTF_8);
-                        } catch (IOException e) {
-                            log.error("Could not read certificate from {}", properties.getSvarut().getCertificate().toString());
-                            throw new ServiceRegistryException(e);
-                        }
-                        ArkivmeldingServiceRecord dpfServiceRecord = ArkivmeldingServiceRecord.of(DPF, orgnr, properties.getSvarut().getServiceRecordUrl().toString(), pem);
-                        dpfServiceRecord.setProcess(p.getIdentifier());
-                        dpfServiceRecord.setDocumentTypes(p.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+                        ServiceRecord dpfServiceRecord = createDpfServiceRecord(orgnr, p);
                         serviceRecords.add(dpfServiceRecord);
                     });
                 } else {
@@ -133,12 +154,7 @@ public class ServiceRecordFactory {
                     if (processIdentifiers.stream()
                             .map(ProcessIdentifier::getIdentifier)
                             .anyMatch(identifier -> identifier.equals(p.getIdentifier()))) {
-                        String pemCertificate = lookupPemCertificate(orgnr);
-                        ArkivmeldingServiceRecord dpoServiceRecord = ArkivmeldingServiceRecord.of(DPO, orgnr, properties.getDpo().getEndpointURL().toString(), pemCertificate);
-                        dpoServiceRecord.getService().setServiceCode(properties.getDpo().getServiceCode());
-                        dpoServiceRecord.getService().setServiceEditionCode(properties.getDpo().getServiceEditionCode());
-                        dpoServiceRecord.setProcess(p.getIdentifier());
-                        dpoServiceRecord.setDocumentTypes(p.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+                        ServiceRecord dpoServiceRecord = createDpoServiceRecord(orgnr, p);
                         serviceRecords.add(dpoServiceRecord);
                     } else {
                         serviceRecords.add(createDpvServiceRecord(orgnr, p));
@@ -155,10 +171,59 @@ public class ServiceRecordFactory {
         return serviceRecords;
     }
 
-    public Optional<ServiceRecord> createDpeServiceRecord(String orgnr, String processIdentifier) {
-        // TODO implementere
-        throw new UnsupportedOperationException();
+    public ServiceRecord createEinnsynServiceRecord(String orgnr, String processIdentifier) {
+        // TODO implementere. Må vel også sørge for å dekke alle 3 typane, meeting, journal og innsyn
+        ServiceRecord einnsynServiceRecord;
+        Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
+        if (!optionalProcess.isPresent()) {
+            return null;
+        }
+        Process p = optionalProcess.get();
+
+        try {
+            einnsynServiceRecord = createEinnsynServiceRecord(orgnr, p);
+        } catch (Exception e) {
+            log.error("Unable to create Service Record of type Einnsyn", e);
+            throw new UnsupportedOperationException();
+        }
+        return einnsynServiceRecord;
     }
+
+    private ServiceRecord createDpoServiceRecord(String orgnr, Process process) {
+        String pem = lookupPemCertificate(orgnr);
+        ServiceRecord arkivmeldingServiceRecord = ArkivmeldingServiceRecord.of(DPO, orgnr, properties.getDpo().getEndpointURL().toString(), pem);
+        arkivmeldingServiceRecord.setProcess(process.getIdentifier());
+        arkivmeldingServiceRecord.getService().setServiceCode(properties.getDpo().getServiceCode());
+        arkivmeldingServiceRecord.getService().setServiceEditionCode(properties.getDpo().getServiceEditionCode());
+        arkivmeldingServiceRecord.setDocumentTypes(process.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+
+        return arkivmeldingServiceRecord;
+    }
+
+    private ServiceRecord createDpfServiceRecord(String orgnr, Process process) {
+        String pem;
+        try {
+            pem = IOUtils.toString(properties.getSvarut().getCertificate().getInputStream(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            log.error("Could not read certificate from {}", properties.getSvarut().getCertificate().toString());
+            throw new ServiceRegistryException(e);
+        }
+        ServiceRecord arkivmeldingServiceRecord = ArkivmeldingServiceRecord.of(DPF, orgnr, properties.getSvarut().getServiceRecordUrl().toString(), pem);
+        arkivmeldingServiceRecord.setProcess(process.getIdentifier());
+        arkivmeldingServiceRecord.setDocumentTypes(process.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+
+        return arkivmeldingServiceRecord;
+    }
+
+    private ServiceRecord createEinnsynServiceRecord(String orgnr, Process process) {
+        String pemCertificate = lookupPemCertificate(orgnr);
+        ServiceRecord einnsynServiceRecord = DpeServiceRecord.of(pemCertificate, orgnr, DPE, process.getServiceCode());
+        einnsynServiceRecord.setProcess(process.getIdentifier());
+        einnsynServiceRecord.setDocumentTypes(process.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+
+        return einnsynServiceRecord;
+    }
+
 
     public List<ServiceRecord> createDpeServiceRecords(String orgnr) {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
@@ -174,7 +239,7 @@ public class ServiceRecordFactory {
             serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, Lists.newArrayList(documentTypeIdentifiers));
             Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
             serviceMetadataList.forEach(smd ->
-                    smd.getProcesses().forEach(p -> processIdentifiers.add(p.getProcessIdentifier()) )
+                    smd.getProcesses().forEach(p -> processIdentifiers.add(p.getProcessIdentifier()))
             );
 
             if (processIdentifiers.isEmpty()) {
@@ -185,12 +250,11 @@ public class ServiceRecordFactory {
                         .map(ProcessIdentifier::getIdentifier)
                         .anyMatch(identifier -> identifier.equals(p.getIdentifier()))) {
                     String pemCertificate = lookupPemCertificate(orgnr);
+                    //TODO fjerne duplikat under og kall eigen hjelpefunksjon ??? lag hjelpefunksjon
                     DpeServiceRecord dpeServiceRecord = DpeServiceRecord.of(pemCertificate, orgnr, DPE, p.getServiceCode());
                     dpeServiceRecord.setProcess(p.getIdentifier());
                     dpeServiceRecord.setDocumentTypes(p.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
                     serviceRecords.add(dpeServiceRecord);
-                } else {
-                    serviceRecords.add(createDpvServiceRecord(orgnr, p));
                 }
             });
 
@@ -204,7 +268,7 @@ public class ServiceRecordFactory {
     }
 
     private ArkivmeldingServiceRecord createDpvServiceRecord(String orgnr, Process process) {
-        ArkivmeldingServiceRecord dpvServiceRecord = ArkivmeldingServiceRecord.of(DPV, orgnr,  properties.getDpv().getEndpointURL().toString());
+        ArkivmeldingServiceRecord dpvServiceRecord = ArkivmeldingServiceRecord.of(DPV, orgnr, properties.getDpv().getEndpointURL().toString());
         dpvServiceRecord.getService().setServiceCode(process.getServiceCode());
         dpvServiceRecord.getService().setServiceEditionCode(process.getServiceEditionCode());
         dpvServiceRecord.setProcess(process.getIdentifier());
@@ -222,10 +286,10 @@ public class ServiceRecordFactory {
 
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
     public ServiceRecord createServiceRecordForCitizen(String identifier,
-                                                                 Authentication auth,
-                                                                 String onBehalfOrgnr,
-                                                                 Notification notification,
-                                                                 boolean forcePrint) throws KRRClientException {
+                                                       Authentication auth,
+                                                       String onBehalfOrgnr,
+                                                       Notification notification,
+                                                       boolean forcePrint) throws KRRClientException {
 
         String token = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
 
@@ -249,9 +313,9 @@ public class ServiceRecordFactory {
     }
 
     private ServiceRecord createPrintServiceRecord(String identifier,
-                                                             String onBehalfOrgnr,
-                                                             String token,
-                                                             PersonResource personResource) throws KRRClientException {
+                                                   String onBehalfOrgnr,
+                                                   String token,
+                                                   PersonResource personResource) throws KRRClientException {
         krrService.setPrintDetails(personResource);
         Optional<DSFResource> dsfResource = krrService.getDSFInfo(lookup(identifier).token(token));
         if (!dsfResource.isPresent()) {

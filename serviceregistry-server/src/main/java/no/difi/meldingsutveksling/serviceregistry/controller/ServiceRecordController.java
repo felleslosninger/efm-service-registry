@@ -119,10 +119,14 @@ public class ServiceRecordController {
         Entity entity = new Entity();
         if (processCategory == ProcessCategory.ARKIVMELDING) {
             serviceRecord = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier);
+            if (serviceRecord == null) {
+                return ResponseEntity.badRequest().body(String.format("Process %s not found for receiver %s", processIdentifier, identifier));
+                //TODO endre feilkode/melding ? greit å ha sjekk på null.
+            }
         }
 
         if (processCategory == ProcessCategory.EINNSYN) {
-            Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createDpeServiceRecord(identifier, processIdentifier);
+            Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createEinnsynServiceRecord(identifier, processIdentifier);
             if (!dpeServiceRecord.isPresent()) {
                 return ResponseEntity.badRequest().body(String.format("Process %s not found for receiver %s", processIdentifier, identifier));
             }
