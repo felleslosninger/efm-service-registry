@@ -4,9 +4,13 @@ import com.jayway.jsonpath.JsonPath;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
+import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
-import no.difi.meldingsutveksling.serviceregistry.krr.*;
+import no.difi.meldingsutveksling.serviceregistry.krr.ContactInfoResource;
+import no.difi.meldingsutveksling.serviceregistry.krr.DigitalPostResource;
+import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
+import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
@@ -15,10 +19,10 @@ import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ArkivmeldingServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.SRService;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
+import no.difi.meldingsutveksling.serviceregistry.servicerecord.SikkerDigitalPostServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +30,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -45,7 +48,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -57,6 +60,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource("classpath:controller-test.properties")
 @Import({PayloadSigner.class, SRConfig.class})
 public class ServiceRecordControllerTest {
+
+    private static final ArkivmeldingServiceRecord DPO_SERVICE_RECORD = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPO, "42", "http://endpoint.here", "pem123");
+    private static final ArkivmeldingServiceRecord DPV_SERVICE_RECORD = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPV, "43", "http://endpoint.here");
 
     @Autowired
     private MockMvc mvc;
@@ -75,11 +81,9 @@ public class ServiceRecordControllerTest {
 
     @Autowired
     private PayloadSigner payloadSigner;
-    private static final ArkivmeldingServiceRecord DPO_SERVICE_RECORD = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPO, "42", "http://endpoint.here", "pem123");
-    private final ArkivmeldingServiceRecord DPV_SERVICE_RECORD = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPV, "43", "http://endpoint.here");
 
     @Before
-    public void setup() throws MalformedURLException, KRRClientException {
+    public void setup() {
         BrregPostadresse testAdr = new BrregPostadresse("testadresse", "1337", "teststed", "testland");
         OrganizationInfo ORGLinfo = new OrganizationInfo("42", "foo",
                 testAdr, new OrganizationType("ORGL"));
@@ -91,26 +95,9 @@ public class ServiceRecordControllerTest {
         when(entityService.getEntityInfo("12345678901")).thenReturn(Optional.of(citizenInfo));
         when(entityService.getEntityInfo("1337")).thenReturn(Optional.empty());
 
-        ServiceregistryProperties serviceregistryProperties = new ServiceregistryProperties();
-        ServiceregistryProperties.PostVirksomhet postVirksomhet = new ServiceregistryProperties.PostVirksomhet();
-        postVirksomhet.setEndpointURL(new URL("http://foo"));
-        serviceregistryProperties.setDpv(postVirksomhet);
-
-        PostAddress postAddress = mock(PostAddress.class);
-        PersonResource personResource = new PersonResource();
-        personResource.setCertificate("cert123");
-        personResource.setDigitalPost(DigitalPostResource.of("adr123", "post123"));
-        personResource.setAlertStatus("KAN_VARSLES");
-        personResource.setContactInfo(ContactInfoResource.of("post@post.foo", "", "123", ""));
-        personResource.setReserved("NEI");
-        personResource.setPrintPostkasseLeverandorAdr("postkasse123");
-
         SRService service = DPO_SERVICE_RECORD.getService();
         service.setServiceCode("123");
         service.setServiceEditionCode("321");
-
-//        SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(null, personResource,
-//                ServiceIdentifier.DPI, "12345678901", postAddress, postAddress);
     }
 
     @Test
@@ -143,27 +130,51 @@ public class ServiceRecordControllerTest {
     }
 
     @Test
-    @Ignore
-    public void dpiEntityShouldReturnOK() throws Exception {
-        OAuth2Authentication mock = mock(OAuth2Authentication.class);
-        when(mock.getName()).thenReturn("foo");
-        when(mock.getPrincipal()).thenReturn("foo");
+    @WithMockUser(username = "user1", password = "pwd", roles = "USER")
+    public void get_IdentifierAndCredentialsResolveToDpi_ServiceRecordShouldMatchExpectedValues() throws Exception {
+        ServiceregistryProperties serviceregistryProperties = fakePropertiesForDpi();
+        PostAddress postAddress = new PostAddress("Address name", "Street x", "Postal code", "Area", "Country");
+        PersonResource personResource = fakePersonResourceForDpi();
+        SikkerDigitalPostServiceRecord dpiServiceRecord
+                = new SikkerDigitalPostServiceRecord(serviceregistryProperties, personResource, ServiceIdentifier.DPI, "12345678901", postAddress, postAddress);
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(Notification.class), anyBoolean()))
+                .thenReturn(Lists.newArrayList(dpiServiceRecord));
+        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString())).thenReturn(Lists.newArrayList());
+        when(serviceRecordFactory.createDpeServiceRecords(anyString())).thenReturn(Lists.newArrayList());
 
-        mvc.perform(get("/identifier/12345678901").accept(MediaType.APPLICATION_JSON).with
-                (SecurityMockMvcRequestPostProcessors.authentication(mock)))
+        mvc.perform(get("/identifier/12345678901").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.serviceRecord.organisationNumber", is("12345678901")))
-                .andExpect(jsonPath("$.serviceRecord.serviceIdentifier", is("DPI")));
+                .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("12345678901")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPI")));
+    }
+
+    private PersonResource fakePersonResourceForDpi() {
+        PersonResource personResource = new PersonResource();
+        personResource.setCertificate("cert123");
+        personResource.setDigitalPost(DigitalPostResource.of("adr123", "post123"));
+        personResource.setAlertStatus("KAN_VARSLES");
+        personResource.setContactInfo(ContactInfoResource.of("post@post.foo", "", "123", ""));
+        personResource.setReserved("NEI");
+        personResource.setPrintPostkasseLeverandorAdr("postkasse123");
+        return personResource;
+    }
+
+    private ServiceregistryProperties fakePropertiesForDpi() throws MalformedURLException {
+        ServiceregistryProperties serviceregistryProperties = new ServiceregistryProperties();
+        ServiceregistryProperties.DigitalPostInnbygger dpiConfig = new ServiceregistryProperties.DigitalPostInnbygger();
+        dpiConfig.setEndpointURL(new URL("http://dpi.endpoint.here"));
+        serviceregistryProperties.setDpi(dpiConfig);
+        return serviceregistryProperties;
     }
 
     @Test
-    public void entityShouldReturnNotFound() throws Exception {
+    public void get_EntityNotFound_ShouldReturnNotFound() throws Exception {
         mvc.perform(get("/identifier/1337").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    public void signedShouldReturnOK() throws Exception {
+    public void getSigned_ArkivmeldingResolvesToDpo_ServiceRecordShouldMatchExpectedValues() throws Exception {
         when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString())).thenReturn(Lists.newArrayList(DPO_SERVICE_RECORD));
         MvcResult response = mvc.perform(get("/identifier/42").accept("application/jose"))
                 .andExpect(status().isOk())
@@ -182,14 +193,14 @@ public class ServiceRecordControllerTest {
     }
 
     @Test
-    public void entityAndProcessLookup_MissingEntity_ShouldReturn404() throws Exception {
-        mvc.perform(get("/entity/1337?process=n/a")).andExpect(status().isNotFound());
+    public void getWithProcessIdentifier_MissingEntity_ShouldReturn404() throws Exception {
+        mvc.perform(get("/identifier/1337/process/ProcessIdHere")).andExpect(status().isNotFound());
     }
 
     @Test
-    public void entityAndProcessLookup_MissingProcess_ShouldReturn404() throws Exception {
+    public void getWithProcessIdentifier_MissingProcess_ShouldReturn404() throws Exception {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.empty());
-        mvc.perform(get("/entity/42?process=notFound")).andExpect(status().isNotFound());
+        mvc.perform(get("/identifier/42/process/NotFound")).andExpect(status().isNotFound());
     }
 
     @Test
