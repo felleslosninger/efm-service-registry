@@ -107,7 +107,7 @@ public class ServiceRecordController {
             }
             try {
                 Entity entity = new Entity();
-                entity.getServiceRecords().add(serviceRecordFactory.createServiceRecordForCitizen(identifier, auth, clientOrgnr, obligation, forcePrint));
+                entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, obligation, forcePrint));
                 entity.setInfoRecord(entityInfo.get());
                 return new ResponseEntity<>(entity, HttpStatus.OK);
             } catch (KRRClientException e) {
@@ -168,8 +168,7 @@ public class ServiceRecordController {
 
         if (shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
             try {
-                ServiceRecord serviceRecord = serviceRecordFactory.createServiceRecordForCitizen(identifier, auth, clientOrgnr, obligation, forcePrint);
-                entity.getServiceRecords().add(serviceRecord);
+                entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, obligation, forcePrint));
             } catch (KRRClientException e) {
                 String errorMsg = "Error looking up identifier in KRR";
                 log.error(errorMsg, e);

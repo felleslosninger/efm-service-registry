@@ -171,7 +171,7 @@ public class ServiceRecordFactory {
         return serviceRecords;
     }
 
-    public ServiceRecord createEinnsynServiceRecord(String orgnr, String processIdentifier) {
+    public Optional<ServiceRecord> createEinnsynServiceRecord(String orgnr, String processIdentifier) {
         // TODO implementere. Må vel også sørge for å dekke alle 3 typane, meeting, journal og innsyn
         ServiceRecord einnsynServiceRecord;
         Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
@@ -186,7 +186,7 @@ public class ServiceRecordFactory {
             log.error("Unable to create Service Record of type Einnsyn", e);
             throw new UnsupportedOperationException();
         }
-        return einnsynServiceRecord;
+        return Optional.ofNullable(einnsynServiceRecord);
     }
 
     private ServiceRecord createDpoServiceRecord(String orgnr, Process process) {
@@ -285,11 +285,12 @@ public class ServiceRecordFactory {
     }
 
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
-    public ServiceRecord createServiceRecordForCitizen(String identifier,
-                                                       Authentication auth,
-                                                       String onBehalfOrgnr,
-                                                       Notification notification,
-                                                       boolean forcePrint) throws KRRClientException {
+    public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
+                                                         Authentication auth,
+                                                         String onBehalfOrgnr,
+                                                         Notification notification,
+                                                         boolean forcePrint) throws KRRClientException {
+
 
         String token = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
 
@@ -301,26 +302,40 @@ public class ServiceRecordFactory {
         // TODO sette prosesser for DPI print og digital
         switch (DpiMessageRouter.route(personResource, notification, forcePrint)) {
             case DPI:
-                return new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
-                        identifier, null, null);
+                return createDigitalServiceRecords(personResource, identifier);
             case PRINT:
-                return createPrintServiceRecord(identifier, onBehalfOrgnr, token, personResource);
+                return createPrintServiceRecords(identifier, onBehalfOrgnr, token, personResource);
             case DPV:
             default:
-                return createDpvServiceRecord(identifier, processService.getDefaultArkivmeldingProcess());
+                return Lists.newArrayList(createDpvServiceRecord(identifier, processService.getDefaultArkivmeldingProcess()));
         }
 
     }
 
-    private ServiceRecord createPrintServiceRecord(String identifier,
-                                                   String onBehalfOrgnr,
-                                                   String token,
-                                                   PersonResource personResource) throws KRRClientException {
+
+    private List<ServiceRecord> createDigitalServiceRecords(PersonResource personResource, String identifier) {
+        List<Process> processes = processService.findAll(ProcessCategory.DIGITALPOST);
+        List<ServiceRecord> serviceRecords = Lists.newArrayList();
+        processes.forEach(p -> {
+            SikkerDigitalPostServiceRecord serviceRecord = new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
+                    identifier, null, null);
+            serviceRecord.setProcess(p.getIdentifier());
+            serviceRecord.setDocumentTypes(Lists.newArrayList(properties.getDpi().getDigitalDocumentType()));
+        });
+
+        return serviceRecords;
+    }
+
+    private List<ServiceRecord> createPrintServiceRecords(String identifier,
+                                                          String onBehalfOrgnr,
+                                                          String token,
+                                                          PersonResource personResource) throws KRRClientException {
+
         krrService.setPrintDetails(personResource);
         Optional<DSFResource> dsfResource = krrService.getDSFInfo(lookup(identifier).token(token));
         if (!dsfResource.isPresent()) {
             log.error("Receiver found in KRR on behalf of {}, but not in DSF. Defaulting to DPV.", onBehalfOrgnr);
-            return createDpvServiceRecord(identifier, processService.getDefaultArkivmeldingProcess());
+            return Lists.newArrayList(createDpvServiceRecord(identifier, processService.getDefaultArkivmeldingProcess()));
         }
         String[] codeArea = dsfResource.get().getPostAddress().split(" ");
         PostAddress postAddress = new PostAddress(dsfResource.get().getName(),
@@ -340,11 +355,19 @@ public class ServiceRecordFactory {
                     orginfo.getPostadresse().getLand());
         } else {
             log.error("Sender {} not found in BRREG, could not get post address. Defaulting to DPV.", onBehalfOrgnr);
-            return createDpvServiceRecord(identifier, processService.getDefaultArkivmeldingProcess());
+            return Lists.newArrayList(createDpvServiceRecord(identifier, processService.getDefaultArkivmeldingProcess()));
         }
 
-        return new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
-                identifier, postAddress, returnAddress);
+        List<Process> processes = processService.findAll(ProcessCategory.DIGITALPOST);
+        ArrayList<ServiceRecord> serviceRecords = Lists.newArrayList();
+        processes.forEach(p -> {
+            SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
+                    identifier, postAddress, returnAddress);
+            dpiServiceRecord.setDocumentTypes(Lists.newArrayList(properties.getDpi().getPrintDocumentType()));
+            dpiServiceRecord.setProcess(p.getIdentifier());
+            serviceRecords.add(dpiServiceRecord);
+        });
+        return serviceRecords;
     }
 
 }
