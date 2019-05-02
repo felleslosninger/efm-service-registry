@@ -71,7 +71,7 @@ public class ServiceRecordController {
      * Used to retrieve information needed to send a message within the provided process
      * to an entity with the provided identifier.
      *
-     * @param identifier  specifies the target entity.
+     * @param identifier        specifies the target entity.
      * @param processIdentifier specifies the target process.
      * @param obligation        determines service record based on the recipient being notifiable
      * @param forcePrint
@@ -85,6 +85,7 @@ public class ServiceRecordController {
                                  @PathVariable("processIdentifier") String processIdentifier,
                                  @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
                                  @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
+                                 @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
                                  Authentication auth,
                                  HttpServletRequest request) {
         MDC.put("entity", identifier);
@@ -149,6 +150,7 @@ public class ServiceRecordController {
             @PathVariable("identifier") String identifier,
             @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
             @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
+            @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             Authentication auth,
             HttpServletRequest request) {
 
@@ -172,7 +174,7 @@ public class ServiceRecordController {
             }
         }
 
-        entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier));
+        entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
         entity.getServiceRecords().addAll(serviceRecordFactory.createDpeServiceRecords(identifier));
 
         return new ResponseEntity<>(entity, HttpStatus.OK);
@@ -196,10 +198,11 @@ public class ServiceRecordController {
             @PathVariable("identifier") String identifier,
             @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
             @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
+            @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             Authentication auth,
             HttpServletRequest request) throws EntitySignerException {
 
-        ResponseEntity entity = entity(identifier, obligation, forcePrint, auth, request);
+        ResponseEntity entity = entity(identifier, obligation, forcePrint, securityLevel, auth, request);
         if (entity.getStatusCode() != HttpStatus.OK) {
             return entity;
         }

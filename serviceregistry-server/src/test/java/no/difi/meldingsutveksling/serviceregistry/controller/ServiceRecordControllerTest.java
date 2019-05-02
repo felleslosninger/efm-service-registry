@@ -102,7 +102,7 @@ public class ServiceRecordControllerTest {
 
     @Test
     public void get_ArkivMeldingResolvesToDpo_ServiceRecordShouldMatchExpectedValues() throws Exception {
-        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString())).thenReturn(Lists.newArrayList(DPO_SERVICE_RECORD));
+        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any())).thenReturn(Lists.newArrayList(DPO_SERVICE_RECORD));
         mvc.perform(get("/identifier/42").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("42")))
@@ -117,7 +117,7 @@ public class ServiceRecordControllerTest {
 
     @Test
     public void get_ArkivmeldingResolvesToDpv_ServiceRecordShouldMatchExpectedValues() throws Exception {
-        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString())).thenReturn(Lists.newArrayList(DPV_SERVICE_RECORD));
+        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any())).thenReturn(Lists.newArrayList(DPV_SERVICE_RECORD));
         mvc.perform(get("/identifier/43").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("43")))
@@ -139,7 +139,7 @@ public class ServiceRecordControllerTest {
                 = new SikkerDigitalPostServiceRecord(serviceregistryProperties, personResource, ServiceIdentifier.DPI, "12345678901", postAddress, postAddress);
         when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(Notification.class), anyBoolean()))
                 .thenReturn(Lists.newArrayList(dpiServiceRecord));
-        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString())).thenReturn(Lists.newArrayList());
+        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any())).thenReturn(Lists.newArrayList());
         when(serviceRecordFactory.createDpeServiceRecords(anyString())).thenReturn(Lists.newArrayList());
 
         mvc.perform(get("/identifier/12345678901").accept(MediaType.APPLICATION_JSON))
@@ -175,7 +175,7 @@ public class ServiceRecordControllerTest {
 
     @Test
     public void getSigned_ArkivmeldingResolvesToDpo_ServiceRecordShouldMatchExpectedValues() throws Exception {
-        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString())).thenReturn(Lists.newArrayList(DPO_SERVICE_RECORD));
+        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any())).thenReturn(Lists.newArrayList(DPO_SERVICE_RECORD));
         MvcResult response = mvc.perform(get("/identifier/42").accept("application/jose"))
                 .andExpect(status().isOk())
                 .andReturn();

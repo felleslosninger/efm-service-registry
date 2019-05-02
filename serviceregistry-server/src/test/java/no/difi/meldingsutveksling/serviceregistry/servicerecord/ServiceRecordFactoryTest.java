@@ -27,8 +27,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -36,7 +34,7 @@ import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 @RunWith(SpringRunner.class)
@@ -80,73 +78,77 @@ public class ServiceRecordFactoryTest {
     private static String ARKIVMELDING_PROCESS_SKATT = "urn:no:difi:profile:arkivmelding:skatterOgAvgifter:ver1.0";
 
     @Before
-    public void init() throws URISyntaxException, EndpointUrlNotFound, MalformedURLException {
-        ServiceregistryProperties.Altinn altinn = new ServiceregistryProperties.Altinn();
-        altinn.setEndpointURL(new URL("http://test"));
-        altinn.setServiceCode("1234");
-        altinn.setServiceEditionCode("123456");
-        when(props.getDpo()).thenReturn(altinn);
-
-        ServiceregistryProperties.PostVirksomhet dpv = new ServiceregistryProperties.PostVirksomhet();
-        dpv.setEndpointURL(new URL("http://foo"));
-        when(props.getDpv()).thenReturn(dpv);
-
-        Endpoint ep = mock(Endpoint.class);
-        when(ep.getAddress()).thenReturn(new URI(""));
-        when(lookupService.lookup(any())).thenReturn(ep);
-
-        when(svarUtService.hasSvarUtAdressering(ORGNR_FIKS)).thenReturn(Optional.of(3));
-
-        DocumentType documentType = new DocumentType();
-        documentType.setIdentifier(ARKIVMELDING_DOCTYPE);
-
+    public void init() throws MalformedURLException, EndpointUrlNotFound {
+        ServiceregistryProperties.Altinn dpoConfig = new ServiceregistryProperties.Altinn();
+        dpoConfig.setEndpointURL(new URL("http://test"));
+        dpoConfig.setServiceCode("1234");
+        dpoConfig.setServiceEditionCode("123456");
+        when(props.getDpo()).thenReturn(dpoConfig);
+        ServiceregistryProperties.PostVirksomhet dpvConfig = new ServiceregistryProperties.PostVirksomhet();
+        dpvConfig.setEndpointURL(new URL("http://foo"));
+        when(props.getDpv()).thenReturn(dpvConfig);
+        ServiceregistryProperties.SvarUt svarUtConfig = new ServiceregistryProperties.SvarUt();
+        svarUtConfig.setCertificate(new ByteArrayResource("cert1234".getBytes()));
+        svarUtConfig.setServiceRecordUrl(new URL("http://foo"));
+        when(props.getSvarut()).thenReturn(svarUtConfig);
+        DocumentType documentType = new DocumentType()
+                .setIdentifier(ARKIVMELDING_DOCTYPE);
         Process processAdmin = new Process()
                 .setIdentifier(ARKIVMELDING_PROCESS_ADMIN)
                 .setCategory(ProcessCategory.ARKIVMELDING)
                 .setServiceCode("4192")
                 .setServiceEditionCode("270815");
-
         Process processSkatt = new Process()
                 .setIdentifier(ARKIVMELDING_PROCESS_SKATT)
                 .setCategory(ProcessCategory.ARKIVMELDING)
                 .setServiceCode("4192")
                 .setServiceEditionCode("270815");
-
         processSkatt.setDocumentTypes(Lists.newArrayList(documentType));
         processAdmin.setDocumentTypes(Lists.newArrayList(documentType));
         documentType.setProcesses(Lists.newArrayList(processAdmin, processSkatt));
-
-        when(processService.findAll()).thenReturn(Lists.newArrayList(processAdmin, processSkatt));
         when(processService.findAll(ProcessCategory.ARKIVMELDING)).thenReturn(Lists.newArrayList(processAdmin, processSkatt));
-
-        ProcessMetadata<Endpoint> pmd = ProcessMetadata.of(ProcessIdentifier.of(ARKIVMELDING_PROCESS_ADMIN), Endpoint.of(null, null, null));
-        ServiceMetadata smd = ServiceMetadata.of(ParticipantIdentifier.of("9908:" + ORGNR), DocumentTypeIdentifier.of(ARKIVMELDING_DOCTYPE), Arrays.asList(pmd));
-        when(lookupService.lookup(Matchers.eq("9908:" + ORGNR), any(List.class))).thenReturn(Lists.newArrayList(smd));
         when(lookupService.lookup(Matchers.eq("9908:" + ORGNR_FIKS), any(List.class))).thenReturn(Lists.newArrayList());
-
     }
 
     @Test
-    public void arkivmeldingDpoDpvServiceRecordTest() {
-        List<ServiceRecord> arkivmeldingServiceRecords = factory.createArkivmeldingServiceRecords(ORGNR);
-        assertEquals(2, arkivmeldingServiceRecords.size());
+    public void createArkivmeldingServiceRecords_IdentifierHasAdministrasjonButNotSkattRegistrationInSmp_ShouldReturnCorrespondingDpoAndDpvServiceRecords() throws EndpointUrlNotFound {
+        ProcessMetadata<Endpoint> administrationProcessMetadata =
+                ProcessMetadata.of(ProcessIdentifier.of(ARKIVMELDING_PROCESS_ADMIN), Endpoint.of(null, null, null));
+        ServiceMetadata administrationServiceMetadata =
+                ServiceMetadata.of(ParticipantIdentifier.of("9908:" + ORGNR),
+                        DocumentTypeIdentifier.of(ARKIVMELDING_DOCTYPE),
+                        Arrays.asList(administrationProcessMetadata));
+        when(lookupService.lookup(Matchers.eq("9908:" + ORGNR), any(List.class))).thenReturn(Lists.newArrayList(administrationServiceMetadata));
 
-        ServiceRecord srAdmin = arkivmeldingServiceRecords.stream().filter(r -> ARKIVMELDING_PROCESS_ADMIN.equals(r.getProcess())).findFirst().orElseThrow(RuntimeException::new);
+        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR, null);
+
+        assertEquals(2, result.size());
+        ServiceRecord srAdmin = result.stream().filter(r -> ARKIVMELDING_PROCESS_ADMIN.equals(r.getProcess())).findFirst().orElseThrow(RuntimeException::new);
         assertEquals(ServiceIdentifier.DPO, srAdmin.getService().getIdentifier());
-        ServiceRecord srSkatt = arkivmeldingServiceRecords.stream().filter(r -> ARKIVMELDING_PROCESS_SKATT.equals(r.getProcess())).findFirst().orElseThrow(RuntimeException::new);
+        ServiceRecord srSkatt = result.stream().filter(r -> ARKIVMELDING_PROCESS_SKATT.equals(r.getProcess())).findFirst().orElseThrow(RuntimeException::new);
         assertEquals(ServiceIdentifier.DPV, srSkatt.getService().getIdentifier());
-
     }
 
     @Test
-    public void arkivmeldingDpfServiceRecordTest() throws MalformedURLException {
-        ServiceregistryProperties.SvarUt svarUt = new ServiceregistryProperties.SvarUt();
-        svarUt.setCertificate(new ByteArrayResource("cert1234".getBytes()));
-        svarUt.setServiceRecordUrl(new URL("http://foo"));
-        when(props.getSvarut()).thenReturn(svarUt);
+    public void createArkivmeldingServiceRecords_IdentifierHasSvarUtRegistration_ShouldReturnDpfServiceRecord() {
+        when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any())).thenReturn(Optional.of(3));
+        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR_FIKS, null);
+        assertEquals(2, countServiceRecordsForServiceIdentifier(result, ServiceIdentifier.DPF));
+    }
 
-        List<ServiceRecord> arkivmeldingServiceRecords = factory.createArkivmeldingServiceRecords(ORGNR_FIKS);
-        assertEquals(2, arkivmeldingServiceRecords.stream().filter(r -> ServiceIdentifier.DPF == r.getService().getIdentifier()).count());
+    @Test
+    public void createArkivmeldingServiceRecordsWithSecurityLevel_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldReturnNoDpfServiceRecords() {
+        when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any())).thenReturn(Optional.empty());
+
+        //TODO: An error response should be returned in this case.
+        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR_FIKS, 3);
+
+        assertEquals(0, countServiceRecordsForServiceIdentifier(result, ServiceIdentifier.DPF));
+        assertEquals(0, countServiceRecordsForServiceIdentifier(result, ServiceIdentifier.DPV));
+    }
+
+    private long countServiceRecordsForServiceIdentifier(List<ServiceRecord> result, ServiceIdentifier serviceIdentifier) {
+        return result.stream().filter(serviceRecord -> serviceIdentifier == serviceRecord.getService().getIdentifier()).count();
     }
 
     // TODO add tests for digitalpost and einnsyn

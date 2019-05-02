@@ -13,8 +13,8 @@ import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
-import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
+import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
@@ -89,7 +89,7 @@ public class ServiceRecordFactory {
     }
 
     @SuppressWarnings("squid:S1166")
-    public List<ServiceRecord> createArkivmeldingServiceRecords(String orgnr) {
+    public List<ServiceRecord> createArkivmeldingServiceRecords(String orgnr, Integer targetSecurityLevel) {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
         List<Process> arkivmeldingProcesses = processService.findAll(ProcessCategory.ARKIVMELDING);
         List<String> documentTypeIdentifiers = new ArrayList<>();
@@ -106,10 +106,10 @@ public class ServiceRecordFactory {
             List<ServiceMetadata> serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, documentTypeIdentifiers);
             Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
             serviceMetadataList.forEach(smd ->
-                    smd.getProcesses().forEach(p -> processIdentifiers.add(p.getProcessIdentifier()) )
+                    smd.getProcesses().forEach(p -> processIdentifiers.add(p.getProcessIdentifier()))
             );
             if (processIdentifiers.isEmpty()) {
-                Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr);
+                Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
                 if (hasSvarUt.isPresent()) {
                     arkivmeldingProcesses.forEach(p -> {
                         String pem;
@@ -125,7 +125,9 @@ public class ServiceRecordFactory {
                         serviceRecords.add(dpfServiceRecord);
                     });
                 } else {
-                    arkivmeldingProcesses.forEach(p -> serviceRecords.add(createDpvServiceRecord(orgnr, p)));
+                    if (null == targetSecurityLevel) {
+                        arkivmeldingProcesses.forEach(p -> serviceRecords.add(createDpvServiceRecord(orgnr, p)));
+                    } //else{} //TODO: An error response is to be returned here.
                 }
                 return serviceRecords;
             } else {
@@ -174,7 +176,7 @@ public class ServiceRecordFactory {
             serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, Lists.newArrayList(documentTypeIdentifiers));
             Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
             serviceMetadataList.forEach(smd ->
-                    smd.getProcesses().forEach(p -> processIdentifiers.add(p.getProcessIdentifier()) )
+                    smd.getProcesses().forEach(p -> processIdentifiers.add(p.getProcessIdentifier()))
             );
 
             if (processIdentifiers.isEmpty()) {
@@ -204,7 +206,7 @@ public class ServiceRecordFactory {
     }
 
     private ArkivmeldingServiceRecord createDpvServiceRecord(String orgnr, Process process) {
-        ArkivmeldingServiceRecord dpvServiceRecord = ArkivmeldingServiceRecord.of(DPV, orgnr,  properties.getDpv().getEndpointURL().toString());
+        ArkivmeldingServiceRecord dpvServiceRecord = ArkivmeldingServiceRecord.of(DPV, orgnr, properties.getDpv().getEndpointURL().toString());
         dpvServiceRecord.getService().setServiceCode(process.getServiceCode());
         dpvServiceRecord.getService().setServiceEditionCode(process.getServiceEditionCode());
         dpvServiceRecord.setProcess(process.getIdentifier());
@@ -222,10 +224,10 @@ public class ServiceRecordFactory {
 
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
     public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
-                                                         Authentication auth,
-                                                         String onBehalfOrgnr,
-                                                         Notification notification,
-                                                         boolean forcePrint) throws KRRClientException {
+                                                               Authentication auth,
+                                                               String onBehalfOrgnr,
+                                                               Notification notification,
+                                                               boolean forcePrint) throws KRRClientException {
 
         String token = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
 
