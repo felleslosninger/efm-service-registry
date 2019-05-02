@@ -2,6 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.model.DocumentType;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory;
@@ -111,7 +112,7 @@ public class ServiceRecordFactoryTest {
     }
 
     @Test
-    public void createArkivmeldingServiceRecords_IdentifierHasAdministrasjonButNotSkattRegistrationInSmp_ShouldReturnCorrespondingDpoAndDpvServiceRecords() throws EndpointUrlNotFound {
+    public void createArkivmeldingServiceRecords_IdentifierHasAdministrasjonButNotSkattRegistrationInSmp_ShouldReturnCorrespondingDpoAndDpvServiceRecords() throws EndpointUrlNotFound, SecurityLevelNotFoundException {
         ProcessMetadata<Endpoint> administrationProcessMetadata =
                 ProcessMetadata.of(ProcessIdentifier.of(ARKIVMELDING_PROCESS_ADMIN), Endpoint.of(null, null, null));
         ServiceMetadata administrationServiceMetadata =
@@ -130,21 +131,16 @@ public class ServiceRecordFactoryTest {
     }
 
     @Test
-    public void createArkivmeldingServiceRecords_IdentifierHasSvarUtRegistration_ShouldReturnDpfServiceRecord() {
+    public void createArkivmeldingServiceRecords_IdentifierHasSvarUtRegistration_ShouldReturnDpfServiceRecord() throws SecurityLevelNotFoundException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any())).thenReturn(Optional.of(3));
         List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR_FIKS, null);
         assertEquals(2, countServiceRecordsForServiceIdentifier(result, ServiceIdentifier.DPF));
     }
 
-    @Test
-    public void createArkivmeldingServiceRecordsWithSecurityLevel_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldReturnNoDpfServiceRecords() {
+    @Test(expected = SecurityLevelNotFoundException.class)
+    public void createArkivmeldingServiceRecordsWithSecurityLevel_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException() throws SecurityLevelNotFoundException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any())).thenReturn(Optional.empty());
-
-        //TODO: An error response should be returned in this case.
-        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR_FIKS, 3);
-
-        assertEquals(0, countServiceRecordsForServiceIdentifier(result, ServiceIdentifier.DPF));
-        assertEquals(0, countServiceRecordsForServiceIdentifier(result, ServiceIdentifier.DPV));
+        factory.createArkivmeldingServiceRecords(ORGNR_FIKS, 3);
     }
 
     private long countServiceRecordsForServiceIdentifier(List<ServiceRecord> result, ServiceIdentifier serviceIdentifier) {
