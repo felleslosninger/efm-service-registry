@@ -100,17 +100,17 @@ public class ServiceRecordFactoryTest {
         DocumentType documentType = new DocumentType();
         documentType.setIdentifier(ARKIVMELDING_DOCTYPE);
 
-        Process processAdmin = new Process()
-                .setIdentifier(ARKIVMELDING_PROCESS_ADMIN)
-                .setCategory(ProcessCategory.ARKIVMELDING)
-                .setServiceCode("4192")
-                .setServiceEditionCode("270815");
+        Process processAdmin = new Process();
+        processAdmin.setIdentifier(ARKIVMELDING_PROCESS_ADMIN);
+        processAdmin.setCategory(ProcessCategory.ARKIVMELDING);
+        processAdmin.setServiceCode("4192");
+        processAdmin.setServiceEditionCode("270815");
 
-        Process processSkatt = new Process()
-                .setIdentifier(ARKIVMELDING_PROCESS_SKATT)
-                .setCategory(ProcessCategory.ARKIVMELDING)
-                .setServiceCode("4192")
-                .setServiceEditionCode("270815");
+        Process processSkatt = new Process();
+        processSkatt.setIdentifier(ARKIVMELDING_PROCESS_SKATT);
+        processSkatt.setCategory(ProcessCategory.ARKIVMELDING);
+        processSkatt.setServiceCode("4192");
+        processSkatt.setServiceEditionCode("270815");
 
         processSkatt.setDocumentTypes(Lists.newArrayList(documentType));
         processAdmin.setDocumentTypes(Lists.newArrayList(documentType));
@@ -120,7 +120,7 @@ public class ServiceRecordFactoryTest {
         when(processService.findAll(ProcessCategory.ARKIVMELDING)).thenReturn(Lists.newArrayList(processAdmin, processSkatt));
 
         ProcessMetadata<Endpoint> pmd = ProcessMetadata.of(ProcessIdentifier.of(ARKIVMELDING_PROCESS_ADMIN), Endpoint.of(null, null, null));
-        ServiceMetadata smd = ServiceMetadata.of(ParticipantIdentifier.of("9908:"+ORGNR), DocumentTypeIdentifier.of(ARKIVMELDING_DOCTYPE), Arrays.asList(pmd));
+        ServiceMetadata smd = ServiceMetadata.of(ParticipantIdentifier.of("9908:" + ORGNR), DocumentTypeIdentifier.of(ARKIVMELDING_DOCTYPE), Arrays.asList(pmd));
         when(lookupService.lookup(Matchers.eq(ORGNR), any(List.class))).thenReturn(Lists.newArrayList(smd));
         when(lookupService.lookup(Matchers.eq(ORGNR_FIKS), any(List.class))).thenReturn(Lists.newArrayList());
 

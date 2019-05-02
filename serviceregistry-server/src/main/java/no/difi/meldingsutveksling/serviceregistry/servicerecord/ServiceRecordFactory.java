@@ -13,8 +13,8 @@ import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
-import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
+import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
@@ -22,6 +22,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import no.difi.vefa.peppol.common.model.ProcessIdentifier;
+import no.difi.vefa.peppol.common.model.ProcessMetadata;
 import no.difi.vefa.peppol.common.model.ServiceMetadata;
 import no.difi.virksert.client.lang.VirksertClientException;
 import org.apache.commons.io.IOUtils;
@@ -29,8 +30,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
+import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -84,37 +85,43 @@ public class ServiceRecordFactory {
         this.processService = processService;
     }
 
-    public ServiceRecord createArkivmeldingServiceRecord(String orgnr, String processIdentifier) {
+    public Optional<ServiceRecord> createArkivmeldingServiceRecord(String orgnr, String processIdentifier) {
         Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
-        Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr);
         if (!optionalProcess.isPresent()) {
-            return null;
+            return Optional.empty();
         }
-        ServiceRecord arkivmeldingServiceRecord ;
+        Optional<ServiceRecord> arkivmeldingServiceRecord;
         Process p = optionalProcess.get();
-
+        final Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
         try {
             List<ServiceMetadata> serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, p.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
-            Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
             serviceMetadataList.forEach(smd ->
                     smd.getProcesses().forEach(s -> processIdentifiers.add(s.getProcessIdentifier()))
             );
+        } catch (EndpointUrlNotFound endpointUrlNotFound) {
+            log.error(String.format("Failed to lookup process in ELMA: %s", endpointUrlNotFound.getMessage()));
+        }
+
+        try {
             if (processIdentifiers.isEmpty()) {
+                Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr);
                 if (hasSvarUt.isPresent()) {
-                    arkivmeldingServiceRecord = createDpfServiceRecord(orgnr, p);
+                    arkivmeldingServiceRecord = Optional.of(createDpfServiceRecord(orgnr, p));
+                } else {
+                    arkivmeldingServiceRecord = Optional.of(createDpvServiceRecord(orgnr, p));
                 }
-                //DPV
-                else {
-                    arkivmeldingServiceRecord = createDpvServiceRecord(orgnr, p);
-                }
-                // dpo
+                return arkivmeldingServiceRecord;
+            }
+            if (processIdentifiers.contains(processIdentifier)) {
+                arkivmeldingServiceRecord = Optional.of(createDpoServiceRecord(orgnr, p));
             } else {
-                arkivmeldingServiceRecord = createDpoServiceRecord(orgnr, p);
+                arkivmeldingServiceRecord = Optional.of(createDpvServiceRecord(orgnr, p));
             }
         } catch (Exception e) {
             log.error("Unable to create Service Record of type Arkivmelding", e);
             throw new UnsupportedOperationException();
         }
+
         return arkivmeldingServiceRecord;
     }
 
@@ -142,11 +149,12 @@ public class ServiceRecordFactory {
                 Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr);
                 if (hasSvarUt.isPresent()) {
                     arkivmeldingProcesses.forEach(p -> {
-                        ServiceRecord dpfServiceRecord = createDpfServiceRecord(orgnr, p);
-                        serviceRecords.add(dpfServiceRecord);
+                        serviceRecords.add(createDpfServiceRecord(orgnr, p));
                     });
                 } else {
-                    arkivmeldingProcesses.forEach(p -> serviceRecords.add(createDpvServiceRecord(orgnr, p)));
+                    arkivmeldingProcesses.forEach(p -> {
+                        serviceRecords.add(createDpvServiceRecord(orgnr, p));
+                    });
                 }
                 return serviceRecords;
             } else {
@@ -154,8 +162,7 @@ public class ServiceRecordFactory {
                     if (processIdentifiers.stream()
                             .map(ProcessIdentifier::getIdentifier)
                             .anyMatch(identifier -> identifier.equals(p.getIdentifier()))) {
-                        ServiceRecord dpoServiceRecord = createDpoServiceRecord(orgnr, p);
-                        serviceRecords.add(dpoServiceRecord);
+                        serviceRecords.add(createDpoServiceRecord(orgnr, p));
                     } else {
                         serviceRecords.add(createDpvServiceRecord(orgnr, p));
                     }
@@ -172,21 +179,35 @@ public class ServiceRecordFactory {
     }
 
     public Optional<ServiceRecord> createEinnsynServiceRecord(String orgnr, String processIdentifier) {
-        // TODO implementere. Må vel også sørge for å dekke alle 3 typane, meeting, journal og innsyn
-        ServiceRecord einnsynServiceRecord;
+        Optional<ServiceRecord> optionalServiceRecord = Optional.empty();
         Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
         if (!optionalProcess.isPresent()) {
             return null;
         }
         Process p = optionalProcess.get();
 
+        final Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
         try {
-            einnsynServiceRecord = createEinnsynServiceRecord(orgnr, p);
+            List<ServiceMetadata> serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, p.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+            serviceMetadataList.forEach(smd ->
+                    smd.getProcesses().forEach(s -> processIdentifiers.add(s.getProcessIdentifier()))
+            );
+        } catch (EndpointUrlNotFound endpointUrlNotFound) {
+            log.error(String.format("Failed to lookup process in ELMA: %s", endpointUrlNotFound.getMessage()));
+        }
+
+        try {
+            if (processIdentifier.isEmpty()) {
+                return Optional.empty();
+            }
+            if (processIdentifiers.contains(processIdentifier)) {
+                optionalServiceRecord = Optional.of(createDpeServiceRecord(orgnr, p));
+            }
         } catch (Exception e) {
             log.error("Unable to create Service Record of type Einnsyn", e);
             throw new UnsupportedOperationException();
         }
-        return Optional.ofNullable(einnsynServiceRecord);
+        return optionalServiceRecord;
     }
 
     private ServiceRecord createDpoServiceRecord(String orgnr, Process process) {
@@ -215,7 +236,7 @@ public class ServiceRecordFactory {
         return arkivmeldingServiceRecord;
     }
 
-    private ServiceRecord createEinnsynServiceRecord(String orgnr, Process process) {
+    private ServiceRecord createDpeServiceRecord(String orgnr, Process process) {
         String pemCertificate = lookupPemCertificate(orgnr);
         ServiceRecord einnsynServiceRecord = DpeServiceRecord.of(pemCertificate, orgnr, DPE, process.getServiceCode());
         einnsynServiceRecord.setProcess(process.getIdentifier());
@@ -225,8 +246,9 @@ public class ServiceRecordFactory {
     }
 
 
-    public List<ServiceRecord> createDpeServiceRecords(String orgnr) {
+    public List<ServiceRecord> createEinnsynServiceRecords(String orgnr) {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
+        Optional<ServiceRecord> optionalServiceRecord;
         List<Process> einnsynProcesses = processService.findAll(ProcessCategory.EINNSYN);
         Set<String> documentTypeIdentifiers = einnsynProcesses.stream()
                 .map(Process::getDocumentTypes)
@@ -245,18 +267,15 @@ public class ServiceRecordFactory {
             if (processIdentifiers.isEmpty()) {
                 return serviceRecords;
             }
-            einnsynProcesses.forEach(p -> {
+
+            for (Process p : einnsynProcesses) {
                 if (processIdentifiers.stream()
                         .map(ProcessIdentifier::getIdentifier)
                         .anyMatch(identifier -> identifier.equals(p.getIdentifier()))) {
-                    String pemCertificate = lookupPemCertificate(orgnr);
-                    //TODO fjerne duplikat under og kall eigen hjelpefunksjon ??? lag hjelpefunksjon
-                    DpeServiceRecord dpeServiceRecord = DpeServiceRecord.of(pemCertificate, orgnr, DPE, p.getServiceCode());
-                    dpeServiceRecord.setProcess(p.getIdentifier());
-                    dpeServiceRecord.setDocumentTypes(p.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
-                    serviceRecords.add(dpeServiceRecord);
+                    optionalServiceRecord = Optional.ofNullable(createDpeServiceRecord(orgnr, p));
+                    optionalServiceRecord.ifPresent(serviceRecords::add);
                 }
-            });
+            }
 
         } catch (EndpointUrlNotFound endpointUrlNotFound) {
             log.debug(MarkerFactory.receiverMarker(orgnr),
@@ -267,7 +286,7 @@ public class ServiceRecordFactory {
         return null;
     }
 
-    private ArkivmeldingServiceRecord createDpvServiceRecord(String orgnr, Process process) {
+    private ServiceRecord createDpvServiceRecord(String orgnr, Process process) {
         ArkivmeldingServiceRecord dpvServiceRecord = ArkivmeldingServiceRecord.of(DPV, orgnr, properties.getDpv().getEndpointURL().toString());
         dpvServiceRecord.getService().setServiceCode(process.getServiceCode());
         dpvServiceRecord.getService().setServiceEditionCode(process.getServiceEditionCode());
@@ -286,10 +305,10 @@ public class ServiceRecordFactory {
 
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
     public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
-                                                         Authentication auth,
-                                                         String onBehalfOrgnr,
-                                                         Notification notification,
-                                                         boolean forcePrint) throws KRRClientException {
+                                                               Authentication auth,
+                                                               String onBehalfOrgnr,
+                                                               Notification notification,
+                                                               boolean forcePrint) throws KRRClientException {
 
 
         String token = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();

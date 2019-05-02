@@ -117,8 +117,12 @@ public class ServiceRecordController {
         }
 
         Entity entity = new Entity();
+        Optional<ServiceRecord> osr;
         if (processCategory == ProcessCategory.ARKIVMELDING) {
-            serviceRecord = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier);
+            osr = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier);
+            if (osr.isPresent()){
+                serviceRecord = osr.get();
+            }
             if (serviceRecord == null) {
                 return ResponseEntity.badRequest().body(String.format("Process %s not found for receiver %s", processIdentifier, identifier));
                 //TODO endre feilkode/melding ? greit å ha sjekk på null.
@@ -128,7 +132,8 @@ public class ServiceRecordController {
         if (processCategory == ProcessCategory.EINNSYN) {
             Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createEinnsynServiceRecord(identifier, processIdentifier);
             if (!dpeServiceRecord.isPresent()) {
-                return ResponseEntity.badRequest().body(String.format("Process %s not found for receiver %s", processIdentifier, identifier));
+                log.error(String.format("Process %s not found for receiver %s", processIdentifier, identifier));
+                return ResponseEntity.notFound().build();
             }
             serviceRecord = dpeServiceRecord.get();
         }
@@ -177,7 +182,7 @@ public class ServiceRecordController {
         }
 
         entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier));
-        entity.getServiceRecords().addAll(serviceRecordFactory.createDpeServiceRecords(identifier));
+        entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(identifier));
 
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
