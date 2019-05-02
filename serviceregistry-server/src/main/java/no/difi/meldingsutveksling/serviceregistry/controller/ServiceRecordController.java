@@ -12,6 +12,7 @@ import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory;
+import no.difi.meldingsutveksling.serviceregistry.response.ErrorResponse;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
@@ -178,7 +179,7 @@ public class ServiceRecordController {
         try {
             entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
         } catch (SecurityLevelNotFoundException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
         }
         entity.getServiceRecords().addAll(serviceRecordFactory.createDpeServiceRecords(identifier));
 

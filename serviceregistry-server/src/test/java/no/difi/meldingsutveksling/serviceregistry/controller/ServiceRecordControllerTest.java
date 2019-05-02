@@ -1,5 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
@@ -14,6 +15,7 @@ import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
+import no.difi.meldingsutveksling.serviceregistry.response.ErrorResponse;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
@@ -30,7 +32,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -243,10 +247,16 @@ public class ServiceRecordControllerTest {
     }
 
     @Test
-    public void getWithSecurityLevel_ArkivmeldingResolvesToDpfButSecurityLevelIsNotAvailable_ShouldReturnBadRequestWithMessage() throws Exception {
-        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), anyInt())).thenThrow(new SecurityLevelNotFoundException("security level not found"));
-        mvc.perform(get("/identifier/42?securityLevel=3")
+    public void getWithSecurityLevel_ArkivmeldingResolvesToDpfButSecurityLevelIsNotAvailable_ShouldReturnErrorResponseBody() throws Exception {
+        final String message = "security level not found";
+        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), anyInt())).thenThrow(new SecurityLevelNotFoundException(message));
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        MockHttpServletResponse result = mvc.perform(get("/identifier/42?securityLevel=3")
                 .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
+                .andReturn().getResponse();
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getStatus());
+        assertEquals(message, objectMapper.readValue(result.getContentAsString(), ErrorResponse.class).getErrorDescription());
     }
 }
