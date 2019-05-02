@@ -17,7 +17,6 @@ import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
-import no.difi.meldingsutveksling.serviceregistry.servicerecord.ErrorServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
 import org.jboss.logging.MDC;
@@ -218,26 +217,6 @@ public class ServiceRecordController {
 
         return ResponseEntity.ok(payloadSigner.sign(json));
     }
-
-    /**
-     * Checks if the returned service record is of type ErrorServiceRecord.
-     * If so, add the service identifier to the list of failed services and
-     * return empty {@code Optional}. Else, return the service record.
-     *
-     * @param serviceRecord to check
-     * @param entity        to add failed serviceIdentifiers to
-     * @return {@code Optional} if present, empty otherwise
-     */
-    private Optional<ServiceRecord> serviceRecordResponseHandler(Optional<ServiceRecord> serviceRecord, Entity entity) {
-        if (serviceRecord.filter(r -> r instanceof ErrorServiceRecord).isPresent()) {
-            if (!entity.getFailedServiceIdentifiers().contains(serviceRecord.get().getService().getIdentifier())) {
-                entity.getFailedServiceIdentifiers().add(serviceRecord.get().getService().getIdentifier());
-            }
-            return Optional.empty();
-        }
-        return serviceRecord;
-    }
-
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find endpoint url for service of requested organization")
     @ExceptionHandler(EndpointUrlNotFound.class)
