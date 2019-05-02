@@ -6,6 +6,7 @@ import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
@@ -174,7 +175,11 @@ public class ServiceRecordController {
             }
         }
 
-        entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
+        try {
+            entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
+        } catch (SecurityLevelNotFoundException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
         entity.getServiceRecords().addAll(serviceRecordFactory.createDpeServiceRecords(identifier));
 
         return new ResponseEntity<>(entity, HttpStatus.OK);

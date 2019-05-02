@@ -7,6 +7,7 @@ import com.nimbusds.jose.crypto.RSASSAVerifier;
 import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.krr.ContactInfoResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.DigitalPostResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
@@ -63,6 +64,7 @@ public class ServiceRecordControllerTest {
 
     private static final ArkivmeldingServiceRecord DPO_SERVICE_RECORD = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPO, "42", "http://endpoint.here", "pem123");
     private static final ArkivmeldingServiceRecord DPV_SERVICE_RECORD = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPV, "43", "http://endpoint.here");
+    private static final ArkivmeldingServiceRecord DPF_SERVICE_RECORD = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPF, "42", "http://endpoint.here", "pem234");
 
     @Autowired
     private MockMvc mvc;
@@ -94,10 +96,13 @@ public class ServiceRecordControllerTest {
         CitizenInfo citizenInfo = new CitizenInfo("12345678901");
         when(entityService.getEntityInfo("12345678901")).thenReturn(Optional.of(citizenInfo));
         when(entityService.getEntityInfo("1337")).thenReturn(Optional.empty());
+        assignServiceCodes(DPO_SERVICE_RECORD.getService(), "123", "321");
+        assignServiceCodes(DPF_SERVICE_RECORD.getService(), "234", "432");
+    }
 
-        SRService service = DPO_SERVICE_RECORD.getService();
-        service.setServiceCode("123");
-        service.setServiceEditionCode("321");
+    private void assignServiceCodes(SRService service, String serviceCode, String serviceEditionCode) {
+        service.setServiceCode(serviceCode);
+        service.setServiceEditionCode(serviceEditionCode);
     }
 
     @Test
@@ -220,5 +225,28 @@ public class ServiceRecordControllerTest {
                 .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("http://endpoint.here")))
                 .andExpect(jsonPath("$.infoRecord.identifier", is("42")))
                 .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")));
+    }
+
+    @Test
+    public void getWithSecurityLevel_ArkivmeldingResolvesToDpfAndSecurityLevelIsAvailable_ServiceRecordShouldMatchExpectedValues() throws Exception {
+        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any())).thenReturn(Lists.newArrayList(DPF_SERVICE_RECORD));
+        mvc.perform(get("/identifier/42?securityLevel=3").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("42")))
+                .andExpect(jsonPath("$.serviceRecords[0].pemCertificate", is("-----BEGIN CERTIFICATE-----\npem234\n-----END CERTIFICATE-----\n")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPF")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.serviceCode", is("234")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.serviceEditionCode", is("432")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("http://endpoint.here")))
+                .andExpect(jsonPath("$.infoRecord.identifier", is("42")))
+                .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")));
+    }
+
+    @Test
+    public void getWithSecurityLevel_ArkivmeldingResolvesToDpfButSecurityLevelIsNotAvailable_ShouldReturnBadRequestWithMessage() throws Exception {
+        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), anyInt())).thenThrow(new SecurityLevelNotFoundException("security level not found"));
+        mvc.perform(get("/identifier/42?securityLevel=3")
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 }

@@ -9,6 +9,7 @@ import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
@@ -89,7 +90,7 @@ public class ServiceRecordFactory {
     }
 
     @SuppressWarnings("squid:S1166")
-    public List<ServiceRecord> createArkivmeldingServiceRecords(String orgnr, Integer targetSecurityLevel) {
+    public List<ServiceRecord> createArkivmeldingServiceRecords(String orgnr, Integer targetSecurityLevel) throws SecurityLevelNotFoundException {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
         List<Process> arkivmeldingProcesses = processService.findAll(ProcessCategory.ARKIVMELDING);
         List<String> documentTypeIdentifiers = new ArrayList<>();
@@ -127,7 +128,9 @@ public class ServiceRecordFactory {
                 } else {
                     if (null == targetSecurityLevel) {
                         arkivmeldingProcesses.forEach(p -> serviceRecords.add(createDpvServiceRecord(orgnr, p)));
-                    } //else{} //TODO: An error response is to be returned here.
+                    } else {
+                        throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", orgnr, targetSecurityLevel));
+                    }
                 }
                 return serviceRecords;
             } else {
