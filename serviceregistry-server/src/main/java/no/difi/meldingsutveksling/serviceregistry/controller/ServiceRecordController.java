@@ -153,28 +153,16 @@ public class ServiceRecordController {
             @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             Authentication auth,
-            HttpServletRequest request) throws SecurityLevelNotFoundException {
-
+            HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException {
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
         Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
         if (!entityInfo.isPresent()) {
             return ResponseEntity.notFound().build();
         }
-
-        String clientOrgnr = getAuthorizedClientIdentifier(auth, request);
         entity.setInfoRecord(entityInfo.get());
-
-        if (shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
-            try {
-                entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, obligation, forcePrint));
-            } catch (KRRClientException e) {
-                String errorMsg = "Error looking up identifier in KRR";
-                log.error(errorMsg, e);
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMsg);
-            }
-        }
-
+        String clientOrgnr = getAuthorizedClientIdentifier(auth, request);
+        entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, obligation, forcePrint));
         entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
         entity.getServiceRecords().addAll(serviceRecordFactory.createDpeServiceRecords(identifier));
         return new ResponseEntity<>(entity, HttpStatus.OK);
@@ -200,7 +188,7 @@ public class ServiceRecordController {
             @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             Authentication auth,
-            HttpServletRequest request) throws EntitySignerException, SecurityLevelNotFoundException {
+            HttpServletRequest request) throws EntitySignerException, SecurityLevelNotFoundException, KRRClientException {
 
         ResponseEntity entity = entity(identifier, obligation, forcePrint, securityLevel, auth, request);
         if (entity.getStatusCode() != HttpStatus.OK) {
@@ -240,6 +228,13 @@ public class ServiceRecordController {
     public ResponseEntity securityLevelNotFound(HttpServletRequest request, Exception e) {
         log.warn(String.format("Security level not found for %s", request.getRequestURL()));
         return ResponseEntity.badRequest().body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
+    }
+
+    @ExceptionHandler(KRRClientException.class)
+    public ResponseEntity krrClientException(HttpServletRequest request, Exception e) {
+        log.error("Exception occurred on {}", request.getRequestURL(), e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
     }
 
 }
