@@ -154,7 +154,7 @@ public class ServiceRecordController {
             @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             Authentication auth,
-            HttpServletRequest request) {
+            HttpServletRequest request) throws SecurityLevelNotFoundException {
 
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
@@ -176,13 +176,8 @@ public class ServiceRecordController {
             }
         }
 
-        try {
-            entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
-        } catch (SecurityLevelNotFoundException e) {
-            return ResponseEntity.badRequest().body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
-        }
+        entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
         entity.getServiceRecords().addAll(serviceRecordFactory.createDpeServiceRecords(identifier));
-
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
@@ -206,7 +201,7 @@ public class ServiceRecordController {
             @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             Authentication auth,
-            HttpServletRequest request) throws EntitySignerException {
+            HttpServletRequest request) throws EntitySignerException, SecurityLevelNotFoundException {
 
         ResponseEntity entity = entity(identifier, obligation, forcePrint, securityLevel, auth, request);
         if (entity.getStatusCode() != HttpStatus.OK) {
@@ -260,6 +255,12 @@ public class ServiceRecordController {
     public ResponseEntity accessDenied(HttpServletRequest req, Exception e) {
         log.warn("Access denied on resource {}", req.getRequestURL(), e);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized scope");
+    }
+
+    @ExceptionHandler(SecurityLevelNotFoundException.class)
+    public ResponseEntity securityLevelNotFound(HttpServletRequest request, Exception e) {
+        log.warn(String.format("Security level not found for %s", request.getRequestURL()));
+        return ResponseEntity.badRequest().body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
     }
 
 }
