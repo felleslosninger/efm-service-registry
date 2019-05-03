@@ -3,6 +3,7 @@ package no.difi.meldingsutveksling.serviceregistry.service.krr;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,9 +51,13 @@ public class KrrService {
         try {
             return this.krrCache.get(params);
         } catch (ExecutionException e) {
-            throw new KRRClientException(e);
+            if (e.getCause() instanceof KRRClientException) {
+                throw ((KRRClientException) e.getCause());
+            }
+            throw new ServiceRegistryException(e);
         }
     }
+
 
     private PersonResource loadCitizenInfo(LookupParameters params) throws KRRClientException {
         return krrClient.getPersonResource(params.getIdentifier(), params.getToken());
@@ -67,7 +72,10 @@ public class KrrService {
         try {
             return this.dsfCache.get(params);
         } catch (ExecutionException e) {
-            throw new KRRClientException(e);
+            if (e.getCause() instanceof KRRClientException) {
+                throw ((KRRClientException) e.getCause());
+            }
+            throw new ServiceRegistryException(e);
         }
     }
 

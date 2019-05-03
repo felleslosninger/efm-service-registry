@@ -9,10 +9,7 @@ import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
-import no.difi.meldingsutveksling.serviceregistry.krr.ContactInfoResource;
-import no.difi.meldingsutveksling.serviceregistry.krr.DigitalPostResource;
-import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
-import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
+import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.response.ErrorResponse;
@@ -42,6 +39,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.cert.Certificate;
@@ -142,8 +140,8 @@ public class ServiceRecordControllerTest {
     @WithMockUser(username = "user1", password = "pwd", roles = "USER")
     public void get_IdentifierAndCredentialsResolveToDpi_ServiceRecordShouldMatchExpectedValues() throws Exception {
         ServiceregistryProperties serviceregistryProperties = fakePropertiesForDpi();
-        PostAddress postAddress = new PostAddress("Address name", "Street x", "Postal code", "Area", "Country");
         PersonResource personResource = fakePersonResourceForDpi();
+        PostAddress postAddress = new PostAddress("Address name", "Street x", "Postal code", "Area", "Country");
         SikkerDigitalPostServiceRecord dpiServiceRecord
                 = new SikkerDigitalPostServiceRecord(serviceregistryProperties, personResource, ServiceIdentifier.DPI, "12345678901", postAddress, postAddress);
         when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(Notification.class), anyBoolean()))
@@ -155,6 +153,20 @@ public class ServiceRecordControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("12345678901")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPI")));
+    }
+
+    @Test
+    public void get_IdentifierAndCredentialsResolveToDpiAndLookupGivesError_ShouldReturnErrorResponseBody() throws Exception {
+        final String message = "Error looking up identifier in KRR";
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(Notification.class), anyBoolean()))
+                .thenThrow(new KRRClientException(new Exception(message)));
+
+        MockHttpServletResponse result = mvc.perform(get("/identifier/12345678901")
+                .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), result.getStatus());
+        assertTrue(deserializeErrorResponse(result).getErrorDescription().contains(message));
     }
 
     private PersonResource fakePersonResourceForDpi() {
@@ -250,13 +262,17 @@ public class ServiceRecordControllerTest {
     public void getWithSecurityLevel_ArkivmeldingResolvesToDpfButSecurityLevelIsNotAvailable_ShouldReturnErrorResponseBody() throws Exception {
         final String message = "security level not found";
         when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), anyInt())).thenThrow(new SecurityLevelNotFoundException(message));
-        ObjectMapper objectMapper = new ObjectMapper();
 
         MockHttpServletResponse result = mvc.perform(get("/identifier/42?securityLevel=3")
                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
         assertEquals(HttpStatus.BAD_REQUEST.value(), result.getStatus());
-        assertEquals(message, objectMapper.readValue(result.getContentAsString(), ErrorResponse.class).getErrorDescription());
+        assertEquals(message, deserializeErrorResponse(result).getErrorDescription());
+    }
+
+    private ErrorResponse deserializeErrorResponse(MockHttpServletResponse result) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.readValue(result.getContentAsString(), ErrorResponse.class);
     }
 }
