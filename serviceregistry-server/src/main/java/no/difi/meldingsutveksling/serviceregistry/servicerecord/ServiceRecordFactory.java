@@ -91,7 +91,7 @@ public class ServiceRecordFactory {
         if (!optionalProcess.isPresent()) {
             return Optional.empty();
         }
-        Optional<ServiceRecord> arkivmeldingServiceRecord;
+        Optional<ServiceRecord> arkivmeldingServiceRecord = Optional.empty();
         Process p = optionalProcess.get();
         final Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
         try {
@@ -113,14 +113,17 @@ public class ServiceRecordFactory {
                 }
                 return arkivmeldingServiceRecord;
             }
-            if (processIdentifiers.contains(processIdentifier)) {
+
+            //TODO eitlanna fubar i logikken her.. fiks det. linje 118 blant anna..
+            if (processIdentifiers.stream()
+                    .map(ProcessIdentifier::getIdentifier)
+                    .anyMatch(identifier -> identifier.equals(p.getIdentifier()))) {
                 arkivmeldingServiceRecord = Optional.of(createDpoServiceRecord(orgnr, p));
             } else {
                 arkivmeldingServiceRecord = Optional.of(createDpvServiceRecord(orgnr, p));
             }
         } catch (Exception e) {
-            log.error("Unable to create Service Record of type Arkivmelding", e);
-            throw new UnsupportedOperationException();
+            log.debug("Unable to create Service Record of type Arkivmelding", e);
         }
 
         return arkivmeldingServiceRecord;
@@ -185,7 +188,7 @@ public class ServiceRecordFactory {
         Optional<ServiceRecord> optionalServiceRecord = Optional.empty();
         Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
         if (!optionalProcess.isPresent()) {
-            return null;
+            return Optional.empty();
         }
         Process p = optionalProcess.get();
 
@@ -196,19 +199,20 @@ public class ServiceRecordFactory {
                     smd.getProcesses().forEach(s -> processIdentifiers.add(s.getProcessIdentifier()))
             );
         } catch (EndpointUrlNotFound endpointUrlNotFound) {
-            log.error(String.format("Failed to lookup process in ELMA: %s", endpointUrlNotFound.getMessage()));
+            log.debug(String.format("Failed to lookup process in ELMA: %s", endpointUrlNotFound.getMessage()));
         }
 
         try {
             if (processIdentifier.isEmpty()) {
                 return Optional.empty();
             }
-            if (processIdentifiers.contains(processIdentifier)) {
+            if (processIdentifiers.stream()
+                    .map(ProcessIdentifier::getIdentifier)
+                    .anyMatch(identifier -> identifier.equals(p.getIdentifier()))) {
                 optionalServiceRecord = Optional.of(createDpeServiceRecord(orgnr, p));
             }
         } catch (Exception e) {
             log.error("Unable to create Service Record of type Einnsyn", e);
-            throw new UnsupportedOperationException();
         }
         return optionalServiceRecord;
     }
