@@ -13,5 +13,5 @@ public class SRService {
     protected String endpointUrl;
     private String serviceCode;
     private String serviceEditionCode;
-    private int securityLevel;
+    private Integer securityLevel;
 }

@@ -199,7 +199,7 @@ public class ServiceRecordFactory {
         return arkivmeldingServiceRecord;
     }
 
-    private ServiceRecord createDpfServiceRecord(String orgnr, Process process, int securityLevel) {
+    private ServiceRecord createDpfServiceRecord(String orgnr, Process process, Integer securityLevel) {
         String pem;
         try {
             pem = IOUtils.toString(properties.getSvarut().getCertificate().getInputStream(), StandardCharsets.UTF_8);
