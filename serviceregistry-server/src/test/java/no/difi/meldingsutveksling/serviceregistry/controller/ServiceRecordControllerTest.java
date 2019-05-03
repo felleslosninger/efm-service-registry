@@ -30,7 +30,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -66,7 +65,7 @@ public class ServiceRecordControllerTest {
     private static final ArkivmeldingServiceRecord DPO_SERVICE_RECORD = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPO, "42", "http://endpoint.here", "pem123");
     private static final ArkivmeldingServiceRecord DPV_SERVICE_RECORD = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPV, "43", "http://endpoint.here");
     private static final ArkivmeldingServiceRecord DPF_SERVICE_RECORD = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPF, "42", "http://endpoint.here", "pem234");
-    private static final DpeServiceRecord DPE_SERVICE_RECORD = DpeServiceRecord.of("pem567", "50", ServiceIdentifier.DPE,  "http://queue.here");
+    private static final DpeServiceRecord DPE_SERVICE_RECORD = DpeServiceRecord.of("pem567", "50", ServiceIdentifier.DPE, "http://queue.here");
 
     @Autowired
     private MockMvc mvc;
@@ -236,8 +235,7 @@ public class ServiceRecordControllerTest {
 
     @Test
     public void getWithProcessIdentifier_ArkivmeldingResolvesToDpo_ServiceRecordShouldMatchExpectedValues() throws Exception {
-        Process processMock = mock(Process.class);
-        when(processMock.getCategory()).thenReturn(ProcessCategory.ARKIVMELDING);
+        Process processMock = mockProcess(ProcessCategory.ARKIVMELDING);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), anyString(), anyInt())).thenReturn(Optional.of(DPO_SERVICE_RECORD));
 
@@ -254,7 +252,41 @@ public class ServiceRecordControllerTest {
     }
 
     @Test
-    public void getWithSecurityLevel_ArkivmeldingResolvesToDpfAndSecurityLevelIsAvailable_ServiceRecordShouldMatchExpectedValues() throws Exception {
+    public void getWithProcessIdentifier_ArkivmeldingResolvesToDpfAndRequestedSecurityLevelIsAvailable_ServiceRecordShouldMatchExpectedValues() throws Exception {
+        DPF_SERVICE_RECORD.getService().setSecurityLevel(3);
+        Process processMock = mockProcess(ProcessCategory.ARKIVMELDING);
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
+        when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), anyString(), any())).thenReturn(Optional.of(DPF_SERVICE_RECORD));
+        mvc.perform(get("/identifier/42/process/ProcessID?securityLevel=3").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("42")))
+                .andExpect(jsonPath("$.serviceRecords[0].pemCertificate", is("-----BEGIN CERTIFICATE-----\npem234\n-----END CERTIFICATE-----\n")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPF")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.securityLevel", is(3)))
+                .andExpect(jsonPath("$.serviceRecords[0].service.serviceCode", is("234")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.serviceEditionCode", is("432")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("http://endpoint.here")))
+                .andExpect(jsonPath("$.infoRecord.identifier", is("42")))
+                .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")));
+    }
+
+    @Test
+    public void getWithProcessIdentifier_ArkivmeldingResolvesToDpfButRequestedSecurityLevelIsNotAvailable_ShouldReturnErrorResponseBody() throws Exception {
+        Process processMock = mockProcess(ProcessCategory.ARKIVMELDING);
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
+        final String message = "security level not found";
+        when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), anyString(), anyInt())).thenThrow(new SecurityLevelNotFoundException(message));
+
+        MockHttpServletResponse result = mvc.perform(get("/identifier/42/process/ProcessID?securityLevel=3")
+                .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getStatus());
+        assertEquals(message, deserializeErrorResponse(result).getErrorDescription());
+    }
+
+    @Test
+    public void get_ArkivmeldingResolvesToDpfAndRequestedSecurityLevelIsAvailable_ServiceRecordShouldMatchExpectedValues() throws Exception {
         DPF_SERVICE_RECORD.getService().setSecurityLevel(3);
         when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any())).thenReturn(Lists.newArrayList(DPF_SERVICE_RECORD));
         mvc.perform(get("/identifier/42?securityLevel=3").accept(MediaType.APPLICATION_JSON))
@@ -271,7 +303,7 @@ public class ServiceRecordControllerTest {
     }
 
     @Test
-    public void getWithSecurityLevel_ArkivmeldingResolvesToDpfButSecurityLevelIsNotAvailable_ShouldReturnErrorResponseBody() throws Exception {
+    public void get_ArkivmeldingResolvesToDpfButRequestedSecurityLevelIsNotAvailable_ShouldReturnErrorResponseBody() throws Exception {
         final String message = "security level not found";
         when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), anyInt())).thenThrow(new SecurityLevelNotFoundException(message));
 
@@ -290,8 +322,7 @@ public class ServiceRecordControllerTest {
 
     @Test
     public void getWithProcessIdentifier_EinnsynServiceRecordShouldMatchExpectedValues() throws Exception {
-        Process processMock = mock(Process.class);
-        when(processMock.getCategory()).thenReturn(ProcessCategory.EINNSYN);
+        Process processMock = mockProcess(ProcessCategory.EINNSYN);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         when(serviceRecordFactory.createEinnsynServiceRecord(anyString(), anyString())).thenReturn(Optional.of(DPE_SERVICE_RECORD));
 
@@ -305,5 +336,11 @@ public class ServiceRecordControllerTest {
                 .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("http://queue.here")))
                 .andExpect(jsonPath("$.infoRecord.identifier", is("50")))
                 .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")));
+    }
+
+    private Process mockProcess(ProcessCategory category) {
+        Process processMock = mock(Process.class);
+        when(processMock.getCategory()).thenReturn(category);
+        return processMock;
     }
 }
