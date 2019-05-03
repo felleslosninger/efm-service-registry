@@ -37,7 +37,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
 
 import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.shouldCreateServiceRecordForCitizen;
-import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 
 @ExposesResourceFor(Entity.class)
 @RestController
@@ -51,8 +50,8 @@ public class ServiceRecordController {
     private PayloadSigner payloadSigner;
 
     /**
-     * @param serviceRecordFactory for creation of the identifiers respective service record
-     * @param entityService        needed to lookup and retrieve organization or citizen information using an identifier number
+     * @param serviceRecordFactory  for creation of the identifiers respective service record
+     * @param entityService         needed to lookup and retrieve organization or citizen information using an identifier number
      * @param processService
      * @param authenticationService
      */
@@ -127,7 +126,7 @@ public class ServiceRecordController {
         Optional<ServiceRecord> osr;
         if (processCategory == ProcessCategory.ARKIVMELDING) {
             osr = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier, securityLevel);
-            if (osr.isPresent()){
+            if (osr.isPresent()) {
                 serviceRecord = osr.get();
             }
             if (serviceRecord == null) {
