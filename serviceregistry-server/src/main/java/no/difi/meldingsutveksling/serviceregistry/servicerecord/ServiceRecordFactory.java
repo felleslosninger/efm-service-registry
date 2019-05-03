@@ -94,23 +94,23 @@ public class ServiceRecordFactory {
         Set<ProcessIdentifier> pids = Sets.newHashSet();
         Set<ProcessIdentifier> processIdentifiers = elmaLookup(orgnr, p, pids);
 
-            if (processIdentifiers.isEmpty()) {
-                Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
-                if (hasSvarUt.isPresent()) {
-                    arkivmeldingServiceRecord = Optional.of(createDpfServiceRecord(orgnr, p, targetSecurityLevel));
-                } else {
-                    arkivmeldingServiceRecord = Optional.of(createDpvServiceRecord(orgnr, p));
-                }
-                return arkivmeldingServiceRecord;
-            }
-
-            if (processIdentifiers.stream()
-                    .map(ProcessIdentifier::getIdentifier)
-                    .anyMatch(identifier -> identifier.equals(processIdentifier))) {
-                arkivmeldingServiceRecord = Optional.of(createDpoServiceRecord(orgnr, p));
+        if (processIdentifiers.isEmpty()) {
+            Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
+            if (hasSvarUt.isPresent()) {
+                arkivmeldingServiceRecord = Optional.of(createDpfServiceRecord(orgnr, p, targetSecurityLevel));
             } else {
                 arkivmeldingServiceRecord = Optional.of(createDpvServiceRecord(orgnr, p));
             }
+            return arkivmeldingServiceRecord;
+        }
+
+        if (processIdentifiers.stream()
+                .map(ProcessIdentifier::getIdentifier)
+                .anyMatch(identifier -> identifier.equals(processIdentifier))) {
+            arkivmeldingServiceRecord = Optional.of(createDpoServiceRecord(orgnr, p));
+        } else {
+            arkivmeldingServiceRecord = Optional.of(createDpvServiceRecord(orgnr, p));
+        }
 
         return arkivmeldingServiceRecord;
     }
@@ -140,9 +140,7 @@ public class ServiceRecordFactory {
         if (processIdentifiers.isEmpty()) {
             Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
             if (hasSvarUt.isPresent()) {
-                arkivmeldingProcesses.forEach(p -> {
-                    serviceRecords.add(createDpfServiceRecord(orgnr, p, targetSecurityLevel));
-                });
+                arkivmeldingProcesses.forEach(p -> serviceRecords.add(createDpfServiceRecord(orgnr, p, targetSecurityLevel)));
             } else {
                 if (null == targetSecurityLevel) {
                     arkivmeldingProcesses.forEach(p -> serviceRecords.add(createDpvServiceRecord(orgnr, p)));
@@ -176,14 +174,14 @@ public class ServiceRecordFactory {
         Set<ProcessIdentifier> pids = Sets.newHashSet();
         Set<ProcessIdentifier> processIdentifiers = elmaLookup(orgnr, p, pids);
 
-            if (processIdentifier.isEmpty()) {
-                return Optional.empty();
-            }
-            if (processIdentifiers.stream()
-                    .map(ProcessIdentifier::getIdentifier)
-                    .anyMatch(identifier -> identifier.equals(processIdentifier))) {
-                optionalServiceRecord = Optional.of(createDpeServiceRecord(orgnr, p));
-            }
+        if (processIdentifier.isEmpty()) {
+            return Optional.empty();
+        }
+        if (processIdentifiers.stream()
+                .map(ProcessIdentifier::getIdentifier)
+                .anyMatch(identifier -> identifier.equals(processIdentifier))) {
+            optionalServiceRecord = Optional.of(createDpeServiceRecord(orgnr, p));
+        }
 
         return optionalServiceRecord;
     }
@@ -363,7 +361,7 @@ public class ServiceRecordFactory {
         return serviceRecords;
     }
 
-    private Set<ProcessIdentifier> elmaLookup(String orgnr, Process p, Set<ProcessIdentifier> pids ) {
+    private Set<ProcessIdentifier> elmaLookup(String orgnr, Process p, Set<ProcessIdentifier> pids) {
         try {
             List<ServiceMetadata> serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, p.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
             serviceMetadataList.forEach(smd ->
