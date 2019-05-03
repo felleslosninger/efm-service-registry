@@ -15,6 +15,7 @@ import no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory;
 import no.difi.meldingsutveksling.serviceregistry.response.ErrorResponse;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
+import no.difi.meldingsutveksling.serviceregistry.service.AuthenticationService;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
@@ -45,6 +46,7 @@ public class ServiceRecordController {
     private static final Logger log = LoggerFactory.getLogger(ServiceRecordController.class);
     private final ServiceRecordFactory serviceRecordFactory;
     private final ProcessService processService;
+    private final AuthenticationService authenticationService;
     private EntityService entityService;
     private PayloadSigner payloadSigner;
 
@@ -52,15 +54,17 @@ public class ServiceRecordController {
      * @param serviceRecordFactory for creation of the identifiers respective service record
      * @param entityService        needed to lookup and retrieve organization or citizen information using an identifier number
      * @param processService
+     * @param authenticationService
      */
     @Autowired
     public ServiceRecordController(ServiceRecordFactory serviceRecordFactory,
                                    EntityService entityService,
-                                   PayloadSigner payloadSigner, ProcessService processService) {
+                                   PayloadSigner payloadSigner, ProcessService processService, AuthenticationService authenticationService) {
         this.entityService = entityService;
         this.serviceRecordFactory = serviceRecordFactory;
         this.payloadSigner = payloadSigner;
         this.processService = processService;
+        this.authenticationService = authenticationService;
     }
 
     @InitBinder
@@ -103,9 +107,10 @@ public class ServiceRecordController {
         Process process = optionalProcess.get();
         ProcessCategory processCategory = process.getCategory();
         if (processCategory.equals(ProcessCategory.DIGITALPOST) && shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
-            String clientOrgnr = getAuthorizedClientIdentifier(auth, request);
-            if (auth == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No authentication provided.");
+            String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
+            if (clientOrgnr == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ErrorResponse.builder().errorDescription("No authentication provided.").build());
             }
             try {
                 Entity entity = new Entity();
@@ -169,24 +174,19 @@ public class ServiceRecordController {
             return ResponseEntity.notFound().build();
         }
         entity.setInfoRecord(entityInfo.get());
-        String clientOrgnr = getAuthorizedClientIdentifier(auth, request);
-        entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, obligation, forcePrint));
+        if (shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
+            String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
+            if (clientOrgnr == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ErrorResponse.builder().errorDescription("No authentication provided.").build());
+            }
+            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, obligation, forcePrint));
+        }
         entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
         entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(identifier));
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
-    private String getAuthorizedClientIdentifier(Authentication auth, HttpServletRequest request) {
-        String clientOrgnr = auth == null ? null : (String) auth.getPrincipal();
-        if (clientOrgnr != null) {
-            log.debug(String.format("Authorized lookup request by %s", clientOrgnr),
-                    markerFrom(request.getRemoteAddr(), request.getRemoteHost(), clientOrgnr));
-        } else {
-            log.debug(String.format("Unauthorized lookup request from %s", request.getRemoteAddr()),
-                    markerFrom(request.getRemoteAddr()));
-        }
-        return clientOrgnr;
-    }
 
     @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = "application/jose")
     @ResponseBody
