@@ -143,42 +143,38 @@ public class ServiceRecordFactory {
             });
         }
 
+        Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
         try {
             List<ServiceMetadata> serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, documentTypeIdentifiers);
-            Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
-            serviceMetadataList.forEach(smd ->
-                    smd.getProcesses().forEach(p -> processIdentifiers.add(p.getProcessIdentifier()))
-            );
-            if (processIdentifiers.isEmpty()) {
-                Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
-                if (hasSvarUt.isPresent()) {
-                    arkivmeldingProcesses.forEach(p -> {
-                        serviceRecords.add(createDpfServiceRecord(orgnr, p));
-                    });
-                } else {
-                    if (null == targetSecurityLevel) {
-                        arkivmeldingProcesses.forEach(p -> serviceRecords.add(createDpvServiceRecord(orgnr, p)));
-                    } else {
-                        throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", orgnr, targetSecurityLevel));
-                    }
-                }
-                return serviceRecords;
-            } else {
-                arkivmeldingProcesses.forEach(p -> {
-                    if (processIdentifiers.stream()
-                            .map(ProcessIdentifier::getIdentifier)
-                            .anyMatch(identifier -> identifier.equals(p.getIdentifier()))) {
-                        serviceRecords.add(createDpoServiceRecord(orgnr, p));
-                    } else {
-                        serviceRecords.add(createDpvServiceRecord(orgnr, p));
-                    }
-                });
-            }
-
+            serviceMetadataList.forEach(smd -> smd.getProcesses().forEach(p -> processIdentifiers.add(p.getProcessIdentifier())) );
         } catch (EndpointUrlNotFound endpointUrlNotFound) {
             log.debug(MarkerFactory.receiverMarker(orgnr),
                     String.format("Attempted to lookup receiver in ELMA: %s", endpointUrlNotFound.getMessage()));
+        }
+        if (processIdentifiers.isEmpty()) {
+            Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
+            if (hasSvarUt.isPresent()) {
+                arkivmeldingProcesses.forEach(p -> {
+                    serviceRecords.add(createDpfServiceRecord(orgnr, p));
+                });
+            } else {
+                if (null == targetSecurityLevel) {
+                    arkivmeldingProcesses.forEach(p -> serviceRecords.add(createDpvServiceRecord(orgnr, p)));
+                } else {
+                    throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", orgnr, targetSecurityLevel));
+                }
+            }
             return serviceRecords;
+        } else {
+            arkivmeldingProcesses.forEach(p -> {
+                if (processIdentifiers.stream()
+                        .map(ProcessIdentifier::getIdentifier)
+                        .anyMatch(identifier -> identifier.equals(p.getIdentifier()))) {
+                    serviceRecords.add(createDpoServiceRecord(orgnr, p));
+                } else {
+                    serviceRecords.add(createDpvServiceRecord(orgnr, p));
+                }
+            });
         }
 
         return serviceRecords;
@@ -264,30 +260,26 @@ public class ServiceRecordFactory {
                 .collect(Collectors.toSet());
 
         List<ServiceMetadata> serviceMetadataList = null;
+        Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
         try {
             serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, Lists.newArrayList(documentTypeIdentifiers));
-            Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
-            serviceMetadataList.forEach(smd ->
-                    smd.getProcesses().forEach(p -> processIdentifiers.add(p.getProcessIdentifier()))
-            );
-
-            if (processIdentifiers.isEmpty()) {
-                return serviceRecords;
-            }
-
-            for (Process p : einnsynProcesses) {
-                if (processIdentifiers.stream()
-                        .map(ProcessIdentifier::getIdentifier)
-                        .anyMatch(identifier -> identifier.equals(p.getIdentifier()))) {
-                    optionalServiceRecord = Optional.ofNullable(createDpeServiceRecord(orgnr, p));
-                    optionalServiceRecord.ifPresent(serviceRecords::add);
-                }
-            }
-
+            serviceMetadataList.forEach(smd -> smd.getProcesses().forEach(p -> processIdentifiers.add(p.getProcessIdentifier())));
         } catch (EndpointUrlNotFound endpointUrlNotFound) {
             log.debug(MarkerFactory.receiverMarker(orgnr),
                     String.format("Attempted to lookup receiver in ELMA: %s", endpointUrlNotFound.getMessage()));
             return serviceRecords;
+        }
+        if (processIdentifiers.isEmpty()) {
+            return serviceRecords;
+        }
+
+        for (Process p : einnsynProcesses) {
+            if (processIdentifiers.stream()
+                    .map(ProcessIdentifier::getIdentifier)
+                    .anyMatch(identifier -> identifier.equals(p.getIdentifier()))) {
+                optionalServiceRecord = Optional.ofNullable(createDpeServiceRecord(orgnr, p));
+                optionalServiceRecord.ifPresent(serviceRecords::add);
+            }
         }
 
         return null;
