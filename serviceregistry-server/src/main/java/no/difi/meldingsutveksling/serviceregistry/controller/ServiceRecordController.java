@@ -6,16 +6,17 @@ import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory;
+import no.difi.meldingsutveksling.serviceregistry.response.ErrorResponse;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
-import no.difi.meldingsutveksling.serviceregistry.servicerecord.ErrorServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
 import org.jboss.logging.MDC;
@@ -71,7 +72,7 @@ public class ServiceRecordController {
      * Used to retrieve information needed to send a message within the provided process
      * to an entity with the provided identifier.
      *
-     * @param identifier  specifies the target entity.
+     * @param identifier        specifies the target entity.
      * @param processIdentifier specifies the target process.
      * @param obligation        determines service record based on the recipient being notifiable
      * @param forcePrint
@@ -85,6 +86,7 @@ public class ServiceRecordController {
                                  @PathVariable("processIdentifier") String processIdentifier,
                                  @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
                                  @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
+                                 @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
                                  Authentication auth,
                                  HttpServletRequest request) {
         MDC.put("entity", identifier);
@@ -119,13 +121,12 @@ public class ServiceRecordController {
         Entity entity = new Entity();
         Optional<ServiceRecord> osr;
         if (processCategory == ProcessCategory.ARKIVMELDING) {
-            osr = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier);
+            osr = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier, securityLevel);
             if (osr.isPresent()){
                 serviceRecord = osr.get();
             }
             if (serviceRecord == null) {
                 return ResponseEntity.badRequest().body(String.format("Process %s not found for receiver %s", processIdentifier, identifier));
-                //TODO endre feilkode/melding ? greit å ha sjekk på null.
             }
         }
 
@@ -158,8 +159,9 @@ public class ServiceRecordController {
             @PathVariable("identifier") String identifier,
             @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
             @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
+            @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             Authentication auth,
-            HttpServletRequest request) {
+            HttpServletRequest request) throws SecurityLevelNotFoundException {
 
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
@@ -180,10 +182,8 @@ public class ServiceRecordController {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMsg);
             }
         }
-
-        entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier));
+        entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
         entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(identifier));
-
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
@@ -205,10 +205,11 @@ public class ServiceRecordController {
             @PathVariable("identifier") String identifier,
             @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
             @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
+            @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             Authentication auth,
-            HttpServletRequest request) throws EntitySignerException {
+            HttpServletRequest request) throws EntitySignerException, SecurityLevelNotFoundException {
 
-        ResponseEntity entity = entity(identifier, obligation, forcePrint, auth, request);
+        ResponseEntity entity = entity(identifier, obligation, forcePrint, securityLevel, auth, request);
         if (entity.getStatusCode() != HttpStatus.OK) {
             return entity;
         }
@@ -223,26 +224,6 @@ public class ServiceRecordController {
 
         return ResponseEntity.ok(payloadSigner.sign(json));
     }
-
-    /**
-     * Checks if the returned service record is of type ErrorServiceRecord.
-     * If so, add the service identifier to the list of failed services and
-     * return empty {@code Optional}. Else, return the service record.
-     *
-     * @param serviceRecord to check
-     * @param entity        to add failed serviceIdentifiers to
-     * @return {@code Optional} if present, empty otherwise
-     */
-    private Optional<ServiceRecord> serviceRecordResponseHandler(Optional<ServiceRecord> serviceRecord, Entity entity) {
-        if (serviceRecord.filter(r -> r instanceof ErrorServiceRecord).isPresent()) {
-            if (!entity.getFailedServiceIdentifiers().contains(serviceRecord.get().getService().getIdentifier())) {
-                entity.getFailedServiceIdentifiers().add(serviceRecord.get().getService().getIdentifier());
-            }
-            return Optional.empty();
-        }
-        return serviceRecord;
-    }
-
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find endpoint url for service of requested organization")
     @ExceptionHandler(EndpointUrlNotFound.class)
@@ -260,6 +241,12 @@ public class ServiceRecordController {
     public ResponseEntity accessDenied(HttpServletRequest req, Exception e) {
         log.warn("Access denied on resource {}", req.getRequestURL(), e);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized scope");
+    }
+
+    @ExceptionHandler(SecurityLevelNotFoundException.class)
+    public ResponseEntity securityLevelNotFound(HttpServletRequest request, Exception e) {
+        log.warn(String.format("Security level not found for %s", request.getRequestURL()));
+        return ResponseEntity.badRequest().body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
     }
 
 }
