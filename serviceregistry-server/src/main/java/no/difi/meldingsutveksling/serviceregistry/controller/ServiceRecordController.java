@@ -124,14 +124,22 @@ public class ServiceRecordController {
         }
 
         Entity entity = new Entity();
+        Optional<ServiceRecord> osr;
         if (processCategory == ProcessCategory.ARKIVMELDING) {
-            serviceRecord = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier);
+            osr = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier, securityLevel);
+            if (osr.isPresent()){
+                serviceRecord = osr.get();
+            }
+            if (serviceRecord == null) {
+                return ResponseEntity.badRequest().body(String.format("Process %s not found for receiver %s", processIdentifier, identifier));
+            }
         }
 
         if (processCategory == ProcessCategory.EINNSYN) {
-            Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createDpeServiceRecord(identifier, processIdentifier);
+            Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createEinnsynServiceRecord(identifier, processIdentifier);
             if (!dpeServiceRecord.isPresent()) {
-                return ResponseEntity.badRequest().body(String.format("Process %s not found for receiver %s", processIdentifier, identifier));
+                log.error(String.format("Process %s not found for receiver %s", processIdentifier, identifier));
+                return ResponseEntity.notFound().build();
             }
             serviceRecord = dpeServiceRecord.get();
         }
@@ -175,7 +183,7 @@ public class ServiceRecordController {
             entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, obligation, forcePrint));
         }
         entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
-        entity.getServiceRecords().addAll(serviceRecordFactory.createDpeServiceRecords(identifier));
+        entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(identifier));
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 

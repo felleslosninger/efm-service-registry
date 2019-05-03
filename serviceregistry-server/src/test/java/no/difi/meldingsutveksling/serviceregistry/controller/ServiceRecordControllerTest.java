@@ -17,10 +17,7 @@ import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.AuthenticationService;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
-import no.difi.meldingsutveksling.serviceregistry.servicerecord.ArkivmeldingServiceRecord;
-import no.difi.meldingsutveksling.serviceregistry.servicerecord.SRService;
-import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
-import no.difi.meldingsutveksling.serviceregistry.servicerecord.SikkerDigitalPostServiceRecord;
+import no.difi.meldingsutveksling.serviceregistry.servicerecord.*;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
@@ -69,6 +66,7 @@ public class ServiceRecordControllerTest {
     private static final ArkivmeldingServiceRecord DPO_SERVICE_RECORD = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPO, "42", "http://endpoint.here", "pem123");
     private static final ArkivmeldingServiceRecord DPV_SERVICE_RECORD = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPV, "43", "http://endpoint.here");
     private static final ArkivmeldingServiceRecord DPF_SERVICE_RECORD = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPF, "42", "http://endpoint.here", "pem234");
+    private static final DpeServiceRecord DPE_SERVICE_RECORD = DpeServiceRecord.of("pem567", "50", ServiceIdentifier.DPE,  "http://queue.here");
 
     @Autowired
     private MockMvc mvc;
@@ -96,7 +94,11 @@ public class ServiceRecordControllerTest {
         BrregPostadresse testAdr = new BrregPostadresse("testadresse", "1337", "teststed", "testland");
         OrganizationInfo ORGLinfo = new OrganizationInfo("42", "foo",
                 testAdr, new OrganizationType("ORGL"));
+        OrganizationInfo ORGinfo = new OrganizationInfo("50", "bar",
+                testAdr, new OrganizationType("ORGL"));
+
         when(entityService.getEntityInfo("42")).thenReturn(Optional.of(ORGLinfo));
+        when(entityService.getEntityInfo("50")).thenReturn(Optional.of(ORGinfo));
         OrganizationInfo ASinfo = new OrganizationInfo("43", "foo",
                 testAdr, new OrganizationType("AS"));
         when(entityService.getEntityInfo("43")).thenReturn(Optional.of(ASinfo));
@@ -105,6 +107,7 @@ public class ServiceRecordControllerTest {
         when(entityService.getEntityInfo("1337")).thenReturn(Optional.empty());
         assignServiceCodes(DPO_SERVICE_RECORD.getService(), "123", "321");
         assignServiceCodes(DPF_SERVICE_RECORD.getService(), "234", "432");
+        assignServiceCodes(DPE_SERVICE_RECORD.getService(), "567", "765");
     }
 
     private void assignServiceCodes(SRService service, String serviceCode, String serviceEditionCode) {
@@ -153,7 +156,7 @@ public class ServiceRecordControllerTest {
         when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(Notification.class), anyBoolean()))
                 .thenReturn(Lists.newArrayList(dpiServiceRecord));
         when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any())).thenReturn(Lists.newArrayList());
-        when(serviceRecordFactory.createDpeServiceRecords(anyString())).thenReturn(Lists.newArrayList());
+        when(serviceRecordFactory.createEinnsynServiceRecords(anyString())).thenReturn(Lists.newArrayList());
 
         mvc.perform(get("/identifier/12345678901").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -236,7 +239,7 @@ public class ServiceRecordControllerTest {
         Process processMock = mock(Process.class);
         when(processMock.getCategory()).thenReturn(ProcessCategory.ARKIVMELDING);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
-        when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), anyString())).thenReturn(DPO_SERVICE_RECORD);
+        when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), anyString(), anyInt())).thenReturn(Optional.of(DPO_SERVICE_RECORD));
 
         mvc.perform(get("/identifier/42/process/ProcessID").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -281,5 +284,24 @@ public class ServiceRecordControllerTest {
     private ErrorResponse deserializeErrorResponse(MockHttpServletResponse result) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.readValue(result.getContentAsString(), ErrorResponse.class);
+    }
+
+    @Test
+    public void getWithProcessIdentifier_EinnsynServiceRecordShouldMatchExpectedValues() throws Exception {
+        Process processMock = mock(Process.class);
+        when(processMock.getCategory()).thenReturn(ProcessCategory.EINNSYN);
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
+        when(serviceRecordFactory.createEinnsynServiceRecord(anyString(), anyString())).thenReturn(Optional.of(DPE_SERVICE_RECORD));
+
+        mvc.perform(get("/identifier/50/process/ProcessID").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("50")))
+                .andExpect(jsonPath("$.serviceRecords[0].pemCertificate", is("-----BEGIN CERTIFICATE-----\npem567\n-----END CERTIFICATE-----\n")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPE")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.serviceCode", is("567")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.serviceEditionCode", is("765")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("http://queue.here")))
+                .andExpect(jsonPath("$.infoRecord.identifier", is("50")))
+                .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")));
     }
 }
