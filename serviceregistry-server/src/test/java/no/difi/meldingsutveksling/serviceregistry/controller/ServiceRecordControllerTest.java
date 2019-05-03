@@ -14,6 +14,7 @@ import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.response.ErrorResponse;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
+import no.difi.meldingsutveksling.serviceregistry.service.AuthenticationService;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ArkivmeldingServiceRecord;
@@ -32,6 +33,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -82,6 +84,9 @@ public class ServiceRecordControllerTest {
 
     @MockBean
     private ProcessService processService;
+
+    @MockBean
+    private AuthenticationService authenticationService;
 
     @Autowired
     private PayloadSigner payloadSigner;
@@ -140,6 +145,7 @@ public class ServiceRecordControllerTest {
     @WithMockUser(username = "user1", password = "pwd", roles = "USER")
     public void get_IdentifierAndCredentialsResolveToDpi_ServiceRecordShouldMatchExpectedValues() throws Exception {
         ServiceregistryProperties serviceregistryProperties = fakePropertiesForDpi();
+        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
         PersonResource personResource = fakePersonResourceForDpi();
         PostAddress postAddress = new PostAddress("Address name", "Street x", "Postal code", "Area", "Country");
         SikkerDigitalPostServiceRecord dpiServiceRecord
@@ -158,6 +164,7 @@ public class ServiceRecordControllerTest {
     @Test
     public void get_IdentifierAndCredentialsResolveToDpiAndLookupGivesError_ShouldReturnErrorResponseBody() throws Exception {
         final String message = "Error looking up identifier in KRR";
+        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
         when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(Notification.class), anyBoolean()))
                 .thenThrow(new KRRClientException(new Exception(message)));
 
