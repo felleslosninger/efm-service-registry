@@ -84,7 +84,7 @@ public class ServiceRecordFactory {
         this.processService = processService;
     }
 
-    public Optional<ServiceRecord> createArkivmeldingServiceRecord(String orgnr, String processIdentifier, Integer targetSecurityLevel) {
+    public Optional<ServiceRecord> createArkivmeldingServiceRecord(String orgnr, String processIdentifier, Integer targetSecurityLevel) throws SecurityLevelNotFoundException {
         Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
         if (!optionalProcess.isPresent()) {
             return Optional.empty();
@@ -99,7 +99,11 @@ public class ServiceRecordFactory {
             if (hasSvarUt.isPresent()) {
                 arkivmeldingServiceRecord = Optional.of(createDpfServiceRecord(orgnr, p, targetSecurityLevel));
             } else {
-                arkivmeldingServiceRecord = Optional.of(createDpvServiceRecord(orgnr, p));
+                if (targetSecurityLevel == null) {
+                    arkivmeldingServiceRecord = Optional.of(createDpvServiceRecord(orgnr, p));
+                } else {
+                    throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", orgnr, targetSecurityLevel));
+                }
             }
             return arkivmeldingServiceRecord;
         }

@@ -34,7 +34,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(SpringRunner.class)
@@ -111,6 +113,20 @@ public class ServiceRecordFactoryTest {
     }
 
     @Test
+    public void createArkivmeldingServiceRecord_ProcessIsNotFound_ShouldReturnNotFound() throws SecurityLevelNotFoundException {
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.empty());
+        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR, "NotFound", null);
+        assertFalse(result.isPresent());
+    }
+
+    @Test(expected = SecurityLevelNotFoundException.class)
+    public void createArkivmeldingServiceRecord_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException() throws SecurityLevelNotFoundException {
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
+        when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
+        factory.createArkivmeldingServiceRecord(ORGNR, "Found", 3);
+    }
+
+    @Test
     public void createArkivmeldingServiceRecords_IdentifierHasAdministrasjonButNotSkattRegistrationInSmp_ShouldReturnCorrespondingDpoAndDpvServiceRecords() throws EndpointUrlNotFound, SecurityLevelNotFoundException {
         ProcessMetadata<Endpoint> administrationProcessMetadata =
                 ProcessMetadata.of(ProcessIdentifier.of(ARKIVMELDING_PROCESS_ADMIN), Endpoint.of(null, null, null));
@@ -137,7 +153,7 @@ public class ServiceRecordFactoryTest {
     }
 
     @Test(expected = SecurityLevelNotFoundException.class)
-    public void createArkivmeldingServiceRecordsWithSecurityLevel_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException() throws SecurityLevelNotFoundException {
+    public void createArkivmeldingServiceRecords_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException() throws SecurityLevelNotFoundException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any())).thenReturn(Optional.empty());
         factory.createArkivmeldingServiceRecords(ORGNR_FIKS, 3);
     }

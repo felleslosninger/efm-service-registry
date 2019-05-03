@@ -92,7 +92,7 @@ public class ServiceRecordController {
                                  @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
                                  @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
                                  Authentication auth,
-                                 HttpServletRequest request) {
+                                 HttpServletRequest request) throws SecurityLevelNotFoundException {
         MDC.put("entity", identifier);
         Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
         if (!entityInfo.isPresent()) {
