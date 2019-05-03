@@ -34,8 +34,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.when;
 
 @RunWith(SpringRunner.class)
@@ -133,7 +132,7 @@ public class ServiceRecordFactoryTest {
     @Test
     public void createArkivmeldingServiceRecords_IdentifierHasSvarUtRegistration_ShouldReturnDpfServiceRecord() throws SecurityLevelNotFoundException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any())).thenReturn(Optional.of(3));
-        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR_FIKS, null);
+        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR_FIKS, 3);
         assertEquals(2, countServiceRecordsForServiceIdentifier(result, ServiceIdentifier.DPF));
     }
 

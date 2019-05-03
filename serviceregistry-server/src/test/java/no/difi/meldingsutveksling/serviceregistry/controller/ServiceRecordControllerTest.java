@@ -255,12 +255,14 @@ public class ServiceRecordControllerTest {
 
     @Test
     public void getWithSecurityLevel_ArkivmeldingResolvesToDpfAndSecurityLevelIsAvailable_ServiceRecordShouldMatchExpectedValues() throws Exception {
+        DPF_SERVICE_RECORD.getService().setSecurityLevel(3);
         when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any())).thenReturn(Lists.newArrayList(DPF_SERVICE_RECORD));
         mvc.perform(get("/identifier/42?securityLevel=3").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("42")))
                 .andExpect(jsonPath("$.serviceRecords[0].pemCertificate", is("-----BEGIN CERTIFICATE-----\npem234\n-----END CERTIFICATE-----\n")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPF")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.securityLevel", is(3)))
                 .andExpect(jsonPath("$.serviceRecords[0].service.serviceCode", is("234")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.serviceEditionCode", is("432")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("http://endpoint.here")))

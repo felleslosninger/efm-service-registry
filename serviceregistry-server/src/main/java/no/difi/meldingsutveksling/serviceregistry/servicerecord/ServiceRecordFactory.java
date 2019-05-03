@@ -23,7 +23,6 @@ import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import no.difi.vefa.peppol.common.model.ProcessIdentifier;
-import no.difi.vefa.peppol.common.model.ProcessMetadata;
 import no.difi.vefa.peppol.common.model.ServiceMetadata;
 import no.difi.virksert.client.lang.VirksertClientException;
 import org.apache.commons.io.IOUtils;
@@ -32,7 +31,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.stereotype.Component;
 
-import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -107,7 +105,7 @@ public class ServiceRecordFactory {
             if (processIdentifiers.isEmpty()) {
                 Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
                 if (hasSvarUt.isPresent()) {
-                    arkivmeldingServiceRecord = Optional.of(createDpfServiceRecord(orgnr, p));
+                    arkivmeldingServiceRecord = Optional.of(createDpfServiceRecord(orgnr, p, targetSecurityLevel));
                 } else {
                     arkivmeldingServiceRecord = Optional.of(createDpvServiceRecord(orgnr, p));
                 }
@@ -146,7 +144,7 @@ public class ServiceRecordFactory {
         Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
         try {
             List<ServiceMetadata> serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, documentTypeIdentifiers);
-            serviceMetadataList.forEach(smd -> smd.getProcesses().forEach(p -> processIdentifiers.add(p.getProcessIdentifier())) );
+            serviceMetadataList.forEach(smd -> smd.getProcesses().forEach(p -> processIdentifiers.add(p.getProcessIdentifier())));
         } catch (EndpointUrlNotFound endpointUrlNotFound) {
             log.debug(MarkerFactory.receiverMarker(orgnr),
                     String.format("Attempted to lookup receiver in ELMA: %s", endpointUrlNotFound.getMessage()));
@@ -155,7 +153,7 @@ public class ServiceRecordFactory {
             Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
             if (hasSvarUt.isPresent()) {
                 arkivmeldingProcesses.forEach(p -> {
-                    serviceRecords.add(createDpfServiceRecord(orgnr, p));
+                    serviceRecords.add(createDpfServiceRecord(orgnr, p, targetSecurityLevel));
                 });
             } else {
                 if (null == targetSecurityLevel) {
@@ -224,7 +222,7 @@ public class ServiceRecordFactory {
         return arkivmeldingServiceRecord;
     }
 
-    private ServiceRecord createDpfServiceRecord(String orgnr, Process process) {
+    private ServiceRecord createDpfServiceRecord(String orgnr, Process process, int securityLevel) {
         String pem;
         try {
             pem = IOUtils.toString(properties.getSvarut().getCertificate().getInputStream(), StandardCharsets.UTF_8);
@@ -235,7 +233,7 @@ public class ServiceRecordFactory {
         ServiceRecord arkivmeldingServiceRecord = ArkivmeldingServiceRecord.of(DPF, orgnr, properties.getSvarut().getServiceRecordUrl().toString(), pem);
         arkivmeldingServiceRecord.setProcess(process.getIdentifier());
         arkivmeldingServiceRecord.setDocumentTypes(process.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
-
+        arkivmeldingServiceRecord.getService().setSecurityLevel(securityLevel);
         return arkivmeldingServiceRecord;
     }
 

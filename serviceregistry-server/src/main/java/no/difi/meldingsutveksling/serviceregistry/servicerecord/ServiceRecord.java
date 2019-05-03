@@ -18,7 +18,6 @@ public abstract class ServiceRecord {
     private List<String> documentTypes;
     private SRService service;
 
-
     public ServiceRecord(ServiceIdentifier serviceIdentifier, String organisationNumber, String endpointUrl) {
         this.organisationNumber = organisationNumber;
         this.service = new SRService(serviceIdentifier, endpointUrl);
@@ -31,7 +30,7 @@ public abstract class ServiceRecord {
 
         String begin = "-----BEGIN CERTIFICATE-----\n";
         String end = "\n-----END CERTIFICATE-----\n";
-        return begin+pemCertificate+end;
+        return begin + pemCertificate + end;
     }
 
 }
