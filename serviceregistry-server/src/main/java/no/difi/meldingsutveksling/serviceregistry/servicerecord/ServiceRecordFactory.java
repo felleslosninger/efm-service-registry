@@ -89,19 +89,11 @@ public class ServiceRecordFactory {
         if (!optionalProcess.isPresent()) {
             return Optional.empty();
         }
-        Optional<ServiceRecord> arkivmeldingServiceRecord = Optional.empty();
+        Optional<ServiceRecord> arkivmeldingServiceRecord;
         Process p = optionalProcess.get();
-        final Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
-        try {
-            List<ServiceMetadata> serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, p.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
-            serviceMetadataList.forEach(smd ->
-                    smd.getProcesses().forEach(s -> processIdentifiers.add(s.getProcessIdentifier()))
-            );
-        } catch (EndpointUrlNotFound endpointUrlNotFound) {
-            log.error(String.format("Failed to lookup process in ELMA: %s", endpointUrlNotFound.getMessage()));
-        }
+        Set<ProcessIdentifier> pids = Sets.newHashSet();
+        Set<ProcessIdentifier> processIdentifiers = elmaLookup(orgnr, p, pids);
 
-        try {
             if (processIdentifiers.isEmpty()) {
                 Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
                 if (hasSvarUt.isPresent()) {
@@ -112,7 +104,6 @@ public class ServiceRecordFactory {
                 return arkivmeldingServiceRecord;
             }
 
-            //TODO eitlanna fubar i logikken her.. fiks det. linje 118 blant anna..
             if (processIdentifiers.stream()
                     .map(ProcessIdentifier::getIdentifier)
                     .anyMatch(identifier -> identifier.equals(processIdentifier))) {
@@ -120,9 +111,6 @@ public class ServiceRecordFactory {
             } else {
                 arkivmeldingServiceRecord = Optional.of(createDpvServiceRecord(orgnr, p));
             }
-        } catch (Exception e) {
-            log.debug("Unable to create Service Record of type Arkivmelding", e);
-        }
 
         return arkivmeldingServiceRecord;
     }
@@ -185,18 +173,9 @@ public class ServiceRecordFactory {
             return Optional.empty();
         }
         Process p = optionalProcess.get();
+        Set<ProcessIdentifier> pids = Sets.newHashSet();
+        Set<ProcessIdentifier> processIdentifiers = elmaLookup(orgnr, p, pids);
 
-        final Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
-        try {
-            List<ServiceMetadata> serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, p.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
-            serviceMetadataList.forEach(smd ->
-                    smd.getProcesses().forEach(s -> processIdentifiers.add(s.getProcessIdentifier()))
-            );
-        } catch (EndpointUrlNotFound endpointUrlNotFound) {
-            log.debug(String.format("Failed to lookup process in ELMA: %s", endpointUrlNotFound.getMessage()));
-        }
-
-        try {
             if (processIdentifier.isEmpty()) {
                 return Optional.empty();
             }
@@ -205,9 +184,7 @@ public class ServiceRecordFactory {
                     .anyMatch(identifier -> identifier.equals(processIdentifier))) {
                 optionalServiceRecord = Optional.of(createDpeServiceRecord(orgnr, p));
             }
-        } catch (Exception e) {
-            log.error("Unable to create Service Record of type Einnsyn", e);
-        }
+
         return optionalServiceRecord;
     }
 
@@ -386,4 +363,15 @@ public class ServiceRecordFactory {
         return serviceRecords;
     }
 
+    private Set<ProcessIdentifier> elmaLookup(String orgnr, Process p, Set<ProcessIdentifier> pids ) {
+        try {
+            List<ServiceMetadata> serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, p.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+            serviceMetadataList.forEach(smd ->
+                    smd.getProcesses().forEach(s -> pids.add(s.getProcessIdentifier()))
+            );
+        } catch (EndpointUrlNotFound endpointUrlNotFound) {
+            log.debug(String.format("Failed to lookup process in ELMA: %s", endpointUrlNotFound.getMessage()));
+        }
+        return pids;
+    }
 }
