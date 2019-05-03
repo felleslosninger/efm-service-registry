@@ -117,7 +117,7 @@ public class ServiceRecordFactory {
             //TODO eitlanna fubar i logikken her.. fiks det. linje 118 blant anna..
             if (processIdentifiers.stream()
                     .map(ProcessIdentifier::getIdentifier)
-                    .anyMatch(identifier -> identifier.equals(p.getIdentifier()))) {
+                    .anyMatch(identifier -> identifier.equals(processIdentifier))) {
                 arkivmeldingServiceRecord = Optional.of(createDpoServiceRecord(orgnr, p));
             } else {
                 arkivmeldingServiceRecord = Optional.of(createDpvServiceRecord(orgnr, p));
