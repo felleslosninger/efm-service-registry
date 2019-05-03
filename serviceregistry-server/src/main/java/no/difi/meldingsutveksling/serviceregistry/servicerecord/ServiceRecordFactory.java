@@ -204,7 +204,7 @@ public class ServiceRecordFactory {
             }
             if (processIdentifiers.stream()
                     .map(ProcessIdentifier::getIdentifier)
-                    .anyMatch(identifier -> identifier.equals(p.getIdentifier()))) {
+                    .anyMatch(identifier -> identifier.equals(processIdentifier))) {
                 optionalServiceRecord = Optional.of(createDpeServiceRecord(orgnr, p));
             }
         } catch (Exception e) {
