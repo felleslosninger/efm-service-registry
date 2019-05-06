@@ -181,7 +181,7 @@ public class ServiceRecordFactory {
         Set<ProcessIdentifier> pids = Sets.newHashSet();
         Set<ProcessIdentifier> processIdentifiers = elmaLookup(orgnr, p, pids);
 
-        if (processIdentifier.isEmpty()) {
+        if (processIdentifiers.isEmpty()) {
             return Optional.empty();
         }
         if (processIdentifiers.stream()
