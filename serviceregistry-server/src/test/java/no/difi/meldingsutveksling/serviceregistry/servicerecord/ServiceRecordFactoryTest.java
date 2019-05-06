@@ -29,12 +29,12 @@ import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -127,14 +127,73 @@ public class ServiceRecordFactoryTest {
     }
 
     @Test
-    public void createArkivmeldingServiceRecords_IdentifierHasAdministrasjonButNotSkattRegistrationInSmp_ShouldReturnCorrespondingDpoAndDpvServiceRecords() throws EndpointUrlNotFound, SecurityLevelNotFoundException {
-        ProcessMetadata<Endpoint> administrationProcessMetadata =
+    public void createArkivMeldingServiceRecord_OrganizationHasAdministrationInSmp_ShouldReturnDpoServiceRecord() throws EndpointUrlNotFound, SecurityLevelNotFoundException {
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
+        setupLookupServiceMockToReturnAdministrationProcessMatch();
+
+        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR, ARKIVMELDING_PROCESS_ADMIN, null);
+
+        assertTrue(result.isPresent());
+        assertEquals(ServiceIdentifier.DPO, result.get().getService().getIdentifier());
+    }
+
+    @Test
+    public void createArkivmeldingServiceRecord_OrganizationHasSvarUtRegistration_ShouldReturnDpfServiceRecord() throws SecurityLevelNotFoundException {
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
+        when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), eq(4))).thenReturn(Optional.of(4));
+
+        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR_FIKS, ARKIVMELDING_PROCESS_SKATT, 4);
+
+        assertTrue(result.isPresent());
+        assertEquals(ServiceIdentifier.DPF, result.get().getService().getIdentifier());
+    }
+
+    @Test
+    public void createArkivmeldingServiceRecord_OrganizationHasNoSkattInSmpOrSvarutRegistration_ShouldReturnDpvServiceRecord() throws SecurityLevelNotFoundException {
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
+        when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
+
+        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR, ARKIVMELDING_PROCESS_SKATT, null);
+
+        assertTrue(result.isPresent());
+        assertEquals(ServiceIdentifier.DPV, result.get().getService().getIdentifier());
+    }
+
+    @Test
+    public void createArkivmeldingServiceRecord_NoSmpNorSvarUtRegistration_ShouldReturnDpvServiceRecord() throws SecurityLevelNotFoundException, EndpointUrlNotFound {
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
+        when(lookupService.lookup(anyString(), anyList())).thenReturn(new ArrayList());
+        when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
+
+        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR, ARKIVMELDING_PROCESS_SKATT, null);
+
+        assertTrue(result.isPresent());
+        assertEquals(ServiceIdentifier.DPV, result.get().getService().getIdentifier());
+    }
+
+    private void setupLookupServiceMockToReturnAdministrationProcessMatch() throws EndpointUrlNotFound {
+        ProcessMetadata<Endpoint> processMetadata =
                 ProcessMetadata.of(ProcessIdentifier.of(ARKIVMELDING_PROCESS_ADMIN), Endpoint.of(null, null, null));
-        ServiceMetadata administrationServiceMetadata =
+        ServiceMetadata serviceMetadata =
                 ServiceMetadata.of(ParticipantIdentifier.of("9908:" + ORGNR),
                         DocumentTypeIdentifier.of(ARKIVMELDING_DOCTYPE),
-                        Arrays.asList(administrationProcessMetadata));
-        when(lookupService.lookup(Matchers.eq("9908:" + ORGNR), any(List.class))).thenReturn(Lists.newArrayList(administrationServiceMetadata));
+                        Arrays.asList(processMetadata));
+        when(lookupService.lookup(Matchers.eq("9908:" + ORGNR), any(List.class))).thenReturn(Lists.newArrayList(serviceMetadata));
+    }
+
+    @Test
+    public void createArkivmeldingServiceRecords_NoProcessesFound_ShouldReturnEmptyList() throws SecurityLevelNotFoundException {
+        when(processService.findAll(ProcessCategory.ARKIVMELDING)).thenReturn(Lists.newArrayList());
+        when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
+
+        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords("identifier", null);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void createArkivmeldingServiceRecords_OrganizationHasAdministrasjonButNotSkattRegistrationInSmp_ShouldReturnCorrespondingDpoAndDpvServiceRecords() throws EndpointUrlNotFound, SecurityLevelNotFoundException {
+        setupLookupServiceMockToReturnAdministrationProcessMatch();
 
         List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR, null);
 
@@ -146,7 +205,7 @@ public class ServiceRecordFactoryTest {
     }
 
     @Test
-    public void createArkivmeldingServiceRecords_IdentifierHasSvarUtRegistration_ShouldReturnDpfServiceRecord() throws SecurityLevelNotFoundException {
+    public void createArkivmeldingServiceRecords_OrganizationHasSvarUtRegistration_ShouldReturnDpfServiceRecord() throws SecurityLevelNotFoundException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any())).thenReturn(Optional.of(3));
         List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR_FIKS, 3);
         assertEquals(2, countServiceRecordsForServiceIdentifier(result, ServiceIdentifier.DPF));
