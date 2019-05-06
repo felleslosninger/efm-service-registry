@@ -164,6 +164,28 @@ public class ServiceRecordControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "user1", password = "pwd", roles = "USER")
+    public void getWithProcessIdentifier_IdentifierAndCredentialsResolveToDpi_ServiceRecordShouldMatchExpectedValues() throws Exception {
+        Process processMock = mockProcess(ProcessCategory.DIGITALPOST);
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
+        ServiceregistryProperties serviceregistryProperties = fakePropertiesForDpi();
+        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
+        PersonResource personResource = fakePersonResourceForDpi();
+        PostAddress postAddress = new PostAddress("Address name", "Street x", "Postal code", "Area", "Country");
+        SikkerDigitalPostServiceRecord dpiServiceRecord
+                = new SikkerDigitalPostServiceRecord(serviceregistryProperties, personResource, ServiceIdentifier.DPI, "12345678901", postAddress, postAddress);
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(Notification.class), anyBoolean()))
+                .thenReturn(Lists.newArrayList(dpiServiceRecord));
+        when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), anyString(), anyInt())).thenReturn(Optional.empty());
+        when(serviceRecordFactory.createEinnsynServiceRecords(anyString())).thenReturn(Lists.newArrayList());
+
+        mvc.perform(get("/identifier/12345678901/process/ProcessId").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("12345678901")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPI")));
+    }
+
+    @Test
     public void get_IdentifierAndCredentialsResolveToDpiAndLookupGivesError_ShouldReturnErrorResponseBody() throws Exception {
         final String message = "Error looking up identifier in KRR";
         when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
@@ -171,6 +193,23 @@ public class ServiceRecordControllerTest {
                 .thenThrow(new KRRClientException(new Exception(message)));
 
         MockHttpServletResponse result = mvc.perform(get("/identifier/12345678901")
+                .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), result.getStatus());
+        assertTrue(deserializeErrorResponse(result).getErrorDescription().contains(message));
+    }
+
+    @Test
+    public void getWithProcessIdentifier_IdentifierAndCredentialsResolveToDpiAndLookupGivesError_ShouldReturnErrorResponseBody() throws Exception {
+        Process processMock = mockProcess(ProcessCategory.DIGITALPOST);
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
+        final String message = "Error looking up identifier in KRR";
+        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(Notification.class), anyBoolean()))
+                .thenThrow(new KRRClientException(new Exception(message)));
+
+        MockHttpServletResponse result = mvc.perform(get("/identifier/12345678901/process/ProcessID")
                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
@@ -231,6 +270,23 @@ public class ServiceRecordControllerTest {
     public void getWithProcessIdentifier_MissingProcess_ShouldReturn404() throws Exception {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.empty());
         mvc.perform(get("/identifier/42/process/NotFound")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void getWithProcessIdentifier_ArkivmeldingResolvesToDpv_ServiceRecordShouldMatchExpectedValues() throws Exception {
+        Process processMock = mockProcess(ProcessCategory.ARKIVMELDING);
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
+        when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), any(), anyInt())).thenReturn(Optional.of(DPV_SERVICE_RECORD));
+
+        mvc.perform(get("/identifier/43/process/ProcessID").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("43")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPV")))
+                .andExpect(jsonPath("$.serviceRecords[0].pemCertificate", isEmptyOrNullString()))
+                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("http://endpoint.here")))
+                .andExpect(jsonPath("$.infoRecord.identifier", is("43")))
+                .andExpect(jsonPath("$.infoRecord.organizationName", is("foo")))
+                .andExpect(jsonPath("$.infoRecord.entityType.name", is("AS")));
     }
 
     @Test

@@ -91,7 +91,7 @@ public class ServiceRecordController {
                                  @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
                                  @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
                                  Authentication auth,
-                                 HttpServletRequest request) throws SecurityLevelNotFoundException {
+                                 HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException {
         MDC.put("entity", identifier);
         Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
         if (!entityInfo.isPresent()) {
@@ -101,31 +101,21 @@ public class ServiceRecordController {
         if (!optionalProcess.isPresent()) {
             return ResponseEntity.notFound().build();
         }
-
+        Entity entity = new Entity();
+        entity.setInfoRecord(entityInfo.get());
         ServiceRecord serviceRecord = null;
-        Process process = optionalProcess.get();
-        ProcessCategory processCategory = process.getCategory();
+        ProcessCategory processCategory = optionalProcess.get().getCategory();
         if (processCategory.equals(ProcessCategory.DIGITALPOST) && shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
             String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
             if (clientOrgnr == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ErrorResponse.builder().errorDescription("No authentication provided.").build());
             }
-            try {
-                Entity entity = new Entity();
-                entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, obligation, forcePrint));
-                entity.setInfoRecord(entityInfo.get());
-                return new ResponseEntity<>(entity, HttpStatus.OK);
-            } catch (KRRClientException e) {
-                log.error("Error looking up identifier in KRR", e);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-            }
+            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, obligation, forcePrint));
         }
 
-        Entity entity = new Entity();
-        Optional<ServiceRecord> osr;
         if (processCategory == ProcessCategory.ARKIVMELDING) {
-            osr = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier, securityLevel);
+            Optional<ServiceRecord> osr = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier, securityLevel);
             if (osr.isPresent()) {
                 serviceRecord = osr.get();
             }
@@ -143,7 +133,6 @@ public class ServiceRecordController {
             serviceRecord = dpeServiceRecord.get();
         }
 
-        entity.setInfoRecord(entityInfo.get());
         entity.getServiceRecords().add(serviceRecord);
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
