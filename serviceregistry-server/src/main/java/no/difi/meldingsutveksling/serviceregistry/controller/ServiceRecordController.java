@@ -109,8 +109,7 @@ public class ServiceRecordController {
         if (processCategory.equals(ProcessCategory.DIGITALPOST) && shouldCreateServiceRecordForCitizen().test(entityInfo)) {
             String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
             if (clientOrgnr == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ErrorResponse.builder().errorDescription("No authentication provided.").build());
+                return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
             }
             entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, obligation, forcePrint));
         }
@@ -162,14 +161,18 @@ public class ServiceRecordController {
         if (shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
             String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
             if (clientOrgnr == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ErrorResponse.builder().errorDescription("No authentication provided.").build());
+                return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
             }
             entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, obligation, forcePrint));
         }
         entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
         entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(identifier));
         return new ResponseEntity<>(entity, HttpStatus.OK);
+    }
+
+    private ResponseEntity errorResponse(HttpStatus status, String message) {
+        return ResponseEntity.status(status)
+                .body(ErrorResponse.builder().errorDescription(message).build());
     }
 
     private ResponseEntity notFoundResponse(String logMessage) {
@@ -230,8 +233,7 @@ public class ServiceRecordController {
     @ExceptionHandler(KRRClientException.class)
     public ResponseEntity krrClientException(HttpServletRequest request, Exception e) {
         log.error("Exception occurred on {}", request.getRequestURL(), e);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
+        return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 
 }
