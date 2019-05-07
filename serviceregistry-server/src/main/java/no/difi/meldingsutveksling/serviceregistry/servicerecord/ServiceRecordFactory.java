@@ -239,7 +239,7 @@ public class ServiceRecordFactory {
                 .map(DocumentType::getIdentifier)
                 .collect(Collectors.toSet());
 
-        List<ServiceMetadata> serviceMetadataList = null;
+        List<ServiceMetadata> serviceMetadataList;
         Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
         try {
             serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, Lists.newArrayList(documentTypeIdentifiers));
@@ -262,7 +262,7 @@ public class ServiceRecordFactory {
             }
         }
 
-        return null;
+        return serviceRecords;
     }
 
 

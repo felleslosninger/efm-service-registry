@@ -14,7 +14,9 @@ import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import no.difi.move.common.oauth.KeystoreHelper;
+import no.difi.vefa.peppol.common.lang.EndpointNotFoundException;
 import no.difi.vefa.peppol.common.model.*;
+import org.apache.tomcat.jni.Proc;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,12 +31,12 @@ import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -75,9 +77,18 @@ public class ServiceRecordFactoryTest {
 
     private static String ORGNR = "123456789";
     private static String ORGNR_FIKS = "987654321";
+    private static String ORGNR_EINNSYN_JOURNALPOST = "123123123";
+    private static String ORGNR_EINNSYN_RESPONSE = "987987987";
+    private static String ORGNR_EINNSYN = "123987654";
     private static String ARKIVMELDING_DOCTYPE = "urn:no:difi:arkivmelding:xsd::arkivmelding";
     private static String ARKIVMELDING_PROCESS_ADMIN = "urn:no:difi:profile:arkivmelding:administrasjon:ver1.0";
     private static String ARKIVMELDING_PROCESS_SKATT = "urn:no:difi:profile:arkivmelding:skatterOgAvgifter:ver1.0";
+    private static String EINNSYN_PROCESS_JOURNALPOST = "urn:no:difi:profile:einnsyn:journalpost:ver1.0";
+    private static String EINNSYN_DOCTYPE_JOURNALPOST = "urn:no:difi:einnsyn:xsd::publisering";
+    private static String EINNSYN_PROCESS_RESPONSE = "urn:no:difi:profile:einnsyn:response:ver1.0";
+    private static String EINNSYN_DOCTYPE_RESPONSE_KVITTERING = "urn:no:difi:einnsyn:xsd::einnsyn_kvittering";
+    private static String EINNSYN_DOCTYPE_RESPONSE_STATUS = "urn:no:difi:eformidling:xsd::status";
+
 
     @Before
     public void init() throws MalformedURLException, EndpointUrlNotFound {
@@ -110,6 +121,50 @@ public class ServiceRecordFactoryTest {
         documentType.setProcesses(Lists.newArrayList(processAdmin, processSkatt));
         when(processService.findAll(ProcessCategory.ARKIVMELDING)).thenReturn(Lists.newArrayList(processAdmin, processSkatt));
         when(lookupService.lookup(Matchers.eq("9908:" + ORGNR_FIKS), any(List.class))).thenReturn(Lists.newArrayList());
+
+        DocumentType einnsynJournalpostDocumentType = new DocumentType()
+                .setIdentifier(EINNSYN_DOCTYPE_JOURNALPOST);
+        Process einnsynJournalpostProcess = new Process()
+                .setIdentifier(EINNSYN_PROCESS_JOURNALPOST)
+                .setCategory(ProcessCategory.EINNSYN)
+                .setServiceCode("567")
+                .setServiceEditionCode("5678");
+        Optional<Process> journalpostProcess = Optional.of(einnsynJournalpostProcess);
+        einnsynJournalpostProcess.setDocumentTypes(Lists.newArrayList(einnsynJournalpostDocumentType));
+        einnsynJournalpostDocumentType.setProcesses(Lists.newArrayList(einnsynJournalpostProcess));
+        when(processService.findAll(ProcessCategory.EINNSYN)).thenReturn(Lists.newArrayList(einnsynJournalpostProcess));
+        when(lookupService.lookup(Matchers.eq("9908:" + ORGNR_EINNSYN_JOURNALPOST), any(List.class))).thenReturn(Lists.newArrayList());
+        when(processService.findByIdentifier(EINNSYN_PROCESS_JOURNALPOST)).thenReturn(journalpostProcess);
+        ProcessMetadata<Endpoint> einnsynProcessMetadata =
+                ProcessMetadata.of(ProcessIdentifier.of(EINNSYN_PROCESS_JOURNALPOST), Endpoint.of(null, null, null));
+        ServiceMetadata einnsynServiceMetadata =
+                ServiceMetadata.of(ParticipantIdentifier.of("9908:" + ORGNR_EINNSYN_JOURNALPOST),
+                        DocumentTypeIdentifier.of(EINNSYN_DOCTYPE_JOURNALPOST),
+                        Arrays.asList(einnsynProcessMetadata));
+        when(lookupService.lookup(Matchers.eq("9908:" + ORGNR_EINNSYN_JOURNALPOST), any(List.class))).thenReturn(Lists.newArrayList(einnsynServiceMetadata));
+
+        DocumentType einnsynResponseDocumentType = new DocumentType()
+                .setIdentifier(EINNSYN_DOCTYPE_RESPONSE_KVITTERING)
+                .setIdentifier(EINNSYN_DOCTYPE_RESPONSE_STATUS);
+        Process einnsynResponseProcess = new Process()
+                .setIdentifier(EINNSYN_PROCESS_RESPONSE)
+                .setCategory(ProcessCategory.EINNSYN)
+                .setServiceCode("567")
+                .setServiceEditionCode("5678");
+
+        Optional<Process> responseProcess = Optional.of(einnsynResponseProcess);
+        einnsynResponseDocumentType.setProcesses(Lists.newArrayList(einnsynResponseProcess));
+        einnsynResponseProcess.setDocumentTypes(Lists.newArrayList(einnsynResponseDocumentType));
+        ProcessMetadata<Endpoint> einnsynResponseProcessMetadata =
+                ProcessMetadata.of(ProcessIdentifier.of(EINNSYN_PROCESS_RESPONSE), Endpoint.of(null, null, null));
+        ServiceMetadata.of(ParticipantIdentifier.of("9908:" + ORGNR_EINNSYN_RESPONSE),
+                DocumentTypeIdentifier.of(EINNSYN_DOCTYPE_RESPONSE_KVITTERING),
+                Arrays.asList(einnsynResponseProcessMetadata));
+        when(lookupService.lookup(Matchers.eq("9908:" + ORGNR_EINNSYN_RESPONSE), any(List.class))).thenReturn(Lists.newArrayList());
+        when(processService.findByIdentifier(EINNSYN_PROCESS_RESPONSE)).thenReturn(responseProcess);
+        when(lookupService.lookup(Matchers.eq("9908:" + ORGNR_EINNSYN), any(List.class))).thenThrow(new RuntimeException("Endpoint Url was not found in ELMA"));
+
+
     }
 
     @Test
@@ -162,5 +217,53 @@ public class ServiceRecordFactoryTest {
         return result.stream().filter(serviceRecord -> serviceIdentifier == serviceRecord.getService().getIdentifier()).count();
     }
 
+    @Test
+    public void createEinnsynServiceRecord_ProcessIsNotFound_ShouldReturnNotFound() {
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.empty());
+        Optional<ServiceRecord> result = factory.createEinnsynServiceRecord(ORGNR, "NotFound");
+        assertFalse(result.isPresent());
+    }
+
+    @Test
+    public void createEinnsynServiceRecords_ShouldReturnDpeServiceRecord() {
+        List<ServiceRecord> result = factory.createEinnsynServiceRecords(ORGNR_EINNSYN_JOURNALPOST);
+        assertEquals(1, result.size());
+        ServiceRecord journalpostServiceRecord = result.stream().filter(r -> EINNSYN_PROCESS_JOURNALPOST.equals(r.getProcess())).findFirst().orElseThrow(RuntimeException::new);
+        assertEquals(ServiceIdentifier.DPE, journalpostServiceRecord.getService().getIdentifier());
+    }
+
+    @Test
+    public void createEinnsynServiceRecords_OrgnrNotInElma_ShouldNotReturnDpeServiceRecord() {
+        List<ServiceRecord> result = factory.createEinnsynServiceRecords(ORGNR_EINNSYN_RESPONSE);
+        assertEquals(0, result.size());
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void createEinnsynServiceRecords_EndpointurlNotFound_ShouldNotReturnDpeServiceRecord() {
+        List<ServiceRecord> result = factory.createEinnsynServiceRecords(ORGNR_EINNSYN);
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    public void createEinnsynServiceRecord_hasOrgnrAndProcessidentifier_ShouldReturnDpeServiceRecord() {
+        ServiceRecord serviceRecord = null;
+        Optional<ServiceRecord> result = factory.createEinnsynServiceRecord(ORGNR_EINNSYN_JOURNALPOST, EINNSYN_PROCESS_JOURNALPOST);
+
+        assertTrue(result.isPresent());
+        serviceRecord = result.get();
+        assertEquals(ServiceIdentifier.DPE, serviceRecord.getService().getIdentifier());
+    }
+
+    @Test
+    public void createEinnsynServiceRecord_hasOrgnrWhileProcessidentifierMatchNotFoundInElma_ShouldNotReturnDpeServiceRecord() {
+        Optional<ServiceRecord> result = factory.createEinnsynServiceRecord(ORGNR_EINNSYN_RESPONSE, EINNSYN_PROCESS_RESPONSE);
+        assertEquals(Optional.empty(), result);
+    }
+
+    @Test
+    public void createEinnsynServiceRecord_hasOrgnrAndProcessidentifierWhileProcessNotFound_ShouldNotReturnDpeServiceRecord() {
+        Optional<ServiceRecord> result = factory.createEinnsynServiceRecord(ORGNR_EINNSYN_JOURNALPOST, EINNSYN_PROCESS_RESPONSE);
+        assertEquals(Optional.empty(), result);
+    }
     // TODO add tests for digitalpost and einnsyn
 }
