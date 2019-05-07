@@ -29,7 +29,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -154,19 +153,8 @@ public class ServiceRecordControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user1", password = "pwd", roles = "USER")
     public void get_CredentialsResolveToDpi_ServiceRecordShouldMatchExpectedValues() throws Exception {
-        ServiceregistryProperties serviceregistryProperties = fakePropertiesForDpi();
-        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
-        PersonResource personResource = fakePersonResourceForDpi();
-        PostAddress postAddress = new PostAddress("Address name", "Street x", "Postal code", "Area", "Country");
-        SikkerDigitalPostServiceRecord dpiServiceRecord
-                = new SikkerDigitalPostServiceRecord(serviceregistryProperties, personResource, ServiceIdentifier.DPI, "12345678901", postAddress, postAddress);
-        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(), anyBoolean()))
-                .thenReturn(Lists.newArrayList(dpiServiceRecord));
-        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any())).thenReturn(Lists.newArrayList());
-        when(serviceRecordFactory.createEinnsynServiceRecords(anyString())).thenReturn(Lists.newArrayList());
-
+        setupMocksForSuccessfulDpi();
         mvc.perform(get("/identifier/12345678901").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("12345678901")))
@@ -174,8 +162,22 @@ public class ServiceRecordControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user1", password = "pwd", roles = "USER")
+    public void get_CredentialsResolveToDpiAndDsfLookupFails_ShouldReturnErrorResponseBody() throws Exception {
+        setupMocksForSuccessfulDpi();
+        final String message = "identifier not found in DSF";
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(), anyBoolean()))
+                .thenThrow(new DsfLookupException(message));
+
+        mvc.perform(get("/identifier/12345678901")
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error_description", containsString(message)));
+    }
+
+    @Test
     public void getWithProcessIdentifier_CredentialsResolveToDpi_ServiceRecordShouldMatchExpectedValues() throws Exception {
+        Process processMock = mockProcess(ProcessCategory.DIGITALPOST);
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         setupMocksForSuccessfulDpi();
 
         mvc.perform(get("/identifier/12345678901/process/ProcessId").accept(MediaType.APPLICATION_JSON))
@@ -185,8 +187,6 @@ public class ServiceRecordControllerTest {
     }
 
     private void setupMocksForSuccessfulDpi() throws MalformedURLException, KRRClientException, DsfLookupException, SecurityLevelNotFoundException, CertificateNotFoundException {
-        Process processMock = mockProcess(ProcessCategory.DIGITALPOST);
-        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         ServiceregistryProperties serviceregistryProperties = fakePropertiesForDpi();
         when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
         PersonResource personResource = fakePersonResourceForDpi();
@@ -201,6 +201,8 @@ public class ServiceRecordControllerTest {
 
     @Test
     public void getWithProcessIdentifier_CredentialsResolveToDpiAndDsfLookupFails_ShouldReturnErrorResponseBody() throws Exception {
+        Process processMock = mockProcess(ProcessCategory.DIGITALPOST);
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         setupMocksForSuccessfulDpi();
         final String message = "identifier not found in DSF";
         when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(), anyBoolean()))
