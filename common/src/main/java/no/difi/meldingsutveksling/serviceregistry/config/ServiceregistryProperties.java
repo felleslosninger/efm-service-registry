@@ -31,8 +31,7 @@ public class ServiceregistryProperties {
     private Auth auth;
     private FeatureToggle feature;
     private ELMA elma;
-    private ELMA elmaDPEInnsyn;
-    private ELMA elmaDPEData;
+
     @Valid
     private Sign sign;
     @Valid

@@ -35,8 +35,4 @@ public class Process {
     @JsonIgnoreProperties("processes")
     private List<DocumentType> documentTypes;
 
-    public ProcessIdentifier asProcessIdentifier() {
-        return ProcessIdentifier.of(identifier);
-    }
-
 }

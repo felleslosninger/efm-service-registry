@@ -3,10 +3,12 @@ package no.difi.meldingsutveksling.serviceregistry.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import no.difi.meldingsutveksling.Notification;
+import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.krr.DsfLookupException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
@@ -91,59 +93,44 @@ public class ServiceRecordController {
                                  @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
                                  @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
                                  Authentication auth,
-                                 HttpServletRequest request) throws SecurityLevelNotFoundException {
+                                 HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException {
         MDC.put("entity", identifier);
-        Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
-        if (!entityInfo.isPresent()) {
-            return ResponseEntity.notFound().build();
+        Optional<EntityInfo> optionalEntityInfo = entityService.getEntityInfo(identifier);
+        if (!optionalEntityInfo.isPresent()) {
+            return notFoundResponse(String.format("Entity with identifier '%s' not found.", identifier));
         }
         Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
         if (!optionalProcess.isPresent()) {
-            return ResponseEntity.notFound().build();
+            return notFoundResponse(String.format("Process with identifier '%s' not found.", processIdentifier));
         }
-
+        Entity entity = new Entity();
+        EntityInfo entityInfo = optionalEntityInfo.get();
+        entity.setInfoRecord(entityInfo);
         ServiceRecord serviceRecord = null;
-        Process process = optionalProcess.get();
-        ProcessCategory processCategory = process.getCategory();
-        if (processCategory.equals(ProcessCategory.DIGITALPOST) && shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
+        ProcessCategory processCategory = optionalProcess.get().getCategory();
+        if (processCategory.equals(ProcessCategory.DIGITALPOST) && shouldCreateServiceRecordForCitizen().test(entityInfo)) {
             String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
             if (clientOrgnr == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ErrorResponse.builder().errorDescription("No authentication provided.").build());
+                return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
             }
-            try {
-                Entity entity = new Entity();
-                entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, obligation, forcePrint));
-                entity.setInfoRecord(entityInfo.get());
-                return new ResponseEntity<>(entity, HttpStatus.OK);
-            } catch (KRRClientException e) {
-                log.error("Error looking up identifier in KRR", e);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-            }
+            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, obligation, forcePrint));
         }
-
-        Entity entity = new Entity();
-        Optional<ServiceRecord> osr;
         if (processCategory == ProcessCategory.ARKIVMELDING) {
-            osr = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier, securityLevel);
+            Optional<ServiceRecord> osr = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier, securityLevel);
             if (osr.isPresent()) {
                 serviceRecord = osr.get();
             }
             if (serviceRecord == null) {
-                return ResponseEntity.badRequest().body(String.format("Process %s not found for receiver %s", processIdentifier, identifier));
+                return notFoundResponse(String.format("Arkivmelding process '%s' not found for receiver '%s'.", processIdentifier, identifier));
             }
         }
-
         if (processCategory == ProcessCategory.EINNSYN) {
             Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createEinnsynServiceRecord(identifier, processIdentifier);
             if (!dpeServiceRecord.isPresent()) {
-                log.error(String.format("Process %s not found for receiver %s", processIdentifier, identifier));
-                return ResponseEntity.notFound().build();
+                return notFoundResponse(String.format("eInnsyn process '%s' not found for receiver '%s'.", processIdentifier, identifier));
             }
             serviceRecord = dpeServiceRecord.get();
         }
-
-        entity.setInfoRecord(entityInfo.get());
         entity.getServiceRecords().add(serviceRecord);
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
@@ -165,19 +152,18 @@ public class ServiceRecordController {
             @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             Authentication auth,
-            HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException {
+            HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException {
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
         Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
         if (!entityInfo.isPresent()) {
-            return ResponseEntity.notFound().build();
+            return notFoundResponse(String.format("Entity with identifier '%s' not found.", identifier));
         }
         entity.setInfoRecord(entityInfo.get());
         if (shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
             String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
             if (clientOrgnr == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ErrorResponse.builder().errorDescription("No authentication provided.").build());
+                return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
             }
             entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, obligation, forcePrint));
         }
@@ -186,6 +172,15 @@ public class ServiceRecordController {
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
+    private ResponseEntity errorResponse(HttpStatus status, String message) {
+        return ResponseEntity.status(status)
+                .body(ErrorResponse.builder().errorDescription(message).build());
+    }
+
+    private ResponseEntity notFoundResponse(String logMessage) {
+        log.error(logMessage);
+        return ResponseEntity.notFound().build();
+    }
 
     @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = "application/jose")
     @ResponseBody
@@ -195,7 +190,7 @@ public class ServiceRecordController {
             @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             Authentication auth,
-            HttpServletRequest request) throws EntitySignerException, SecurityLevelNotFoundException, KRRClientException {
+            HttpServletRequest request) throws EntitySignerException, SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException {
 
         ResponseEntity entity = entity(identifier, obligation, forcePrint, securityLevel, auth, request);
         if (entity.getStatusCode() != HttpStatus.OK) {
@@ -216,13 +211,13 @@ public class ServiceRecordController {
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find endpoint url for service of requested organization")
     @ExceptionHandler(EndpointUrlNotFound.class)
     public void endpointNotFound(HttpServletRequest req, Exception e) {
-        log.warn(String.format("Endpoint not found for %s", req.getRequestURL()), e);
+        log.warn("Endpoint not found for {}", req.getRequestURL(), e);
     }
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find entity for the requested identifier")
     @ExceptionHandler(EntityNotFoundException.class)
     public void entityNotFound(HttpServletRequest req, Exception e) {
-        log.warn(String.format("Entity not found for %s", req.getRequestURL()), e);
+        log.warn("Entity not found for {}", req.getRequestURL(), e);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -233,15 +228,26 @@ public class ServiceRecordController {
 
     @ExceptionHandler(SecurityLevelNotFoundException.class)
     public ResponseEntity securityLevelNotFound(HttpServletRequest request, Exception e) {
-        log.warn(String.format("Security level not found for %s", request.getRequestURL()));
+        log.warn("Security level not found for {}", request.getRequestURL(), e);
         return ResponseEntity.badRequest().body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
     }
 
     @ExceptionHandler(KRRClientException.class)
     public ResponseEntity krrClientException(HttpServletRequest request, Exception e) {
         log.error("Exception occurred on {}", request.getRequestURL(), e);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
+        return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+    }
+
+    @ExceptionHandler(CertificateNotFoundException.class)
+    public ResponseEntity certificateNotFound(HttpServletRequest request, Exception e) {
+        log.error("Certificate not found for {}", request.getRequestURL(), e);
+        return errorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(DsfLookupException.class)
+    public ResponseEntity dsfLookupException(HttpServletRequest request, Exception e) {
+        log.error("DSF lookup failed for {}", request.getRequestURL(), e);
+        return errorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
 }

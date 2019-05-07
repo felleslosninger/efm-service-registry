@@ -65,17 +65,6 @@ public class ELMALookupService {
         }
     }
 
-    // andre argument med ?
-    public Endpoint lookupEndpoint(ServiceMetadata serviceMetadata, ProcessIdentifier processIdentifier) throws EndpointUrlNotFound {
-        try {
-            return lookupClient.getEndpoint(serviceMetadata, processIdentifier, transportProfile);
-        } catch (PeppolSecurityException e) {
-            throw new ServiceRegistryException(e);
-        } catch (EndpointNotFoundException e) {
-            throw new EndpointUrlNotFound(String.format("Failed lookup through ELMA of process %s ", processIdentifier), e);
-        }
-    }
-
     public Endpoint lookup(String organisationNumber, String documentTypeIdentifier, String processIdentifier) throws EndpointUrlNotFound {
         try {
             return lookupClient.getEndpoint(ParticipantIdentifier.of(organisationNumber),
@@ -89,25 +78,4 @@ public class ELMALookupService {
         }
     }
 
-    public boolean identifierHasInnsynskravCapability(String identifier) {
-        return identifierHasCapability(identifier, props.getElmaDPEInnsyn());
-    }
-
-    public boolean identifierHasInnsynDataCapability(String identifier) {
-        return identifierHasCapability(identifier, props.getElmaDPEData());
-    }
-
-    private boolean identifierHasCapability(String identifier, ServiceregistryProperties.ELMA elmaProp) {
-        try {
-            Endpoint ep = lookupClient.getEndpoint(ParticipantIdentifier.of(identifier),
-                    DocumentTypeIdentifier.of(elmaProp.getDocumentTypeIdentifier()),
-                    ProcessIdentifier.of(elmaProp.getProcessIdentifier()),
-                    transportProfile);
-            return !isNullOrEmpty(ep.getAddress().toString());
-        } catch (PeppolSecurityException e) {
-            throw new ServiceRegistryException(e);
-        } catch (LookupException | EndpointNotFoundException e) {
-            return false;
-        }
-    }
 }
