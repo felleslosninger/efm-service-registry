@@ -242,7 +242,7 @@ public class ServiceRecordFactory {
                                                                Authentication auth,
                                                                String onBehalfOrgnr,
                                                                Notification notification,
-                                                               boolean forcePrint) throws KRRClientException {
+                                                               boolean forcePrint) throws KRRClientException, DsfLookupException {
 
         String token = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
 
@@ -280,13 +280,12 @@ public class ServiceRecordFactory {
     private List<ServiceRecord> createPrintServiceRecords(String identifier,
                                                           String onBehalfOrgnr,
                                                           String token,
-                                                          PersonResource personResource) throws KRRClientException {
+                                                          PersonResource personResource) throws KRRClientException, DsfLookupException {
 
         krrService.setPrintDetails(personResource);
         Optional<DSFResource> dsfResource = krrService.getDSFInfo(lookup(identifier).token(token));
         if (!dsfResource.isPresent()) {
-            log.error("Receiver found in KRR on behalf of {}, but not in DSF. Defaulting to DPV.", onBehalfOrgnr);
-            return Lists.newArrayList(createDpvServiceRecord(identifier, processService.getDefaultArkivmeldingProcess()));
+            throw new DsfLookupException(String.format("Receiver found in KRR on behalf of '%s', but not in DSF.", onBehalfOrgnr));
         }
         String[] codeArea = dsfResource.get().getPostAddress().split(" ");
         PostAddress postAddress = new PostAddress(dsfResource.get().getName(),

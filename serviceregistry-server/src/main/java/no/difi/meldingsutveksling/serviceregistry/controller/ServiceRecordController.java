@@ -92,7 +92,7 @@ public class ServiceRecordController {
                                  @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
                                  @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
                                  Authentication auth,
-                                 HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException {
+                                 HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException {
         MDC.put("entity", identifier);
         Optional<EntityInfo> optionalEntityInfo = entityService.getEntityInfo(identifier);
         if (!optionalEntityInfo.isPresent()) {
@@ -151,7 +151,7 @@ public class ServiceRecordController {
             @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             Authentication auth,
-            HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException {
+            HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException {
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
         Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
@@ -189,7 +189,7 @@ public class ServiceRecordController {
             @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             Authentication auth,
-            HttpServletRequest request) throws EntitySignerException, SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException {
+            HttpServletRequest request) throws EntitySignerException, SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException {
 
         ResponseEntity entity = entity(identifier, obligation, forcePrint, securityLevel, auth, request);
         if (entity.getStatusCode() != HttpStatus.OK) {
@@ -210,13 +210,13 @@ public class ServiceRecordController {
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find endpoint url for service of requested organization")
     @ExceptionHandler(EndpointUrlNotFound.class)
     public void endpointNotFound(HttpServletRequest req, Exception e) {
-        log.warn(String.format("Endpoint not found for %s", req.getRequestURL()), e);
+        log.warn("Endpoint not found for {}", req.getRequestURL(), e);
     }
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find entity for the requested identifier")
     @ExceptionHandler(EntityNotFoundException.class)
     public void entityNotFound(HttpServletRequest req, Exception e) {
-        log.warn(String.format("Entity not found for %s", req.getRequestURL()), e);
+        log.warn("Entity not found for {}", req.getRequestURL(), e);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -227,7 +227,7 @@ public class ServiceRecordController {
 
     @ExceptionHandler(SecurityLevelNotFoundException.class)
     public ResponseEntity securityLevelNotFound(HttpServletRequest request, Exception e) {
-        log.warn(String.format("Security level not found for %s", request.getRequestURL()), e);
+        log.warn("Security level not found for {}", request.getRequestURL(), e);
         return ResponseEntity.badRequest().body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
     }
 
@@ -239,7 +239,13 @@ public class ServiceRecordController {
 
     @ExceptionHandler(CertificateNotFoundException.class)
     public ResponseEntity certificateNotFound(HttpServletRequest request, Exception e) {
-        log.error(String.format("Certificate not found for %s", request.getRequestURL()), e);
+        log.error("Certificate not found for {}", request.getRequestURL(), e);
+        return errorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(DsfLookupException.class)
+    public ResponseEntity dsfLookupException(HttpServletRequest request, Exception e) {
+        log.error("DSF lookup failed for {}", request.getRequestURL(), e);
         return errorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 

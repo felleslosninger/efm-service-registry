@@ -155,7 +155,7 @@ public class ServiceRecordControllerTest {
 
     @Test
     @WithMockUser(username = "user1", password = "pwd", roles = "USER")
-    public void get_IdentifierAndCredentialsResolveToDpi_ServiceRecordShouldMatchExpectedValues() throws Exception {
+    public void get_CredentialsResolveToDpi_ServiceRecordShouldMatchExpectedValues() throws Exception {
         ServiceregistryProperties serviceregistryProperties = fakePropertiesForDpi();
         when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
         PersonResource personResource = fakePersonResourceForDpi();
@@ -175,7 +175,16 @@ public class ServiceRecordControllerTest {
 
     @Test
     @WithMockUser(username = "user1", password = "pwd", roles = "USER")
-    public void getWithProcessIdentifier_IdentifierAndCredentialsResolveToDpi_ServiceRecordShouldMatchExpectedValues() throws Exception {
+    public void getWithProcessIdentifier_CredentialsResolveToDpi_ServiceRecordShouldMatchExpectedValues() throws Exception {
+        setupMocksForSuccessfulDpi();
+
+        mvc.perform(get("/identifier/12345678901/process/ProcessId").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("12345678901")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPI")));
+    }
+
+    private void setupMocksForSuccessfulDpi() throws MalformedURLException, KRRClientException, DsfLookupException, SecurityLevelNotFoundException, CertificateNotFoundException {
         Process processMock = mockProcess(ProcessCategory.DIGITALPOST);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         ServiceregistryProperties serviceregistryProperties = fakePropertiesForDpi();
@@ -188,15 +197,23 @@ public class ServiceRecordControllerTest {
                 .thenReturn(Lists.newArrayList(dpiServiceRecord));
         when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), anyString(), anyInt())).thenReturn(Optional.empty());
         when(serviceRecordFactory.createEinnsynServiceRecords(anyString())).thenReturn(Lists.newArrayList());
-
-        mvc.perform(get("/identifier/12345678901/process/ProcessId").accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("12345678901")))
-                .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPI")));
     }
 
     @Test
-    public void get_IdentifierAndCredentialsResolveToDpiAndLookupGivesError_ShouldReturnErrorResponseBody() throws Exception {
+    public void getWithProcessIdentifier_CredentialsResolveToDpiAndDsfLookupFails_ShouldReturnErrorResponseBody() throws Exception {
+        setupMocksForSuccessfulDpi();
+        final String message = "identifier not found in DSF";
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(), anyBoolean()))
+                .thenThrow(new DsfLookupException(message));
+
+        mvc.perform(get("/identifier/12345678901")
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error_description", containsString(message)));
+    }
+
+    @Test
+    public void get_CredentialsResolveToDpiAndLookupGivesError_ShouldReturnErrorResponseBody() throws Exception {
         final String message = "Error looking up identifier in KRR";
         when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
         when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(), anyBoolean()))
@@ -209,7 +226,7 @@ public class ServiceRecordControllerTest {
     }
 
     @Test
-    public void getWithProcessIdentifier_IdentifierAndCredentialsResolveToDpiAndLookupGivesError_ShouldReturnErrorResponseBody() throws Exception {
+    public void getWithProcessIdentifier_CredentialsResolveToDpiAndLookupGivesError_ShouldReturnErrorResponseBody() throws Exception {
         Process processMock = mockProcess(ProcessCategory.DIGITALPOST);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         final String message = "Error looking up identifier in KRR";

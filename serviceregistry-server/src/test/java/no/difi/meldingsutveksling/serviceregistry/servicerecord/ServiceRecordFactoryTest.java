@@ -4,6 +4,10 @@ import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.krr.DsfLookupException;
+import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
+import no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters;
+import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.model.DocumentType;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory;
@@ -26,6 +30,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 
@@ -80,6 +86,7 @@ public class ServiceRecordFactoryTest {
     private static String ARKIVMELDING_DOCTYPE = "urn:no:difi:arkivmelding:xsd::arkivmelding";
     private static String ARKIVMELDING_PROCESS_ADMIN = "urn:no:difi:profile:arkivmelding:administrasjon:ver1.0";
     private static String ARKIVMELDING_PROCESS_SKATT = "urn:no:difi:profile:arkivmelding:skatterOgAvgifter:ver1.0";
+    private static String PERSONNUMMER = "01234567890";
 
     @Before
     public void init() throws MalformedURLException, EndpointUrlNotFound {
@@ -247,6 +254,20 @@ public class ServiceRecordFactoryTest {
 
     private long countServiceRecordsForServiceIdentifier(List<ServiceRecord> result, ServiceIdentifier serviceIdentifier) {
         return result.stream().filter(serviceRecord -> serviceIdentifier == serviceRecord.getService().getIdentifier()).count();
+    }
+
+    @Test(expected = DsfLookupException.class)
+    public void createDigitalpostServiceRecords_ForcePrintMessageToRecipientNotInPopulationRegistry_ShouldThrowDedicatedException() throws KRRClientException, DsfLookupException {
+        Authentication authenticationMock = mock(Authentication.class);
+        OAuth2AuthenticationDetails detailsMock = mock(OAuth2AuthenticationDetails.class);
+        when(detailsMock.getTokenValue()).thenReturn("TOKEN");
+        when(authenticationMock.getDetails()).thenReturn(detailsMock);
+        PersonResource personResourceMock = mock(PersonResource.class);
+        when(personResourceMock.hasMailbox()).thenReturn(false);
+        when(krrService.getCitizenInfo(any(LookupParameters.class))).thenReturn(personResourceMock);
+        when(krrService.getDSFInfo(any(LookupParameters.class))).thenReturn(Optional.empty());
+
+        factory.createDigitalpostServiceRecords(PERSONNUMMER, authenticationMock, "991825827", null, true);
     }
 
     // TODO add tests for digitalpost and einnsyn
