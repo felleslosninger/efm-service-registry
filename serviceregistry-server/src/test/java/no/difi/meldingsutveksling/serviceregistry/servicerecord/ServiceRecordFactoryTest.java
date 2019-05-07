@@ -1,5 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
+import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
@@ -15,6 +16,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertServi
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import no.difi.move.common.oauth.KeystoreHelper;
 import no.difi.vefa.peppol.common.model.*;
+import no.difi.virksert.client.lang.VirksertClientException;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -113,21 +115,21 @@ public class ServiceRecordFactoryTest {
     }
 
     @Test
-    public void createArkivmeldingServiceRecord_ProcessIsNotFound_ShouldReturnNotFound() throws SecurityLevelNotFoundException {
+    public void createArkivmeldingServiceRecord_ProcessIsNotFound_ShouldReturnNotFound() throws SecurityLevelNotFoundException, CertificateNotFoundException {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.empty());
         Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR, "NotFound", null);
         assertFalse(result.isPresent());
     }
 
     @Test(expected = SecurityLevelNotFoundException.class)
-    public void createArkivmeldingServiceRecord_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException() throws SecurityLevelNotFoundException {
+    public void createArkivmeldingServiceRecord_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException() throws SecurityLevelNotFoundException, CertificateNotFoundException {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
         factory.createArkivmeldingServiceRecord(ORGNR, "Found", 3);
     }
 
     @Test
-    public void createArkivMeldingServiceRecord_OrganizationHasAdministrationInSmp_ShouldReturnDpoServiceRecord() throws EndpointUrlNotFound, SecurityLevelNotFoundException {
+    public void createArkivMeldingServiceRecord_OrganizationHasAdministrationInSmp_ShouldReturnDpoServiceRecord() throws EndpointUrlNotFound, SecurityLevelNotFoundException, CertificateNotFoundException {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
         setupLookupServiceMockToReturnAdministrationProcessMatch();
 
@@ -137,8 +139,17 @@ public class ServiceRecordFactoryTest {
         assertEquals(ServiceIdentifier.DPO, result.get().getService().getIdentifier());
     }
 
+    @Test(expected = CertificateNotFoundException.class)
+    public void createArkivMeldingServiceRecord_CertificateMissingForSmpProcess_ShouldThrowDedicatedException() throws EndpointUrlNotFound, SecurityLevelNotFoundException, VirksertClientException, CertificateNotFoundException {
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
+        setupLookupServiceMockToReturnAdministrationProcessMatch();
+        when(virkSertService.getCertificate(anyString())).thenThrow(new VirksertClientException("certificate not found"));
+
+        factory.createArkivmeldingServiceRecord(ORGNR, ARKIVMELDING_PROCESS_ADMIN, null);
+    }
+
     @Test
-    public void createArkivmeldingServiceRecord_OrganizationHasSvarUtRegistration_ShouldReturnDpfServiceRecord() throws SecurityLevelNotFoundException {
+    public void createArkivmeldingServiceRecord_OrganizationHasSvarUtRegistration_ShouldReturnDpfServiceRecord() throws SecurityLevelNotFoundException, CertificateNotFoundException {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), eq(4))).thenReturn(Optional.of(4));
 
@@ -149,7 +160,7 @@ public class ServiceRecordFactoryTest {
     }
 
     @Test
-    public void createArkivmeldingServiceRecord_OrganizationHasNoSkattInSmpOrSvarutRegistration_ShouldReturnDpvServiceRecord() throws SecurityLevelNotFoundException {
+    public void createArkivmeldingServiceRecord_OrganizationHasNoSkattInSmpOrSvarutRegistration_ShouldReturnDpvServiceRecord() throws SecurityLevelNotFoundException, CertificateNotFoundException {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
@@ -160,7 +171,7 @@ public class ServiceRecordFactoryTest {
     }
 
     @Test
-    public void createArkivmeldingServiceRecord_NoSmpNorSvarUtRegistration_ShouldReturnDpvServiceRecord() throws SecurityLevelNotFoundException, EndpointUrlNotFound {
+    public void createArkivmeldingServiceRecord_NoSmpNorSvarUtRegistration_ShouldReturnDpvServiceRecord() throws SecurityLevelNotFoundException, EndpointUrlNotFound, CertificateNotFoundException {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
         when(lookupService.lookup(anyString(), anyList())).thenReturn(new ArrayList());
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
@@ -182,7 +193,7 @@ public class ServiceRecordFactoryTest {
     }
 
     @Test
-    public void createArkivmeldingServiceRecords_NoProcessesFound_ShouldReturnEmptyList() throws SecurityLevelNotFoundException {
+    public void createArkivmeldingServiceRecords_NoProcessesFound_ShouldReturnEmptyList() throws SecurityLevelNotFoundException, CertificateNotFoundException {
         when(processService.findAll(ProcessCategory.ARKIVMELDING)).thenReturn(Lists.newArrayList());
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
@@ -191,8 +202,15 @@ public class ServiceRecordFactoryTest {
         assertTrue(result.isEmpty());
     }
 
+    @Test(expected = CertificateNotFoundException.class)
+    public void createArkivmeldingServiceRecords_CertificateNotFoundForSmpProcess_ShouldThrowDedicatedException() throws EndpointUrlNotFound, SecurityLevelNotFoundException, CertificateNotFoundException, VirksertClientException {
+        setupLookupServiceMockToReturnAdministrationProcessMatch();
+        when(virkSertService.getCertificate(anyString())).thenThrow(new VirksertClientException("certificate not found"));
+        factory.createArkivmeldingServiceRecords(ORGNR, null);
+    }
+
     @Test
-    public void createArkivmeldingServiceRecords_OrganizationHasAdministrasjonButNotSkattRegistrationInSmp_ShouldReturnCorrespondingDpoAndDpvServiceRecords() throws EndpointUrlNotFound, SecurityLevelNotFoundException {
+    public void createArkivmeldingServiceRecords_OrganizationHasAdministrasjonButNotSkattRegistrationInSmp_ShouldReturnCorrespondingDpoAndDpvServiceRecords() throws EndpointUrlNotFound, SecurityLevelNotFoundException, CertificateNotFoundException {
         setupLookupServiceMockToReturnAdministrationProcessMatch();
 
         List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR, null);
@@ -205,14 +223,14 @@ public class ServiceRecordFactoryTest {
     }
 
     @Test
-    public void createArkivmeldingServiceRecords_OrganizationHasSvarUtRegistration_ShouldReturnDpfServiceRecord() throws SecurityLevelNotFoundException {
+    public void createArkivmeldingServiceRecords_OrganizationHasSvarUtRegistration_ShouldReturnDpfServiceRecord() throws SecurityLevelNotFoundException, CertificateNotFoundException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any())).thenReturn(Optional.of(3));
         List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR_FIKS, 3);
         assertEquals(2, countServiceRecordsForServiceIdentifier(result, ServiceIdentifier.DPF));
     }
 
     @Test
-    public void createArkivmeldingServiceRecords_OrganizationHasNoSmpNorSvarutRegistration_ShouldReturnDpvServiceRecord() throws EndpointUrlNotFound, SecurityLevelNotFoundException {
+    public void createArkivmeldingServiceRecords_OrganizationHasNoSmpNorSvarutRegistration_ShouldReturnDpvServiceRecord() throws EndpointUrlNotFound, SecurityLevelNotFoundException, CertificateNotFoundException {
         when(lookupService.lookup(Matchers.eq("9908:" + ORGNR), any(List.class))).thenReturn(new ArrayList());
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
@@ -222,7 +240,7 @@ public class ServiceRecordFactoryTest {
     }
 
     @Test(expected = SecurityLevelNotFoundException.class)
-    public void createArkivmeldingServiceRecords_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException() throws SecurityLevelNotFoundException {
+    public void createArkivmeldingServiceRecords_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException() throws SecurityLevelNotFoundException, CertificateNotFoundException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any())).thenReturn(Optional.empty());
         factory.createArkivmeldingServiceRecords(ORGNR_FIKS, 3);
     }

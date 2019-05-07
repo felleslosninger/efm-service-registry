@@ -3,6 +3,7 @@ package no.difi.meldingsutveksling.serviceregistry.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import no.difi.meldingsutveksling.Notification;
+import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
@@ -91,7 +92,7 @@ public class ServiceRecordController {
                                  @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
                                  @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
                                  Authentication auth,
-                                 HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException {
+                                 HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException {
         MDC.put("entity", identifier);
         Optional<EntityInfo> optionalEntityInfo = entityService.getEntityInfo(identifier);
         if (!optionalEntityInfo.isPresent()) {
@@ -150,7 +151,7 @@ public class ServiceRecordController {
             @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             Authentication auth,
-            HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException {
+            HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException {
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
         Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
@@ -188,7 +189,7 @@ public class ServiceRecordController {
             @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             Authentication auth,
-            HttpServletRequest request) throws EntitySignerException, SecurityLevelNotFoundException, KRRClientException {
+            HttpServletRequest request) throws EntitySignerException, SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException {
 
         ResponseEntity entity = entity(identifier, obligation, forcePrint, securityLevel, auth, request);
         if (entity.getStatusCode() != HttpStatus.OK) {
@@ -226,7 +227,7 @@ public class ServiceRecordController {
 
     @ExceptionHandler(SecurityLevelNotFoundException.class)
     public ResponseEntity securityLevelNotFound(HttpServletRequest request, Exception e) {
-        log.warn(String.format("Security level not found for %s", request.getRequestURL()));
+        log.warn(String.format("Security level not found for %s", request.getRequestURL()), e);
         return ResponseEntity.badRequest().body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
     }
 
@@ -234,6 +235,12 @@ public class ServiceRecordController {
     public ResponseEntity krrClientException(HttpServletRequest request, Exception e) {
         log.error("Exception occurred on {}", request.getRequestURL(), e);
         return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+    }
+
+    @ExceptionHandler(CertificateNotFoundException.class)
+    public ResponseEntity certificateNotFound(HttpServletRequest request, Exception e) {
+        log.error(String.format("Certificate not found for %s", request.getRequestURL()), e);
+        return errorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
 }

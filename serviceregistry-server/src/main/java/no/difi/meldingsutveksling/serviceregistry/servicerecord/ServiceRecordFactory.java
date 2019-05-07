@@ -84,7 +84,7 @@ public class ServiceRecordFactory {
         this.processService = processService;
     }
 
-    public Optional<ServiceRecord> createArkivmeldingServiceRecord(String orgnr, String processIdentifier, Integer targetSecurityLevel) throws SecurityLevelNotFoundException {
+    public Optional<ServiceRecord> createArkivmeldingServiceRecord(String orgnr, String processIdentifier, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException {
         Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
         return optionalProcess.isPresent()
                 ? Optional.of(createArkivmeldingServiceRecord(orgnr, processIdentifier, targetSecurityLevel, optionalProcess.get()))
@@ -92,7 +92,7 @@ public class ServiceRecordFactory {
     }
 
     @SuppressWarnings("squid:S1166")
-    public List<ServiceRecord> createArkivmeldingServiceRecords(String orgnr, Integer targetSecurityLevel) throws SecurityLevelNotFoundException {
+    public List<ServiceRecord> createArkivmeldingServiceRecords(String orgnr, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
         List<Process> arkivmeldingProcesses = processService.findAll(ProcessCategory.ARKIVMELDING);
         for (Process process : arkivmeldingProcesses) {
@@ -101,7 +101,7 @@ public class ServiceRecordFactory {
         return serviceRecords;
     }
 
-    private ServiceRecord createArkivmeldingServiceRecord(String orgnr, String processIdentifier, Integer targetSecurityLevel, Process process) throws SecurityLevelNotFoundException {
+    private ServiceRecord createArkivmeldingServiceRecord(String orgnr, String processIdentifier, Integer targetSecurityLevel, Process process) throws SecurityLevelNotFoundException, CertificateNotFoundException {
         ServiceRecord serviceRecord;
         Set<ProcessIdentifier> processIdentifiers = getSmpRegistrations(orgnr, Lists.newArrayList(process));
         if (processIdentifiers.isEmpty()) {
@@ -128,7 +128,7 @@ public class ServiceRecordFactory {
     }
 
 
-    public Optional<ServiceRecord> createEinnsynServiceRecord(String orgnr, String processIdentifier) {
+    public Optional<ServiceRecord> createEinnsynServiceRecord(String orgnr, String processIdentifier) throws CertificateNotFoundException {
         Optional<ServiceRecord> optionalServiceRecord = Optional.empty();
         Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
         if (!optionalProcess.isPresent()) {
@@ -149,7 +149,7 @@ public class ServiceRecordFactory {
         return optionalServiceRecord;
     }
 
-    private ServiceRecord createDpoServiceRecord(String orgnr, Process process) {
+    private ServiceRecord createDpoServiceRecord(String orgnr, Process process) throws CertificateNotFoundException {
         String pem = lookupPemCertificate(orgnr);
         ServiceRecord arkivmeldingServiceRecord = ArkivmeldingServiceRecord.of(DPO, orgnr, properties.getDpo().getEndpointURL().toString(), pem);
         arkivmeldingServiceRecord.setProcess(process.getIdentifier());
@@ -175,7 +175,7 @@ public class ServiceRecordFactory {
         return arkivmeldingServiceRecord;
     }
 
-    private ServiceRecord createDpeServiceRecord(String orgnr, Process process) {
+    private ServiceRecord createDpeServiceRecord(String orgnr, Process process) throws CertificateNotFoundException {
         String pemCertificate = lookupPemCertificate(orgnr);
         ServiceRecord einnsynServiceRecord = DpeServiceRecord.of(pemCertificate, orgnr, DPE, process.getServiceCode());
         einnsynServiceRecord.setProcess(process.getIdentifier());
@@ -185,7 +185,7 @@ public class ServiceRecordFactory {
     }
 
 
-    public List<ServiceRecord> createEinnsynServiceRecords(String orgnr) {
+    public List<ServiceRecord> createEinnsynServiceRecords(String orgnr) throws CertificateNotFoundException {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
         Optional<ServiceRecord> optionalServiceRecord;
         List<Process> einnsynProcesses = processService.findAll(ProcessCategory.EINNSYN);
@@ -229,7 +229,7 @@ public class ServiceRecordFactory {
         return dpvServiceRecord;
     }
 
-    private String lookupPemCertificate(String orgnumber) {
+    private String lookupPemCertificate(String orgnumber) throws CertificateNotFoundException {
         try {
             return virksertService.getCertificate(orgnumber);
         } catch (VirksertClientException e) {
