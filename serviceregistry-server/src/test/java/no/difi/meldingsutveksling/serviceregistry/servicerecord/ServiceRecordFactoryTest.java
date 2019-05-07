@@ -211,6 +211,16 @@ public class ServiceRecordFactoryTest {
         assertEquals(2, countServiceRecordsForServiceIdentifier(result, ServiceIdentifier.DPF));
     }
 
+    @Test
+    public void createArkivmeldingServiceRecords_OrganizationHasNoSmpNorSvarutRegistration_ShouldReturnDpvServiceRecord() throws EndpointUrlNotFound, SecurityLevelNotFoundException {
+        when(lookupService.lookup(Matchers.eq("9908:" + ORGNR), any(List.class))).thenReturn(new ArrayList());
+        when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
+
+        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR, null);
+
+        assertEquals(2, countServiceRecordsForServiceIdentifier(result, ServiceIdentifier.DPV));
+    }
+
     @Test(expected = SecurityLevelNotFoundException.class)
     public void createArkivmeldingServiceRecords_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException() throws SecurityLevelNotFoundException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any())).thenReturn(Optional.empty());
