@@ -95,11 +95,11 @@ public class ServiceRecordController {
         MDC.put("entity", identifier);
         Optional<EntityInfo> optionalEntityInfo = entityService.getEntityInfo(identifier);
         if (!optionalEntityInfo.isPresent()) {
-            return ResponseEntity.notFound().build();
+            return notFoundResponse(String.format("Entity with identifier '%s' not found.", identifier));
         }
         Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
         if (!optionalProcess.isPresent()) {
-            return ResponseEntity.notFound().build();
+            return notFoundResponse(String.format("Process with identifier '%s' not found.", processIdentifier));
         }
         Entity entity = new Entity();
         EntityInfo entityInfo = optionalEntityInfo.get();
@@ -120,21 +120,16 @@ public class ServiceRecordController {
                 serviceRecord = osr.get();
             }
             if (serviceRecord == null) {
-                return ResponseEntity.badRequest()
-                        .body(ErrorResponse.builder()
-                                .errorDescription(String.format("Process '%s' not found for receiver '%s'.", processIdentifier, identifier))
-                                .build());
+                return notFoundResponse(String.format("Arkivmelding process '%s' not found for receiver '%s'.", processIdentifier, identifier));
             }
         }
         if (processCategory == ProcessCategory.EINNSYN) {
             Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createEinnsynServiceRecord(identifier, processIdentifier);
             if (!dpeServiceRecord.isPresent()) {
-                log.error(String.format("Process %s not found for receiver %s", processIdentifier, identifier));
-                return ResponseEntity.notFound().build();
+                return notFoundResponse(String.format("eInnsyn process '%s' not found for receiver '%s'.", processIdentifier, identifier));
             }
             serviceRecord = dpeServiceRecord.get();
         }
-
         entity.getServiceRecords().add(serviceRecord);
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
@@ -161,7 +156,7 @@ public class ServiceRecordController {
         Entity entity = new Entity();
         Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
         if (!entityInfo.isPresent()) {
-            return ResponseEntity.notFound().build();
+            return notFoundResponse(String.format("Entity with identifier '%s' not found.", identifier));
         }
         entity.setInfoRecord(entityInfo.get());
         if (shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
@@ -177,6 +172,10 @@ public class ServiceRecordController {
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
+    private ResponseEntity notFoundResponse(String logMessage) {
+        log.error(logMessage);
+        return ResponseEntity.notFound().build();
+    }
 
     @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = "application/jose")
     @ResponseBody

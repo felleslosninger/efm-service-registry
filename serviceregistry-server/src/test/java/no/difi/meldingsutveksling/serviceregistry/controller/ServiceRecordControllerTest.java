@@ -351,9 +351,7 @@ public class ServiceRecordControllerTest {
                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
-        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getStatus());
-//        assertEquals("Process ProcessID not found for receiver 42", result.getContentAsString());
-        assertEquals("Process 'ProcessID' not found for receiver '42'.", deserializeErrorResponse(result).getErrorDescription());
+        assertEquals(HttpStatus.NOT_FOUND.value(), result.getStatus());
     }
 
     @Test
