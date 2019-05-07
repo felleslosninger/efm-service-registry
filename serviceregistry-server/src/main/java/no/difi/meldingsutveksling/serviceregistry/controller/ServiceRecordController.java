@@ -93,8 +93,8 @@ public class ServiceRecordController {
                                  Authentication auth,
                                  HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException {
         MDC.put("entity", identifier);
-        Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
-        if (!entityInfo.isPresent()) {
+        Optional<EntityInfo> optionalEntityInfo = entityService.getEntityInfo(identifier);
+        if (!optionalEntityInfo.isPresent()) {
             return ResponseEntity.notFound().build();
         }
         Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
@@ -102,10 +102,11 @@ public class ServiceRecordController {
             return ResponseEntity.notFound().build();
         }
         Entity entity = new Entity();
-        entity.setInfoRecord(entityInfo.get());
+        EntityInfo entityInfo = optionalEntityInfo.get();
+        entity.setInfoRecord(entityInfo);
         ServiceRecord serviceRecord = null;
         ProcessCategory processCategory = optionalProcess.get().getCategory();
-        if (processCategory.equals(ProcessCategory.DIGITALPOST) && shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
+        if (processCategory.equals(ProcessCategory.DIGITALPOST) && shouldCreateServiceRecordForCitizen().test(entityInfo)) {
             String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
             if (clientOrgnr == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -113,17 +114,18 @@ public class ServiceRecordController {
             }
             entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, obligation, forcePrint));
         }
-
         if (processCategory == ProcessCategory.ARKIVMELDING) {
             Optional<ServiceRecord> osr = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier, securityLevel);
             if (osr.isPresent()) {
                 serviceRecord = osr.get();
             }
             if (serviceRecord == null) {
-                return ResponseEntity.badRequest().body(String.format("Process %s not found for receiver %s", processIdentifier, identifier));
+                return ResponseEntity.badRequest()
+                        .body(ErrorResponse.builder()
+                                .errorDescription(String.format("Process '%s' not found for receiver '%s'.", processIdentifier, identifier))
+                                .build());
             }
         }
-
         if (processCategory == ProcessCategory.EINNSYN) {
             Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createEinnsynServiceRecord(identifier, processIdentifier);
             if (!dpeServiceRecord.isPresent()) {

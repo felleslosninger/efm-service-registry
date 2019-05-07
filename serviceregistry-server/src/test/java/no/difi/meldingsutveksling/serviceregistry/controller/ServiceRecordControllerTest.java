@@ -342,6 +342,21 @@ public class ServiceRecordControllerTest {
     }
 
     @Test
+    public void getWithProcessIdentifier_ArkivmeldingResolvesToEmptyRecord_ShouldReturnErrorResponseBody() throws Exception {
+        Process processMock = mockProcess(ProcessCategory.ARKIVMELDING);
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
+        when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), anyString(), anyInt())).thenReturn(Optional.empty());
+
+        MockHttpServletResponse result = mvc.perform(get("/identifier/42/process/ProcessID?securityLevel=2")
+                .accept(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse();
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), result.getStatus());
+//        assertEquals("Process ProcessID not found for receiver 42", result.getContentAsString());
+        assertEquals("Process 'ProcessID' not found for receiver '42'.", deserializeErrorResponse(result).getErrorDescription());
+    }
+
+    @Test
     public void get_ArkivmeldingResolvesToDpfAndRequestedSecurityLevelIsAvailable_ServiceRecordShouldMatchExpectedValues() throws Exception {
         DPF_SERVICE_RECORD.getService().setSecurityLevel(3);
         when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any())).thenReturn(Lists.newArrayList(DPF_SERVICE_RECORD));
