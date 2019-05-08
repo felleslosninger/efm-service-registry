@@ -19,6 +19,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import no.difi.move.common.oauth.KeystoreHelper;
+import no.difi.vefa.peppol.common.lang.PeppolException;
 import no.difi.vefa.peppol.common.model.*;
 import no.difi.virksert.client.lang.VirksertClientException;
 import org.assertj.core.util.Lists;
@@ -157,20 +158,17 @@ public class ServiceRecordFactoryTest {
                 .setCategory(ProcessCategory.EINNSYN)
                 .setServiceCode("567")
                 .setServiceEditionCode("5678");
-
         Optional<Process> responseProcess = Optional.of(einnsynResponseProcess);
         einnsynResponseDocumentType.setProcesses(Lists.newArrayList(einnsynResponseProcess));
         einnsynResponseProcess.setDocumentTypes(Lists.newArrayList(einnsynResponseDocumentType));
+        when(processService.findByIdentifier(EINNSYN_PROCESS_RESPONSE)).thenReturn(responseProcess);
         ProcessMetadata<Endpoint> einnsynResponseProcessMetadata =
                 ProcessMetadata.of(ProcessIdentifier.of(EINNSYN_PROCESS_RESPONSE), Endpoint.of(null, null, null));
-        ServiceMetadata.of(ParticipantIdentifier.of("9908:" + ORGNR_EINNSYN_RESPONSE),
+        ServiceMetadata serviceMetadata = ServiceMetadata.of(ParticipantIdentifier.of("9908:" + ORGNR_EINNSYN_RESPONSE),
                 DocumentTypeIdentifier.of(EINNSYN_DOCTYPE_RESPONSE_KVITTERING),
                 Arrays.asList(einnsynResponseProcessMetadata));
-        when(lookupService.lookup(Matchers.eq("9908:" + ORGNR_EINNSYN_RESPONSE), any(List.class))).thenReturn(Lists.newArrayList());
-        when(processService.findByIdentifier(EINNSYN_PROCESS_RESPONSE)).thenReturn(responseProcess);
-        when(lookupService.lookup(Matchers.eq("9908:" + ORGNR_EINNSYN), any(List.class))).thenThrow(new RuntimeException("Endpoint Url was not found in ELMA"));
-
-
+        when(lookupService.lookup(Matchers.eq("9908:" + ORGNR_EINNSYN_RESPONSE), any(List.class)))
+                .thenReturn(Lists.newArrayList(serviceMetadata));
     }
 
     @Test
@@ -308,7 +306,6 @@ public class ServiceRecordFactoryTest {
         return result.stream().filter(serviceRecord -> serviceIdentifier == serviceRecord.getService().getIdentifier()).count();
     }
 
-
     @Test
     public void createEinnsynServiceRecord_ProcessIsNotFound_ShouldReturnNotFound() throws CertificateNotFoundException {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.empty());
@@ -325,37 +322,32 @@ public class ServiceRecordFactoryTest {
     }
 
     @Test
-    public void createEinnsynServiceRecords_OrgnrNotInElma_ShouldNotReturnDpeServiceRecord() throws CertificateNotFoundException {
+    public void createEinnsynServiceRecords_OrgnrNotInElma_ShouldNotReturnDpeServiceRecord() throws CertificateNotFoundException, EndpointUrlNotFound {
+        when(lookupService.lookup(Matchers.eq("9908:" + ORGNR_EINNSYN_RESPONSE), any(List.class))).thenReturn(Lists.newArrayList());
         List<ServiceRecord> result = factory.createEinnsynServiceRecords(ORGNR_EINNSYN_RESPONSE);
         assertEquals(0, result.size());
     }
 
-    @Test(expected = RuntimeException.class)
-    public void createEinnsynServiceRecords_EndpointurlNotFound_ShouldNotReturnDpeServiceRecord() throws CertificateNotFoundException {
+    @Test
+    public void createEinnsynServiceRecords_EndpointurlNotFound_ShouldNotReturnDpeServiceRecord() throws CertificateNotFoundException, EndpointUrlNotFound {
+        when(lookupService.lookup(Matchers.eq("9908:" + ORGNR_EINNSYN), any(List.class)))
+                .thenThrow(new EndpointUrlNotFound("Endpoint Url was not found in ELMA", new PeppolException("(required by constructor)")));
         List<ServiceRecord> result = factory.createEinnsynServiceRecords(ORGNR_EINNSYN);
-        assertEquals(0, result.size());
+        assertTrue(result.isEmpty());
     }
 
     @Test
-    public void createEinnsynServiceRecord_hasOrgnrAndProcessidentifier_ShouldReturnDpeServiceRecord() throws CertificateNotFoundException {
-        ServiceRecord serviceRecord = null;
+    public void createEinnsynServiceRecord_HasOrgnrAndProcessidentifier_ShouldReturnDpeServiceRecord() throws CertificateNotFoundException {
         Optional<ServiceRecord> result = factory.createEinnsynServiceRecord(ORGNR_EINNSYN_JOURNALPOST, EINNSYN_PROCESS_JOURNALPOST);
-
         assertTrue(result.isPresent());
-        serviceRecord = result.get();
-        assertEquals(ServiceIdentifier.DPE, serviceRecord.getService().getIdentifier());
+        assertEquals(ServiceIdentifier.DPE, result.get().getService().getIdentifier());
     }
 
     @Test
-    public void createEinnsynServiceRecord_hasOrgnrWhileProcessidentifierMatchNotFoundInElma_ShouldNotReturnDpeServiceRecord() throws CertificateNotFoundException {
+    public void createEinnsynServiceRecord_HasOrgnrWhileProcessidentifierMatchNotFoundInElma_ShouldNotReturnDpeServiceRecord() throws CertificateNotFoundException {
+        when(processService.findByIdentifier(EINNSYN_PROCESS_RESPONSE)).thenReturn(Optional.empty());
         Optional<ServiceRecord> result = factory.createEinnsynServiceRecord(ORGNR_EINNSYN_RESPONSE, EINNSYN_PROCESS_RESPONSE);
-        assertEquals(Optional.empty(), result);
-    }
-
-    @Test
-    public void createEinnsynServiceRecord_hasOrgnrAndProcessidentifierWhileProcessNotFound_ShouldNotReturnDpeServiceRecord() throws CertificateNotFoundException {
-        Optional<ServiceRecord> result = factory.createEinnsynServiceRecord(ORGNR_EINNSYN_JOURNALPOST, EINNSYN_PROCESS_RESPONSE);
-        assertEquals(Optional.empty(), result);
+        assertFalse(result.isPresent());
     }
 
     @Test(expected = DsfLookupException.class)
@@ -372,5 +364,4 @@ public class ServiceRecordFactoryTest {
         factory.createDigitalpostServiceRecords(PERSONNUMMER, authenticationMock, "991825827", null, true);
     }
 
-    // TODO add tests for digitalpost and einnsyn
 }
