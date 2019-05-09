@@ -13,6 +13,7 @@ import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
+import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
@@ -351,7 +352,7 @@ public class ServiceRecordFactoryTest {
     }
 
     @Test(expected = DsfLookupException.class)
-    public void createDigitalpostServiceRecords_ForcePrintMessageToRecipientNotInPopulationRegistry_ShouldThrowDedicatedException() throws KRRClientException, DsfLookupException {
+    public void createDigitalpostServiceRecords_ForcePrintMessageToRecipientNotInPopulationRegistry_ShouldThrowDedicatedException() throws KRRClientException, DsfLookupException, BrregNotFoundException {
         Authentication authenticationMock = mock(Authentication.class);
         OAuth2AuthenticationDetails detailsMock = mock(OAuth2AuthenticationDetails.class);
         when(detailsMock.getTokenValue()).thenReturn("TOKEN");
@@ -361,7 +362,7 @@ public class ServiceRecordFactoryTest {
         when(krrService.getCitizenInfo(any(LookupParameters.class))).thenReturn(personResourceMock);
         when(krrService.getDSFInfo(any(LookupParameters.class))).thenReturn(Optional.empty());
 
-        factory.createDigitalpostServiceRecords(PERSONNUMMER, authenticationMock, "991825827", null, true);
+        factory.createDigitalpostServiceRecords(PERSONNUMMER, authenticationMock, "991825827",true);
     }
 
 }

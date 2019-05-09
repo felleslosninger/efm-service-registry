@@ -15,6 +15,7 @@ import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.AuthenticationService;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
+import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.*;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import no.difi.virksert.client.lang.VirksertClientException;
@@ -165,7 +166,7 @@ public class ServiceRecordControllerTest {
     public void get_CredentialsResolveToDpiAndDsfLookupFails_ShouldReturnErrorResponseBody() throws Exception {
         setupMocksForSuccessfulDpi();
         final String message = "identifier not found in DSF";
-        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(), anyBoolean()))
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), anyBoolean()))
                 .thenThrow(new DsfLookupException(message));
 
         mvc.perform(get("/identifier/12345678901")
@@ -186,14 +187,14 @@ public class ServiceRecordControllerTest {
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPI")));
     }
 
-    private void setupMocksForSuccessfulDpi() throws MalformedURLException, KRRClientException, DsfLookupException, SecurityLevelNotFoundException, CertificateNotFoundException {
+    private void setupMocksForSuccessfulDpi() throws MalformedURLException, KRRClientException, DsfLookupException, SecurityLevelNotFoundException, CertificateNotFoundException, BrregNotFoundException {
         ServiceregistryProperties serviceregistryProperties = fakePropertiesForDpi();
         when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
         PersonResource personResource = fakePersonResourceForDpi();
         PostAddress postAddress = new PostAddress("Address name", "Street x", "Postal code", "Area", "Country");
         SikkerDigitalPostServiceRecord dpiServiceRecord
                 = new SikkerDigitalPostServiceRecord(serviceregistryProperties, personResource, ServiceIdentifier.DPI, "12345678901", postAddress, postAddress);
-        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(), anyBoolean()))
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), anyBoolean()))
                 .thenReturn(Lists.newArrayList(dpiServiceRecord));
         when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), anyString(), anyInt())).thenReturn(Optional.empty());
         when(serviceRecordFactory.createEinnsynServiceRecords(anyString())).thenReturn(Lists.newArrayList());
@@ -205,7 +206,7 @@ public class ServiceRecordControllerTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         setupMocksForSuccessfulDpi();
         final String message = "identifier not found in DSF";
-        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(), anyBoolean()))
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), anyBoolean()))
                 .thenThrow(new DsfLookupException(message));
 
         mvc.perform(get("/identifier/12345678901")
@@ -218,7 +219,7 @@ public class ServiceRecordControllerTest {
     public void get_CredentialsResolveToDpiAndLookupGivesError_ShouldReturnErrorResponseBody() throws Exception {
         final String message = "Error looking up identifier in KRR";
         when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
-        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(), anyBoolean()))
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), anyBoolean()))
                 .thenThrow(new KRRClientException(new Exception(message)));
 
         mvc.perform(get("/identifier/12345678901")
@@ -233,7 +234,7 @@ public class ServiceRecordControllerTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         final String message = "Error looking up identifier in KRR";
         when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
-        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(), anyBoolean()))
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), anyBoolean()))
                 .thenThrow(new KRRClientException(new Exception(message)));
 
         mvc.perform(get("/identifier/12345678901/process/ProcessID")
