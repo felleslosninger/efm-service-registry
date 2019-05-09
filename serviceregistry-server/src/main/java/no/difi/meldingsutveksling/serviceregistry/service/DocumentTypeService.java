@@ -1,6 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.service;
 
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.model.BusinessMessageTypes;
 import no.difi.meldingsutveksling.serviceregistry.model.DocumentType;
 import no.difi.meldingsutveksling.serviceregistry.persistence.DocumentTypeRepository;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,12 @@ public class DocumentTypeService {
     @Transactional(readOnly = true)
     public Optional<DocumentType> findByIdentifier(String identifier) {
         return Optional.ofNullable(repository.findByIdentifier(identifier));
+    }
+
+    public Optional<DocumentType> findByBusinessMessageType(BusinessMessageTypes type) {
+        return repository.findAll().stream()
+                .filter(dt -> dt.getIdentifier().endsWith(type.toString().toLowerCase()))
+                .findFirst();
     }
 
     @Transactional

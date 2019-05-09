@@ -13,8 +13,10 @@ import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFou
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
+import no.difi.meldingsutveksling.serviceregistry.service.DocumentTypeService;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
+import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
@@ -30,10 +32,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
@@ -53,17 +52,18 @@ public class ServiceRecordFactory {
     private EntityService entityService;
     private SvarUtService svarUtService;
     private ProcessService processService;
+    private DocumentTypeService documentTypeService;
     private static final String NORWAY_PREFIX = "9908:";
 
     /**
      * Creates factory to create ServiceRecord using provided environment and services
-     *
-     * @param properties        - parameters needed to contact the provided services
+     *  @param properties        - parameters needed to contact the provided services
      * @param virksertService   - used to lookup virksomhetssertifikat (certificate)
      * @param elmaLookupService - used to lookup hostname of Altinn formidlingstjeneste
      * @param krrService        - used to lookup parameters needed to use DPI transportation
      * @param entityService     - used to look up information about citizens and organizations in Brønnøysundregisteret and Datahotellet.
      * @param svarUtService     - used to determine whether an organization utilizes FIKS.
+     * @param documentTypeService
      */
     public ServiceRecordFactory(ServiceregistryProperties properties,
                                 VirkSertService virksertService,
@@ -71,7 +71,8 @@ public class ServiceRecordFactory {
                                 KrrService krrService,
                                 EntityService entityService,
                                 SvarUtService svarUtService,
-                                ProcessService processService) {
+                                ProcessService processService,
+                                DocumentTypeService documentTypeService) {
         this.properties = properties;
         this.virksertService = virksertService;
         this.elmaLookupService = elmaLookupService;
@@ -79,6 +80,7 @@ public class ServiceRecordFactory {
         this.entityService = entityService;
         this.svarUtService = svarUtService;
         this.processService = processService;
+        this.documentTypeService = documentTypeService;
     }
 
     public Optional<ServiceRecord> createArkivmeldingServiceRecord(String orgnr, String processIdentifier, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException {
@@ -238,46 +240,67 @@ public class ServiceRecordFactory {
     public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
                                                                Authentication auth,
                                                                String onBehalfOrgnr,
-                                                               Notification notification,
-                                                               boolean forcePrint) throws KRRClientException, DsfLookupException {
+                                                               boolean forcePrint) throws KRRClientException, DsfLookupException, BrregNotFoundException {
 
         String token = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
-
         PersonResource personResource = krrService.getCitizenInfo(lookup(identifier)
                 .onBehalfOf(onBehalfOrgnr)
-                .require(notification)
                 .token(token));
 
-        // TODO sette prosesser for DPI print og digital
-        switch (DpiMessageRouter.route(personResource, notification, forcePrint)) {
-            case DPI:
-                return createDigitalServiceRecords(personResource, identifier);
-            case PRINT:
-                return createPrintServiceRecords(identifier, onBehalfOrgnr, token, personResource);
-            case DPV:
-            default:
-                return Lists.newArrayList(createDpvServiceRecord(identifier, processService.getDefaultArkivmeldingProcess()));
-        }
-
-    }
-
-    private List<ServiceRecord> createDigitalServiceRecords(PersonResource personResource, String identifier) {
-        List<Process> processes = processService.findAll(ProcessCategory.DIGITALPOST);
+        List<Process> digitalpostProcesses = processService.findAll(ProcessCategory.DIGITALPOST);
         List<ServiceRecord> serviceRecords = Lists.newArrayList();
-        processes.forEach(p -> {
-            SikkerDigitalPostServiceRecord serviceRecord = new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
-                    identifier, null, null);
-            serviceRecord.setProcess(p.getIdentifier());
-            serviceRecord.setDocumentTypes(Lists.newArrayList(properties.getDpi().getDigitalDocumentType()));
-        });
+        for (Process p : digitalpostProcesses) {
+            DpiMessageRouter.TargetRecord target;
+            if (p.getIdentifier().equals(properties.getDpi().getInfoProcess())) {
+                target = DpiMessageRouter.route(personResource, Notification.NOT_OBLIGATED, forcePrint);
+            } else if (p.getIdentifier().equals(properties.getDpi().getVedtakProcess())) {
+                target = DpiMessageRouter.route(personResource, Notification.OBLIGATED, forcePrint);
+            } else {
+                throw new ServiceRegistryException(String.format("Error processing unknown digitalpost process: %s", p.getIdentifier()));
+            }
+
+            switch (target) {
+                case DPI:
+                    serviceRecords.add(createDigitalServiceRecord(personResource, identifier, p));
+                case PRINT:
+                    serviceRecords.add(createPrintServiceRecord(identifier, onBehalfOrgnr, token, personResource, p));
+                case DPV:
+                default:
+                    serviceRecords.add(createDigitalDpvServiceRecord(identifier, p));
+            }
+        }
 
         return serviceRecords;
     }
 
-    private List<ServiceRecord> createPrintServiceRecords(String identifier,
-                                                          String onBehalfOrgnr,
-                                                          String token,
-                                                          PersonResource personResource) throws KRRClientException, DsfLookupException {
+    private ServiceRecord createDigitalDpvServiceRecord(String identifier, Process process) {
+        ArkivmeldingServiceRecord dpvServiceRecord = ArkivmeldingServiceRecord.of(DPV, identifier, properties.getDpv().getEndpointURL().toString());
+        Process defaultArkivmeldingProcess = processService.getDefaultArkivmeldingProcess();
+        dpvServiceRecord.getService().setServiceCode(defaultArkivmeldingProcess.getServiceCode());
+        dpvServiceRecord.getService().setServiceEditionCode(defaultArkivmeldingProcess.getServiceEditionCode());
+        dpvServiceRecord.setProcess(process.getIdentifier());
+        DocumentType docType = documentTypeService.findByBusinessMessageType(BusinessMessageTypes.DIGITAL_DPV)
+                .orElseThrow(() -> new ServiceRegistryException(String.format("Missing DocumentType for business message type '%s'", BusinessMessageTypes.DIGITAL)));
+        dpvServiceRecord.setDocumentTypes(Lists.newArrayList(docType.getIdentifier()));
+        return dpvServiceRecord;
+    }
+
+    private ServiceRecord createDigitalServiceRecord(PersonResource personResource, String identifier, Process p) {
+        SikkerDigitalPostServiceRecord serviceRecord = new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
+                identifier, null, null);
+        serviceRecord.setProcess(p.getIdentifier());
+        DocumentType docType = documentTypeService.findByBusinessMessageType(BusinessMessageTypes.DIGITAL)
+                .orElseThrow(() -> new ServiceRegistryException(String.format("Missing DocumentType for business message type '%s'", BusinessMessageTypes.DIGITAL)));
+        serviceRecord.setDocumentTypes(Lists.newArrayList(docType.getIdentifier()));
+
+        return serviceRecord;
+    }
+
+    private ServiceRecord createPrintServiceRecord(String identifier,
+                                                         String onBehalfOrgnr,
+                                                         String token,
+                                                         PersonResource personResource,
+                                                         Process p) throws KRRClientException, DsfLookupException, BrregNotFoundException {
 
         krrService.setPrintDetails(personResource);
         Optional<DSFResource> dsfResource = krrService.getDSFInfo(lookup(identifier).token(token));
@@ -301,20 +324,16 @@ public class ServiceRecordFactory {
                     orginfo.getPostadresse().getPoststed(),
                     orginfo.getPostadresse().getLand());
         } else {
-            log.error("Sender {} not found in BRREG, could not get post address. Defaulting to DPV.", onBehalfOrgnr);
-            return Lists.newArrayList(createDpvServiceRecord(identifier, processService.getDefaultArkivmeldingProcess()));
+            throw new BrregNotFoundException(String.format("Sender with identifier=%s not found in BRREG", onBehalfOrgnr));
         }
 
-        List<Process> processes = processService.findAll(ProcessCategory.DIGITALPOST);
-        ArrayList<ServiceRecord> serviceRecords = Lists.newArrayList();
-        processes.forEach(p -> {
-            SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
-                    identifier, postAddress, returnAddress);
-            dpiServiceRecord.setDocumentTypes(Lists.newArrayList(properties.getDpi().getPrintDocumentType()));
-            dpiServiceRecord.setProcess(p.getIdentifier());
-            serviceRecords.add(dpiServiceRecord);
-        });
-        return serviceRecords;
+        SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
+                identifier, postAddress, returnAddress);
+        DocumentType docType = documentTypeService.findByBusinessMessageType(BusinessMessageTypes.PRINT)
+                .orElseThrow(() -> new ServiceRegistryException(String.format("Missing DocumentType for business message type '%s'", BusinessMessageTypes.DIGITAL)));
+        dpiServiceRecord.setDocumentTypes(Lists.newArrayList(docType.getIdentifier()));
+        dpiServiceRecord.setProcess(p.getIdentifier());
+        return dpiServiceRecord;
     }
 
     private Set<ProcessIdentifier> getSmpRegistrations(String organizationIdentifier, List<Process> processes) {

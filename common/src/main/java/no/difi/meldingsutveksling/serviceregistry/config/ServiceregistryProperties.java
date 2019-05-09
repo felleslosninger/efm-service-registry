@@ -61,7 +61,8 @@ public class ServiceregistryProperties {
     @Data
     public static class DigitalPostInnbygger {
         private URL endpointURL;
-        private String digitalDocumentType;
+        private String infoProcess;
+        private String vedtakProcess;
         private String printDocumentType;
     }
 

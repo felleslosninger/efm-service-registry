@@ -20,6 +20,7 @@ import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.AuthenticationService;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
+import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
 import org.jboss.logging.MDC;
@@ -79,7 +80,6 @@ public class ServiceRecordController {
      *
      * @param identifier        specifies the target entity.
      * @param processIdentifier specifies the target process.
-     * @param obligation        determines service record based on the recipient being notifiable
      * @param forcePrint
      * @param auth              provides the authentication object.
      * @param request           is the servlet request.
@@ -89,11 +89,10 @@ public class ServiceRecordController {
     @ResponseBody
     public ResponseEntity entity(@PathVariable("identifier") String identifier,
                                  @PathVariable("processIdentifier") String processIdentifier,
-                                 @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
                                  @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
                                  @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
                                  Authentication auth,
-                                 HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException {
+                                 HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException, BrregNotFoundException {
         MDC.put("entity", identifier);
         Optional<EntityInfo> optionalEntityInfo = entityService.getEntityInfo(identifier);
         if (!optionalEntityInfo.isPresent()) {
@@ -113,7 +112,7 @@ public class ServiceRecordController {
             if (clientOrgnr == null) {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
             }
-            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, obligation, forcePrint));
+            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, forcePrint));
         }
         if (processCategory == ProcessCategory.ARKIVMELDING) {
             Optional<ServiceRecord> osr = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier, securityLevel);
@@ -140,7 +139,6 @@ public class ServiceRecordController {
      * identifier
      *
      * @param identifier of the organization/person to receive a message
-     * @param obligation determines service record based on the recipient being notifiable
      * @return JSON object with information needed to send a message
      */
     @GetMapping(value = "/identifier/{identifier}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -148,11 +146,10 @@ public class ServiceRecordController {
     @SuppressWarnings("squid:S2583")
     public ResponseEntity entity(
             @PathVariable("identifier") String identifier,
-            @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
             @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             Authentication auth,
-            HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException {
+            HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException, BrregNotFoundException {
         MDC.put("identifier", identifier);
         Entity entity = new Entity();
         Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
@@ -165,7 +162,7 @@ public class ServiceRecordController {
             if (clientOrgnr == null) {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
             }
-            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, obligation, forcePrint));
+            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, forcePrint));
         }
         entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
         entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(identifier));
@@ -190,9 +187,9 @@ public class ServiceRecordController {
             @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             Authentication auth,
-            HttpServletRequest request) throws EntitySignerException, SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException {
+            HttpServletRequest request) throws EntitySignerException, SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException, BrregNotFoundException {
 
-        ResponseEntity entity = entity(identifier, obligation, forcePrint, securityLevel, auth, request);
+        ResponseEntity entity = entity(identifier, forcePrint, securityLevel, auth, request);
         if (entity.getStatusCode() != HttpStatus.OK) {
             return entity;
         }
@@ -240,14 +237,19 @@ public class ServiceRecordController {
 
     @ExceptionHandler(CertificateNotFoundException.class)
     public ResponseEntity certificateNotFound(HttpServletRequest request, Exception e) {
-        log.error("Certificate not found for {}", request.getRequestURL(), e);
+        log.warn("Certificate not found for {}", request.getRequestURL(), e);
         return errorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
     @ExceptionHandler(DsfLookupException.class)
     public ResponseEntity dsfLookupException(HttpServletRequest request, Exception e) {
-        log.error("DSF lookup failed for {}", request.getRequestURL(), e);
+        log.warn("DSF lookup failed for {}", request.getRequestURL(), e);
         return errorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
+    @ExceptionHandler(BrregNotFoundException.class)
+    public ResponseEntity brregNotFoundException(HttpServletRequest request, Exception e) {
+        log.warn("BRREG lookup failed for {}", request.getRequestURL(), e);
+        return errorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
 }
