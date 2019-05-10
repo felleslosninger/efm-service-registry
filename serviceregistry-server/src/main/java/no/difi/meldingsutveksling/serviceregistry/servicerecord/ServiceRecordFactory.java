@@ -4,15 +4,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.Notification;
-import no.difi.meldingsutveksling.logging.MarkerFactory;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
-import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
-import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
+import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.service.DocumentTypeService;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
@@ -22,7 +20,6 @@ import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import no.difi.vefa.peppol.common.model.ProcessIdentifier;
-import no.difi.vefa.peppol.common.model.ServiceMetadata;
 import no.difi.virksert.client.lang.VirksertClientException;
 import org.apache.commons.io.IOUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,7 +29,10 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
@@ -85,24 +85,27 @@ public class ServiceRecordFactory {
 
     public Optional<ServiceRecord> createArkivmeldingServiceRecord(String orgnr, String processIdentifier, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException {
         Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
-        return optionalProcess.isPresent()
-                ? Optional.of(createArkivmeldingServiceRecord(orgnr, processIdentifier, targetSecurityLevel, optionalProcess.get()))
-                : Optional.empty();
+        if (optionalProcess.isPresent()) {
+            return Optional.of(createArkivmeldingServiceRecord(orgnr, targetSecurityLevel, optionalProcess.get()));
+        }
+        return Optional.empty();
     }
 
     @SuppressWarnings("squid:S1166")
     public List<ServiceRecord> createArkivmeldingServiceRecords(String orgnr, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
-        List<Process> arkivmeldingProcesses = processService.findAll(ProcessCategory.ARKIVMELDING);
+        Set<Process> arkivmeldingProcesses = processService.findAll(ProcessCategory.ARKIVMELDING);
         for (Process process : arkivmeldingProcesses) {
-            serviceRecords.add(createArkivmeldingServiceRecord(orgnr, process.getIdentifier(), targetSecurityLevel, process));
+            serviceRecords.add(createArkivmeldingServiceRecord(orgnr, targetSecurityLevel, process));
         }
         return serviceRecords;
     }
 
-    private ServiceRecord createArkivmeldingServiceRecord(String orgnr, String processIdentifier, Integer targetSecurityLevel, Process process) throws SecurityLevelNotFoundException, CertificateNotFoundException {
+    private ServiceRecord createArkivmeldingServiceRecord(String orgnr, Integer targetSecurityLevel, Process process) throws SecurityLevelNotFoundException, CertificateNotFoundException {
         ServiceRecord serviceRecord;
-        Set<ProcessIdentifier> processIdentifiers = getSmpRegistrations(orgnr, Lists.newArrayList(process));
+        Set<String> processIdentifiers = getSmpRegistrations(orgnr, Sets.newHashSet(process)).stream()
+                .map(ProcessIdentifier::getIdentifier)
+                .collect(Collectors.toSet());
         if (processIdentifiers.isEmpty()) {
             Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
             if (hasSvarUt.isPresent()) {
@@ -115,9 +118,7 @@ public class ServiceRecordFactory {
                 }
             }
         } else {
-            if (processIdentifiers.stream()
-                    .map(ProcessIdentifier::getIdentifier)
-                    .anyMatch(identifier -> identifier.equals(processIdentifier))) {
+            if (processIdentifiers.contains(process.getIdentifier())) {
                 serviceRecord = createDpoServiceRecord(orgnr, process);
             } else {
                 serviceRecord = createDpvServiceRecord(orgnr, process);
@@ -135,7 +136,7 @@ public class ServiceRecordFactory {
         }
 
         Process process = optionalProcess.get();
-        Set<ProcessIdentifier> processIdentifiers = getSmpRegistrations(orgnr, Lists.newArrayList(process));
+        Set<ProcessIdentifier> processIdentifiers = getSmpRegistrations(orgnr, Sets.newHashSet(process));
         if (processIdentifiers.isEmpty()) {
             return Optional.empty();
         }
@@ -186,33 +187,15 @@ public class ServiceRecordFactory {
 
     public List<ServiceRecord> createEinnsynServiceRecords(String orgnr) throws CertificateNotFoundException {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
-        Optional<ServiceRecord> optionalServiceRecord;
-        List<Process> einnsynProcesses = processService.findAll(ProcessCategory.EINNSYN);
-        Set<String> documentTypeIdentifiers = einnsynProcesses.stream()
-                .map(Process::getDocumentTypes)
-                .flatMap(List::stream)
-                .map(DocumentType::getIdentifier)
+        Set<Process> einnsynProcesses = processService.findAll(ProcessCategory.EINNSYN);
+
+        Set<String> processIdentifiers = getSmpRegistrations(orgnr, einnsynProcesses).stream()
+                .map(ProcessIdentifier::getIdentifier)
                 .collect(Collectors.toSet());
 
-        Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
-        try {
-            List<ServiceMetadata> serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + orgnr, Lists.newArrayList(documentTypeIdentifiers));
-            serviceMetadataList.forEach(smd -> smd.getProcesses().forEach(p -> processIdentifiers.add(p.getProcessIdentifier())));
-        } catch (EndpointUrlNotFound endpointUrlNotFound) {
-            log.debug(MarkerFactory.receiverMarker(orgnr),
-                    String.format("Attempted to lookup receiver in ELMA: %s", endpointUrlNotFound.getMessage()));
-            return serviceRecords;
-        }
-        if (processIdentifiers.isEmpty()) {
-            return serviceRecords;
-        }
-
         for (Process p : einnsynProcesses) {
-            if (processIdentifiers.stream()
-                    .map(ProcessIdentifier::getIdentifier)
-                    .anyMatch(identifier -> identifier.equals(p.getIdentifier()))) {
-                optionalServiceRecord = Optional.ofNullable(createDpeServiceRecord(orgnr, p));
-                optionalServiceRecord.ifPresent(serviceRecords::add);
+            if (processIdentifiers.contains(p.getIdentifier())) {
+                serviceRecords.add(createDpeServiceRecord(orgnr, p));
             }
         }
 
@@ -247,7 +230,7 @@ public class ServiceRecordFactory {
                 .onBehalfOf(onBehalfOrgnr)
                 .token(token));
 
-        List<Process> digitalpostProcesses = processService.findAll(ProcessCategory.DIGITALPOST);
+        Set<Process> digitalpostProcesses = processService.findAll(ProcessCategory.DIGITALPOST);
         List<ServiceRecord> serviceRecords = Lists.newArrayList();
         for (Process p : digitalpostProcesses) {
             DpiMessageRouter.TargetRecord target;
@@ -336,24 +319,11 @@ public class ServiceRecordFactory {
         return dpiServiceRecord;
     }
 
-    private Set<ProcessIdentifier> getSmpRegistrations(String organizationIdentifier, List<Process> processes) {
-        Set<ProcessIdentifier> processIdentifiers = Sets.newHashSet();
-        try {
-            List<String> documentTypeIdentifiers = new ArrayList<>();
-            for (Process p : processes) {
-                p.getDocumentTypes().forEach(t -> {
-                    String identifier = t.getIdentifier();
-                    if (!documentTypeIdentifiers.contains(identifier)) {
-                        documentTypeIdentifiers.add(identifier);
-                    }
-                });
-            }
-            List<ServiceMetadata> serviceMetadataList = elmaLookupService.lookup(NORWAY_PREFIX + organizationIdentifier, documentTypeIdentifiers);
-            serviceMetadataList.forEach(smd -> smd.getProcesses().forEach(p -> processIdentifiers.add(p.getProcessIdentifier())));
-        } catch (EndpointUrlNotFound endpointUrlNotFound) {
-            log.debug(MarkerFactory.receiverMarker(organizationIdentifier),
-                    String.format("Attempted to lookup receiver in ELMA: %s", endpointUrlNotFound.getMessage()));
-        }
-        return processIdentifiers;
+    private Set<ProcessIdentifier> getSmpRegistrations(String organizationIdentifier, Set<Process> processes) {
+        Set<String> documentTypeIdentifiers = processes.stream()
+                .flatMap(p -> p.getDocumentTypes().stream())
+                .map(DocumentType::getIdentifier)
+                .collect(Collectors.toSet());
+        return elmaLookupService.lookupRegisteredProcesses(NORWAY_PREFIX + organizationIdentifier, documentTypeIdentifiers);
     }
 }

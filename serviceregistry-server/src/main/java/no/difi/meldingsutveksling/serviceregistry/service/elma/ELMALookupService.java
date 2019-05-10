@@ -1,5 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.service.elma;
 
+import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
@@ -13,13 +14,14 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * See configuraion beans for beans that might be injected as LookupClient and TransportProfile
  */
 @Component
+@Slf4j
 public class ELMALookupService {
 
     @Autowired
@@ -47,22 +49,31 @@ public class ELMALookupService {
         }
     }
 
-    public List<ServiceMetadata> lookup(String organizationNumber, List<String> documentIdentifiers) throws EndpointUrlNotFound {
-        try {
-            List<ServiceMetadata> metadataList = new ArrayList<>();
+    public Set<ProcessIdentifier> lookupRegisteredProcesses(String orgnr, Set<String> documentIdentifiers) {
+        List<ServiceMetadata> smdList = lookup(orgnr, documentIdentifiers);
+        return smdList.stream()
+                .flatMap(smd -> smd.getProcesses().stream())
+                .map(ProcessMetadata::getProcessIdentifier)
+                .collect(Collectors.toSet());
+    }
 
-            for (String id : documentIdentifiers) {
+    public List<ServiceMetadata> lookup(String organizationNumber, Set<String> documentIdentifiers) {
+        List<ServiceMetadata> metadataList = new ArrayList<>();
+        for (String id : documentIdentifiers) {
+            try {
                 ServiceMetadata serviceMetadata = lookupClient.getServiceMetadata(ParticipantIdentifier.of(organizationNumber), DocumentTypeIdentifier.of(id));
                 if (serviceMetadata != null) {
                     metadataList.add(serviceMetadata);
                 }
+
+            } catch (PeppolSecurityException e) {
+                throw new ServiceRegistryException(e);
+            } catch (LookupException e) {
+                // Just log, need to check the remaining documents
+                log.debug("Failed ELMA lookup for identifier={}, documentTypeIdentifier={}", organizationNumber, id, e);
             }
-            return metadataList;
-        } catch (PeppolSecurityException e) {
-            throw new ServiceRegistryException(e);
-        } catch (LookupException e) {
-            throw new EndpointUrlNotFound(String.format("Failed lookup %s through ELMA ", organizationNumber), e);
         }
+        return metadataList;
     }
 
     public Endpoint lookup(String organisationNumber, String documentTypeIdentifier, String processIdentifier) throws EndpointUrlNotFound {

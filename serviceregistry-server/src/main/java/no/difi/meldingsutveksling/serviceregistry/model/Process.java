@@ -2,8 +2,8 @@ package no.difi.meldingsutveksling.serviceregistry.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
-import no.difi.vefa.peppol.common.model.ProcessIdentifier;
 
 import javax.persistence.Entity;
 import javax.persistence.*;
@@ -13,6 +13,7 @@ import java.util.List;
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = "identifier"))
 @Data
 @ToString(exclude = "documentTypes")
+@EqualsAndHashCode(exclude = "documentTypes")
 public class Process {
 
     @Id
