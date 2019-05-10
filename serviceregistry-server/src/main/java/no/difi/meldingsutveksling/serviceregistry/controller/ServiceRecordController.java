@@ -109,7 +109,7 @@ public class ServiceRecordController {
         ServiceRecord serviceRecord = null;
         ProcessCategory processCategory = optionalProcess.get().getCategory();
         if (processCategory.equals(ProcessCategory.DIGITALPOST) && shouldCreateServiceRecordForCitizen().test(entityInfo)) {
-            String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
+            String clientOrgnr = authenticationService.getOrganizationNumber(auth, request);
             if (clientOrgnr == null) {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
             }
@@ -161,7 +161,7 @@ public class ServiceRecordController {
         }
         entity.setInfoRecord(entityInfo.get());
         if (shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
-            String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
+            String clientOrgnr = authenticationService.getOrganizationNumber(auth, request);
             if (clientOrgnr == null) {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
             }

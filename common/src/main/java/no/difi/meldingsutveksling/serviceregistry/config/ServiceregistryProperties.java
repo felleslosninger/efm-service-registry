@@ -56,6 +56,8 @@ public class ServiceregistryProperties {
     public static class Auth {
         private boolean enable;
         private String sasToken;
+        private String issuer;
+        private String jwksUri;
     }
 
     @Data

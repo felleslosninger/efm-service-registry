@@ -88,6 +88,7 @@ public class ServiceRecordFactory {
                 : Optional.empty();
     }
 
+    // TODO: Sjekk tokens utan preauthorize
     @SuppressWarnings("squid:S1166")
     public List<ServiceRecord> createArkivmeldingServiceRecords(String orgnr, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
@@ -181,7 +182,7 @@ public class ServiceRecordFactory {
         return einnsynServiceRecord;
     }
 
-
+    // TODO: Sjekk tokens utan preauthorize
     public List<ServiceRecord> createEinnsynServiceRecords(String orgnr) throws CertificateNotFoundException {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
         Optional<ServiceRecord> optionalServiceRecord;

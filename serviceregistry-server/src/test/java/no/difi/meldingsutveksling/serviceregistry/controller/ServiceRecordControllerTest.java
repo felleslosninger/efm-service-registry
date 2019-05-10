@@ -26,9 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -188,7 +186,7 @@ public class ServiceRecordControllerTest {
 
     private void setupMocksForSuccessfulDpi() throws MalformedURLException, KRRClientException, DsfLookupException, SecurityLevelNotFoundException, CertificateNotFoundException {
         ServiceregistryProperties serviceregistryProperties = fakePropertiesForDpi();
-        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
+        when(authenticationService.getOrganizationNumber(any(), any())).thenReturn("AuthorizedIdentifier");
         PersonResource personResource = fakePersonResourceForDpi();
         PostAddress postAddress = new PostAddress("Address name", "Street x", "Postal code", "Area", "Country");
         SikkerDigitalPostServiceRecord dpiServiceRecord
@@ -217,7 +215,7 @@ public class ServiceRecordControllerTest {
     @Test
     public void get_CredentialsResolveToDpiAndLookupGivesError_ShouldReturnErrorResponseBody() throws Exception {
         final String message = "Error looking up identifier in KRR";
-        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
+        when(authenticationService.getOrganizationNumber(any(), any())).thenReturn("AuthorizedIdentifier");
         when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(), anyBoolean()))
                 .thenThrow(new KRRClientException(new Exception(message)));
 
@@ -232,7 +230,7 @@ public class ServiceRecordControllerTest {
         Process processMock = mockProcess(ProcessCategory.DIGITALPOST);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         final String message = "Error looking up identifier in KRR";
-        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
+        when(authenticationService.getOrganizationNumber(any(), any())).thenReturn("AuthorizedIdentifier");
         when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(), anyBoolean()))
                 .thenThrow(new KRRClientException(new Exception(message)));
 
@@ -383,11 +381,9 @@ public class ServiceRecordControllerTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), anyString(), anyInt())).thenReturn(Optional.empty());
 
-        MockHttpServletResponse result = mvc.perform(get("/identifier/42/process/ProcessID?securityLevel=2")
+        mvc.perform(get("/identifier/42/process/ProcessID?securityLevel=2")
                 .accept(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse();
-
-        assertEquals(HttpStatus.NOT_FOUND.value(), result.getStatus());
+                .andExpect(status().isNotFound());
     }
 
     @Test
