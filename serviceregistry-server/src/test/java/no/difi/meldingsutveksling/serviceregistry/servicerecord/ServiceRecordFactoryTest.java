@@ -156,20 +156,6 @@ public class ServiceRecordFactoryTest {
         when(lookupService.lookupRegisteredProcesses(Matchers.eq("9908:" + ORGNR_EINNSYN_JOURNALPOST), anySetOf(String.class)))
                 .thenReturn(Sets.newHashSet(ProcessIdentifier.of(EINNSYN_PROCESS_JOURNALPOST)));
 
-        DocumentType einnsynResponseDocumentType = new DocumentType()
-                .setIdentifier(EINNSYN_DOCTYPE_RESPONSE_KVITTERING)
-                .setIdentifier(EINNSYN_DOCTYPE_RESPONSE_STATUS);
-        Process einnsynResponseProcess = new Process()
-                .setIdentifier(EINNSYN_PROCESS_RESPONSE)
-                .setCategory(ProcessCategory.EINNSYN)
-                .setServiceCode("567")
-                .setServiceEditionCode("5678");
-        Optional<Process> responseProcess = Optional.of(einnsynResponseProcess);
-        einnsynResponseDocumentType.setProcesses(Lists.newArrayList(einnsynResponseProcess));
-        einnsynResponseProcess.setDocumentTypes(Lists.newArrayList(einnsynResponseDocumentType));
-        when(processService.findByIdentifier(EINNSYN_PROCESS_RESPONSE)).thenReturn(responseProcess);
-        when(lookupService.lookupRegisteredProcesses(Matchers.eq("9908:" + ORGNR_EINNSYN_RESPONSE), anySetOf(String.class)))
-                .thenReturn(Sets.newHashSet(ProcessIdentifier.of(EINNSYN_PROCESS_RESPONSE)));
     }
 
     @Test
@@ -325,7 +311,7 @@ public class ServiceRecordFactoryTest {
     public void createEinnsynServiceRecords_OrgnrNotInElma_ShouldNotReturnDpeServiceRecord() throws CertificateNotFoundException {
         when(lookupService.lookup(Matchers.eq("9908:" + ORGNR_EINNSYN_RESPONSE), anySetOf(String.class))).thenReturn(Lists.newArrayList());
         List<ServiceRecord> result = factory.createEinnsynServiceRecords(ORGNR_EINNSYN_RESPONSE);
-        assertEquals(0, result.size());
+        assertTrue(result.isEmpty());
     }
 
     @Test
@@ -343,6 +329,21 @@ public class ServiceRecordFactoryTest {
 
     @Test
     public void createEinnsynServiceRecord_HasOrgnrWhileProcessidentifierMatchNotFoundInElma_ShouldNotReturnDpeServiceRecord() throws CertificateNotFoundException {
+        DocumentType einnsynResponseDocumentType = new DocumentType()
+                .setIdentifier(EINNSYN_DOCTYPE_RESPONSE_KVITTERING)
+                .setIdentifier(EINNSYN_DOCTYPE_RESPONSE_STATUS);
+        Process einnsynResponseProcess = new Process()
+                .setIdentifier(EINNSYN_PROCESS_RESPONSE)
+                .setCategory(ProcessCategory.EINNSYN)
+                .setServiceCode("567")
+                .setServiceEditionCode("5678");
+        Optional<Process> responseProcess = Optional.of(einnsynResponseProcess);
+        einnsynResponseDocumentType.setProcesses(Lists.newArrayList(einnsynResponseProcess));
+        einnsynResponseProcess.setDocumentTypes(Lists.newArrayList(einnsynResponseDocumentType));
+        when(processService.findByIdentifier(EINNSYN_PROCESS_RESPONSE)).thenReturn(responseProcess);
+        when(lookupService.lookupRegisteredProcesses(Matchers.eq("9908:" + ORGNR_EINNSYN_RESPONSE), anySetOf(String.class)))
+                .thenReturn(Sets.newHashSet(ProcessIdentifier.of(EINNSYN_PROCESS_RESPONSE)));
+
         when(processService.findByIdentifier(EINNSYN_PROCESS_RESPONSE)).thenReturn(Optional.empty());
         Optional<ServiceRecord> result = factory.createEinnsynServiceRecord(ORGNR_EINNSYN_RESPONSE, EINNSYN_PROCESS_RESPONSE);
         assertFalse(result.isPresent());
