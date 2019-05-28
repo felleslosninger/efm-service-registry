@@ -28,6 +28,7 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
                                           ServiceIdentifier serviceIdentifier, String organisationNumber,
                                           PostAddress postAddress, PostAddress returnAddress) {
         super(serviceIdentifier, organisationNumber, properties.getDpi().getEndpointURL().toString());
+        setPemCertificate(personResource.getCertificate());
         this.properties = properties;
 
         if (personResource.hasMailbox()) {

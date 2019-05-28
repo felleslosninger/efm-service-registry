@@ -163,9 +163,10 @@ public class ServiceRecordController {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
             }
             entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, forcePrint));
+        } else {
+            entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
+            entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(identifier));
         }
-        entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
-        entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(identifier));
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 

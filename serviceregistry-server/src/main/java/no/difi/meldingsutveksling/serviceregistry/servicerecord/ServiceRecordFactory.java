@@ -245,8 +245,10 @@ public class ServiceRecordFactory {
             switch (target) {
                 case DPI:
                     serviceRecords.add(createDigitalServiceRecord(personResource, identifier, p));
+                    break;
                 case PRINT:
                     serviceRecords.add(createPrintServiceRecord(identifier, onBehalfOrgnr, token, personResource, p));
+                    break;
                 case DPV:
                 default:
                     serviceRecords.add(createDigitalDpvServiceRecord(identifier, p));
