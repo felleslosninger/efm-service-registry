@@ -271,7 +271,7 @@ public class ServiceRecordFactory {
     }
 
     private ServiceRecord createDigitalServiceRecord(PersonResource personResource, String identifier, Process p) {
-        SikkerDigitalPostServiceRecord serviceRecord = new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
+        SikkerDigitalPostServiceRecord serviceRecord = new SikkerDigitalPostServiceRecord(false, properties, personResource, ServiceIdentifier.DPI,
                 identifier, null, null);
         serviceRecord.setProcess(p.getIdentifier());
         DocumentType docType = documentTypeService.findByBusinessMessageType(BusinessMessageTypes.DIGITAL)
@@ -312,7 +312,7 @@ public class ServiceRecordFactory {
             throw new BrregNotFoundException(String.format("Sender with identifier=%s not found in BRREG", onBehalfOrgnr));
         }
 
-        SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
+        SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(true, properties, personResource, ServiceIdentifier.DPI,
                 identifier, postAddress, returnAddress);
         DocumentType docType = documentTypeService.findByBusinessMessageType(BusinessMessageTypes.PRINT)
                 .orElseThrow(() -> new ServiceRegistryException(String.format("Missing DocumentType for business message type '%s'", BusinessMessageTypes.DIGITAL)));

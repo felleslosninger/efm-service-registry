@@ -2,12 +2,11 @@ package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
-import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
+import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 
-import static no.difi.meldingsutveksling.serviceregistry.krr.PersonResource.Reservasjon.JA;
 import static no.difi.meldingsutveksling.serviceregistry.krr.PersonResource.Varslingsstatus.KAN_VARSLES;
 
 @Data
@@ -24,19 +23,24 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
     private final PostAddress postAddress;
     private final PostAddress returnAddress;
 
-    public SikkerDigitalPostServiceRecord(ServiceregistryProperties properties, PersonResource personResource,
-                                          ServiceIdentifier serviceIdentifier, String organisationNumber,
-                                          PostAddress postAddress, PostAddress returnAddress) {
+    public SikkerDigitalPostServiceRecord(boolean isFysiskPost,
+                                          ServiceregistryProperties properties,
+                                          PersonResource personResource,
+                                          ServiceIdentifier serviceIdentifier,
+                                          String organisationNumber,
+                                          PostAddress postAddress,
+                                          PostAddress returnAddress) {
         super(serviceIdentifier, organisationNumber, properties.getDpi().getEndpointURL().toString());
         setPemCertificate(personResource.getCertificate());
         this.properties = properties;
 
-        if (personResource.hasMailbox()) {
-            orgnrPostkasse = personResource.getDigitalPost().getPostkasseleverandoeradresse();
-            postkasseAdresse = personResource.getDigitalPost().getPostkasseadresse();
-        } else {
+        fysiskPost = isFysiskPost;
+        if (isFysiskPost) {
             orgnrPostkasse = personResource.getPrintPostkasseLeverandorAdr();
             postkasseAdresse = null;
+        } else {
+            orgnrPostkasse = personResource.getDigitalPost().getPostkasseleverandoeradresse();
+            postkasseAdresse = personResource.getDigitalPost().getPostkasseadresse();
         }
 
         kanVarsles = KAN_VARSLES.name().equals(personResource.getAlertStatus());
@@ -47,7 +51,6 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
             epostAdresse = null;
             mobilnummer = null;
         }
-        fysiskPost = JA.name().equals(personResource.getReserved());
 
         this.postAddress = postAddress;
         this.returnAddress = returnAddress;
