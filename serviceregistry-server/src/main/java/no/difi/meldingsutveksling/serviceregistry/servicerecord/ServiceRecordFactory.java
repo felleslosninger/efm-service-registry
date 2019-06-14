@@ -213,7 +213,7 @@ public class ServiceRecordFactory {
 
         switch (DpiMessageRouter.route(personResource, notification, forcePrint)) {
             case DPI:
-                return Optional.of(new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
+                return Optional.of(new SikkerDigitalPostServiceRecord(false, properties, personResource, ServiceIdentifier.DPI,
                         identifier, null, null));
             case PRINT:
                 return createPrintServiceRecord(identifier, onBehalfOrgnr, token, personResource);
@@ -255,7 +255,7 @@ public class ServiceRecordFactory {
             return Optional.empty();
         }
 
-        return Optional.of(new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
+        return Optional.of(new SikkerDigitalPostServiceRecord(true, properties, personResource, ServiceIdentifier.DPI,
                 identifier, postAddress, returnAddress));
     }
 

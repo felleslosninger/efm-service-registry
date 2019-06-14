@@ -110,7 +110,7 @@ public class ServiceRecordControllerTest {
         personResource.setReserved("NEI");
         personResource.setPrintPostkasseLeverandorAdr("postkasse123");
 
-        SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(null, personResource,
+        SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(false, null, personResource,
                 ServiceIdentifier.DPI, "12345678901", postAddress, postAddress);
         when(serviceRecordFactory.createServiceRecordForCititzen(eq("12345678901"), any(), any(), any(), anyBoolean())).thenReturn
                 (Optional.of(dpiServiceRecord));
