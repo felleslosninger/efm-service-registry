@@ -18,7 +18,6 @@ import java.util.Map;
 
 @ConditionalOnProperty(name = "difi.move.auth.enable", havingValue = "true")
 @Configuration
-
 public class TokenAuthenticationFilter extends GenericFilterBean {
 
     private final TokenValidator tokenValidator;

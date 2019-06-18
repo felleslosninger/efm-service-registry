@@ -5,6 +5,7 @@ import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.auth.TokenValidator;
 import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
@@ -79,6 +80,9 @@ public class ServiceRecordControllerTest {
 
     @MockBean
     private AuthenticationService authenticationService;
+
+    @MockBean
+    private TokenValidator tokenValidator;
 
     @Autowired
     private PayloadSigner payloadSigner;
