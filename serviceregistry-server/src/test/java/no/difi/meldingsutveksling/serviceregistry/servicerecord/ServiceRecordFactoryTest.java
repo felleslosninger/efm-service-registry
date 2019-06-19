@@ -1,6 +1,8 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.auth.OpenIdConnectAuthenticationToken;
+import no.difi.meldingsutveksling.serviceregistry.auth.TokenValidator;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
@@ -31,17 +33,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.oauth2.provider.OAuth2Request;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
@@ -54,6 +56,9 @@ public class ServiceRecordFactoryTest {
 
     @Autowired
     private ServiceRecordFactory factory;
+
+    @MockBean
+    private TokenValidator tokenValidator;
 
     @MockBean
     private VirkSertService virkSertService;
@@ -352,16 +357,29 @@ public class ServiceRecordFactoryTest {
 
     @Test(expected = DsfLookupException.class)
     public void createDigitalpostServiceRecords_ForcePrintMessageToRecipientNotInPopulationRegistry_ShouldThrowDedicatedException() throws KRRClientException, DsfLookupException {
-        Authentication authenticationMock = mock(Authentication.class);
-        OAuth2AuthenticationDetails detailsMock = mock(OAuth2AuthenticationDetails.class);
-        when(detailsMock.getTokenValue()).thenReturn("TOKEN");
-        when(authenticationMock.getDetails()).thenReturn(detailsMock);
         PersonResource personResourceMock = mock(PersonResource.class);
         when(personResourceMock.hasMailbox()).thenReturn(false);
         when(krrService.getCitizenInfo(any(LookupParameters.class))).thenReturn(personResourceMock);
         when(krrService.getDSFInfo(any(LookupParameters.class))).thenReturn(Optional.empty());
 
-        factory.createDigitalpostServiceRecords(PERSONNUMMER, authenticationMock, "991825827", null, true);
+        factory.createDigitalpostServiceRecords(PERSONNUMMER, fakeOauthAuthentication(), "991825827", null, true);
+        unsetFakeOauthAuthentication();
+    }
+
+    private OAuth2Authentication fakeOauthAuthentication() {
+        final String dpiScope = "move/dpi.read";
+        OAuth2Request request = new OAuth2Request(null, "foo", null, true, Collections.singleton(dpiScope), null, null, null, null);
+        UsernamePasswordAuthenticationToken authenticationToken = new OpenIdConnectAuthenticationToken("foo", Collections.singletonList(dpiScope));
+        OAuth2Authentication authentication = new OAuth2Authentication(request, authenticationToken);
+        OAuth2AuthenticationDetails detailsMock = mock(OAuth2AuthenticationDetails.class);
+        when(detailsMock.getTokenValue()).thenReturn("TokenValueHere");
+        authentication.setDetails(detailsMock);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        return authentication;
+    }
+
+    private void unsetFakeOauthAuthentication(){
+        SecurityContextHolder.getContext().setAuthentication(null);
     }
 
 }
