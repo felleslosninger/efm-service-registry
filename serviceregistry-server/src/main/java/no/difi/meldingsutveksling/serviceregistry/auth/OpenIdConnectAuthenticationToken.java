@@ -11,7 +11,6 @@ import java.util.List;
 @Data
 public class OpenIdConnectAuthenticationToken extends UsernamePasswordAuthenticationToken {
 
-
     public OpenIdConnectAuthenticationToken(Object principal, Object credentials, List<String> scopes) {
         super(principal, credentials, generateAuthorities(scopes));
     }

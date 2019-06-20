@@ -25,6 +25,7 @@ import no.difi.vefa.peppol.common.lang.PeppolException;
 import no.difi.vefa.peppol.common.model.*;
 import no.difi.virksert.client.lang.VirksertClientException;
 import org.assertj.core.util.Lists;
+import org.assertj.core.util.Sets;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,7 +44,10 @@ import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
@@ -101,6 +105,10 @@ public class ServiceRecordFactoryTest {
     private static String EINNSYN_DOCTYPE_RESPONSE_KVITTERING = "urn:no:difi:einnsyn:xsd::einnsyn_kvittering";
     private static String EINNSYN_DOCTYPE_RESPONSE_STATUS = "urn:no:difi:eformidling:xsd::status";
     private static String PERSONNUMMER = "01234567890";
+    private final String DPI_SCOPE = "move/dpi.read";
+    private final String DPO_SCOPE = "move/dpo.read";
+    private final String DPV_SCOPE = "move/dpv.read";
+    private final String DPF_SCOPE = "move/dpf.read";
 
     @Before
     public void init() throws MalformedURLException, EndpointUrlNotFound {
@@ -259,35 +267,39 @@ public class ServiceRecordFactoryTest {
         when(processService.findAll(ProcessCategory.ARKIVMELDING)).thenReturn(Lists.newArrayList());
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
-        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords("identifier", null);
+        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords("identifier", fakeOauthAuthentication(Lists.newArrayList(DPO_SCOPE)), null);
 
         assertTrue(result.isEmpty());
+        unsetFakeOauthAuthentication();
     }
 
     @Test(expected = CertificateNotFoundException.class)
     public void createArkivmeldingServiceRecords_CertificateNotFoundForSmpProcess_ShouldThrowDedicatedException() throws EndpointUrlNotFound, SecurityLevelNotFoundException, CertificateNotFoundException, VirksertClientException {
         setupLookupServiceMockToReturnAdministrationProcessMatch();
         when(virkSertService.getCertificate(anyString())).thenThrow(new VirksertClientException("certificate not found"));
-        factory.createArkivmeldingServiceRecords(ORGNR, null);
+
+        factory.createArkivmeldingServiceRecords(ORGNR, fakeOauthAuthentication(Lists.newArrayList(DPO_SCOPE)), null);
+        unsetFakeOauthAuthentication();
     }
 
     @Test
     public void createArkivmeldingServiceRecords_OrganizationHasAdministrasjonButNotSkattRegistrationInSmp_ShouldReturnCorrespondingDpoAndDpvServiceRecords() throws EndpointUrlNotFound, SecurityLevelNotFoundException, CertificateNotFoundException {
         setupLookupServiceMockToReturnAdministrationProcessMatch();
 
-        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR, null);
+        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR, fakeOauthAuthentication(Lists.newArrayList(DPO_SCOPE)), null);
 
         assertEquals(2, result.size());
         ServiceRecord srAdmin = result.stream().filter(r -> ARKIVMELDING_PROCESS_ADMIN.equals(r.getProcess())).findFirst().orElseThrow(RuntimeException::new);
         assertEquals(ServiceIdentifier.DPO, srAdmin.getService().getIdentifier());
         ServiceRecord srSkatt = result.stream().filter(r -> ARKIVMELDING_PROCESS_SKATT.equals(r.getProcess())).findFirst().orElseThrow(RuntimeException::new);
         assertEquals(ServiceIdentifier.DPV, srSkatt.getService().getIdentifier());
+        unsetFakeOauthAuthentication();
     }
 
     @Test
     public void createArkivmeldingServiceRecords_OrganizationHasSvarUtRegistration_ShouldReturnDpfServiceRecord() throws SecurityLevelNotFoundException, CertificateNotFoundException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any())).thenReturn(Optional.of(3));
-        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR_FIKS, 3);
+        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR_FIKS, fakeOauthAuthentication(Lists.newArrayList(DPF_SCOPE)), 3);
         assertEquals(2, countServiceRecordsForServiceIdentifier(result, ServiceIdentifier.DPF));
     }
 
@@ -296,7 +308,7 @@ public class ServiceRecordFactoryTest {
         when(lookupService.lookup(Matchers.eq("9908:" + ORGNR), any(List.class))).thenReturn(new ArrayList());
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
-        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR, null);
+        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR, fakeOauthAuthentication(Lists.newArrayList(DPO_SCOPE)), null);
 
         assertEquals(2, countServiceRecordsForServiceIdentifier(result, ServiceIdentifier.DPV));
     }
@@ -304,7 +316,7 @@ public class ServiceRecordFactoryTest {
     @Test(expected = SecurityLevelNotFoundException.class)
     public void createArkivmeldingServiceRecords_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException() throws SecurityLevelNotFoundException, CertificateNotFoundException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any())).thenReturn(Optional.empty());
-        factory.createArkivmeldingServiceRecords(ORGNR_FIKS, 3);
+        factory.createArkivmeldingServiceRecords(ORGNR_FIKS,fakeOauthAuthentication(Lists.newArrayList(DPF_SCOPE)), 3);
     }
 
     private long countServiceRecordsForServiceIdentifier(List<ServiceRecord> result, ServiceIdentifier serviceIdentifier) {
@@ -362,14 +374,13 @@ public class ServiceRecordFactoryTest {
         when(krrService.getCitizenInfo(any(LookupParameters.class))).thenReturn(personResourceMock);
         when(krrService.getDSFInfo(any(LookupParameters.class))).thenReturn(Optional.empty());
 
-        factory.createDigitalpostServiceRecords(PERSONNUMMER, fakeOauthAuthentication(), "991825827", null, true);
+        factory.createDigitalpostServiceRecords(PERSONNUMMER, fakeOauthAuthentication(Lists.newArrayList(DPI_SCOPE)), "991825827", null, true);
         unsetFakeOauthAuthentication();
     }
 
-    private OAuth2Authentication fakeOauthAuthentication() {
-        final String dpiScope = "move/dpi.read";
-        OAuth2Request request = new OAuth2Request(null, "foo", null, true, Collections.singleton(dpiScope), null, null, null, null);
-        UsernamePasswordAuthenticationToken authenticationToken = new OpenIdConnectAuthenticationToken("foo", Collections.singletonList(dpiScope));
+    private OAuth2Authentication fakeOauthAuthentication(List<String> scopes) {
+        OAuth2Request request = new OAuth2Request(null, "foo", null, true, Sets.newHashSet(scopes), null, null, null, null);
+        UsernamePasswordAuthenticationToken authenticationToken = new OpenIdConnectAuthenticationToken("foo", scopes);
         OAuth2Authentication authentication = new OAuth2Authentication(request, authenticationToken);
         OAuth2AuthenticationDetails detailsMock = mock(OAuth2AuthenticationDetails.class);
         when(detailsMock.getTokenValue()).thenReturn("TokenValueHere");
@@ -378,7 +389,7 @@ public class ServiceRecordFactoryTest {
         return authentication;
     }
 
-    private void unsetFakeOauthAuthentication(){
+    private void unsetFakeOauthAuthentication() {
         SecurityContextHolder.getContext().setAuthentication(null);
     }
 

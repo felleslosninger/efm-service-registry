@@ -90,7 +90,7 @@ public class ServiceRecordFactory {
 
     // TODO: Sjekk tokens utan preauthorize
     @SuppressWarnings("squid:S1166")
-    public List<ServiceRecord> createArkivmeldingServiceRecords(String orgnr, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException {
+    public List<ServiceRecord> createArkivmeldingServiceRecords(String orgnr, Authentication authentication, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
         List<Process> arkivmeldingProcesses = processService.findAll(ProcessCategory.ARKIVMELDING);
         for (Process process : arkivmeldingProcesses) {

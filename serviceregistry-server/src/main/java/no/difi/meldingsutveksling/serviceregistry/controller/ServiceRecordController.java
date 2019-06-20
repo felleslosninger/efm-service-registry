@@ -167,7 +167,7 @@ public class ServiceRecordController {
             }
             entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, obligation, forcePrint));
         }
-        entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
+        entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, auth, securityLevel));
         entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(identifier));
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }

@@ -39,6 +39,7 @@ import java.net.URL;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.interfaces.RSAPublicKey;
+import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
@@ -115,7 +116,7 @@ public class ServiceRecordControllerTest {
 
     @Test
     public void get_ArkivMeldingResolvesToDpo_ServiceRecordShouldMatchExpectedValues() throws Exception {
-        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any())).thenReturn(Lists.newArrayList(DPO_SERVICE_RECORD));
+        setupMockToReturnArkivmeldingRecords(Lists.newArrayList(DPO_SERVICE_RECORD));
         mvc.perform(get("/identifier/42").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("42")))
@@ -128,11 +129,15 @@ public class ServiceRecordControllerTest {
                 .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")));
     }
 
+    private void setupMockToReturnArkivmeldingRecords(List<ArkivmeldingServiceRecord> serviceRecords) throws SecurityLevelNotFoundException, CertificateNotFoundException {
+        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any(), any())).thenReturn(Lists.newArrayList(serviceRecords));
+    }
+
     @Test
     public void get_ArkivmeldingResultsInCertificateException_ServiceRecordShouldMatchExpectedValues() throws Exception {
-        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any())).thenReturn(Lists.newArrayList(DPO_SERVICE_RECORD));
+        setupMockToReturnArkivmeldingRecords(Lists.newArrayList(DPO_SERVICE_RECORD));
         final String message = "Certificate not found.";
-        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), anyInt()))
+        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any(), anyInt()))
                 .thenThrow(new CertificateNotFoundException(message, new VirksertClientException("")));
 
         mvc.perform(get("/identifier/42").accept(MediaType.APPLICATION_JSON))
@@ -142,7 +147,7 @@ public class ServiceRecordControllerTest {
 
     @Test
     public void get_ArkivmeldingResolvesToDpv_ServiceRecordShouldMatchExpectedValues() throws Exception {
-        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any())).thenReturn(Lists.newArrayList(DPV_SERVICE_RECORD));
+        setupMockToReturnArkivmeldingRecords(Lists.newArrayList(DPV_SERVICE_RECORD));
         mvc.perform(get("/identifier/43").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("43")))
@@ -271,7 +276,7 @@ public class ServiceRecordControllerTest {
 
     @Test
     public void getSigned_ArkivmeldingResolvesToDpo_ServiceRecordShouldMatchExpectedValues() throws Exception {
-        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any())).thenReturn(Lists.newArrayList(DPO_SERVICE_RECORD));
+        setupMockToReturnArkivmeldingRecords(Lists.newArrayList(DPO_SERVICE_RECORD));
         MvcResult response = mvc.perform(get("/identifier/42").accept("application/jose"))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -393,7 +398,7 @@ public class ServiceRecordControllerTest {
     @Test
     public void get_ArkivmeldingResolvesToDpfAndRequestedSecurityLevelIsAvailable_ServiceRecordShouldMatchExpectedValues() throws Exception {
         DPF_SERVICE_RECORD.getService().setSecurityLevel(3);
-        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any())).thenReturn(Lists.newArrayList(DPF_SERVICE_RECORD));
+        setupMockToReturnArkivmeldingRecords(Lists.newArrayList(DPF_SERVICE_RECORD));
         mvc.perform(get("/identifier/42?securityLevel=3").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("42")))
@@ -410,7 +415,7 @@ public class ServiceRecordControllerTest {
     @Test
     public void get_ArkivmeldingResolvesToDpfButRequestedSecurityLevelIsNotAvailable_ShouldReturnErrorResponseBody() throws Exception {
         final String message = "security level not found";
-        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), anyInt())).thenThrow(new SecurityLevelNotFoundException(message));
+        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any(),anyInt())).thenThrow(new SecurityLevelNotFoundException(message));
         mvc.perform(get("/identifier/42?securityLevel=3")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
