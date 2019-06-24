@@ -4,6 +4,8 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.oauth2.provider.OAuth2Request;
 import org.springframework.web.filter.GenericFilterBean;
 
 import javax.servlet.FilterChain;
@@ -13,6 +15,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -36,13 +39,13 @@ public class TokenAuthenticationFilter extends GenericFilterBean {
                 = null != accessToken
                 ? tokenValidator.validate(accessToken)
                 : null;
-        if (null != validationResult) {
+        if (null != validationResult && validationResult.isValid()) {
             JWTClaimsSet claimsSet = validationResult.getClaims();
             Map<String, Object> claims = claimsSet.getClaims();
-            Object client_orgno = claims.getOrDefault("client_orgno", null);
+            Object clientId = claims.getOrDefault("client_orgno", null);
             List<String> scopes = Arrays.asList(((String) claims.get("scope")).split(" "));
-            OpenIdConnectAuthenticationToken authentication
-                    = new OpenIdConnectAuthenticationToken(client_orgno, scopes);
+            OAuth2Request request = new OAuth2Request(null, (String) clientId, null, true, new HashSet<>(scopes), null, null, null, null);
+            OAuth2Authentication authentication = new OAuth2Authentication(request, null);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
         chain.doFilter(servletRequest, servletResponse);

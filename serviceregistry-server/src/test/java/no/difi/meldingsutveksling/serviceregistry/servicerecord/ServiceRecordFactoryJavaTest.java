@@ -2,7 +2,6 @@ package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
-import no.difi.meldingsutveksling.serviceregistry.auth.OpenIdConnectAuthenticationToken;
 import no.difi.meldingsutveksling.serviceregistry.auth.TokenValidator;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.krr.DSFResource;
@@ -28,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
@@ -256,8 +254,7 @@ public class ServiceRecordFactoryJavaTest {
     private OAuth2Authentication fakeOauthAuthentication() {
         final String dpiScope = "move/dpi.read";
         OAuth2Request request = new OAuth2Request(null, "foo", null, true, Collections.singleton(dpiScope), null, null, null, null);
-        UsernamePasswordAuthenticationToken authenticationToken = new OpenIdConnectAuthenticationToken("foo", Collections.singletonList(dpiScope));
-        OAuth2Authentication authentication = new OAuth2Authentication(request, authenticationToken);
+        OAuth2Authentication authentication = new OAuth2Authentication(request, null);
         OAuth2AuthenticationDetails detailsMock = mock(OAuth2AuthenticationDetails.class);
         when(detailsMock.getTokenValue()).thenReturn("TokenValueHere");
         authentication.setDetails(detailsMock);
