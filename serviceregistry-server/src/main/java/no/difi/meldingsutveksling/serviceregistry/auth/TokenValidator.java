@@ -10,6 +10,7 @@ import com.nimbusds.jose.proc.JWSKeySelector;
 import com.nimbusds.jose.proc.JWSVerificationKeySelector;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.proc.BadJWTException;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import lombok.Value;
@@ -68,8 +69,8 @@ public class TokenValidator {
             return new Result(validateTokenIssuer(claims), claims);
         } catch (ParseException e) {
             log.error("Unable to parse the authorization token", e);
-        } catch (BadJOSEException e) {
-            log.error("Invalid authorization token signature", e);
+        }catch (BadJOSEException e) {
+            log.error("Bad JOSE encountered", e);
         } catch (JOSEException e) {
             log.error("Unable to process the authorization token signature", e);
         }
