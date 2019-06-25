@@ -222,8 +222,7 @@ public class ServiceRecordFactory {
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
     public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
                                                                Authentication auth,
-                                                               String onBehalfOrgnr,
-                                                               boolean forcePrint) throws KRRClientException, DsfLookupException, BrregNotFoundException {
+                                                               String onBehalfOrgnr) throws KRRClientException, DsfLookupException, BrregNotFoundException {
 
         String token = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
         PersonResource personResource = krrService.getCitizenInfo(lookup(identifier)
@@ -235,9 +234,9 @@ public class ServiceRecordFactory {
         for (Process p : digitalpostProcesses) {
             DpiMessageRouter.TargetRecord target;
             if (p.getIdentifier().equals(properties.getDpi().getInfoProcess())) {
-                target = DpiMessageRouter.route(personResource, Notification.NOT_OBLIGATED, forcePrint);
+                target = DpiMessageRouter.route(personResource, Notification.NOT_OBLIGATED);
             } else if (p.getIdentifier().equals(properties.getDpi().getVedtakProcess())) {
-                target = DpiMessageRouter.route(personResource, Notification.OBLIGATED, forcePrint);
+                target = DpiMessageRouter.route(personResource, Notification.OBLIGATED);
             } else {
                 throw new ServiceRegistryException(String.format("Error processing unknown digitalpost process: %s", p.getIdentifier()));
             }
@@ -252,6 +251,7 @@ public class ServiceRecordFactory {
                 case DPV:
                 default:
                     serviceRecords.add(createDigitalDpvServiceRecord(identifier, p));
+                    serviceRecords.add(createPrintServiceRecord(identifier, onBehalfOrgnr, token, personResource, p));
             }
         }
 
