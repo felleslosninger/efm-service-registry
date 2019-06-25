@@ -8,7 +8,6 @@ import com.nimbusds.jose.jwk.source.RemoteJWKSet;
 import com.nimbusds.jose.proc.BadJOSEException;
 import com.nimbusds.jose.proc.JWSKeySelector;
 import com.nimbusds.jose.proc.JWSVerificationKeySelector;
-import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
@@ -46,38 +45,30 @@ public class TokenValidator {
         this.jwksUri = authorizationProperties.getJwksUri();
     }
 
-    public Result validate(String token) throws IOException {
-        JWSObject jwsToken;
+    Result validate(String token) throws IOException {
         try {
-            jwsToken = JWSObject.parse(token);
-        } catch (ParseException e) {
-            log.error("Invalid authorization token.");
-            return new Result(false, null);
-        }
-        String algorithm = jwsToken.getHeader().getAlgorithm().getName().toUpperCase();
-        if (!validateSigningAlgorithm(algorithm)) {
-            return new Result(false, null);
-        }
-        ConfigurableJWTProcessor jwtProcessor = new DefaultJWTProcessor();
-        JWKSource keySource = new RemoteJWKSet(new URL(jwksUri));
-        JWSKeySelector keySelector = new JWSVerificationKeySelector(SIGNING_ALGORITHM, keySource);
-        jwtProcessor.setJWSKeySelector(keySelector);
-        SecurityContext context = null;
-        try {
-            JWTClaimsSet claims = jwtProcessor.process(token, context);
-            return new Result(validateTokenIssuer(claims), claims);
+            JWSObject jwsToken = JWSObject.parse(token);
+            String algorithm = jwsToken.getHeader().getAlgorithm().getName().toUpperCase();
+            if (validateSigningAlgorithm(algorithm)) {
+                ConfigurableJWTProcessor jwtProcessor = new DefaultJWTProcessor();
+                JWKSource keySource = new RemoteJWKSet(new URL(jwksUri));
+                JWSKeySelector keySelector = new JWSVerificationKeySelector(SIGNING_ALGORITHM, keySource);
+                jwtProcessor.setJWSKeySelector(keySelector);
+                JWTClaimsSet claims = jwtProcessor.process(token, null);
+                return new Result(validateTokenIssuer(claims), claims);
+            }
         } catch (ParseException e) {
             log.error("Unable to parse the authorization token", e);
         } catch (BadJOSEException e) {
-            log.error("Invalid authorization token signature", e);
+            log.error("Bad JOSE encountered", e);
         } catch (JOSEException e) {
-            log.error("Unable to process the authorization token signature", e);
+            log.error("Internal token processing exception", e);
         }
         return new Result(false, null);
     }
 
     @Value
-    public class Result {
+    class Result {
         boolean valid;
         JWTClaimsSet claims;
     }

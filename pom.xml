@@ -4,7 +4,7 @@
 
     <groupId>no.difi.meldingsutveksling</groupId>
     <artifactId>serviceregistry-parent</artifactId>
-    <version>1.0.54-SNAPSHOT</version>
+    <version>1.0.55-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <scm>

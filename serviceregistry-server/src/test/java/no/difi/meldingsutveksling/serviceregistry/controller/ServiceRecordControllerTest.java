@@ -4,7 +4,6 @@ import com.jayway.jsonpath.JsonPath;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
-import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.auth.TokenValidator;
 import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
@@ -66,6 +65,9 @@ public class ServiceRecordControllerTest {
 
     @Autowired
     private MockMvc mvc;
+
+    @MockBean
+    private TokenValidator tokenValidator;
 
     @MockBean
     private ServiceRecordFactory serviceRecordFactory;
