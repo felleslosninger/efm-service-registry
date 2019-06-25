@@ -132,6 +132,7 @@ public class ServiceRecordFactoryTest {
         processAdmin.setDocumentTypes(Lists.newArrayList(documentType));
         documentType.setProcesses(Lists.newArrayList(processAdmin, processSkatt));
         when(processService.findAll(ProcessCategory.ARKIVMELDING)).thenReturn(Sets.newHashSet(processAdmin, processSkatt));
+        when(processService.getDefaultArkivmeldingProcess()).thenReturn(processAdmin);
         when(lookupService.lookupRegisteredProcesses(Matchers.eq("9908:" + ORGNR_FIKS), anySetOf(String.class))).thenReturn(Sets.newHashSet());
 
         Process vedtakProcess = new Process()
@@ -350,7 +351,7 @@ public class ServiceRecordFactoryTest {
     }
 
     @Test(expected = DsfLookupException.class)
-    public void createDigitalpostServiceRecords_ForcePrintMessageToRecipientNotInPopulationRegistry_ShouldThrowDedicatedException() throws KRRClientException, DsfLookupException, BrregNotFoundException {
+    public void createDigitalpostServiceRecords_MessageToRecipientNotInPopulationRegistry_ShouldThrowDedicatedException() throws KRRClientException, DsfLookupException, BrregNotFoundException {
         Authentication authenticationMock = mock(Authentication.class);
         OAuth2AuthenticationDetails detailsMock = mock(OAuth2AuthenticationDetails.class);
         when(detailsMock.getTokenValue()).thenReturn("TOKEN");
@@ -360,7 +361,7 @@ public class ServiceRecordFactoryTest {
         when(krrService.getCitizenInfo(any(LookupParameters.class))).thenReturn(personResourceMock);
         when(krrService.getDSFInfo(any(LookupParameters.class))).thenReturn(Optional.empty());
 
-        factory.createDigitalpostServiceRecords(PERSONNUMMER, authenticationMock, "991825827",true);
+        factory.createDigitalpostServiceRecords(PERSONNUMMER, authenticationMock, "991825827");
     }
 
 }

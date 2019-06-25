@@ -250,8 +250,8 @@ public class ServiceRecordFactory {
                     break;
                 case DPV:
                 default:
-                    serviceRecords.add(createDigitalDpvServiceRecord(identifier, p));
                     serviceRecords.add(createPrintServiceRecord(identifier, onBehalfOrgnr, token, personResource, p));
+                    serviceRecords.add(createDigitalDpvServiceRecord(identifier, p));
             }
         }
 
