@@ -1,28 +1,25 @@
 package no.difi.meldingsutveksling.serviceregistry.auth;
 
-import com.nimbusds.jwt.JWTClaimsSet;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.OAuth2Request;
-import org.springframework.web.filter.GenericFilterBean;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+@Component
 @ConditionalOnProperty(name = "difi.move.auth.enable", havingValue = "true")
-@Configuration
-
-public class TokenAuthenticationFilter extends GenericFilterBean {
+public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     private final TokenValidator tokenValidator;
 
@@ -31,24 +28,25 @@ public class TokenAuthenticationFilter extends GenericFilterBean {
     }
 
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain)
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        final HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
-        final String accessToken = resolveToken(httpRequest);
+        String accessToken = resolveToken(request);
         TokenValidator.Result validationResult
                 = null != accessToken
                 ? tokenValidator.validate(accessToken)
                 : null;
         if (null != validationResult && validationResult.isValid()) {
-            JWTClaimsSet claimsSet = validationResult.getClaims();
-            Map<String, Object> claims = claimsSet.getClaims();
-            Object clientId = claims.getOrDefault("client_orgno", null);
-            List<String> scopes = Arrays.asList(((String) claims.get("scope")).split(" "));
-            OAuth2Request request = new OAuth2Request(null, (String) clientId, null, true, new HashSet<>(scopes), null, null, null, null);
-            OAuth2Authentication authentication = new OAuth2Authentication(request, null);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            setOauthAuthentication(validationResult.getClaims().getClaims());
         }
-        chain.doFilter(servletRequest, servletResponse);
+        chain.doFilter(request, response);
+    }
+
+    private void setOauthAuthentication(Map<String, Object> claims) {
+        Object clientId = claims.getOrDefault("client_orgno", null);
+        List<String> scopes = Arrays.asList(((String) claims.get("scope")).split(" "));
+        OAuth2Request request = new OAuth2Request(null, (String) clientId, null, true, new HashSet<>(scopes), null, null, null, null);
+        OAuth2Authentication authentication = new OAuth2Authentication(request, null);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     private String resolveToken(HttpServletRequest req) {
@@ -58,4 +56,5 @@ public class TokenAuthenticationFilter extends GenericFilterBean {
         }
         return null;
     }
+
 }
