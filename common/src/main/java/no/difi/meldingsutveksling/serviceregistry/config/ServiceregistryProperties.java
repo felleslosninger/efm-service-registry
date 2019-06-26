@@ -41,6 +41,7 @@ public class ServiceregistryProperties {
 
     @Data
     public static class ELMA {
+        private String locatorUrl;
         private String defaultProcessIdentifier;
         private String processIdentifier;
         private String documentTypeIdentifier;

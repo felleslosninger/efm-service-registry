@@ -1,15 +1,12 @@
 package no.difi.meldingsutveksling.serviceregistry.service.elma;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
-import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
-import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
-import no.difi.vefa.peppol.common.lang.EndpointNotFoundException;
 import no.difi.vefa.peppol.common.model.*;
 import no.difi.vefa.peppol.lookup.LookupClient;
 import no.difi.vefa.peppol.lookup.api.LookupException;
 import no.difi.vefa.peppol.security.lang.PeppolSecurityException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -22,32 +19,10 @@ import java.util.stream.Collectors;
  */
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class ELMALookupService {
 
-    @Autowired
-    private ServiceregistryProperties props;
-
-    private LookupClient lookupClient;
-    private TransportProfile transportProfile;
-
-    @Autowired
-    public ELMALookupService(LookupClient lookupClient, TransportProfile transportProfile) {
-        this.lookupClient = lookupClient;
-        this.transportProfile = transportProfile;
-    }
-
-    public Endpoint lookup(String organisationNumber) throws EndpointUrlNotFound {
-        try {
-            return lookupClient.getEndpoint(ParticipantIdentifier.of(organisationNumber),
-                    DocumentTypeIdentifier.of(props.getElma().getDocumentTypeIdentifier()),
-                    ProcessIdentifier.of(props.getElma().getProcessIdentifier()),
-                    transportProfile);
-        } catch (PeppolSecurityException e) {
-            throw new ServiceRegistryException(e);
-        } catch (LookupException | EndpointNotFoundException e) {
-            throw new EndpointUrlNotFound(String.format("Failed lookup %s through ELMA ", organisationNumber), e);
-        }
-    }
+    private final LookupClient lookupClient;
 
     public Set<ProcessIdentifier> lookupRegisteredProcesses(String orgnr, Set<String> documentIdentifiers) {
         List<ServiceMetadata> smdList = lookup(orgnr, documentIdentifiers);
@@ -74,19 +49,6 @@ public class ELMALookupService {
             }
         }
         return metadataList;
-    }
-
-    public Endpoint lookup(String organisationNumber, String documentTypeIdentifier, String processIdentifier) throws EndpointUrlNotFound {
-        try {
-            return lookupClient.getEndpoint(ParticipantIdentifier.of(organisationNumber),
-                    DocumentTypeIdentifier.of(documentTypeIdentifier),
-                    ProcessIdentifier.of(processIdentifier),
-                    transportProfile);
-        } catch (PeppolSecurityException e) {
-            throw new ServiceRegistryException(e);
-        } catch (LookupException | EndpointNotFoundException e) {
-            throw new EndpointUrlNotFound(String.format("Failed lookup through ELMA of %s with document type %s and process %s.", organisationNumber, documentTypeIdentifier, processIdentifier), e);
-        }
     }
 
 }

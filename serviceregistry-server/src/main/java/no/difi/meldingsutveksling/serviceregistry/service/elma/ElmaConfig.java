@@ -1,33 +1,25 @@
 package no.difi.meldingsutveksling.serviceregistry.service.elma;
 
+import lombok.RequiredArgsConstructor;
+import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.vefa.peppol.common.lang.PeppolLoadingException;
-import no.difi.vefa.peppol.common.model.TransportProfile;
 import no.difi.vefa.peppol.lookup.LookupClient;
 import no.difi.vefa.peppol.lookup.LookupClientBuilder;
 import no.difi.vefa.peppol.lookup.locator.StaticLocator;
 import no.difi.vefa.peppol.security.util.EmptyCertificateValidator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
-/**
- * @author Glenn Bech
- */
-@Profile({"staging"})
 @Configuration
-public class ElmaStagingConfig {
-    private static final String ELMA_ENDPOINT_KEY = "bdxr-transport-altinn";
-    private static final TransportProfile TRANSPORT_PROFILE_ALTINN = TransportProfile.of(ELMA_ENDPOINT_KEY);
+@RequiredArgsConstructor
+public class ElmaConfig {
 
-    @Bean
-    public TransportProfile getTransportProfile() {
-        return TRANSPORT_PROFILE_ALTINN;
-    }
+    private final ServiceregistryProperties props;
 
     @Bean
     public LookupClient getElmaLookupClient() throws PeppolLoadingException {
         return LookupClientBuilder.forTest()
-                .locator(new StaticLocator("http://test-smp.difi.no.publisher.acc.edelivery.tech.ec.europa.eu"))
+                .locator(new StaticLocator(props.getElma().getLocatorUrl()))
                 .certificateValidator(EmptyCertificateValidator.INSTANCE)
                 .build();
     }
