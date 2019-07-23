@@ -80,7 +80,6 @@ public class ServiceRecordController {
      *
      * @param identifier        specifies the target entity.
      * @param processIdentifier specifies the target process.
-     * @param forcePrint
      * @param auth              provides the authentication object.
      * @param request           is the servlet request.
      * @return JSON object with information needed to send a message.
@@ -89,7 +88,6 @@ public class ServiceRecordController {
     @ResponseBody
     public ResponseEntity entity(@PathVariable("identifier") String identifier,
                                  @PathVariable("processIdentifier") String processIdentifier,
-                                 @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
                                  @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
                                  Authentication auth,
                                  HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException, BrregNotFoundException {
@@ -112,7 +110,7 @@ public class ServiceRecordController {
             if (clientOrgnr == null) {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
             }
-            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, forcePrint));
+            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr));
         }
         if (processCategory == ProcessCategory.ARKIVMELDING) {
             Optional<ServiceRecord> osr = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier, securityLevel);
@@ -146,7 +144,6 @@ public class ServiceRecordController {
     @SuppressWarnings("squid:S2583")
     public ResponseEntity entity(
             @PathVariable("identifier") String identifier,
-            @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             Authentication auth,
             HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException, BrregNotFoundException {
@@ -162,10 +159,11 @@ public class ServiceRecordController {
             if (clientOrgnr == null) {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
             }
-            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr, forcePrint));
+            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr));
+        } else {
+            entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
+            entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(identifier));
         }
-        entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
-        entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(identifier));
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
@@ -184,12 +182,11 @@ public class ServiceRecordController {
     public ResponseEntity signed(
             @PathVariable("identifier") String identifier,
             @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
-            @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             Authentication auth,
             HttpServletRequest request) throws EntitySignerException, SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException, BrregNotFoundException {
 
-        ResponseEntity entity = entity(identifier, forcePrint, securityLevel, auth, request);
+        ResponseEntity entity = entity(identifier, securityLevel, auth, request);
         if (entity.getStatusCode() != HttpStatus.OK) {
             return entity;
         }

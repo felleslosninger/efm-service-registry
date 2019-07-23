@@ -222,8 +222,7 @@ public class ServiceRecordFactory {
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
     public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
                                                                Authentication auth,
-                                                               String onBehalfOrgnr,
-                                                               boolean forcePrint) throws KRRClientException, DsfLookupException, BrregNotFoundException {
+                                                               String onBehalfOrgnr) throws KRRClientException, DsfLookupException, BrregNotFoundException {
 
         String token = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
         PersonResource personResource = krrService.getCitizenInfo(lookup(identifier)
@@ -235,9 +234,9 @@ public class ServiceRecordFactory {
         for (Process p : digitalpostProcesses) {
             DpiMessageRouter.TargetRecord target;
             if (p.getIdentifier().equals(properties.getDpi().getInfoProcess())) {
-                target = DpiMessageRouter.route(personResource, Notification.NOT_OBLIGATED, forcePrint);
+                target = DpiMessageRouter.route(personResource, Notification.NOT_OBLIGATED);
             } else if (p.getIdentifier().equals(properties.getDpi().getVedtakProcess())) {
-                target = DpiMessageRouter.route(personResource, Notification.OBLIGATED, forcePrint);
+                target = DpiMessageRouter.route(personResource, Notification.OBLIGATED);
             } else {
                 throw new ServiceRegistryException(String.format("Error processing unknown digitalpost process: %s", p.getIdentifier()));
             }
@@ -245,10 +244,13 @@ public class ServiceRecordFactory {
             switch (target) {
                 case DPI:
                     serviceRecords.add(createDigitalServiceRecord(personResource, identifier, p));
+                    break;
                 case PRINT:
                     serviceRecords.add(createPrintServiceRecord(identifier, onBehalfOrgnr, token, personResource, p));
+                    break;
                 case DPV:
                 default:
+                    serviceRecords.add(createPrintServiceRecord(identifier, onBehalfOrgnr, token, personResource, p));
                     serviceRecords.add(createDigitalDpvServiceRecord(identifier, p));
             }
         }
@@ -269,7 +271,7 @@ public class ServiceRecordFactory {
     }
 
     private ServiceRecord createDigitalServiceRecord(PersonResource personResource, String identifier, Process p) {
-        SikkerDigitalPostServiceRecord serviceRecord = new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
+        SikkerDigitalPostServiceRecord serviceRecord = new SikkerDigitalPostServiceRecord(false, properties, personResource, ServiceIdentifier.DPI,
                 identifier, null, null);
         serviceRecord.setProcess(p.getIdentifier());
         DocumentType docType = documentTypeService.findByBusinessMessageType(BusinessMessageTypes.DIGITAL)
@@ -310,7 +312,7 @@ public class ServiceRecordFactory {
             throw new BrregNotFoundException(String.format("Sender with identifier=%s not found in BRREG", onBehalfOrgnr));
         }
 
-        SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(properties, personResource, ServiceIdentifier.DPI,
+        SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(true, properties, personResource, ServiceIdentifier.DPI,
                 identifier, postAddress, returnAddress);
         DocumentType docType = documentTypeService.findByBusinessMessageType(BusinessMessageTypes.PRINT)
                 .orElseThrow(() -> new ServiceRegistryException(String.format("Missing DocumentType for business message type '%s'", BusinessMessageTypes.DIGITAL)));
