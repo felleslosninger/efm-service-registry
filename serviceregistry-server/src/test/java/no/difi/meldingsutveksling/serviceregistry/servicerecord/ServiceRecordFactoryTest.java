@@ -20,8 +20,10 @@ import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
+import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
 import no.difi.move.common.oauth.KeystoreHelper;
 import no.difi.vefa.peppol.common.model.ProcessIdentifier;
+import no.difi.vefa.peppol.lookup.LookupClient;
 import no.difi.virksert.client.lang.VirksertClientException;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
@@ -78,6 +80,12 @@ public class ServiceRecordFactoryTest {
 
     @MockBean
     private HttpComponentsMessageSender httpComponentsMessageSender;
+
+    @MockBean
+    private SRRequestScope requestScope;
+
+    @MockBean
+    private LookupClient lookupClient;
 
     @MockBean
     private ServiceregistryProperties props;

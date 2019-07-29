@@ -3,27 +3,33 @@ package no.difi.meldingsutveksling.serviceregistry.service.brreg;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.client.brreg.BrregClient;
+import no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.OrganizationInfo;
+import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+
+import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 
 @Service
 @Slf4j
 public class BrregService {
 
     private BrregClient brregClient;
-
     private DatahotellClient datahotellClient;
+    private SRRequestScope requestScope;
 
     @Autowired
     public BrregService(BrregClient brregClient,
-                        DatahotellClient datahotellClient) {
+                        DatahotellClient datahotellClient,
+                        SRRequestScope requestScope) {
         this.brregClient = brregClient;
         this.datahotellClient = datahotellClient;
+        this.requestScope = requestScope;
     }
 
     @HystrixCommand(fallbackMethod = "getOrgInfoFromDatahotell")
@@ -40,7 +46,7 @@ public class BrregService {
     }
 
     public Optional<EntityInfo> getOrgInfoFromDatahotell(String orgnr, Throwable e) throws BrregNotFoundException {
-        log.info("Brreg lookup failed, using hotell.difi.no instead", e);
+        log.info(markerFrom(requestScope), "Brreg lookup failed, using hotell.difi.no instead", e);
         return datahotellClient.getOrganizationInfo(orgnr);
     }
 }

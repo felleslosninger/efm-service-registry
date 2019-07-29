@@ -9,6 +9,7 @@ import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
+import no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.service.DocumentTypeService;
@@ -19,6 +20,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
+import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
 import no.difi.vefa.peppol.common.model.ProcessIdentifier;
 import no.difi.virksert.client.lang.VirksertClientException;
 import org.apache.commons.io.IOUtils;
@@ -36,6 +38,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
+import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.*;
 
 /**
@@ -53,17 +56,19 @@ public class ServiceRecordFactory {
     private SvarUtService svarUtService;
     private ProcessService processService;
     private DocumentTypeService documentTypeService;
+    private SRRequestScope requestScope;
     private static final String NORWAY_PREFIX = "9908:";
 
     /**
      * Creates factory to create ServiceRecord using provided environment and services
-     *  @param properties        - parameters needed to contact the provided services
+     * @param properties        - parameters needed to contact the provided services
      * @param virksertService   - used to lookup virksomhetssertifikat (certificate)
      * @param elmaLookupService - used to lookup hostname of Altinn formidlingstjeneste
      * @param krrService        - used to lookup parameters needed to use DPI transportation
      * @param entityService     - used to look up information about citizens and organizations in Brønnøysundregisteret and Datahotellet.
      * @param svarUtService     - used to determine whether an organization utilizes FIKS.
      * @param documentTypeService
+     * @param requestScope
      */
     public ServiceRecordFactory(ServiceregistryProperties properties,
                                 VirkSertService virksertService,
@@ -72,7 +77,8 @@ public class ServiceRecordFactory {
                                 EntityService entityService,
                                 SvarUtService svarUtService,
                                 ProcessService processService,
-                                DocumentTypeService documentTypeService) {
+                                DocumentTypeService documentTypeService,
+                                SRRequestScope requestScope) {
         this.properties = properties;
         this.virksertService = virksertService;
         this.elmaLookupService = elmaLookupService;
@@ -81,6 +87,7 @@ public class ServiceRecordFactory {
         this.svarUtService = svarUtService;
         this.processService = processService;
         this.documentTypeService = documentTypeService;
+        this.requestScope = requestScope;
     }
 
     public Optional<ServiceRecord> createArkivmeldingServiceRecord(String orgnr, String processIdentifier, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException {
@@ -165,7 +172,7 @@ public class ServiceRecordFactory {
         try {
             pem = IOUtils.toString(properties.getSvarut().getCertificate().getInputStream(), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            log.error("Could not read certificate from {}", properties.getSvarut().getCertificate().toString());
+            log.error(markerFrom(requestScope), "Could not read certificate from {}", properties.getSvarut().getCertificate().toString());
             throw new ServiceRegistryException(e);
         }
         ServiceRecord arkivmeldingServiceRecord = ArkivmeldingServiceRecord.of(DPF, orgnr, properties.getSvarut().getServiceRecordUrl().toString(), pem);

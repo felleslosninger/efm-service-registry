@@ -5,6 +5,7 @@ import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregPostadresse;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.OrganizationInfo;
+import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -48,7 +49,8 @@ public class BrregServiceTest {
         Mockito.when(brregClientMock.getBrregEnhetByOrgnr(Mockito.anyString())).thenReturn(Optional.empty());
         Mockito.when(brregClientMock.getBrregEnhetByOrgnr(orgNr)).thenReturn(Optional.of(enhet));
         DatahotellClient datahotellMock = mock(DatahotellClient.class);
-        brregService = new BrregService(brregClientMock, datahotellMock);
+        SRRequestScope requestScopeMock = mock(SRRequestScope.class);
+        brregService = new BrregService(brregClientMock, datahotellMock, requestScopeMock);
 
         OrganizationInfo actual = (OrganizationInfo) brregService.getOrganizationInfo(difi.getIdentifier()).get();
         assertEquals(difi, actual);
@@ -77,7 +79,8 @@ public class BrregServiceTest {
         Mockito.when(brregClientMock.getBrregEnhetByOrgnr(Mockito.anyString())).thenReturn(Optional.empty());
         Mockito.when(brregClientMock.getBrregEnhetByOrgnr(orgNr2)).thenReturn(Optional.of(enhet2));
         DatahotellClient datahotellMock = mock(DatahotellClient.class);
-        brregService = new BrregService(brregClientMock, datahotellMock);
+        SRRequestScope requestScopeMock = mock(SRRequestScope.class);
+        brregService = new BrregService(brregClientMock, datahotellMock, requestScopeMock);
 
         OrganizationInfo actual = (OrganizationInfo) brregService.getOrganizationInfo(donna.getIdentifier()).get();
         assertEquals(donna.getPostadresse(), actual.getPostadresse());

@@ -18,6 +18,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.*;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
+import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
 import no.difi.virksert.client.lang.VirksertClientException;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
@@ -82,6 +83,9 @@ public class ServiceRecordControllerTest {
 
     @MockBean
     private AuthenticationService authenticationService;
+
+    @MockBean
+    private SRRequestScope requestScope;
 
     @Autowired
     private PayloadSigner payloadSigner;
