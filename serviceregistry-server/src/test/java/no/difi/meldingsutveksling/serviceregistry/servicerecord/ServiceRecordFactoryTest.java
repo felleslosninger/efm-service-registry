@@ -2,6 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 import com.google.common.collect.Sets;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.config.SecurityConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
@@ -34,14 +35,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.oauth2.provider.OAuth2Request;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -108,7 +114,7 @@ public class ServiceRecordFactoryTest {
     private static String PERSONNUMMER = "01234567890";
 
     @Before
-    public void init() throws MalformedURLException, EndpointUrlNotFound {
+    public void init() throws MalformedURLException {
         ServiceregistryProperties.Altinn dpoConfig = new ServiceregistryProperties.Altinn();
         dpoConfig.setEndpointURL(new URL("http://test"));
         dpoConfig.setServiceCode("1234");
@@ -356,20 +362,6 @@ public class ServiceRecordFactoryTest {
         when(processService.findByIdentifier(EINNSYN_PROCESS_RESPONSE)).thenReturn(Optional.empty());
         Optional<ServiceRecord> result = factory.createEinnsynServiceRecord(ORGNR_EINNSYN_RESPONSE, EINNSYN_PROCESS_RESPONSE);
         assertFalse(result.isPresent());
-    }
-
-    @Test(expected = DsfLookupException.class)
-    public void createDigitalpostServiceRecords_MessageToRecipientNotInPopulationRegistry_ShouldThrowDedicatedException() throws KRRClientException, DsfLookupException, BrregNotFoundException {
-        Authentication authenticationMock = mock(Authentication.class);
-        OAuth2AuthenticationDetails detailsMock = mock(OAuth2AuthenticationDetails.class);
-        when(detailsMock.getTokenValue()).thenReturn("TOKEN");
-        when(authenticationMock.getDetails()).thenReturn(detailsMock);
-        PersonResource personResourceMock = mock(PersonResource.class);
-        when(personResourceMock.hasMailbox()).thenReturn(false);
-        when(krrService.getCitizenInfo(any(LookupParameters.class))).thenReturn(personResourceMock);
-        when(krrService.getDSFInfo(any(LookupParameters.class))).thenReturn(Optional.empty());
-
-        factory.createDigitalpostServiceRecords(PERSONNUMMER, authenticationMock, "991825827");
     }
 
 }

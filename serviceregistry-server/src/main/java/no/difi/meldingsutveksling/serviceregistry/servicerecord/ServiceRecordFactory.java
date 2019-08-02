@@ -9,9 +9,8 @@ import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
-import no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory;
-import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
+import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.service.DocumentTypeService;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
@@ -61,12 +60,13 @@ public class ServiceRecordFactory {
 
     /**
      * Creates factory to create ServiceRecord using provided environment and services
-     * @param properties        - parameters needed to contact the provided services
-     * @param virksertService   - used to lookup virksomhetssertifikat (certificate)
-     * @param elmaLookupService - used to lookup hostname of Altinn formidlingstjeneste
-     * @param krrService        - used to lookup parameters needed to use DPI transportation
-     * @param entityService     - used to look up information about citizens and organizations in Brønnøysundregisteret and Datahotellet.
-     * @param svarUtService     - used to determine whether an organization utilizes FIKS.
+     *
+     * @param properties          - parameters needed to contact the provided services
+     * @param virksertService     - used to lookup virksomhetssertifikat (certificate)
+     * @param elmaLookupService   - used to lookup hostname of Altinn formidlingstjeneste
+     * @param krrService          - used to lookup parameters needed to use DPI transportation
+     * @param entityService       - used to look up information about citizens and organizations in Brønnøysundregisteret and Datahotellet.
+     * @param svarUtService       - used to determine whether an organization utilizes FIKS.
      * @param documentTypeService
      * @param requestScope
      */
@@ -289,10 +289,10 @@ public class ServiceRecordFactory {
     }
 
     private ServiceRecord createPrintServiceRecord(String identifier,
-                                                         String onBehalfOrgnr,
-                                                         String token,
-                                                         PersonResource personResource,
-                                                         Process p) throws KRRClientException, DsfLookupException, BrregNotFoundException {
+                                                   String onBehalfOrgnr,
+                                                   String token,
+                                                   PersonResource personResource,
+                                                   Process p) throws KRRClientException, DsfLookupException, BrregNotFoundException {
 
         krrService.setPrintDetails(personResource);
         Optional<DSFResource> dsfResource = krrService.getDSFInfo(lookup(identifier).token(token));
