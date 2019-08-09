@@ -45,6 +45,7 @@ public class ServiceregistryProperties {
         private String defaultProcessIdentifier;
         private String processIdentifier;
         private String documentTypeIdentifier;
+        private String lookupIcd;
     }
 
     @Data

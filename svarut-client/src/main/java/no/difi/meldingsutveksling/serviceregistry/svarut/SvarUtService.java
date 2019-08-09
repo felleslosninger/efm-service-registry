@@ -1,6 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.svarut;
 
 import lombok.extern.slf4j.Slf4j;
+import no.difi.meldingsutveksling.serviceregistry.lang.ExternalServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -21,9 +22,10 @@ public class SvarUtService {
         this.svarUtClient = svarUtClient;
     }
 
-    public Optional<Integer> hasSvarUtAdressering(String orgnr, Integer securityLevel) {
+    public Optional<Integer> hasSvarUtAdressering(String orgnr, Integer securityLevel) throws ExternalServiceException {
         RetrieveMottakerSystemForOrgnr request = RetrieveMottakerSystemForOrgnr.builder().withOrganisasjonsnr(orgnr).build();
-        RetrieveMottakerSystemForOrgnrResponse response = svarUtClient.retrieveMottakerSystemForOrgnr(request);
+        RetrieveMottakerSystemForOrgnrResponse response;
+        response = svarUtClient.retrieveMottakerSystemForOrgnr(request);
         Stream<MottakerForsendelseTyper> validFiksRequests = response.getReturn().stream()
                 .filter(m -> isNullOrEmpty(m.forsendelseType));
         if (null != securityLevel) {

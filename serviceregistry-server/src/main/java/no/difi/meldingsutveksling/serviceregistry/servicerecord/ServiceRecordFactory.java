@@ -9,6 +9,7 @@ import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
+import no.difi.meldingsutveksling.serviceregistry.lang.ExternalServiceException;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.service.DocumentTypeService;
@@ -56,7 +57,6 @@ public class ServiceRecordFactory {
     private ProcessService processService;
     private DocumentTypeService documentTypeService;
     private SRRequestScope requestScope;
-    private static final String NORWAY_PREFIX = "9908:";
 
     /**
      * Creates factory to create ServiceRecord using provided environment and services
@@ -103,35 +103,43 @@ public class ServiceRecordFactory {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
         Set<Process> arkivmeldingProcesses = processService.findAll(ProcessCategory.ARKIVMELDING);
         for (Process process : arkivmeldingProcesses) {
-            serviceRecords.add(createArkivmeldingServiceRecord(orgnr, targetSecurityLevel, process));
+            ServiceRecord record = createArkivmeldingServiceRecord(orgnr, targetSecurityLevel, process);
+            if (null != record) {
+                serviceRecords.add(record);
+            }
         }
         return serviceRecords;
     }
 
     private ServiceRecord createArkivmeldingServiceRecord(String orgnr, Integer targetSecurityLevel, Process process) throws SecurityLevelNotFoundException, CertificateNotFoundException {
-        ServiceRecord serviceRecord;
-        Set<String> processIdentifiers = getSmpRegistrations(orgnr, Sets.newHashSet(process)).stream()
-                .map(ProcessIdentifier::getIdentifier)
-                .collect(Collectors.toSet());
-        if (processIdentifiers.isEmpty()) {
-            Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
-            if (hasSvarUt.isPresent()) {
-                serviceRecord = createDpfServiceRecord(orgnr, process, targetSecurityLevel);
-            } else {
-                if (targetSecurityLevel == null) {
-                    serviceRecord = createDpvServiceRecord(orgnr, process);
+        try {
+            ServiceRecord serviceRecord;
+            Set<String> processIdentifiers = getSmpRegistrations(orgnr, Sets.newHashSet(process)).stream()
+                    .map(ProcessIdentifier::getIdentifier)
+                    .collect(Collectors.toSet());
+            if (processIdentifiers.isEmpty()) {
+                Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
+                if (hasSvarUt.isPresent()) {
+                    serviceRecord = createDpfServiceRecord(orgnr, process, targetSecurityLevel);
                 } else {
-                    throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", orgnr, targetSecurityLevel));
+                    if (targetSecurityLevel == null) {
+                        serviceRecord = createDpvServiceRecord(orgnr, process);
+                    } else {
+                        throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", orgnr, targetSecurityLevel));
+                    }
+                }
+            } else {
+                if (processIdentifiers.contains(process.getIdentifier())) {
+                    serviceRecord = createDpoServiceRecord(orgnr, process);
+                } else {
+                    serviceRecord = createDpvServiceRecord(orgnr, process);
                 }
             }
-        } else {
-            if (processIdentifiers.contains(process.getIdentifier())) {
-                serviceRecord = createDpoServiceRecord(orgnr, process);
-            } else {
-                serviceRecord = createDpvServiceRecord(orgnr, process);
-            }
+            return serviceRecord;
+        } catch (ExternalServiceException e) {
+            log.error("Exception occurred when calling an external service.", e);
+            return null;
         }
-        return serviceRecord;
     }
 
 
@@ -333,6 +341,7 @@ public class ServiceRecordFactory {
                 .flatMap(p -> p.getDocumentTypes().stream())
                 .map(DocumentType::getIdentifier)
                 .collect(Collectors.toSet());
-        return elmaLookupService.lookupRegisteredProcesses(NORWAY_PREFIX + organizationIdentifier, documentTypeIdentifiers);
+        String norwegianIcd = properties.getElma().getLookupIcd();
+        return elmaLookupService.lookupRegisteredProcesses(String.format("%s:%s", norwegianIcd, organizationIdentifier), documentTypeIdentifiers);
     }
 }
