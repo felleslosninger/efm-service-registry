@@ -17,10 +17,12 @@ import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.*;
+import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
 import no.difi.virksert.client.lang.VirksertClientException;
 import org.assertj.core.util.Lists;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -144,6 +146,16 @@ public class ServiceRecordControllerTest {
     }
 
     @Test
+    public void get_ArkivmeldingResultsInSvarUtClientException_ShouldReturnInternalServerError() throws Exception {
+        final String message = "svarut is unavailable";
+        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any()))
+                .thenThrow(new SvarUtClientException(new RuntimeException(message)));
+        mvc.perform(get("/identifier/42").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error_description", Matchers.containsString(message)));
+    }
+
+    @Test
     public void get_ArkivmeldingResolvesToDpv_ServiceRecordShouldMatchExpectedValues() throws Exception {
         when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any())).thenReturn(Lists.newArrayList(DPV_SERVICE_RECORD));
         mvc.perform(get("/identifier/43").accept(MediaType.APPLICATION_JSON))
@@ -191,7 +203,7 @@ public class ServiceRecordControllerTest {
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPI")));
     }
 
-    private void setupMocksForSuccessfulDpi() throws MalformedURLException, KRRClientException, DsfLookupException, SecurityLevelNotFoundException, CertificateNotFoundException, BrregNotFoundException {
+    private void setupMocksForSuccessfulDpi() throws MalformedURLException, KRRClientException, DsfLookupException, SecurityLevelNotFoundException, CertificateNotFoundException, BrregNotFoundException, SvarUtClientException {
         ServiceregistryProperties serviceregistryProperties = fakePropertiesForDpi();
         when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
         PersonResource personResource = fakePersonResourceForDpi();

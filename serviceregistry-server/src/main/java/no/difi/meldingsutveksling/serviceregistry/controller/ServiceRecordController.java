@@ -2,8 +2,6 @@ package no.difi.meldingsutveksling.serviceregistry.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
-import net.logstash.logback.marker.LogstashMarker;
 import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
@@ -12,7 +10,6 @@ import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.krr.DsfLookupException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
-import no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory;
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
@@ -26,6 +23,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
+import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
 import org.jboss.logging.MDC;
 import org.slf4j.Logger;
@@ -42,7 +40,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.shouldCreateServiceRecordForCitizen;
 import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 
@@ -101,7 +98,9 @@ public class ServiceRecordController {
                                  @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
                                  @RequestParam(name = "conversationId", required = false) String conversationId,
                                  Authentication auth,
-                                 HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException, BrregNotFoundException {
+                                 HttpServletRequest request)
+            throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException,
+            DsfLookupException, BrregNotFoundException, SvarUtClientException {
         MDC.put("entity", identifier);
         requestScope.setConversationId(conversationId);
         requestScope.setIdentifier(identifier);
@@ -161,7 +160,8 @@ public class ServiceRecordController {
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             @RequestParam(name = "conversationId", required = false) String conversationId,
             Authentication auth,
-            HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException, BrregNotFoundException {
+            HttpServletRequest request)
+            throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException, BrregNotFoundException, SvarUtClientException {
         MDC.put("identifier", identifier);
         requestScope.setConversationId(conversationId);
         requestScope.setIdentifier(identifier);
@@ -203,13 +203,13 @@ public class ServiceRecordController {
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             @RequestParam(name = "conversationId", required = false) String conversationId,
             Authentication auth,
-            HttpServletRequest request) throws EntitySignerException, SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException, BrregNotFoundException {
-
+            HttpServletRequest request)
+            throws EntitySignerException, SecurityLevelNotFoundException, KRRClientException,
+            CertificateNotFoundException, DsfLookupException, BrregNotFoundException, SvarUtClientException {
         ResponseEntity entity = entity(identifier, securityLevel, conversationId, auth, request);
         if (entity.getStatusCode() != HttpStatus.OK) {
             return entity;
         }
-
         String json;
         try {
             json = new ObjectMapper().writeValueAsString(entity.getBody());
@@ -247,6 +247,12 @@ public class ServiceRecordController {
 
     @ExceptionHandler(KRRClientException.class)
     public ResponseEntity krrClientException(HttpServletRequest request, Exception e) {
+        log.error(markerFrom(requestScope), "Exception occurred on {}", request.getRequestURL(), e);
+        return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+    }
+
+    @ExceptionHandler(SvarUtClientException.class)
+    public ResponseEntity handleSvarUtClientException(HttpServletRequest request, Exception e) {
         log.error(markerFrom(requestScope), "Exception occurred on {}", request.getRequestURL(), e);
         return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
     }

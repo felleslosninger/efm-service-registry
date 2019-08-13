@@ -2,7 +2,6 @@ package no.difi.meldingsutveksling.serviceregistry.svarut;
 
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
-import no.difi.meldingsutveksling.serviceregistry.lang.ExternalServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.ws.client.core.WebServiceTemplate;
@@ -22,13 +21,13 @@ public class SvarUtClient {
         this.props = props;
     }
 
-    public RetrieveMottakerSystemForOrgnrResponse retrieveMottakerSystemForOrgnr(RetrieveMottakerSystemForOrgnr payload) throws ExternalServiceException {
+    public RetrieveMottakerSystemForOrgnrResponse retrieveMottakerSystemForOrgnr(RetrieveMottakerSystemForOrgnr payload) throws SvarUtClientException {
         String url = props.getSvarut().getForsendelsesserviceUrl().toString();
         try {
             JAXBElement<RetrieveMottakerSystemForOrgnrResponse> response = (JAXBElement<RetrieveMottakerSystemForOrgnrResponse>) wsTemplate.marshalSendAndReceive(url, payload);
             return response.getValue();
         } catch (Exception e) {
-            throw new ExternalServiceException(e);
+            throw new SvarUtClientException(e);
         }
     }
 

@@ -9,7 +9,6 @@ import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
-import no.difi.meldingsutveksling.serviceregistry.lang.ExternalServiceException;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.service.DocumentTypeService;
@@ -19,6 +18,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundExc
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
+import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
 import no.difi.vefa.peppol.common.model.ProcessIdentifier;
@@ -90,7 +90,7 @@ public class ServiceRecordFactory {
         this.requestScope = requestScope;
     }
 
-    public Optional<ServiceRecord> createArkivmeldingServiceRecord(String orgnr, String processIdentifier, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException {
+    public Optional<ServiceRecord> createArkivmeldingServiceRecord(String orgnr, String processIdentifier, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
         if (optionalProcess.isPresent()) {
             return Optional.of(createArkivmeldingServiceRecord(orgnr, targetSecurityLevel, optionalProcess.get()));
@@ -99,7 +99,7 @@ public class ServiceRecordFactory {
     }
 
     @SuppressWarnings("squid:S1166")
-    public List<ServiceRecord> createArkivmeldingServiceRecords(String orgnr, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException {
+    public List<ServiceRecord> createArkivmeldingServiceRecords(String orgnr, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
         Set<Process> arkivmeldingProcesses = processService.findAll(ProcessCategory.ARKIVMELDING);
         for (Process process : arkivmeldingProcesses) {
@@ -111,35 +111,30 @@ public class ServiceRecordFactory {
         return serviceRecords;
     }
 
-    private ServiceRecord createArkivmeldingServiceRecord(String orgnr, Integer targetSecurityLevel, Process process) throws SecurityLevelNotFoundException, CertificateNotFoundException {
-        try {
-            ServiceRecord serviceRecord;
-            Set<String> processIdentifiers = getSmpRegistrations(orgnr, Sets.newHashSet(process)).stream()
-                    .map(ProcessIdentifier::getIdentifier)
-                    .collect(Collectors.toSet());
-            if (processIdentifiers.isEmpty()) {
-                Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
-                if (hasSvarUt.isPresent()) {
-                    serviceRecord = createDpfServiceRecord(orgnr, process, targetSecurityLevel);
-                } else {
-                    if (targetSecurityLevel == null) {
-                        serviceRecord = createDpvServiceRecord(orgnr, process);
-                    } else {
-                        throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", orgnr, targetSecurityLevel));
-                    }
-                }
+    private ServiceRecord createArkivmeldingServiceRecord(String orgnr, Integer targetSecurityLevel, Process process) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
+        ServiceRecord serviceRecord;
+        Set<String> processIdentifiers = getSmpRegistrations(orgnr, Sets.newHashSet(process)).stream()
+                .map(ProcessIdentifier::getIdentifier)
+                .collect(Collectors.toSet());
+        if (processIdentifiers.isEmpty()) {
+            Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
+            if (hasSvarUt.isPresent()) {
+                serviceRecord = createDpfServiceRecord(orgnr, process, targetSecurityLevel);
             } else {
-                if (processIdentifiers.contains(process.getIdentifier())) {
-                    serviceRecord = createDpoServiceRecord(orgnr, process);
-                } else {
+                if (targetSecurityLevel == null) {
                     serviceRecord = createDpvServiceRecord(orgnr, process);
+                } else {
+                    throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", orgnr, targetSecurityLevel));
                 }
             }
-            return serviceRecord;
-        } catch (ExternalServiceException e) {
-            log.error("Exception occurred when calling an external service.", e);
-            return null;
+        } else {
+            if (processIdentifiers.contains(process.getIdentifier())) {
+                serviceRecord = createDpoServiceRecord(orgnr, process);
+            } else {
+                serviceRecord = createDpvServiceRecord(orgnr, process);
+            }
         }
+        return serviceRecord;
     }
 
 
