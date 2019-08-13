@@ -11,6 +11,7 @@ import no.difi.virksert.client.lang.VirksertClientException;
 import no.difi.virksert.lang.BusinessCertificateException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -47,7 +48,7 @@ public class VirkSertService {
         }
 
         try {
-            if (env.acceptsProfiles("production")) {
+            if (env.acceptsProfiles(Profiles.of("production"))) {
                 virksertClient = BusinessCertificateClient.of(virksertUrl, Mode.PRODUCTION);
             } else {
                 virksertClient = BusinessCertificateClient.of(virksertUrl, "/recipe-move-difiSigned.xml");

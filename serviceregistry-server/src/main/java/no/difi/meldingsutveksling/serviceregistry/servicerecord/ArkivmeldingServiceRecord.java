@@ -1,14 +1,19 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 
 /**
  * Represents a Service Record for EDU messages
- *
  */
-@Data
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode(callSuper = true)
 public class ArkivmeldingServiceRecord extends ServiceRecord {
 
     private ArkivmeldingServiceRecord(ServiceIdentifier serviceIdentifier, String orgnr, String endpointUrl) {
@@ -24,5 +29,4 @@ public class ArkivmeldingServiceRecord extends ServiceRecord {
         arkivmeldingServiceRecord.setPemCertificate(pemCertificate);
         return arkivmeldingServiceRecord;
     }
-
 }
