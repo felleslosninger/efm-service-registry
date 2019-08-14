@@ -4,7 +4,6 @@ import net.logstash.logback.marker.Markers;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.webservice.support.SoapFaultInterceptorLogger;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
@@ -19,11 +18,8 @@ import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 @Configuration
 public class SvarUtConfig {
 
-    @Autowired
-    private ServiceregistryProperties props;
-
     @Bean
-    HttpComponentsMessageSender messageSender() {
+    HttpComponentsMessageSender messageSender(ServiceregistryProperties props) {
         HttpComponentsMessageSender messageSender = new HttpComponentsMessageSender();
         messageSender.setCredentials(new UsernamePasswordCredentials(props.getSvarut().getUser(), props.getSvarut().getPassword()));
         return messageSender;
@@ -45,7 +41,7 @@ public class SvarUtConfig {
 
     @Bean
     WebServiceTemplate webServiceTemplate(WebServiceMessageSender messageSender,
-                                                  SoapMessageFactory messageFactory) {
+                                          SoapMessageFactory messageFactory) {
         WebServiceTemplate template = new WebServiceTemplate();
 
         template.setMarshaller(marshaller());
