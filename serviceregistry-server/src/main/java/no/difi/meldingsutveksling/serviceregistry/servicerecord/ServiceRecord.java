@@ -1,7 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
+import lombok.*;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 
 import java.util.List;

@@ -3,7 +3,6 @@ package no.difi.meldingsutveksling.serviceregistry.service.brreg;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.client.brreg.BrregClient;
-import no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.OrganizationInfo;

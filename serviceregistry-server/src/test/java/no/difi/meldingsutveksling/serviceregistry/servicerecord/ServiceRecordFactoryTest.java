@@ -29,7 +29,6 @@ import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Matchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -46,7 +45,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -141,7 +140,7 @@ public class ServiceRecordFactoryTest {
         documentType.setProcesses(Lists.newArrayList(processAdmin, processSkatt));
         when(processService.findAll(ProcessCategory.ARKIVMELDING)).thenReturn(Sets.newHashSet(processAdmin, processSkatt));
         when(processService.getDefaultArkivmeldingProcess()).thenReturn(processAdmin);
-        when(lookupService.lookupRegisteredProcesses(Matchers.eq("9908:" + ORGNR_FIKS), anySetOf(String.class))).thenReturn(Sets.newHashSet());
+        when(lookupService.lookupRegisteredProcesses(eq("9908:" + ORGNR_FIKS), anySet())).thenReturn(Sets.newHashSet());
 
         Process vedtakProcess = new Process()
                 .setIdentifier(DIGITALPOST_PROCESS_VEDTAK)
@@ -160,9 +159,9 @@ public class ServiceRecordFactoryTest {
         einnsynJournalpostProcess.setDocumentTypes(Lists.newArrayList(einnsynJournalpostDocumentType));
         einnsynJournalpostDocumentType.setProcesses(Lists.newArrayList(einnsynJournalpostProcess));
         when(processService.findAll(ProcessCategory.EINNSYN)).thenReturn(Sets.newHashSet(einnsynJournalpostProcess));
-        when(lookupService.lookupRegisteredProcesses(Matchers.eq("9908:" + ORGNR_EINNSYN_JOURNALPOST), anySetOf(String.class))).thenReturn(Sets.newHashSet());
+        when(lookupService.lookupRegisteredProcesses(eq("9908:" + ORGNR_EINNSYN_JOURNALPOST), anySet())).thenReturn(Sets.newHashSet());
         when(processService.findByIdentifier(EINNSYN_PROCESS_JOURNALPOST)).thenReturn(journalpostProcess);
-        when(lookupService.lookupRegisteredProcesses(Matchers.eq("9908:" + ORGNR_EINNSYN_JOURNALPOST), anySetOf(String.class)))
+        when(lookupService.lookupRegisteredProcesses(eq("9908:" + ORGNR_EINNSYN_JOURNALPOST), anySet()))
                 .thenReturn(Sets.newHashSet(ProcessIdentifier.of(EINNSYN_PROCESS_JOURNALPOST)));
 
     }
@@ -239,8 +238,8 @@ public class ServiceRecordFactoryTest {
         assertEquals(ServiceIdentifier.DPV, result.get().getService().getIdentifier());
     }
 
-    private void setupLookupServiceMockToReturnAdministrationProcessMatch() throws EndpointUrlNotFound {
-        when(lookupService.lookupRegisteredProcesses(Matchers.eq("9908:" + ORGNR), anySetOf(String.class)))
+    private void setupLookupServiceMockToReturnAdministrationProcessMatch() {
+        when(lookupService.lookupRegisteredProcesses(eq("9908:" + ORGNR), anySet()))
                 .thenReturn(Sets.newHashSet(ProcessIdentifier.of(ARKIVMELDING_PROCESS_ADMIN)));
     }
 
@@ -283,7 +282,7 @@ public class ServiceRecordFactoryTest {
 
     @Test
     public void createArkivmeldingServiceRecords_OrganizationHasNoSmpNorSvarutRegistration_ShouldReturnDpvServiceRecord() throws EndpointUrlNotFound, SecurityLevelNotFoundException, CertificateNotFoundException {
-        when(lookupService.lookup(Matchers.eq("9908:" + ORGNR), anySetOf(String.class))).thenReturn(Lists.newArrayList());
+        when(lookupService.lookup(eq("9908:" + ORGNR), anySetOf(String.class))).thenReturn(Lists.newArrayList());
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
         List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR, null);
@@ -318,7 +317,7 @@ public class ServiceRecordFactoryTest {
 
     @Test
     public void createEinnsynServiceRecords_OrgnrNotInElma_ShouldNotReturnDpeServiceRecord() throws CertificateNotFoundException {
-        when(lookupService.lookup(Matchers.eq("9908:" + ORGNR_EINNSYN_RESPONSE), anySetOf(String.class))).thenReturn(Lists.newArrayList());
+        when(lookupService.lookup(eq("9908:" + ORGNR_EINNSYN_RESPONSE), anySetOf(String.class))).thenReturn(Lists.newArrayList());
         List<ServiceRecord> result = factory.createEinnsynServiceRecords(ORGNR_EINNSYN_RESPONSE);
         assertTrue(result.isEmpty());
     }
@@ -350,7 +349,7 @@ public class ServiceRecordFactoryTest {
         einnsynResponseDocumentType.setProcesses(Lists.newArrayList(einnsynResponseProcess));
         einnsynResponseProcess.setDocumentTypes(Lists.newArrayList(einnsynResponseDocumentType));
         when(processService.findByIdentifier(EINNSYN_PROCESS_RESPONSE)).thenReturn(responseProcess);
-        when(lookupService.lookupRegisteredProcesses(Matchers.eq("9908:" + ORGNR_EINNSYN_RESPONSE), anySetOf(String.class)))
+        when(lookupService.lookupRegisteredProcesses(eq("9908:" + ORGNR_EINNSYN_RESPONSE), anySetOf(String.class)))
                 .thenReturn(Sets.newHashSet(ProcessIdentifier.of(EINNSYN_PROCESS_RESPONSE)));
 
         when(processService.findByIdentifier(EINNSYN_PROCESS_RESPONSE)).thenReturn(Optional.empty());

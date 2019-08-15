@@ -1,24 +1,22 @@
 package no.difi.meldingsutveksling.serviceregistry.controller;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.dev.TestEnvironmentEnheter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
+@RequiredArgsConstructor
 public class AddMockEnhetController {
 
-    private static final Logger logger = LoggerFactory.getLogger(AddMockEnhetController.class);
+    private final TestEnvironmentEnheter testEnheter;
 
-    @Autowired
-    TestEnvironmentEnheter testEnheter;
-
-    @RequestMapping(method = RequestMethod.POST, value = "/addmockenhet")
+    @PostMapping("/addmockenhet")
     @ResponseBody
     public String addMockEnhet(@RequestBody BrregEnhet enhet) {
-        logger.info("Adding {} to Brreg mock", enhet);
+        log.info("Adding {} to Brreg mock", enhet);
         if (testEnheter.addBrregEnhet(enhet)) {
             return "Lagt til i mock";
         }
@@ -27,7 +25,7 @@ public class AddMockEnhetController {
 
     @RequestMapping(value = "/deletemockenhet/{orgnr}")
     public void delMockEnhet(@PathVariable String orgnr) {
-        logger.info("Deleting mock entry with identifier {}", orgnr);
+        log.info("Deleting mock entry with identifier {}", orgnr);
         testEnheter.deleteBrregEnhet(orgnr);
     }
 }

@@ -7,7 +7,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,11 +73,11 @@ public class ProcessServiceTest {
     @Test
     public void update_ChangeDocumentTypes_ShouldBeSaved() {
         Process existingProcessMock = mock(Process.class);
-        when(repositoryMock.findByIdentifier(anyString())).thenReturn(existingProcessMock);
+        when(repositoryMock.findByIdentifier(any())).thenReturn(existingProcessMock);
         List<DocumentType> newTypes = new ArrayList<>();
         DocumentType documentTypeMock = mock(DocumentType.class);
         newTypes.add(documentTypeMock);
-        when(documentTypeServiceMock.findByIdentifier(anyString())).thenReturn(Optional.of(documentTypeMock));
+        when(documentTypeServiceMock.findByIdentifier(any())).thenReturn(Optional.of(documentTypeMock));
         Process updatedProcess = createProcess(null, null, newTypes);
         when(repositoryMock.save(existingProcessMock)).thenReturn(existingProcessMock);
 
@@ -95,7 +95,6 @@ public class ProcessServiceTest {
         List<DocumentType> newTypes = new ArrayList<>();
         DocumentType documentTypeMock = mock(DocumentType.class);
         newTypes.add(documentTypeMock);
-        when(documentTypeServiceMock.findByIdentifier(anyString())).thenReturn(Optional.empty());
         Process updatedProcess = createProcess(null, null, newTypes);
         when(repositoryMock.save(existingProcessMock)).thenReturn(existingProcessMock);
 
