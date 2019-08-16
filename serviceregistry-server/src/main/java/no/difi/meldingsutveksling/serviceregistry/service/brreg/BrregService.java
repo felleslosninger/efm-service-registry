@@ -20,15 +20,12 @@ public class BrregService {
 
     private BrregClient brregClient;
     private DatahotellClient datahotellClient;
-    private SRRequestScope requestScope;
 
     @Autowired
     public BrregService(BrregClient brregClient,
-                        DatahotellClient datahotellClient,
-                        SRRequestScope requestScope) {
+                        DatahotellClient datahotellClient) {
         this.brregClient = brregClient;
         this.datahotellClient = datahotellClient;
-        this.requestScope = requestScope;
     }
 
     @HystrixCommand(fallbackMethod = "getOrgInfoFromDatahotell")
@@ -45,7 +42,7 @@ public class BrregService {
     }
 
     public Optional<EntityInfo> getOrgInfoFromDatahotell(String orgnr, Throwable e) throws BrregNotFoundException {
-        log.info(markerFrom(requestScope), "Brreg lookup failed, using hotell.difi.no instead", e);
+        log.warn("Brreg lookup failed, using hotell.difi.no instead", e);
         return datahotellClient.getOrganizationInfo(orgnr);
     }
 }
