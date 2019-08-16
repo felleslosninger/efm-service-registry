@@ -2,19 +2,15 @@ package no.difi.meldingsutveksling.serviceregistry.config;
 
 import no.difi.move.common.config.KeystoreProperties;
 import no.difi.move.common.oauth.KeystoreHelper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public class SRConfig extends WebMvcConfigurerAdapter {
-
-    @Autowired
-    private ServiceregistryProperties srProps;
+public class SRConfig implements WebMvcConfigurer {
 
     @Bean
     HystrixContextInterceptor hystrixContextInterceptor() {
@@ -32,7 +28,7 @@ public class SRConfig extends WebMvcConfigurerAdapter {
     }
 
     @Bean
-    KeystoreHelper keystoreHelper() {
+    public KeystoreHelper keystoreHelper(ServiceregistryProperties srProps) {
         KeystoreProperties props = new KeystoreProperties();
         props.setAlias(srProps.getSign().getJks().getAlias());
         props.setEntryPassword(srProps.getSign().getJks().getPassword());

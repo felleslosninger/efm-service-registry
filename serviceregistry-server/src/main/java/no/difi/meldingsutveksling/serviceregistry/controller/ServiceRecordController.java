@@ -2,25 +2,34 @@ package no.difi.meldingsutveksling.serviceregistry.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
+import net.logstash.logback.marker.LogstashMarker;
 import no.difi.meldingsutveksling.Notification;
+import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.krr.DsfLookupException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
+import no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory;
 import no.difi.meldingsutveksling.serviceregistry.model.Entity;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
-import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
+import no.difi.meldingsutveksling.serviceregistry.model.Process;
+import no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory;
+import no.difi.meldingsutveksling.serviceregistry.response.ErrorResponse;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
+import no.difi.meldingsutveksling.serviceregistry.service.AuthenticationService;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
-import no.difi.meldingsutveksling.serviceregistry.servicerecord.ErrorServiceRecord;
-import no.difi.meldingsutveksling.serviceregistry.servicerecord.FiksWrapper;
+import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
+import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
+import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
 import org.jboss.logging.MDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.ExposesResourceFor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -33,7 +42,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
 
-import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.shouldCreateServiceRecordForCititzen;
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.shouldCreateServiceRecordForCitizen;
 import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 
 @ExposesResourceFor(Entity.class)
@@ -42,20 +52,31 @@ public class ServiceRecordController {
 
     private static final Logger log = LoggerFactory.getLogger(ServiceRecordController.class);
     private final ServiceRecordFactory serviceRecordFactory;
+    private final ProcessService processService;
+    private final AuthenticationService authenticationService;
     private EntityService entityService;
     private PayloadSigner payloadSigner;
+    private SRRequestScope requestScope;
 
     /**
-     * @param serviceRecordFactory for creation of the identifiers respective service record
-     * @param entityService        needed to lookup and retrieve organization or citizen information using an identifier number
+     * @param serviceRecordFactory  for creation of the identifiers respective service record
+     * @param entityService         needed to lookup and retrieve organization or citizen information using an identifier number
+     * @param processService
+     * @param authenticationService
+     * @param requestScope
      */
-    @Autowired
     public ServiceRecordController(ServiceRecordFactory serviceRecordFactory,
                                    EntityService entityService,
-                                   PayloadSigner payloadSigner) {
+                                   PayloadSigner payloadSigner,
+                                   ProcessService processService,
+                                   AuthenticationService authenticationService,
+                                   SRRequestScope requestScope) {
         this.entityService = entityService;
         this.serviceRecordFactory = serviceRecordFactory;
         this.payloadSigner = payloadSigner;
+        this.processService = processService;
+        this.authenticationService = authenticationService;
+        this.requestScope = requestScope;
     }
 
     @InitBinder
@@ -64,125 +85,114 @@ public class ServiceRecordController {
     }
 
     /**
+     * Used to retrieve information needed to send a message within the provided process
+     * to an entity with the provided identifier.
+     *
+     * @param identifier        specifies the target entity.
+     * @param processIdentifier specifies the target process.
+     * @param auth              provides the authentication object.
+     * @param request           is the servlet request.
+     * @return JSON object with information needed to send a message.
+     */
+    @GetMapping(value = "/identifier/{identifier}/process/{processIdentifier}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity entity(@PathVariable("identifier") String identifier,
+                                 @PathVariable("processIdentifier") String processIdentifier,
+                                 @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
+                                 @RequestParam(name = "conversationId", required = false) String conversationId,
+                                 Authentication auth,
+                                 HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException, BrregNotFoundException {
+        MDC.put("entity", identifier);
+        requestScope.setConversationId(conversationId);
+        requestScope.setIdentifier(identifier);
+        String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
+        requestScope.setClientId(clientOrgnr);
+        Optional<EntityInfo> optionalEntityInfo = entityService.getEntityInfo(identifier);
+        if (!optionalEntityInfo.isPresent()) {
+            return notFoundResponse(String.format("Entity with identifier '%s' not found.", identifier));
+        }
+        Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
+        if (!optionalProcess.isPresent()) {
+            return notFoundResponse(String.format("Process with identifier '%s' not found.", processIdentifier));
+        }
+        Entity entity = new Entity();
+        EntityInfo entityInfo = optionalEntityInfo.get();
+        entity.setInfoRecord(entityInfo);
+        ServiceRecord serviceRecord = null;
+        ProcessCategory processCategory = optionalProcess.get().getCategory();
+        if (processCategory.equals(ProcessCategory.DIGITALPOST) && shouldCreateServiceRecordForCitizen().test(entityInfo)) {
+            if (clientOrgnr == null) {
+                return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
+            }
+            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr));
+        }
+        if (processCategory == ProcessCategory.ARKIVMELDING) {
+            Optional<ServiceRecord> osr = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier, securityLevel);
+            if (osr.isPresent()) {
+                serviceRecord = osr.get();
+            }
+            if (serviceRecord == null) {
+                return notFoundResponse(String.format("Arkivmelding process '%s' not found for receiver '%s'.", processIdentifier, identifier));
+            }
+        }
+        if (processCategory == ProcessCategory.EINNSYN) {
+            Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createEinnsynServiceRecord(identifier, processIdentifier);
+            if (!dpeServiceRecord.isPresent()) {
+                return notFoundResponse(String.format("eInnsyn process '%s' not found for receiver '%s'.", processIdentifier, identifier));
+            }
+            serviceRecord = dpeServiceRecord.get();
+        }
+        entity.getServiceRecords().add(serviceRecord);
+        return new ResponseEntity<>(entity, HttpStatus.OK);
+    }
+
+    /**
      * Used to retrieve information needed to send a message to an entity (organization or a person) having the provided
      * identifier
      *
      * @param identifier of the organization/person to receive a message
-     * @param obligation determines service record based on the recipient being notifiable
      * @return JSON object with information needed to send a message
      */
-    @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/identifier/{identifier}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     @SuppressWarnings("squid:S2583")
     public ResponseEntity entity(
             @PathVariable("identifier") String identifier,
-            @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
-            @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
+            @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
+            @RequestParam(name = "conversationId", required = false) String conversationId,
             Authentication auth,
-            HttpServletRequest request) {
-
+            HttpServletRequest request) throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException, BrregNotFoundException {
         MDC.put("identifier", identifier);
+        requestScope.setConversationId(conversationId);
+        requestScope.setIdentifier(identifier);
+        String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
+        requestScope.setClientId(clientOrgnr);
         Entity entity = new Entity();
         Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
         if (!entityInfo.isPresent()) {
-            return ResponseEntity.notFound().build();
+            return notFoundResponse(String.format("Entity with identifier '%s' not found.", identifier));
         }
-
-        String clientOrgnr = auth == null ? null : (String) auth.getPrincipal();
-        if (clientOrgnr != null) {
-            log.debug(String.format("Authorized lookup request by %s", clientOrgnr),
-                    markerFrom(request.getRemoteAddr(), request.getRemoteHost(), clientOrgnr));
-        } else {
-            log.debug(String.format("Unauthorized lookup request from %s", request.getRemoteAddr()),
-                    markerFrom(request.getRemoteAddr()));
-        }
-
-
-        Optional<ServiceRecord> serviceRecord = Optional.empty();
-
-        if (shouldCreateServiceRecordForCititzen().test(entityInfo.get())) {
-            if (auth == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("No authentication provided.");
-            }
-            try {
-                serviceRecord = serviceRecordFactory.createServiceRecordForCititzen(identifier, auth, clientOrgnr, obligation, forcePrint);
-            } catch (KRRClientException e) {
-                log.error("Error looking up identifier in KRR", e);
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-            }
-        }
-
-        if (!serviceRecord.isPresent()) {
-            serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createEduServiceRecord(identifier), entity);
-        }
-
-        if (!serviceRecord.isPresent()) {
-            Optional<FiksWrapper> fiksWrapper = serviceRecordFactory.createFiksServiceRecord(identifier);
-            if (fiksWrapper.isPresent()) {
-                serviceRecord = serviceRecordResponseHandler(Optional.of(fiksWrapper.get().getServiceRecord()), entity);
-                if (serviceRecord.isPresent()) {
-                    entity.getSecuritylevels().put(ServiceIdentifier.DPF, fiksWrapper.get().getSecuritylevel());
-                }
-            }
-        }
-
-        if (!serviceRecord.isPresent()) {
-            serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createDpeInnsynServiceRecord(identifier), entity);
-        }
-
-        if (!serviceRecord.isPresent()) {
-            serviceRecord = serviceRecordResponseHandler(serviceRecordFactory.createPostVirksomhetServiceRecord(identifier), entity);
-        }
-
-        serviceRecord.ifPresent(entity::setServiceRecord);
         entity.setInfoRecord(entityInfo.get());
-        // TODO: temporary solution for multiple servicerecords
-        addServiceRecords(entityInfo.get(), entity, auth, clientOrgnr, obligation, forcePrint);
-
+        if (shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
+            if (clientOrgnr == null) {
+                return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
+            }
+            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr));
+        } else {
+            entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
+            entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(identifier));
+        }
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
-    @SuppressWarnings("squid:S2583")
-    private void addServiceRecords(EntityInfo entityInfo, Entity entity, Authentication auth, String clientOrgnr,
-                                   Notification obligation, boolean forcePrint) {
+    private ResponseEntity errorResponse(HttpStatus status, String message) {
+        return ResponseEntity.status(status)
+                .body(ErrorResponse.builder().errorDescription(message).build());
+    }
 
-        String orgnr = entityInfo.getIdentifier();
-        if (shouldCreateServiceRecordForCititzen().test(entityInfo)) {
-            Optional<ServiceRecord> serviceRecord = Optional.empty();
-            try {
-                serviceRecord = serviceRecordFactory.createServiceRecordForCititzen(orgnr, auth, clientOrgnr, obligation, forcePrint);
-            } catch (KRRClientException e) {
-                log.error("Error looking up identifier in KRR", e);
-            }
-            serviceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
-        }
-
-        Optional<ServiceRecord> eduServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createEduServiceRecord(orgnr), entity);
-        eduServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
-
-        Optional<FiksWrapper> fiksWrapper = serviceRecordFactory.createFiksServiceRecord(orgnr);
-        if (fiksWrapper.isPresent()) {
-            Optional<ServiceRecord> fiksServiceRecord = serviceRecordResponseHandler(Optional.of(fiksWrapper.get().getServiceRecord()), entity);
-            if (fiksServiceRecord.isPresent()) {
-                entity.getServiceRecords().add(fiksServiceRecord.get());
-                entity.getSecuritylevels().put(ServiceIdentifier.DPF, fiksWrapper.get().getSecuritylevel());
-            }
-        }
-
-        Optional<ServiceRecord> dpeInnsynServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createDpeInnsynServiceRecord(orgnr), entity);
-        dpeInnsynServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
-
-        Optional<ServiceRecord> dpeDataServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createDpeDataServiceRecord(orgnr), entity);
-        dpeDataServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
-
-        if (dpeInnsynServiceRecord.isPresent() || dpeDataServiceRecord.isPresent()) {
-            Optional<ServiceRecord> dpeReceiptServiceRecord = serviceRecordResponseHandler(serviceRecordFactory.createDpeReceiptServiceRecord(orgnr), entity);
-            dpeReceiptServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
-        }
-
-        Optional<ServiceRecord> dpvServiceRecord = serviceRecordFactory.createPostVirksomhetServiceRecord(orgnr);
-        dpvServiceRecord.ifPresent(r -> entity.getServiceRecords().add(r));
-
+    private ResponseEntity notFoundResponse(String logMessage) {
+        log.error(markerFrom(requestScope), logMessage);
+        return ResponseEntity.notFound().build();
     }
 
     @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = "application/jose")
@@ -190,11 +200,12 @@ public class ServiceRecordController {
     public ResponseEntity signed(
             @PathVariable("identifier") String identifier,
             @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
-            @RequestParam(name = "forcePrint", defaultValue = "false") boolean forcePrint,
+            @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
+            @RequestParam(name = "conversationId", required = false) String conversationId,
             Authentication auth,
-            HttpServletRequest request) throws EntitySignerException {
+            HttpServletRequest request) throws EntitySignerException, SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException, BrregNotFoundException {
 
-        ResponseEntity entity = entity(identifier, obligation, forcePrint, auth, request);
+        ResponseEntity entity = entity(identifier, securityLevel, conversationId, auth, request);
         if (entity.getStatusCode() != HttpStatus.OK) {
             return entity;
         }
@@ -203,49 +214,58 @@ public class ServiceRecordController {
         try {
             json = new ObjectMapper().writeValueAsString(entity.getBody());
         } catch (JsonProcessingException e) {
-            log.error("Failed to convert entity to json", e);
+            log.error(markerFrom(requestScope), "Failed to convert entity to json", e);
             throw new ServiceRegistryException(e);
         }
 
         return ResponseEntity.ok(payloadSigner.sign(json));
     }
 
-    /**
-     * Checks if the returned service record is of type ErrorServiceRecord.
-     * If so, add the service identifier to the list of failed services and
-     * return empty {@code Optional}. Else, return the service record.
-     *
-     * @param serviceRecord to check
-     * @param entity to add failed serviceIdentifiers to
-     * @return {@code Optional} if present, empty otherwise
-     */
-    private Optional<ServiceRecord> serviceRecordResponseHandler(Optional<ServiceRecord> serviceRecord, Entity entity) {
-        if (serviceRecord.filter(r -> r instanceof ErrorServiceRecord).isPresent()) {
-            if (!entity.getFailedServiceIdentifiers().contains(serviceRecord.get().getServiceIdentifier())) {
-                entity.getFailedServiceIdentifiers().add(serviceRecord.get().getServiceIdentifier());
-            }
-            return Optional.empty();
-        }
-        return serviceRecord;
-    }
-
-
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find endpoint url for service of requested organization")
     @ExceptionHandler(EndpointUrlNotFound.class)
     public void endpointNotFound(HttpServletRequest req, Exception e) {
-        log.warn(String.format("Endpoint not found for %s", req.getRequestURL()), e);
+        log.warn(markerFrom(requestScope), "Endpoint not found for {}", req.getRequestURL(), e);
     }
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find entity for the requested identifier")
     @ExceptionHandler(EntityNotFoundException.class)
     public void entityNotFound(HttpServletRequest req, Exception e) {
-        log.warn(String.format("Entity not found for %s", req.getRequestURL()), e);
+        log.warn(markerFrom(requestScope), "Entity not found for {}", req.getRequestURL(), e);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity accessDenied(HttpServletRequest req, Exception e) {
-        log.warn("Access denied on resource {}", req.getRequestURL(), e);
+        log.warn(markerFrom(requestScope), "Access denied on resource {}", req.getRequestURL(), e);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized scope");
     }
 
+    @ExceptionHandler(SecurityLevelNotFoundException.class)
+    public ResponseEntity securityLevelNotFound(HttpServletRequest request, Exception e) {
+        log.warn(markerFrom(requestScope), "Security level not found for {}", request.getRequestURL(), e);
+        return ResponseEntity.badRequest().body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
+    }
+
+    @ExceptionHandler(KRRClientException.class)
+    public ResponseEntity krrClientException(HttpServletRequest request, Exception e) {
+        log.error(markerFrom(requestScope), "Exception occurred on {}", request.getRequestURL(), e);
+        return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+    }
+
+    @ExceptionHandler(CertificateNotFoundException.class)
+    public ResponseEntity certificateNotFound(HttpServletRequest request, Exception e) {
+        log.warn(markerFrom(requestScope), "Certificate not found for {}", request.getRequestURL(), e);
+        return errorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(DsfLookupException.class)
+    public ResponseEntity dsfLookupException(HttpServletRequest request, Exception e) {
+        log.warn(markerFrom(requestScope), "DSF lookup failed for {}", request.getRequestURL(), e);
+        return errorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(BrregNotFoundException.class)
+    public ResponseEntity brregNotFoundException(HttpServletRequest request, Exception e) {
+        log.warn(markerFrom(requestScope), "BRREG lookup failed for {}", request.getRequestURL(), e);
+        return errorResponse(HttpStatus.NOT_FOUND, e.getMessage());
+    }
 }

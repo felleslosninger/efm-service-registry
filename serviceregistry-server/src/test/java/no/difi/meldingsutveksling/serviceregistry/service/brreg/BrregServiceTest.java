@@ -5,6 +5,7 @@ import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregPostadresse;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.OrganizationInfo;
+import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;

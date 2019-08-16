@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.1.7.RELEASE</version>
+        <relativePath/>
+    </parent>
 
     <groupId>no.difi.meldingsutveksling</groupId>
     <artifactId>serviceregistry-parent</artifactId>
@@ -66,10 +74,11 @@
     </repositories>
 
     <properties>
+        <spring.cloud.version>Greenwich.SR2</spring.cloud.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <move-common.version>1.0.27</move-common.version>
+        <move-common.version>1.1.1</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
     </properties>
 
@@ -84,6 +93,41 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>no.difi.move-common</groupId>
+                <artifactId>move-dependencies</artifactId>
+                <version>${move-common.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring.cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>no.difi.meldingsutveksling</groupId>
+                <artifactId>common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>no.difi.meldingsutveksling</groupId>
+                <artifactId>svarut-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>no.difi.meldingsutveksling</groupId>
+                <artifactId>service-registry-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>no.difi.meldingsutveksling</groupId>
+                <artifactId>kontakt-reservasjonsregister-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>no.difi.commons</groupId>
                 <artifactId>commons-certvalidator</artifactId>
@@ -105,13 +149,6 @@
                 <version>${move-common.version}</version>
             </dependency>
             <dependency>
-                <groupId>no.difi.move-common</groupId>
-                <artifactId>move-dependencies</artifactId>
-                <version>${move-common.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
                 <groupId>no.difi.virksert</groupId>
                 <artifactId>virksert-common</artifactId>
                 <version>1.0-SNAPSHOT</version>
@@ -121,11 +158,12 @@
                 <artifactId>virksert-client</artifactId>
                 <version>1.0-SNAPSHOT</version>
             </dependency>
-            <!-- <dependency>
-                <groupId>no.difi.vefa</groupId>
-                <artifactId>peppol-lookup</artifactId>
-                <version>0.9.5</version>
-            </dependency> -->
+            <dependency>
+                <groupId>no.difi.virksert</groupId>
+                <artifactId>virksert-move</artifactId>
+                <version>1.0.3-SNAPSHOT</version>
+            </dependency>
+
             <dependency>
                 <groupId>no.difi.vefa</groupId>
                 <artifactId>peppol-lookup</artifactId>
@@ -142,56 +180,70 @@
                 <version>0.9.1</version>
             </dependency>
             <dependency>
+                <groupId>cglib</groupId>
+                <artifactId>cglib-nodep</artifactId>
+                <version>3.2.12</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.wss4j</groupId>
                 <artifactId>wss4j-ws-security-common</artifactId>
-                <version>2.1.4</version>
+                <version>2.2.4</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.ws.commons.axiom</groupId>
                 <artifactId>axiom-api</artifactId>
-                <version>1.2.19</version>
+                <version>1.2.22</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.ws.commons.axiom</groupId>
                 <artifactId>axiom-impl</artifactId>
-                <version>1.2.19</version>
-            </dependency>
-          <dependency>
-            <groupId>org.spockframework</groupId>
-            <artifactId>spock-core</artifactId>
-            <version>1.0-groovy-2.4</version>
-            <scope>test</scope>
-          </dependency>
-            <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>1.16.10</version>
+                <version>1.2.22</version>
             </dependency>
             <dependency>
-                <groupId>mysql</groupId>
-                <artifactId>mysql-connector-java</artifactId>
-                <version>6.0.6</version>
+                <groupId>com.sun.xml.messaging.saaj</groupId>
+                <artifactId>saaj-impl</artifactId>
+                <version>1.5.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.spockframework</groupId>
+                <artifactId>spock-core</artifactId>
+                <version>1.3-groovy-2.4</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>3.6.0.1398</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
-          <plugin>
-            <!-- The gmavenplus plugin is used to compile Groovy code. To learn more about this plugin,
-            visit https://github.com/groovy/GMavenPlus/wiki -->
-            <groupId>org.codehaus.gmavenplus</groupId>
-            <artifactId>gmavenplus-plugin</artifactId>
-            <version>1.5</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>compile</goal>
-                  <goal>testCompile</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <!-- The gmavenplus plugin is used to compile Groovy code. To learn more about this plugin,
+                visit https://github.com/groovy/GMavenPlus/wiki -->
+                <groupId>org.codehaus.gmavenplus</groupId>
+                <artifactId>gmavenplus-plugin</artifactId>
+                <version>1.5</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <artifactId>maven-release-plugin</artifactId>
                 <version>2.5.3</version>
@@ -221,7 +273,7 @@
                         <versionTagPrefix>v@</versionTagPrefix>
                     </flowInitContext>
                     <allowSnapshots>true</allowSnapshots>
-                    <scmCommentPrefix>[RELEASE] </scmCommentPrefix>
+                    <scmCommentPrefix>[RELEASE]</scmCommentPrefix>
                 </configuration>
             </plugin>
             <plugin>
@@ -229,7 +281,7 @@
                 <artifactId>dependency-check-maven</artifactId>
                 <version>1.4.3</version>
                 <configuration>
-                    <format>XML</format>
+                    <format>ALL</format>
                 </configuration>
             </plugin>
         </plugins>
@@ -248,34 +300,4 @@
             </properties>
         </profile>
     </profiles>
-
-    <dependencies>
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.hamcrest</groupId>
-            <artifactId>hamcrest-all</artifactId>
-            <version>1.3</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>hamcrest-core</artifactId>
-                    <groupId>org.hamcrest</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
 </project>

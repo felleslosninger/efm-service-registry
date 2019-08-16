@@ -20,7 +20,5 @@ public enum ServiceIdentifier {
     /**
      * Identifies eInnsyn
      */
-    DPE_INNSYN,
-    DPE_DATA,
-    DPE_RECEIPT
+    DPE,
 }

@@ -1,7 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Data;
+import lombok.*;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
@@ -9,7 +9,10 @@ import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.PersonResource.Varslingsstatus.KAN_VARSLES;
 
-@Data
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode(callSuper = true)
 public class SikkerDigitalPostServiceRecord extends ServiceRecord {
 
     @JsonIgnore
@@ -30,7 +33,8 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
                                           String organisationNumber,
                                           PostAddress postAddress,
                                           PostAddress returnAddress) {
-        super(personResource.getCertificate(), serviceIdentifier, organisationNumber);
+        super(serviceIdentifier, organisationNumber, properties.getDpi().getEndpointURL().toString());
+        setPemCertificate(personResource.getCertificate());
         this.properties = properties;
 
         fysiskPost = isFysiskPost;
@@ -53,11 +57,6 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
 
         this.postAddress = postAddress;
         this.returnAddress = returnAddress;
-    }
-
-    @Override
-    public String getEndPointURL() {
-        return properties.getDpi().getEndpointURL().toString();
     }
 
 }

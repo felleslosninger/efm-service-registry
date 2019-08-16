@@ -26,12 +26,12 @@ public class ServiceregistryProperties {
     private Brønnøysundregistrene brreg;
     private Datahotell datahotell;
     private PostVirksomhet dpv;
+    private Altinn dpo;
     private Adresseregister ar;
     private Auth auth;
     private FeatureToggle feature;
     private ELMA elma;
-    private ELMA elmaDPEInnsyn;
-    private ELMA elmaDPEData;
+
     @Valid
     private Sign sign;
     @Valid
@@ -41,6 +41,8 @@ public class ServiceregistryProperties {
 
     @Data
     public static class ELMA {
+        private String locatorUrl;
+        private String defaultProcessIdentifier;
         private String processIdentifier;
         private String documentTypeIdentifier;
     }
@@ -60,6 +62,9 @@ public class ServiceregistryProperties {
     @Data
     public static class DigitalPostInnbygger {
         private URL endpointURL;
+        private String infoProcess;
+        private String vedtakProcess;
+        private String printDocumentType;
     }
 
     @Data
@@ -88,6 +93,13 @@ public class ServiceregistryProperties {
     @Data
     public static class PostVirksomhet {
         private URL endpointURL;
+    }
+
+    @Data
+    public static class Altinn {
+        private URL endpointURL;
+        private String serviceCode;
+        private String serviceEditionCode;
     }
 
     @Data
