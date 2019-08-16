@@ -4,12 +4,10 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import lombok.extern.slf4j.Slf4j;
-import no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory;
 import no.difi.meldingsutveksling.serviceregistry.model.CitizenInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
-import no.difi.meldingsutveksling.serviceregistry.service.brreg.DatahotellClient;
 import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
 import org.springframework.stereotype.Service;
 
@@ -28,10 +26,9 @@ import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory
 @Slf4j
 public class EntityService {
 
-    LoadingCache<String, Optional<EntityInfo>> entityCache;
-
-    private BrregService brregService;
-    private SRRequestScope requestScope;
+    private final LoadingCache<String, Optional<EntityInfo>> entityCache;
+    private final BrregService brregService;
+    private final SRRequestScope requestScope;
 
     public EntityService(BrregService brregService,
                          SRRequestScope requestScope) {
@@ -48,11 +45,10 @@ public class EntityService {
     }
 
     /**
-     *
      * @param identifier for an entity either an organization number or a fodselsnummer
      * @return info needed to send messages to the entity
      */
-    public Optional<EntityInfo> loadEntityInfo(String identifier) throws BrregNotFoundException {
+    private Optional<EntityInfo> loadEntityInfo(String identifier) throws BrregNotFoundException {
         if (isCitizen().test(identifier)) {
             return Optional.of(new CitizenInfo(identifier));
         } else {
@@ -61,7 +57,6 @@ public class EntityService {
     }
 
     /**
-     *
      * @param identifier for an entity either an organization number or a fodselsnummer
      * @return info needed to send messages to the entity
      */

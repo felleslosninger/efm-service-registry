@@ -40,7 +40,7 @@ public class AdminController {
 
     @PostMapping(value = "/processes", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Transactional
-    public ResponseEntity<?> addProcess(@RequestBody Process process) {
+    public ResponseEntity addProcess(@RequestBody Process process) {
         try {
             Optional<Process> existingProcess = processService.findByIdentifier(process.getIdentifier());
             if (existingProcess.isPresent()) {
@@ -68,7 +68,7 @@ public class AdminController {
     }
 
     @DeleteMapping(value = "/processes/{identifier:.+}")
-    public ResponseEntity<?> deleteProcess(@PathVariable String identifier) {
+    public ResponseEntity deleteProcess(@PathVariable String identifier) {
         try {
             Optional<Process> process = processService.findByIdentifier(identifier);
             if (process.isPresent()) {
@@ -91,12 +91,11 @@ public class AdminController {
     }
 
     @PutMapping(value = "/processes/{processIdentifier:.+}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> updateProcess(@PathVariable String processIdentifier, @RequestBody Process processWithValuesForUpdate) {
+    public ResponseEntity updateProcess(@PathVariable String processIdentifier, @RequestBody Process processWithValuesForUpdate) {
         try {
             if (processService.update(processIdentifier, processWithValuesForUpdate)) {
                 return ResponseEntity.ok().build();
-            }
-            else {
+            } else {
                 return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {
@@ -108,13 +107,11 @@ public class AdminController {
     @GetMapping(value = "/documentTypes/{identifier}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DocumentType> getDocumentType(@PathVariable String identifier) {
         Optional<DocumentType> documentType = documentTypeService.findByIdentifier(identifier);
-        return documentType.isPresent()
-                ? ResponseEntity.ok(documentType.get())
-                : ResponseEntity.notFound().build();
+        return documentType.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping(value = "/documentTypes", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> addDocumentType(@RequestBody DocumentType documentType) {
+    public ResponseEntity addDocumentType(@RequestBody DocumentType documentType) {
         try {
             Optional<DocumentType> existingDocumentType = documentTypeService.findByIdentifier(documentType.getIdentifier());
             if (existingDocumentType.isPresent()) {
@@ -131,7 +128,7 @@ public class AdminController {
     }
 
     @DeleteMapping(value = "/documentTypes/{identifier:.+}")
-    public ResponseEntity<?> deleteDocumentType(@PathVariable String identifier) {
+    public ResponseEntity deleteDocumentType(@PathVariable String identifier) {
         try {
             Optional<DocumentType> documentType = documentTypeService.findByIdentifier(identifier);
             if (documentType.isPresent()) {

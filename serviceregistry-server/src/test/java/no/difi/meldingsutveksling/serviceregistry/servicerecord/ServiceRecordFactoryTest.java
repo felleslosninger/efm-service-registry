@@ -24,7 +24,6 @@ import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Matchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -39,7 +38,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -138,7 +137,7 @@ public class ServiceRecordFactoryTest {
         documentType.setProcesses(Lists.newArrayList(processAdmin, processSkatt));
         when(processService.findAll(ProcessCategory.ARKIVMELDING)).thenReturn(Sets.newHashSet(processAdmin, processSkatt));
         when(processService.getDefaultArkivmeldingProcess()).thenReturn(processAdmin);
-        when(lookupService.lookupRegisteredProcesses(Matchers.eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_FIKS)), anySetOf(String.class))).thenReturn(Sets.newHashSet());
+        when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_FIKS)), anySet())).thenReturn(Sets.newHashSet());
 
         Process vedtakProcess = new Process()
                 .setIdentifier(DIGITALPOST_PROCESS_VEDTAK)
@@ -157,9 +156,9 @@ public class ServiceRecordFactoryTest {
         einnsynJournalpostProcess.setDocumentTypes(Lists.newArrayList(einnsynJournalpostDocumentType));
         einnsynJournalpostDocumentType.setProcesses(Lists.newArrayList(einnsynJournalpostProcess));
         when(processService.findAll(ProcessCategory.EINNSYN)).thenReturn(Sets.newHashSet(einnsynJournalpostProcess));
-        when(lookupService.lookupRegisteredProcesses(Matchers.eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_EINNSYN_JOURNALPOST)), anySetOf(String.class))).thenReturn(Sets.newHashSet());
+        when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_EINNSYN_JOURNALPOST)), anySet())).thenReturn(Sets.newHashSet());
         when(processService.findByIdentifier(EINNSYN_PROCESS_JOURNALPOST)).thenReturn(journalpostProcess);
-        when(lookupService.lookupRegisteredProcesses(Matchers.eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_EINNSYN_JOURNALPOST)), anySetOf(String.class)))
+        when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_EINNSYN_JOURNALPOST)), anySet()))
                 .thenReturn(Sets.newHashSet(ProcessIdentifier.of(EINNSYN_PROCESS_JOURNALPOST)));
 
     }
@@ -237,7 +236,7 @@ public class ServiceRecordFactoryTest {
     }
 
     private void setupLookupServiceMockToReturnAdministrationProcessMatch() {
-        when(lookupService.lookupRegisteredProcesses(Matchers.eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR)), anySetOf(String.class)))
+        when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR)), anySet()))
                 .thenReturn(Sets.newHashSet(ProcessIdentifier.of(ARKIVMELDING_PROCESS_ADMIN)));
     }
 
@@ -280,7 +279,7 @@ public class ServiceRecordFactoryTest {
 
     @Test
     public void createArkivmeldingServiceRecords_OrganizationHasNoSmpNorSvarutRegistration_ShouldReturnDpvServiceRecord() throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
-        when(lookupService.lookup(Matchers.eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR)), anySetOf(String.class))).thenReturn(Lists.newArrayList());
+        when(lookupService.lookup(anyString(), anySet())).thenReturn(Lists.newArrayList());
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
         List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR, null);
@@ -289,24 +288,28 @@ public class ServiceRecordFactoryTest {
     }
 
     @Test(expected = SecurityLevelNotFoundException.class)
-    public void createArkivmeldingServiceRecords_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException() throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
+    public void createArkivmeldingServiceRecords_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException
+            () throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any())).thenReturn(Optional.empty());
         factory.createArkivmeldingServiceRecords(ORGNR_FIKS, 3);
     }
 
     @Test(expected = SvarUtClientException.class)
-    public void createArkivmeldingServiceRecords_SvarUtServiceIsUnavailable_ShouldReturnEmpty() throws SvarUtClientException, SecurityLevelNotFoundException, CertificateNotFoundException {
+    public void createArkivmeldingServiceRecords_SvarUtServiceIsUnavailable_ShouldReturnEmpty() throws
+            SvarUtClientException, SecurityLevelNotFoundException, CertificateNotFoundException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any()))
                 .thenThrow(new SvarUtClientException(new RuntimeException("service unavailable")));
         factory.createArkivmeldingServiceRecords(ORGNR_FIKS, 3);
     }
 
-    private long countServiceRecordsForServiceIdentifier(List<ServiceRecord> result, ServiceIdentifier serviceIdentifier) {
+    private long countServiceRecordsForServiceIdentifier(List<ServiceRecord> result, ServiceIdentifier
+            serviceIdentifier) {
         return result.stream().filter(serviceRecord -> serviceIdentifier == serviceRecord.getService().getIdentifier()).count();
     }
 
     @Test
-    public void createEinnsynServiceRecord_ProcessIsNotFound_ShouldReturnNotFound() throws CertificateNotFoundException {
+    public void createEinnsynServiceRecord_ProcessIsNotFound_ShouldReturnNotFound() throws
+            CertificateNotFoundException {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.empty());
         Optional<ServiceRecord> result = factory.createEinnsynServiceRecord(ORGNR, "NotFound");
         assertFalse(result.isPresent());
@@ -322,26 +325,29 @@ public class ServiceRecordFactoryTest {
 
     @Test
     public void createEinnsynServiceRecords_OrgnrNotInElma_ShouldNotReturnDpeServiceRecord() throws CertificateNotFoundException {
-        when(lookupService.lookup(Matchers.eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_EINNSYN_RESPONSE)), anySetOf(String.class))).thenReturn(Lists.newArrayList());
+        when(lookupService.lookup(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_EINNSYN_RESPONSE)), anySet())).thenReturn(Lists.newArrayList());
         List<ServiceRecord> result = factory.createEinnsynServiceRecords(ORGNR_EINNSYN_RESPONSE);
         assertTrue(result.isEmpty());
     }
 
     @Test
-    public void createEinnsynServiceRecords_EndpointurlNotFound_ShouldNotReturnDpeServiceRecord() throws CertificateNotFoundException {
+    public void createEinnsynServiceRecords_EndpointurlNotFound_ShouldNotReturnDpeServiceRecord() throws
+            CertificateNotFoundException {
         List<ServiceRecord> result = factory.createEinnsynServiceRecords(ORGNR_EINNSYN);
         assertTrue(result.isEmpty());
     }
 
     @Test
-    public void createEinnsynServiceRecord_HasOrgnrAndProcessidentifier_ShouldReturnDpeServiceRecord() throws CertificateNotFoundException {
+    public void createEinnsynServiceRecord_HasOrgnrAndProcessidentifier_ShouldReturnDpeServiceRecord() throws
+            CertificateNotFoundException {
         Optional<ServiceRecord> result = factory.createEinnsynServiceRecord(ORGNR_EINNSYN_JOURNALPOST, EINNSYN_PROCESS_JOURNALPOST);
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPE, result.get().getService().getIdentifier());
     }
 
     @Test
-    public void createEinnsynServiceRecord_HasOrgnrWhileProcessidentifierMatchNotFoundInElma_ShouldNotReturnDpeServiceRecord() throws CertificateNotFoundException {
+    public void createEinnsynServiceRecord_HasOrgnrWhileProcessidentifierMatchNotFoundInElma_ShouldNotReturnDpeServiceRecord
+            () throws CertificateNotFoundException {
         DocumentType einnsynResponseDocumentType = new DocumentType()
                 .setIdentifier(EINNSYN_DOCTYPE_RESPONSE_KVITTERING)
                 .setIdentifier(EINNSYN_DOCTYPE_RESPONSE_STATUS);
@@ -354,7 +360,7 @@ public class ServiceRecordFactoryTest {
         einnsynResponseDocumentType.setProcesses(Lists.newArrayList(einnsynResponseProcess));
         einnsynResponseProcess.setDocumentTypes(Lists.newArrayList(einnsynResponseDocumentType));
         when(processService.findByIdentifier(EINNSYN_PROCESS_RESPONSE)).thenReturn(responseProcess);
-        when(lookupService.lookupRegisteredProcesses(Matchers.eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_EINNSYN_RESPONSE)), anySetOf(String.class)))
+        when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_EINNSYN_RESPONSE)), anySet()))
                 .thenReturn(Sets.newHashSet(ProcessIdentifier.of(EINNSYN_PROCESS_RESPONSE)));
 
         when(processService.findByIdentifier(EINNSYN_PROCESS_RESPONSE)).thenReturn(Optional.empty());
