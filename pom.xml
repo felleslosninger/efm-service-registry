@@ -109,7 +109,7 @@
             </dependency>
             <dependency>
                 <groupId>no.difi.meldingsutveksling</groupId>
-                <artifactId>common</artifactId>
+                <artifactId>service-registry-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
