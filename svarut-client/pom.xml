@@ -13,7 +13,7 @@
     <dependencies>
         <dependency>
             <groupId>no.difi.meldingsutveksling</groupId>
-            <artifactId>common</artifactId>
+            <artifactId>service-registry-common</artifactId>
         </dependency>
         <dependency>
             <groupId>no.difi.meldingsutveksling</groupId>
