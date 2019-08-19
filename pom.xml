@@ -289,7 +289,7 @@
                 </executions>
                 <configuration>
                     <format>ALL</format>
-                    <suppressionFile>${project.basedir}/suppression.xml</suppressionFile>
+                    <suppressionFile>${maven.multiModuleProjectDirectory}/suppression.xml</suppressionFile>
                 </configuration>
             </plugin>
         </plugins>
