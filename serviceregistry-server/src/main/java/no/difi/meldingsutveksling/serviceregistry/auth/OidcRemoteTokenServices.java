@@ -9,7 +9,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
@@ -54,10 +53,6 @@ public class OidcRemoteTokenServices implements ResourceServerTokenServices {
             }
         });
 
-//        setCheckTokenEndpointUrl(props.getTokenInfoUri());
-//        setClientId(props.getClientId());
-//        setClientSecret(props.getClientSecret());
-
     }
 
     public void setAccessTokenConverter(AccessTokenConverter accessTokenConverter) {
@@ -66,7 +61,7 @@ public class OidcRemoteTokenServices implements ResourceServerTokenServices {
 
 
     @Override
-    public OAuth2Authentication loadAuthentication(String accessToken) throws AuthenticationException, InvalidTokenException {
+    public OAuth2Authentication loadAuthentication(String accessToken) {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add(tokenName, accessToken);
         HttpHeaders headers = new HttpHeaders();
