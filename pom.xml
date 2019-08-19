@@ -289,7 +289,7 @@
                 </executions>
                 <configuration>
                     <format>ALL</format>
-                    <suppressionFile>suppression.xml</suppressionFile>
+                    <suppressionFile>${project.basedir}/suppression.xml</suppressionFile>
                 </configuration>
             </plugin>
         </plugins>
