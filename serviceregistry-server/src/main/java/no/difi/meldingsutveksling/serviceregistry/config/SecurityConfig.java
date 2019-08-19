@@ -2,7 +2,6 @@ package no.difi.meldingsutveksling.serviceregistry.config;
 
 import no.difi.meldingsutveksling.serviceregistry.auth.OidcRemoteTokenServices;
 import no.difi.meldingsutveksling.serviceregistry.auth.OrgnrUserAuthConverter;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -19,12 +18,12 @@ public class SecurityConfig {
     public BeanPostProcessor configureRemoteTokenService() {
         return new BeanPostProcessor() {
             @Override
-            public Object postProcessBeforeInitialization(Object o, String string) throws BeansException {
+            public Object postProcessBeforeInitialization(Object o, String string) {
                 return o;
             }
 
             @Override
-            public Object postProcessAfterInitialization(Object o, String string) throws BeansException {
+            public Object postProcessAfterInitialization(Object o, String string) {
                 if (o instanceof OidcRemoteTokenServices) {
                     OidcRemoteTokenServices tokenServices = (OidcRemoteTokenServices) o;
                     OrgnrUserAuthConverter orgnrUserAuthConverter = new OrgnrUserAuthConverter();

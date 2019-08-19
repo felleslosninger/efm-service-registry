@@ -70,6 +70,7 @@ public class ServiceRecordFactory {
      * @param documentTypeService
      * @param requestScope
      */
+    @SuppressWarnings("squid:S00107")
     public ServiceRecordFactory(ServiceregistryProperties properties,
                                 VirkSertService virksertService,
                                 ELMALookupService elmaLookupService,
@@ -275,7 +276,7 @@ public class ServiceRecordFactory {
         dpvServiceRecord.getService().setServiceEditionCode(defaultArkivmeldingProcess.getServiceEditionCode());
         dpvServiceRecord.setProcess(process.getIdentifier());
         DocumentType docType = documentTypeService.findByBusinessMessageType(BusinessMessageTypes.DIGITAL_DPV)
-                .orElseThrow(() -> new ServiceRegistryException(String.format("Missing DocumentType for business message type '%s'", BusinessMessageTypes.DIGITAL)));
+                .orElseThrow(this::getServiceRegistryException);
         dpvServiceRecord.setDocumentTypes(Lists.newArrayList(docType.getIdentifier()));
         return dpvServiceRecord;
     }
@@ -285,7 +286,7 @@ public class ServiceRecordFactory {
                 identifier, null, null);
         serviceRecord.setProcess(p.getIdentifier());
         DocumentType docType = documentTypeService.findByBusinessMessageType(BusinessMessageTypes.DIGITAL)
-                .orElseThrow(() -> new ServiceRegistryException(String.format("Missing DocumentType for business message type '%s'", BusinessMessageTypes.DIGITAL)));
+                .orElseThrow(this::getServiceRegistryException);
         serviceRecord.setDocumentTypes(Lists.newArrayList(docType.getIdentifier()));
 
         return serviceRecord;
@@ -325,10 +326,14 @@ public class ServiceRecordFactory {
         SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(true, properties, personResource, ServiceIdentifier.DPI,
                 identifier, postAddress, returnAddress);
         DocumentType docType = documentTypeService.findByBusinessMessageType(BusinessMessageTypes.PRINT)
-                .orElseThrow(() -> new ServiceRegistryException(String.format("Missing DocumentType for business message type '%s'", BusinessMessageTypes.DIGITAL)));
+                .orElseThrow(this::getServiceRegistryException);
         dpiServiceRecord.setDocumentTypes(Lists.newArrayList(docType.getIdentifier()));
         dpiServiceRecord.setProcess(p.getIdentifier());
         return dpiServiceRecord;
+    }
+
+    private ServiceRegistryException getServiceRegistryException() {
+        return new ServiceRegistryException(String.format("Missing DocumentType for business message type '%s'", BusinessMessageTypes.DIGITAL));
     }
 
     private Set<ProcessIdentifier> getSmpRegistrations(String organizationIdentifier, Set<Process> processes) {

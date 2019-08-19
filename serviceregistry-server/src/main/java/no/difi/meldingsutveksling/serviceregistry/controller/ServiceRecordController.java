@@ -195,7 +195,7 @@ public class ServiceRecordController {
         return ResponseEntity.notFound().build();
     }
 
-    @RequestMapping(value = "/identifier/{identifier}", method = RequestMethod.GET, produces = "application/jose")
+    @GetMapping(value = "/identifier/{identifier}", produces = "application/jose")
     @ResponseBody
     public ResponseEntity signed(
             @PathVariable("identifier") String identifier,
