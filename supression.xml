@@ -2,79 +2,9 @@
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.1.xsd">
     <suppress>
         <notes><![CDATA[
-   file name: spring-security-core-5.1.6.RELEASE.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring\-security\-core@.*$</packageUrl>
-        <cve>CVE-2018-1258</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-      file name: jackson-databind-2.9.9.jar
-      ]]></notes>
-        <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson\-databind@.*$</packageUrl>
-        <cpe>cpe:/a:fasterxml:jackson</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
    file name: jackson-databind-2.9.9.jar
    ]]></notes>
-        <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson\-databind@.*$</packageUrl>
-        <vulnerabilityName>CVE-2019-12814</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: jackson-databind-2.9.9.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson\-databind@.*$</packageUrl>
-        <vulnerabilityName>CVE-2019-14379</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: jackson-databind-2.9.9.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson\-databind@.*$</packageUrl>
-        <vulnerabilityName>CVE-2019-14439</vulnerabilityName>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: virksert-common-1.0-SNAPSHOT.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/no\.difi\.virksert/virksert\-common@.*$</packageUrl>
-        <cpe>cpe:/a:pivotal_software:spring_boot</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: virksert-common-1.0-SNAPSHOT.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/no\.difi\.virksert/virksert\-common@.*$</packageUrl>
-        <cpe>cpe:/a:pivotal_software:spring_framework</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: virksert-move-1.0.3-SNAPSHOT.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/no\.difi\.virksert/virksert\-move@.*$</packageUrl>
-        <cpe>cpe:/a:pivotal_software:spring_boot</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: virksert-move-1.0.3-SNAPSHOT.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/no\.difi\.virksert/virksert\-move@.*$</packageUrl>
-        <cpe>cpe:/a:pivotal_software:spring_framework</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: virksert-client-1.0-SNAPSHOT.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/no\.difi\.virksert/virksert\-client@.*$</packageUrl>
-        <cpe>cpe:/a:pivotal_software:spring_boot</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: virksert-client-1.0-SNAPSHOT.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/no\.difi\.virksert/virksert\-client@.*$</packageUrl>
-        <cpe>cpe:/a:pivotal_software:spring_framework</cpe>
+        <gav regex="true">^com\.fasterxml\.jackson\.core:jackson-databind:.*$</gav>
+        <cpe>cpe:/a:fasterxml:jackson-databind</cpe>
     </suppress>
 </suppressions>
