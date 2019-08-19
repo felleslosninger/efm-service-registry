@@ -80,8 +80,6 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <move-common.version>1.1.2</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
-
-        <owasp.suppressionFile>${user.dir}/suppression.xml</owasp.suppressionFile>
     </properties>
 
     <modules>
@@ -291,7 +289,7 @@
                 </executions>
                 <configuration>
                     <format>ALL</format>
-                    <suppressionFile>${owasp.suppressionFile}</suppressionFile>
+                    <suppressionFile>${user.dir}/suppression.xml</suppressionFile>
                 </configuration>
             </plugin>
         </plugins>
