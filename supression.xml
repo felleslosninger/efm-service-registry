@@ -22,10 +22,6 @@
         <cve>CVE-2006-0550</cve>
     </suppress>
     <suppress>
-        <notes><![CDATA[
-   file name: virksert-common-1.0-SNAPSHOT.jar
-   ]]></notes>
-        <gav regex="true">^no\.difi\.virksert:virksert-common:.*$</gav>
         <cve>CVE-2017-8046</cve>
     </suppress>
 </suppressions>
