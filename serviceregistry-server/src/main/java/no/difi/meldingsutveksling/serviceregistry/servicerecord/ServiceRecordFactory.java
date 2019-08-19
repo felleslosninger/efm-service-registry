@@ -121,10 +121,10 @@ public class ServiceRecordFactory {
             if (hasSvarUt.isPresent()) {
                 serviceRecord = createDpfServiceRecord(orgnr, process, targetSecurityLevel);
             } else {
-                if (targetSecurityLevel == null) {
-                    serviceRecord = createDpvServiceRecord(orgnr, process);
-                } else {
+                if (targetSecurityLevel == 4) {
                     throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", orgnr, targetSecurityLevel));
+                } else {
+                    serviceRecord = createDpvServiceRecord(orgnr, process);
                 }
             }
         } else {

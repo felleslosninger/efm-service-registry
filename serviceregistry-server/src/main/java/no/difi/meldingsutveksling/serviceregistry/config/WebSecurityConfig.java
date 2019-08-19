@@ -6,7 +6,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
 
 @Configuration
 @EnableWebSecurity
@@ -14,30 +13,41 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 public class WebSecurityConfig {
 
     @Configuration
-    public static class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
+    @Order(0)
+    public static class ActuatorFilter extends WebSecurityConfigurerAdapter {
         @Override
         protected void configure(HttpSecurity http) throws Exception {
-            http.cors().and().csrf().disable();
-            http.authorizeRequests()
-                    .antMatchers("/").permitAll()
-                    .antMatchers("/manage/**").authenticated();
+            http.antMatcher("/manage/**")
+                    .authorizeRequests()
+                    .antMatchers("/manage/health").permitAll()
+                    .antMatchers("/manage/**").authenticated()
+                    .and().httpBasic();
         }
     }
 
-    @Order(2)
     @Configuration
+    @Order(1)
     public static class AdminApiSecurityConfiguration extends WebSecurityConfigurerAdapter {
         @Override
         protected void configure(HttpSecurity http) throws Exception {
-            http.headers().frameOptions().sameOrigin();
-            http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                    .and()
-                    .csrf().disable()
+            http.headers().frameOptions().sameOrigin().and()
+                    .antMatcher("/api/**")
                     .authorizeRequests()
-                    .antMatchers("/h2-console/**").permitAll()
-                    .antMatchers("/api/**").authenticated()
-                    .and().httpBasic();
+                    .antMatchers("/api/**").authenticated().and()
+                    .httpBasic();
         }
-
     }
+
+    @Configuration
+    @Order(2)
+    public static class H2AdminFilter extends WebSecurityConfigurerAdapter {
+        @Override
+        protected void configure(HttpSecurity http) throws Exception {
+            http.headers().frameOptions().sameOrigin().and()
+                    .antMatcher("/h2-console/**")
+                    .authorizeRequests()
+                    .antMatchers("/h2-console/**").permitAll();
+        }
+    }
+
 }
