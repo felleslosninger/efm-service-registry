@@ -289,7 +289,6 @@
                 </executions>
                 <configuration>
                     <format>ALL</format>
-                    <suppressionFile>${user.dir}/suppression.xml</suppressionFile>
                 </configuration>
             </plugin>
         </plugins>
