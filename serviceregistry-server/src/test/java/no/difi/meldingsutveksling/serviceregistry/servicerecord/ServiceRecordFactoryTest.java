@@ -29,6 +29,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.ws.transport.http.AbstractHttpWebServiceMessageSender;
 import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 
 import java.net.MalformedURLException;
@@ -79,6 +80,9 @@ public class ServiceRecordFactoryTest {
     @MockBean
     private LookupClient lookupClient;
 
+    @MockBean(name = "svarUtMessageSender")
+    private AbstractHttpWebServiceMessageSender messageSender;
+
     @MockBean
     private ServiceregistryProperties props;
 
@@ -113,6 +117,8 @@ public class ServiceRecordFactoryTest {
         ServiceregistryProperties.SvarUt svarUtConfig = new ServiceregistryProperties.SvarUt();
         svarUtConfig.setCertificate(new ByteArrayResource("cert1234".getBytes()));
         svarUtConfig.setServiceRecordUrl(new URL("http://foo"));
+        svarUtConfig.setUser("foo");
+        svarUtConfig.setPassword("bar");
         when(props.getSvarut()).thenReturn(svarUtConfig);
         ServiceregistryProperties.DigitalPostInnbygger dpiProps = new ServiceregistryProperties.DigitalPostInnbygger();
         dpiProps.setVedtakProcess(DIGITALPOST_PROCESS_VEDTAK);
@@ -174,7 +180,7 @@ public class ServiceRecordFactoryTest {
     public void createArkivmeldingServiceRecord_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException() throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
-        factory.createArkivmeldingServiceRecord(ORGNR, "Found", 3);
+        factory.createArkivmeldingServiceRecord(ORGNR, "Found", 4);
     }
 
     @Test
@@ -291,7 +297,7 @@ public class ServiceRecordFactoryTest {
     public void createArkivmeldingServiceRecords_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException
             () throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any())).thenReturn(Optional.empty());
-        factory.createArkivmeldingServiceRecords(ORGNR_FIKS, 3);
+        factory.createArkivmeldingServiceRecords(ORGNR_FIKS, 4);
     }
 
     @Test(expected = SvarUtClientException.class)
