@@ -23,7 +23,7 @@ public class AddMockEnhetController {
         return "Enheten eksisterer allerede";
     }
 
-    @RequestMapping(value = "/deletemockenhet/{orgnr}")
+    @GetMapping(value = "/deletemockenhet/{orgnr}")
     public void delMockEnhet(@PathVariable String orgnr) {
         log.info("Deleting mock entry with identifier {}", orgnr);
         testEnheter.deleteBrregEnhet(orgnr);
