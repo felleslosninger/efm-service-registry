@@ -7,4 +7,25 @@
         <gav regex="true">^com\.fasterxml\.jackson\.core:jackson-databind:.*$</gav>
         <cpe>cpe:/a:fasterxml:jackson-databind</cpe>
     </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: spring-security-rsa-1.0.7.RELEASE.jar
+   ]]></notes>
+        <gav regex="true">^org\.springframework\.security:spring-security-rsa:.*$</gav>
+        <cve>CVE-2018-1260</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: jersey-apache-client4-1.19.1.jar
+   ]]></notes>
+        <gav regex="true">^com\.sun\.jersey\.contribs:jersey-apache-client4:.*$</gav>
+        <cve>CVE-2006-0550</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: virksert-common-1.0-SNAPSHOT.jar
+   ]]></notes>
+        <gav regex="true">^no\.difi\.virksert:virksert-common:.*$</gav>
+        <cve>CVE-2017-8046</cve>
+    </suppress>
 </suppressions>
