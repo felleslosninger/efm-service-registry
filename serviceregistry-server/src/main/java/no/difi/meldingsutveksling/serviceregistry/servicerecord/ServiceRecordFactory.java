@@ -132,6 +132,9 @@ public class ServiceRecordFactory {
             if (processIdentifiers.contains(process.getIdentifier())) {
                 serviceRecord = createDpoServiceRecord(orgnr, process);
             } else {
+                if (targetSecurityLevel != null && targetSecurityLevel == 4) {
+                    return null;
+                }
                 serviceRecord = createDpvServiceRecord(orgnr, process);
             }
         }
