@@ -118,15 +118,19 @@ public class ServiceRecordFactory {
                 .map(ProcessIdentifier::getIdentifier)
                 .collect(Collectors.toSet());
         if (processIdentifiers.isEmpty()) {
-            Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
-            if (hasSvarUt.isPresent()) {
-                serviceRecord = createDpfServiceRecord(orgnr, process, targetSecurityLevel);
-            } else {
-                if (targetSecurityLevel != null && targetSecurityLevel == 4) {
-                    throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", orgnr, targetSecurityLevel));
+            if (properties.getFeature().isEnableDpfDpv()) {
+                Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
+                if (hasSvarUt.isPresent()) {
+                    serviceRecord = createDpfServiceRecord(orgnr, process, targetSecurityLevel);
                 } else {
-                    serviceRecord = createDpvServiceRecord(orgnr, process);
+                    if (targetSecurityLevel != null && targetSecurityLevel == 4) {
+                        throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", orgnr, targetSecurityLevel));
+                    } else {
+                        serviceRecord = createDpvServiceRecord(orgnr, process);
+                    }
                 }
+            } else {
+                return null;
             }
         } else {
             if (processIdentifiers.contains(process.getIdentifier())) {

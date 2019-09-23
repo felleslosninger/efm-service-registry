@@ -79,6 +79,7 @@ public class ServiceregistryProperties {
     @Data
     public static class FeatureToggle {
         private boolean paaVegneAvOppslag = false;
+        private boolean enableDpfDpv = true;
     }
 
     @Data
