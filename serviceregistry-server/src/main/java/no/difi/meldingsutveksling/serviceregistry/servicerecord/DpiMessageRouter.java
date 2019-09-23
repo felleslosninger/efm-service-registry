@@ -43,7 +43,7 @@ public class DpiMessageRouter {
         if (person.isNotifiable()) {
             return checkActiveMailbox(person);
         }
-        return DPV;
+        return PRINT;
     }
 
     private static TargetRecord checkActiveMailbox(PersonResource person) {
