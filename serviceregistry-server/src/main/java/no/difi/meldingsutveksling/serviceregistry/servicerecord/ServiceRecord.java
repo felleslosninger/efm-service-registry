@@ -1,7 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.common.collect.Lists;
+import lombok.*;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 
 import java.util.List;
@@ -9,41 +9,18 @@ import java.util.List;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Data
 public abstract class ServiceRecord {
 
     protected String organisationNumber;
-    private ServiceIdentifier serviceIdentifier;
-    protected String endpointUrl;
     private String pemCertificate;
-    private List<String> dpeCapabilities;
+    private String process;
+    private List<String> documentTypes;
+    private SRService service;
 
-    public ServiceRecord(String pemCertificate, ServiceIdentifier serviceIdentifier, String organisationNumber) {
+    public ServiceRecord(ServiceIdentifier serviceIdentifier, String organisationNumber, String endpointUrl) {
         this.organisationNumber = organisationNumber;
-        this.serviceIdentifier = serviceIdentifier;
-        this.pemCertificate = pemCertificate;
-        this.dpeCapabilities = Lists.newArrayList();
-    }
-
-    public String getOrganisationNumber() {
-        return organisationNumber;
-    }
-
-    public void setOrganisationNumber(String organisationNumber) {
-        this.organisationNumber = organisationNumber;
-    }
-
-    public abstract String getEndPointURL();
-
-    public void setEndpointUrl(String endpointUrl) {
-        this.endpointUrl = endpointUrl;
-    }
-
-    public ServiceIdentifier getServiceIdentifier() {
-        return serviceIdentifier;
-    }
-
-    public void setServiceIdentifier(ServiceIdentifier serviceIdentifier) {
-        this.serviceIdentifier = serviceIdentifier;
+        this.service = new SRService(serviceIdentifier, endpointUrl);
     }
 
     public String getPemCertificate() {
@@ -53,24 +30,7 @@ public abstract class ServiceRecord {
 
         String begin = "-----BEGIN CERTIFICATE-----\n";
         String end = "\n-----END CERTIFICATE-----\n";
-        return begin+pemCertificate+end;
+        return begin + pemCertificate + end;
     }
 
-    public List<String> getDpeCapabilities() {
-        return dpeCapabilities;
-    }
-
-    public void addDpeCapability(String capability) {
-        this.dpeCapabilities.add(capability);
-    }
-
-    @Override
-    public String toString() {
-        return "ServiceRecord{"
-                + "serviceIdentifier='" + serviceIdentifier + '\''
-                + ", organisationNumber='" + organisationNumber + '\''
-                + ", pemCertificate='" + getPemCertificate() + '\''
-                + ", endPointURL='" + getEndPointURL() + '\''
-                + '}';
-    }
 }

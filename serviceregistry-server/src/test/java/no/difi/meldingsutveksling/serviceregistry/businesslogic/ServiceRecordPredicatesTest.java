@@ -39,7 +39,7 @@ public class ServiceRecordPredicatesTest {
     public void messagesToCitizenUsesSikkerDigitalPost() {
         final OrganizationInfo citizen = new OrganizationInfo.Builder().withOrganizationNumber("06068700602").build();
 
-        final boolean result = ServiceRecordPredicates.shouldCreateServiceRecordForCititzen().test(citizen);
+        final boolean result = ServiceRecordPredicates.shouldCreateServiceRecordForCitizen().test(citizen);
 
         assertThat("Citizen should use sikker digital post", result, equalTo(true));
     }

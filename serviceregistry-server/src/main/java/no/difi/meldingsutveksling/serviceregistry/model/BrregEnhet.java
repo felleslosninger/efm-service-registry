@@ -20,5 +20,7 @@ public class BrregEnhet {
     private String organisasjonsform;
     @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private BrregPostadresse postadresse;
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private BrregPostadresse forretningsadresse;
 
 }

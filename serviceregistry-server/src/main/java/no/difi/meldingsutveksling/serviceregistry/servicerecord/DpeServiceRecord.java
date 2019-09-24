@@ -4,18 +4,14 @@ import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 
 public class DpeServiceRecord extends ServiceRecord {
 
-    private DpeServiceRecord(String pemCertificate, ServiceIdentifier serviceIdentifier, String organisationNumber) {
-        super(pemCertificate, serviceIdentifier, organisationNumber);
+    private DpeServiceRecord(ServiceIdentifier serviceIdentifier, String organisationNumber, String queue) {
+        super(serviceIdentifier, organisationNumber, queue);
     }
 
-    public static DpeServiceRecord of(String pemCertificate, String organizationNumber, ServiceIdentifier serviceIdentifier) {
-        DpeServiceRecord dpeServiceRecord = new DpeServiceRecord(pemCertificate, serviceIdentifier, organizationNumber);
-        dpeServiceRecord.addDpeCapability(serviceIdentifier.toString());
+    public static DpeServiceRecord of(String pemCertificate, String organizationNumber, ServiceIdentifier serviceIdentifier, String queue) {
+        DpeServiceRecord dpeServiceRecord = new DpeServiceRecord(serviceIdentifier, organizationNumber, queue);
+        dpeServiceRecord.setPemCertificate(pemCertificate);
         return dpeServiceRecord;
     }
 
-    @Override
-    public String getEndPointURL() {
-        return null;
-    }
 }

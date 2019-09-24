@@ -2,212 +2,42 @@
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.1.xsd">
     <suppress>
         <notes><![CDATA[
-      file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.core/jackson-annotations/pom.xml
-      ]]></notes>
-        <sha1>bf2a064aec0f86ef110ded6b11147350cfef0bb7</sha1>
-        <cpe>cpe:/a:fasterxml:jackson:2.3.0</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.core/jackson-annotations/pom.xml
+   file name: micrometer-core-1.1.5.jar
    ]]></notes>
-        <sha1>bf2a064aec0f86ef110ded6b11147350cfef0bb7</sha1>
-        <cve>CVE-2016-3720</cve>
+        <sha1>cf2e89e38ed17587f3e6fe289f335db5493c8217</sha1>
+        <cpe>cpe:/a:git:git:1.1.5</cpe>
     </suppress>
     <suppress>
-        <notes><![CDATA[
-   file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.core/jackson-core/pom.xml
-   ]]></notes>
-        <sha1>fc05676963f49f5c338cdc115b4ff74dfe041c4f</sha1>
-        <cpe>cpe:/a:fasterxml:jackson:2.3.3</cpe>
+        <cpe>cpe:/a:fasterxml:jackson-databind:2.9.6</cpe>
     </suppress>
     <suppress>
-        <notes><![CDATA[
-   file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.core/jackson-core/pom.xml
-   ]]></notes>
-        <sha1>fc05676963f49f5c338cdc115b4ff74dfe041c4f</sha1>
-        <cve>CVE-2016-3720</cve>
+        <cpe>cpe:/a:fasterxml:jackson-databind:2.9.9</cpe>
     </suppress>
     <suppress>
-        <notes><![CDATA[
-   file name: apache-mime4j-core-0.7.2.jar
-   ]]></notes>
-        <sha1>a81264fe0265ebe8fd1d8128aad06dc320de6eef</sha1>
-        <cpe>cpe:/a:apache:james:0.7.2</cpe>
+        <cpe>cpe:/a:fasterxml:jackson:1.9.13</cpe>
     </suppress>
     <suppress>
-        <notes><![CDATA[
-   file name: apache-mime4j-core-0.7.2.jar
-   ]]></notes>
-        <sha1>a81264fe0265ebe8fd1d8128aad06dc320de6eef</sha1>
-        <cpe>cpe:/a:jcore:jcore:0.7.2</cpe>
+        <cpe>cpe:/a:fasterxml:jackson:2.9.6</cpe>
     </suppress>
     <suppress>
-        <notes><![CDATA[
-   file name: apache-mime4j-core-0.7.2.jar
-   ]]></notes>
-        <sha1>a81264fe0265ebe8fd1d8128aad06dc320de6eef</sha1>
-        <cve>CVE-2012-4232</cve>
+        <cpe>cpe:/a:apache:geronimo:1.8.4</cpe>
     </suppress>
     <suppress>
-        <notes><![CDATA[
-   file name: apache-mime4j-core-0.7.2.jar
-   ]]></notes>
-        <sha1>a81264fe0265ebe8fd1d8128aad06dc320de6eef</sha1>
-        <cve>CVE-2012-4231</cve>
+        <cpe>cpe:/a:fasterxml:jackson:1.9.13</cpe>
     </suppress>
     <suppress>
-        <notes><![CDATA[
-   file name: tomcat-embed-core-8.5.5.jar
-   ]]></notes>
-        <sha1>d55e12a418ff99ecd723a118c2a28bb91079972d</sha1>
-        <cpe>cpe:/a:apache:tomcat:8.5.5</cpe>
+        <cpe>cpe:/a:apache:tomcat:4.0.0</cpe>
     </suppress>
     <suppress>
-        <notes><![CDATA[
-   file name: tomcat-embed-core-8.5.5.jar
-   ]]></notes>
-        <sha1>d55e12a418ff99ecd723a118c2a28bb91079972d</sha1>
-        <cve>CVE-2016-6325</cve>
+        <cpe>cpe:/a:pivotal_software:spring_boot:1.0.0</cpe>
     </suppress>
     <suppress>
-        <notes><![CDATA[
-   file name: tomcat-embed-core-8.5.5.jar
-   ]]></notes>
-        <sha1>d55e12a418ff99ecd723a118c2a28bb91079972d</sha1>
-        <cve>CVE-2016-5425</cve>
+        <cpe>cpe:/a:pivotal_software:spring_boot:1.0.3</cpe>
     </suppress>
     <suppress>
-        <notes><![CDATA[
-   file name: tomcat-embed-core-8.5.5.jar
-   ]]></notes>
-        <sha1>d55e12a418ff99ecd723a118c2a28bb91079972d</sha1>
-        <cve>CVE-2013-2185</cve>
+        <cpe>cpe:/a:pivotal_software:spring_framework:2.1.2</cpe>
     </suppress>
     <suppress>
-        <notes><![CDATA[
-   file name: tomcat-embed-core-8.5.5.jar
-   ]]></notes>
-        <sha1>d55e12a418ff99ecd723a118c2a28bb91079972d</sha1>
-        <cve>CVE-2009-2696</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: tomcat-embed-core-8.5.5.jar
-   ]]></notes>
-        <sha1>d55e12a418ff99ecd723a118c2a28bb91079972d</sha1>
-        <cve>CVE-2007-5461</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: tomcat-embed-core-8.5.5.jar
-   ]]></notes>
-        <sha1>d55e12a418ff99ecd723a118c2a28bb91079972d</sha1>
-        <cve>CVE-2002-0493</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: spring-boot-starter-data-jpa-1.4.1.RELEASE.jar
-   ]]></notes>
-        <sha1>cae0497ceff725efd0438f070c8c0ca0ef3a7128</sha1>
-        <cpe>cpe:/a:pivotal_software:spring_data_jpa:1.4.1</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: spring-boot-starter-data-jpa-1.4.1.RELEASE.jar
-   ]]></notes>
-        <sha1>cae0497ceff725efd0438f070c8c0ca0ef3a7128</sha1>
-        <cve>CVE-2016-6652</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-            file name: tomcat-embed-websocket-8.5.5.jar
-            ]]></notes>
-        <sha1>fd99cd1cd4c824abdf03466f0509f067747f0d1a</sha1>
-        <cpe>cpe:/a:apache:tomcat:8.5.5</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-            file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.core/jackson-databind/pom.xml
-            ]]></notes>
-        <sha1>fc2fa919676ab9574a7e312fd44741e5569b86a1</sha1>
-        <cpe>cpe:/a:fasterxml:jackson:2.3.3</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-            file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.core/jackson-databind/pom.xml
-            ]]></notes>
-        <sha1>fc2fa919676ab9574a7e312fd44741e5569b86a1</sha1>
-        <cve>CVE-2016-3720</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-            file name: tomcat-embed-websocket-8.5.5.jar
-            ]]></notes>
-        <sha1>fd99cd1cd4c824abdf03466f0509f067747f0d1a</sha1>
-        <cve>CVE-2016-6325</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-            file name: tomcat-embed-websocket-8.5.5.jar
-            ]]></notes>
-        <sha1>fd99cd1cd4c824abdf03466f0509f067747f0d1a</sha1>
-        <cve>CVE-2016-5425</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-            file name: tomcat-embed-websocket-8.5.5.jar
-            ]]></notes>
-        <sha1>fd99cd1cd4c824abdf03466f0509f067747f0d1a</sha1>
-        <cve>CVE-2013-2185</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-            file name: tomcat-embed-websocket-8.5.5.jar
-            ]]></notes>
-        <sha1>fd99cd1cd4c824abdf03466f0509f067747f0d1a</sha1>
-        <cve>CVE-2009-2696</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-            file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/pom.xml
-            ]]></notes>
-        <sha1>c3eba3468d5971c45c981c803efa776508a5c63d</sha1>
-        <cve>CVE-2016-3720</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-            file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/pom.xml
-            ]]></notes>
-        <sha1>c3eba3468d5971c45c981c803efa776508a5c63d</sha1>
-        <cpe>cpe:/a:fasterxml:jackson:2.3.3</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-            file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/pom.xml
-            ]]></notes>
-        <sha1>2f4b8921cc1693827f46dbedcdfd2c1afe6e0928</sha1>
-        <cpe>cpe:/a:fasterxml:jackson:2.3.3</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-            file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/pom.xml
-            ]]></notes>
-        <sha1>2f4b8921cc1693827f46dbedcdfd2c1afe6e0928</sha1>
-        <cve>CVE-2016-3720</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-            file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/pom.xml
-            ]]></notes>
-        <sha1>63e7293b8a7ebc035133c91da4fcdfdc8d35fa56</sha1>
-        <cpe>cpe:/a:fasterxml:jackson:2.3.3</cpe>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-            file name: ehcache-2.10.2.2.21.jar/rest-management-private-classpath/META-INF/maven/com.fasterxml.jackson.module/jackson-module-jaxb-annotations/pom.xml
-            ]]></notes>
-        <sha1>63e7293b8a7ebc035133c91da4fcdfdc8d35fa56</sha1>
-        <cve>CVE-2016-3720</cve>
+        <cpe>cpe:/a:pivotal_software:spring_framework:2.1.3</cpe>
     </suppress>
 </suppressions>

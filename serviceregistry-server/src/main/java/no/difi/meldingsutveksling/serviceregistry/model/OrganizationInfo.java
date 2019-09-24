@@ -2,6 +2,9 @@ package no.difi.meldingsutveksling.serviceregistry.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import no.difi.meldingsutveksling.serviceregistry.model.datahotell.DatahotellEntry;
+
+import static com.google.common.base.Strings.isNullOrEmpty;
 
 /**
  * Contains information relevant for an organization
@@ -15,7 +18,6 @@ public class OrganizationInfo implements EntityInfo {
     private OrganizationType organizationType;
     private BrregPostadresse postadresse;
 
-    // Needed by the JSON marshaller?
     public OrganizationInfo() {
     }
 
@@ -33,8 +35,38 @@ public class OrganizationInfo implements EntityInfo {
     }
 
     public static OrganizationInfo of(BrregEnhet brregEnhet) {
-        return new OrganizationInfo(brregEnhet.getOrganisasjonsnummer(), brregEnhet.getNavn(), brregEnhet
-                .getPostadresse(), new OrganizationType(brregEnhet.getOrganisasjonsform()));
+        if (brregEnhet.getPostadresse() == null) {
+            return new OrganizationInfo(brregEnhet.getOrganisasjonsnummer(),
+                    brregEnhet.getNavn(),
+                    brregEnhet.getForretningsadresse(),
+                    new OrganizationType(brregEnhet.getOrganisasjonsform()));
+        }
+        return new OrganizationInfo(brregEnhet.getOrganisasjonsnummer(),
+                brregEnhet.getNavn(),
+                brregEnhet.getPostadresse(),
+                new OrganizationType(brregEnhet.getOrganisasjonsform()));
+    }
+
+    public static OrganizationInfo of(DatahotellEntry enhet) {
+        BrregPostadresse postadresse;
+        if (isNullOrEmpty(enhet.getPostadresse())
+                || isNullOrEmpty(enhet.getPpostnr())
+                || isNullOrEmpty(enhet.getPpoststed())
+                || isNullOrEmpty(enhet.getPpostland())) {
+            postadresse = new BrregPostadresse(enhet.getForretningsadr(),
+                    enhet.getForradrpostnr(),
+                    enhet.getForradrpoststed(),
+                    enhet.getForradrland());
+        } else {
+            postadresse = new BrregPostadresse(enhet.getPostadresse(),
+                    enhet.getPpostnr(),
+                    enhet.getPpoststed(),
+                    enhet.getPpostland());
+        }
+        return new OrganizationInfo(enhet.getOrgnr(),
+                enhet.getNavn(),
+                postadresse,
+                new OrganizationType(enhet.getOrganisasjonsform()));
     }
 
     @Override
