@@ -199,7 +199,6 @@ public class ServiceRecordController {
     @ResponseBody
     public ResponseEntity signed(
             @PathVariable("identifier") String identifier,
-            @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             @RequestParam(name = "conversationId", required = false) String conversationId,
             Authentication auth,
@@ -207,6 +206,31 @@ public class ServiceRecordController {
             throws EntitySignerException, SecurityLevelNotFoundException, KRRClientException,
             CertificateNotFoundException, DsfLookupException, BrregNotFoundException, SvarUtClientException {
         ResponseEntity entity = entity(identifier, securityLevel, conversationId, auth, request);
+        if (entity.getStatusCode() != HttpStatus.OK) {
+            return entity;
+        }
+        String json;
+        try {
+            json = new ObjectMapper().writeValueAsString(entity.getBody());
+        } catch (JsonProcessingException e) {
+            log.error(markerFrom(requestScope), "Failed to convert entity to json", e);
+            throw new ServiceRegistryException(e);
+        }
+
+        return ResponseEntity.ok(payloadSigner.sign(json));
+    }
+
+    @GetMapping(value = "/identifier/{identifier}/process/{processIdentifier}", produces = "application/jose")
+    @ResponseBody
+    public ResponseEntity signed(@PathVariable("identifier") String identifier,
+                                 @PathVariable("processIdentifier") String processIdentifier,
+                                 @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
+                                 @RequestParam(name = "conversationId", required = false) String conversationId,
+                                 Authentication auth,
+                                 HttpServletRequest request)
+            throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException,
+            DsfLookupException, BrregNotFoundException, SvarUtClientException, EntitySignerException {
+        ResponseEntity entity = entity(identifier, processIdentifier, securityLevel, conversationId, auth, request);
         if (entity.getStatusCode() != HttpStatus.OK) {
             return entity;
         }
