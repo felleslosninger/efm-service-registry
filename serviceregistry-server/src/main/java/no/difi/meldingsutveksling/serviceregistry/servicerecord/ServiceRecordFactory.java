@@ -122,7 +122,7 @@ public class ServiceRecordFactory {
             if (properties.getFeature().isEnableDpfDpv()) {
                 Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
                 if (hasSvarUt.isPresent()) {
-                    serviceRecord = createDpfServiceRecord(orgnr, process, targetSecurityLevel);
+                    serviceRecord = createDpfServiceRecord(orgnr, process, hasSvarUt.get());
                 } else {
                     if (targetSecurityLevel != null && targetSecurityLevel == 4) {
                         throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", orgnr, targetSecurityLevel));
