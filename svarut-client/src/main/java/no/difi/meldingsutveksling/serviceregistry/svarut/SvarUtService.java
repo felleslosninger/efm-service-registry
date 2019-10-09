@@ -21,9 +21,10 @@ public class SvarUtService {
         this.svarUtClient = svarUtClient;
     }
 
-    public Optional<Integer> hasSvarUtAdressering(String orgnr, Integer securityLevel) {
+    public Optional<Integer> hasSvarUtAdressering(String orgnr, Integer securityLevel) throws SvarUtClientException {
         RetrieveMottakerSystemForOrgnr request = RetrieveMottakerSystemForOrgnr.builder().withOrganisasjonsnr(orgnr).build();
-        RetrieveMottakerSystemForOrgnrResponse response = svarUtClient.retrieveMottakerSystemForOrgnr(request);
+        RetrieveMottakerSystemForOrgnrResponse response;
+        response = svarUtClient.retrieveMottakerSystemForOrgnr(request);
         Stream<MottakerForsendelseTyper> validFiksRequests = response.getReturn().stream()
                 .filter(m -> isNullOrEmpty(m.forsendelseType));
         if (null != securityLevel) {

@@ -1,16 +1,22 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.Data;
-import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
+import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.PersonResource.Reservasjon.JA;
 import static no.difi.meldingsutveksling.serviceregistry.krr.PersonResource.Varslingsstatus.KAN_VARSLES;
 
-@Data
+@Getter
+@Setter
+@ToString
+@EqualsAndHashCode(callSuper = true)
 public class SikkerDigitalPostServiceRecord extends ServiceRecord {
 
     @JsonIgnore
@@ -24,10 +30,15 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
     private final PostAddress postAddress;
     private final PostAddress returnAddress;
 
-    public SikkerDigitalPostServiceRecord(ServiceregistryProperties properties, PersonResource personResource,
-                                          ServiceIdentifier serviceIdentifier, String organisationNumber,
-                                          PostAddress postAddress, PostAddress returnAddress) {
+    public SikkerDigitalPostServiceRecord(boolean isFysiskPost,
+                                          ServiceregistryProperties properties,
+                                          PersonResource personResource,
+                                          ServiceIdentifier serviceIdentifier,
+                                          String organisationNumber,
+                                          PostAddress postAddress,
+                                          PostAddress returnAddress) {
         super(serviceIdentifier, organisationNumber, properties.getDpi().getEndpointURL().toString());
+        setPemCertificate(personResource.getCertificate());
         this.properties = properties;
 
         if (personResource.hasMailbox()) {

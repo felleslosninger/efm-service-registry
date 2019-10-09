@@ -23,7 +23,7 @@ public class DpiMessageRouterTest {
         when(person.isActive()).thenReturn(true);
         when(person.hasMailbox()).thenReturn(true);
 
-        assertEquals(DPI, route(person, OBLIGATED, false));
+        assertEquals(DPI, route(person, OBLIGATED));
     }
 
     @Test
@@ -34,7 +34,7 @@ public class DpiMessageRouterTest {
         when(person.isActive()).thenReturn(false);
         when(person.hasMailbox()).thenReturn(false);
 
-        assertEquals(DPV, route(person, OBLIGATED, false));
+        assertEquals(DPV, route(person, OBLIGATED));
     }
 
     @Test
@@ -45,7 +45,7 @@ public class DpiMessageRouterTest {
         when(person.isNotifiable()).thenReturn(true);
         when(person.hasMailbox()).thenReturn(true);
 
-        assertEquals(PRINT, route(person, OBLIGATED, false));
+        assertEquals(PRINT, route(person, OBLIGATED));
     }
 
     @Test
@@ -56,7 +56,7 @@ public class DpiMessageRouterTest {
         when(person.isNotifiable()).thenReturn(false);
         when(person.hasMailbox()).thenReturn(true);
 
-        assertEquals(DPI, route(person, NOT_OBLIGATED, false));
+        assertEquals(DPI, route(person, NOT_OBLIGATED));
     }
 
     @Test
@@ -67,17 +67,7 @@ public class DpiMessageRouterTest {
         when(person.isNotifiable()).thenReturn(false);
         when(person.hasMailbox()).thenReturn(true);
 
-        assertEquals(DPV, route(person, NOT_OBLIGATED, false));
+        assertEquals(DPV, route(person, NOT_OBLIGATED));
     }
 
-    @Test
-    public void routerShouldReturnPrintNotObligatedForcePrint() {
-        PersonResource person = mock(PersonResource.class);
-        when(person.isReserved()).thenReturn(true);
-        when(person.isActive()).thenReturn(false);
-        when(person.isNotifiable()).thenReturn(false);
-        when(person.hasMailbox()).thenReturn(true);
-
-        assertEquals(PRINT, route(person, NOT_OBLIGATED, true));
-    }
 }

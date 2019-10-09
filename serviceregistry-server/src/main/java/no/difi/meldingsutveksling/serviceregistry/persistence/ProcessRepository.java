@@ -6,6 +6,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface ProcessRepository extends CrudRepository<Process, Long> {
@@ -14,5 +15,5 @@ public interface ProcessRepository extends CrudRepository<Process, Long> {
 
     List<Process> findAll();
 
-    List<Process> findAllByCategory(ProcessCategory processCategory);
+    Set<Process> findAllByCategory(ProcessCategory processCategory);
 }

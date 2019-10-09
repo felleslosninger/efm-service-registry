@@ -1,20 +1,19 @@
 package no.difi.meldingsutveksling.serviceregistry.service.brreg.dev;
 
+import lombok.RequiredArgsConstructor;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregPostadresse;
 import no.difi.meldingsutveksling.serviceregistry.persistence.BrregEnhetRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class TestEnvironmentEnheter {
 
-    @Autowired
-    private BrregEnhetRepository brregMockRepo;
-
+    private final BrregEnhetRepository brregMockRepo;
 
     /**
      * Add test users if they don't exist.
@@ -56,20 +55,20 @@ public class TestEnvironmentEnheter {
         brregEnhet.setPostadresse(adr);
         addBrregEnhet(brregEnhet);
     }
+
     public boolean addBrregEnhet(BrregEnhet enhet) {
-        BrregEnhet find = brregMockRepo.findOne(enhet.getOrganisasjonsnummer());
-        if (find != null) return false;
+        Optional<BrregEnhet> existing = brregMockRepo.findById(enhet.getOrganisasjonsnummer());
+        if (existing.isPresent()) return false;
 
         brregMockRepo.save(enhet);
-
         return true;
     }
 
     public Optional<BrregEnhet> getBrregEnhet(String orgnr) {
-        return Optional.ofNullable(brregMockRepo.findOne(orgnr));
+        return brregMockRepo.findById(orgnr);
     }
 
     public void deleteBrregEnhet(String orgnr) {
-        brregMockRepo.delete(orgnr);
+        brregMockRepo.deleteById(orgnr);
     }
 }

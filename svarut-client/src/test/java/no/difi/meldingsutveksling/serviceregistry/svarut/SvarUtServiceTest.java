@@ -5,7 +5,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Optional;
 
@@ -24,7 +24,7 @@ public class SvarUtServiceTest {
     private SvarUtClient svarUtClientMock;
 
     @Test
-    public void hasSvarUtAddressering_OrganizationNotFound_FiksReceiverResponseShouldBeEmpty() {
+    public void hasSvarUtAddressering_OrganizationNotFound_FiksReceiverResponseShouldBeEmpty() throws SvarUtClientException {
         RetrieveMottakerSystemForOrgnrResponse emptyResponse = RetrieveMottakerSystemForOrgnrResponse.builder()
                 .withReturn(Lists.newArrayList()).build();
         when(svarUtClientMock.retrieveMottakerSystemForOrgnr(any(RetrieveMottakerSystemForOrgnr.class)))
@@ -36,7 +36,7 @@ public class SvarUtServiceTest {
     }
 
     @Test
-    public void hasSvarUtAddressering_OrganizationWithEmptyForsendelseTypeFound_FiksReceiverResponseShouldBePresent() {
+    public void hasSvarUtAddressering_OrganizationWithEmptyForsendelseTypeFound_FiksReceiverResponseShouldBePresent() throws SvarUtClientException {
         MottakerForsendelseTyper responseContent = MottakerForsendelseTyper.builder()
                 .withForsendelseType(null).build();
         RetrieveMottakerSystemForOrgnrResponse response = RetrieveMottakerSystemForOrgnrResponse.builder()
@@ -50,7 +50,7 @@ public class SvarUtServiceTest {
     }
 
     @Test
-    public void hasSvarUtAddressering_OrganizationWithForsendelseTypeFound_FiksReceiverResponseShouldBeEmpty() {
+    public void hasSvarUtAddressering_OrganizationWithForsendelseTypeFound_FiksReceiverResponseShouldBeEmpty() throws SvarUtClientException {
         MottakerForsendelseTyper responseContent = MottakerForsendelseTyper.builder()
                 .withForsendelseType("type").build();
         RetrieveMottakerSystemForOrgnrResponse response = RetrieveMottakerSystemForOrgnrResponse.builder()
@@ -64,7 +64,7 @@ public class SvarUtServiceTest {
     }
 
     @Test
-    public void hasSvarUtAddressering_ReceiverNotFound_FiksReceiverResponseShouldBeEmpty() {
+    public void hasSvarUtAddressering_ReceiverNotFound_FiksReceiverResponseShouldBeEmpty() throws SvarUtClientException {
         RetrieveMottakerSystemForOrgnrResponse emptyResponse = RetrieveMottakerSystemForOrgnrResponse.builder()
                 .withReturn(Lists.newArrayList()).build();
         when(svarUtClientMock.retrieveMottakerSystemForOrgnr(any(RetrieveMottakerSystemForOrgnr.class)))
@@ -76,7 +76,7 @@ public class SvarUtServiceTest {
     }
 
     @Test
-    public void hasSvarUtAddressering_ReceiverFoundWithoutTargetServiceLevel_FiksReceiverResponseShouldBeEmpty() {
+    public void hasSvarUtAddressering_ReceiverFoundWithoutTargetServiceLevel_FiksReceiverResponseShouldBeEmpty() throws SvarUtClientException {
         final int targetLevel = 3;
         MottakerForsendelseTyper responseContent = MottakerForsendelseTyper.builder()
                 .withForsendelseType(null)
@@ -92,7 +92,7 @@ public class SvarUtServiceTest {
     }
 
     @Test
-    public void hasSvarUtAddressering_ReceiverFoundWithTargetServiceLevelAndForsendelseType_FiksReceiverResponseShouldBeEmpty() {
+    public void hasSvarUtAddressering_ReceiverFoundWithTargetServiceLevelAndForsendelseType_FiksReceiverResponseShouldBeEmpty() throws SvarUtClientException {
         final int targetLevel = 3;
         MottakerForsendelseTyper responseContent = MottakerForsendelseTyper.builder()
                 .withForsendelseType("type")
@@ -108,7 +108,7 @@ public class SvarUtServiceTest {
     }
 
     @Test
-    public void hasSvarUtAddressering_ReceiverFoundWithTargetServiceLevel_FiksReceiverResponseShouldBePresent() {
+    public void hasSvarUtAddressering_ReceiverFoundWithTargetServiceLevel_FiksReceiverResponseShouldBePresent() throws SvarUtClientException {
         final int targetLevel = 3;
         MottakerForsendelseTyper responseContent = MottakerForsendelseTyper.builder()
                 .withForsendelseType(null)

@@ -8,8 +8,7 @@ import no.difi.meldingsutveksling.serviceregistry.model.CitizenInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
-import no.difi.meldingsutveksling.serviceregistry.service.brreg.DatahotellClient;
-import org.springframework.beans.factory.annotation.Autowired;
+import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -17,6 +16,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.isCitizen;
+import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 
 /**
  * Service is used to lookup information needed to send messages to an entity
@@ -26,14 +26,14 @@ import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRe
 @Slf4j
 public class EntityService {
 
-    LoadingCache<String, Optional<EntityInfo>> entityCache;
-
+    private final LoadingCache<String, Optional<EntityInfo>> entityCache;
     private final BrregService brregService;
+    private final SRRequestScope requestScope;
 
-    @Autowired
-    public EntityService(BrregService brregService, DatahotellClient datahotellClient) {
+    public EntityService(BrregService brregService,
+                         SRRequestScope requestScope) {
         this.brregService = brregService;
-
+        this.requestScope = requestScope;
         this.entityCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(1, TimeUnit.DAYS)
                 .build(new CacheLoader<String, Optional<EntityInfo>>() {
@@ -45,11 +45,10 @@ public class EntityService {
     }
 
     /**
-     *
      * @param identifier for an entity either an organization number or a fodselsnummer
      * @return info needed to send messages to the entity
      */
-    public Optional<EntityInfo> loadEntityInfo(String identifier) throws BrregNotFoundException {
+    private Optional<EntityInfo> loadEntityInfo(String identifier) throws BrregNotFoundException {
         if (isCitizen().test(identifier)) {
             return Optional.of(new CitizenInfo(identifier));
         } else {
@@ -58,7 +57,6 @@ public class EntityService {
     }
 
     /**
-     *
      * @param identifier for an entity either an organization number or a fodselsnummer
      * @return info needed to send messages to the entity
      */
@@ -66,7 +64,7 @@ public class EntityService {
         try {
             return entityCache.get(identifier);
         } catch (ExecutionException e) {
-            log.error("Could not find entity for the requested identifier={}", identifier, e);
+            log.error(markerFrom(requestScope), "Could not find entity for the requested identifier={}", identifier, e);
             return Optional.empty();
         }
     }

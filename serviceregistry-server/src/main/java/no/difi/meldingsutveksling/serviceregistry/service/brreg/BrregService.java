@@ -16,7 +16,6 @@ import java.util.Optional;
 public class BrregService {
 
     private BrregClient brregClient;
-
     private DatahotellClient datahotellClient;
 
     @Autowired
@@ -40,7 +39,7 @@ public class BrregService {
     }
 
     public Optional<EntityInfo> getOrgInfoFromDatahotell(String orgnr, Throwable e) throws BrregNotFoundException {
-        log.info("Brreg lookup failed, using hotell.difi.no instead", e);
+        log.warn("Brreg lookup failed, using hotell.difi.no instead", e);
         return datahotellClient.getOrganizationInfo(orgnr);
     }
 }

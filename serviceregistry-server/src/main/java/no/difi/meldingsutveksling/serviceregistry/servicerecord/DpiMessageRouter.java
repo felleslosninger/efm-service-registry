@@ -22,36 +22,35 @@ public class DpiMessageRouter {
      *
      * @param person resource from KRR
      * @param notification if notification is obligatory
-     * @param forcePrint if message should be printed instead of going to DPV
      * @return enum value to determine course of message
      */
-    public static TargetRecord route(PersonResource person, Notification notification, boolean forcePrint) {
+    public static TargetRecord route(PersonResource person, Notification notification) {
         if (OBLIGATED.equals(notification)) {
-            return checkReservation(person, forcePrint);
+            return checkReservation(person);
         } else {
-            return checkActiveMailbox(person, forcePrint);
+            return checkActiveMailbox(person);
         }
     }
 
-    private static TargetRecord checkReservation(PersonResource person, boolean forcePrint) {
+    private static TargetRecord checkReservation(PersonResource person) {
         if (person.isReserved()) {
             return PRINT;
         }
-        return checkNotification(person, forcePrint);
+        return checkNotification(person);
     }
 
-    private static TargetRecord checkNotification(PersonResource person, boolean forcePrint) {
+    private static TargetRecord checkNotification(PersonResource person) {
         if (person.isNotifiable()) {
-            return checkActiveMailbox(person, forcePrint);
+            return checkActiveMailbox(person);
         }
-        return (forcePrint) ? PRINT : DPV;
+        return PRINT;
     }
 
-    private static TargetRecord checkActiveMailbox(PersonResource person, boolean forcePrint) {
+    private static TargetRecord checkActiveMailbox(PersonResource person) {
         if (person.hasMailbox() && person.isActive()) {
             return DPI;
         }
-        return (forcePrint) ? PRINT : DPV;
+        return DPV;
     }
 
 }

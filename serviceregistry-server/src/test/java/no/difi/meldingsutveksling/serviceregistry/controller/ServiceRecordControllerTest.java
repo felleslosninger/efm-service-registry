@@ -16,10 +16,14 @@ import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.AuthenticationService;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
+import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.*;
+import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
+import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
 import no.difi.virksert.client.lang.VirksertClientException;
 import org.assertj.core.util.Lists;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,8 +49,8 @@ import java.util.Optional;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -84,6 +88,9 @@ public class ServiceRecordControllerTest {
 
     @MockBean
     private AuthenticationService authenticationService;
+
+    @MockBean
+    private SRRequestScope requestScope;
 
     @Autowired
     private PayloadSigner payloadSigner;
@@ -129,20 +136,30 @@ public class ServiceRecordControllerTest {
                 .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")));
     }
 
-    private void setupMockToReturnArkivmeldingRecords(List<ArkivmeldingServiceRecord> serviceRecords) throws SecurityLevelNotFoundException, CertificateNotFoundException {
+    private void setupMockToReturnArkivmeldingRecords(List<ArkivmeldingServiceRecord> serviceRecords)
+            throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any(), any())).thenReturn(Lists.newArrayList(serviceRecords));
     }
 
     @Test
-    public void get_ArkivmeldingResultsInCertificateException_ServiceRecordShouldMatchExpectedValues() throws Exception {
-        setupMockToReturnArkivmeldingRecords(Lists.newArrayList(DPO_SERVICE_RECORD));
+    public void get_ArkivmeldingResultsInCertificateException_ShouldReturnBadRequest() throws Exception {
         final String message = "Certificate not found.";
-        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any(), anyInt()))
-                .thenThrow(new CertificateNotFoundException(message, new VirksertClientException("")));
+        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any(), any()))
+                .thenThrow(new CertificateNotFoundException(message, new VirksertClientException(message)));
 
         mvc.perform(get("/identifier/42").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_description", is(message)));
+    }
+
+    @Test
+    public void get_ArkivmeldingResultsInSvarUtClientException_ShouldReturnInternalServerError() throws Exception {
+        final String message = "svarut is unavailable";
+        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any(), any()))
+                .thenThrow(new SvarUtClientException(new RuntimeException(message)));
+        mvc.perform(get("/identifier/42").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error_description", Matchers.containsString(message)));
     }
 
     @Test
@@ -172,7 +189,7 @@ public class ServiceRecordControllerTest {
     public void get_CredentialsResolveToDpiAndDsfLookupFails_ShouldReturnErrorResponseBody() throws Exception {
         setupMocksForSuccessfulDpi();
         final String message = "identifier not found in DSF";
-        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(), anyBoolean()))
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString()))
                 .thenThrow(new DsfLookupException(message));
 
         mvc.perform(get("/identifier/12345678901")
@@ -193,14 +210,14 @@ public class ServiceRecordControllerTest {
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPI")));
     }
 
-    private void setupMocksForSuccessfulDpi() throws MalformedURLException, KRRClientException, DsfLookupException, SecurityLevelNotFoundException, CertificateNotFoundException {
+    private void setupMocksForSuccessfulDpi() throws MalformedURLException, KRRClientException, DsfLookupException, SecurityLevelNotFoundException, CertificateNotFoundException, BrregNotFoundException, SvarUtClientException {
         ServiceregistryProperties serviceregistryProperties = fakePropertiesForDpi();
         when(authenticationService.getOrganizationNumber(any(), any())).thenReturn("AuthorizedIdentifier");
         PersonResource personResource = fakePersonResourceForDpi();
         PostAddress postAddress = new PostAddress("Address name", "Street x", "Postal code", "Area", "Country");
         SikkerDigitalPostServiceRecord dpiServiceRecord
-                = new SikkerDigitalPostServiceRecord(serviceregistryProperties, personResource, ServiceIdentifier.DPI, "12345678901", postAddress, postAddress);
-        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(), anyBoolean()))
+                = new SikkerDigitalPostServiceRecord(false, serviceregistryProperties, personResource, ServiceIdentifier.DPI, "12345678901", postAddress, postAddress);
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString()))
                 .thenReturn(Lists.newArrayList(dpiServiceRecord));
         when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), anyString(), anyInt())).thenReturn(Optional.empty());
         when(serviceRecordFactory.createEinnsynServiceRecords(anyString())).thenReturn(Lists.newArrayList());
@@ -212,7 +229,7 @@ public class ServiceRecordControllerTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         setupMocksForSuccessfulDpi();
         final String message = "identifier not found in DSF";
-        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(), anyBoolean()))
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString()))
                 .thenThrow(new DsfLookupException(message));
 
         mvc.perform(get("/identifier/12345678901")
@@ -225,7 +242,7 @@ public class ServiceRecordControllerTest {
     public void get_CredentialsResolveToDpiAndLookupGivesError_ShouldReturnErrorResponseBody() throws Exception {
         final String message = "Error looking up identifier in KRR";
         when(authenticationService.getOrganizationNumber(any(), any())).thenReturn("AuthorizedIdentifier");
-        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(), anyBoolean()))
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString()))
                 .thenThrow(new KRRClientException(new Exception(message)));
 
         mvc.perform(get("/identifier/12345678901")
@@ -240,7 +257,7 @@ public class ServiceRecordControllerTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         final String message = "Error looking up identifier in KRR";
         when(authenticationService.getOrganizationNumber(any(), any())).thenReturn("AuthorizedIdentifier");
-        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString(), any(), anyBoolean()))
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString()))
                 .thenThrow(new KRRClientException(new Exception(message)));
 
         mvc.perform(get("/identifier/12345678901/process/ProcessID")
@@ -308,7 +325,7 @@ public class ServiceRecordControllerTest {
     public void getWithProcessIdentifier_ArkivmeldingResolvesToDpv_ServiceRecordShouldMatchExpectedValues() throws Exception {
         Process processMock = mockProcess(ProcessCategory.ARKIVMELDING);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
-        when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), any(), anyInt())).thenReturn(Optional.of(DPV_SERVICE_RECORD));
+        when(serviceRecordFactory.createArkivmeldingServiceRecord(any(), any(), any())).thenReturn(Optional.of(DPV_SERVICE_RECORD));
 
         mvc.perform(get("/identifier/43/process/ProcessID").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -325,7 +342,7 @@ public class ServiceRecordControllerTest {
     public void getWithProcessIdentifier_ArkivmeldingResolvesToDpo_ServiceRecordShouldMatchExpectedValues() throws Exception {
         Process processMock = mockProcess(ProcessCategory.ARKIVMELDING);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
-        when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), anyString(), anyInt())).thenReturn(Optional.of(DPO_SERVICE_RECORD));
+        when(serviceRecordFactory.createArkivmeldingServiceRecord(any(), any(), any())).thenReturn(Optional.of(DPO_SERVICE_RECORD));
 
         mvc.perform(get("/identifier/42/process/ProcessID").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -344,7 +361,7 @@ public class ServiceRecordControllerTest {
         Process processMock = mockProcess(ProcessCategory.ARKIVMELDING);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         final String message = "Certificate not found.";
-        when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), anyString(), anyInt()))
+        when(serviceRecordFactory.createArkivmeldingServiceRecord(any(), any(), any()))
                 .thenThrow(new CertificateNotFoundException(message, new VirksertClientException("")));
 
         mvc.perform(get("/identifier/42/process/ProcessID").accept(MediaType.APPLICATION_JSON))
@@ -357,7 +374,7 @@ public class ServiceRecordControllerTest {
         DPF_SERVICE_RECORD.getService().setSecurityLevel(3);
         Process processMock = mockProcess(ProcessCategory.ARKIVMELDING);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
-        when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), anyString(), any())).thenReturn(Optional.of(DPF_SERVICE_RECORD));
+        when(serviceRecordFactory.createArkivmeldingServiceRecord(any(), any(), any())).thenReturn(Optional.of(DPF_SERVICE_RECORD));
         mvc.perform(get("/identifier/42/process/ProcessID?securityLevel=3").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("42")))
@@ -415,7 +432,7 @@ public class ServiceRecordControllerTest {
     @Test
     public void get_ArkivmeldingResolvesToDpfButRequestedSecurityLevelIsNotAvailable_ShouldReturnErrorResponseBody() throws Exception {
         final String message = "security level not found";
-        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any(),anyInt())).thenThrow(new SecurityLevelNotFoundException(message));
+        when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any(), anyInt())).thenThrow(new SecurityLevelNotFoundException(message));
         mvc.perform(get("/identifier/42?securityLevel=3")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())

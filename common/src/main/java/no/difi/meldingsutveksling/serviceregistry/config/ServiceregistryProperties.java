@@ -41,9 +41,11 @@ public class ServiceregistryProperties {
 
     @Data
     public static class ELMA {
+        private String locatorUrl;
         private String defaultProcessIdentifier;
         private String processIdentifier;
         private String documentTypeIdentifier;
+        private String lookupIcd;
     }
 
     @Data
@@ -63,7 +65,8 @@ public class ServiceregistryProperties {
     @Data
     public static class DigitalPostInnbygger {
         private URL endpointURL;
-        private String digitalDocumentType;
+        private String infoProcess;
+        private String vedtakProcess;
         private String printDocumentType;
     }
 
@@ -78,6 +81,7 @@ public class ServiceregistryProperties {
     @Data
     public static class FeatureToggle {
         private boolean paaVegneAvOppslag = false;
+        private boolean enableDpfDpv = true;
     }
 
     @Data

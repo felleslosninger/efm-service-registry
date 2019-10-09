@@ -2,14 +2,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>serviceregistry-server</artifactId>
-    <version>1.0.55-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>serviceregistry-server</name>
 
     <parent>
         <artifactId>serviceregistry-parent</artifactId>
         <groupId>no.difi.meldingsutveksling</groupId>
-        <version>1.0.55-SNAPSHOT</version>
+        <version>2.0.0-SNAPSHOT</version>
     </parent>
 
     <properties>
@@ -17,7 +17,6 @@
         <java.version>1.8</java.version>
         <docker.registry>registry:5000/</docker.registry>
         <docker.build.version>${project.version}</docker.build.version>
-        <springfox.version>2.9.2</springfox.version>
     </properties>
 
     <profiles>
@@ -34,7 +33,7 @@
                     <plugin>
                         <groupId>com.spotify</groupId>
                         <artifactId>docker-maven-plugin</artifactId>
-                        <version>0.4.11</version>
+                        <version>1.2.0</version>
                         <configuration>
                             <imageName>${docker.registry}/${project.artifactId}:latest</imageName>
                             <dockerDirectory>${project.basedir}/src/main/docker</dockerDirectory>
@@ -86,7 +85,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>1.5.3.RELEASE</version>
+<!--                <version>1.5.3.RELEASE</version>-->
                 <executions>
                     <execution>
                         <goals>
@@ -125,7 +124,7 @@
             <plugin>
                 <groupId>com.spotify</groupId>
                 <artifactId>docker-maven-plugin</artifactId>
-                <version>0.4.11</version>
+                <version>1.2.0</version>
                 <configuration>
                     <serverId>docker-hub</serverId>
                     <imageName>${docker.registry}/${project.artifactId}:${docker.build.version}</imageName>
@@ -142,7 +141,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>buildnumber-maven-plugin</artifactId>
-                <version>1.1</version>
+                <version>1.4</version>
                 <executions>
                     <execution>
                         <phase>validate</phase>
@@ -164,7 +163,7 @@
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
-                <version>1.0</version>
+                <version>1.7.6</version>
                 <configuration>
                     <installDirectory>target</installDirectory>
                 </configuration>
@@ -203,115 +202,88 @@
 
         <dependency>
             <groupId>no.difi.meldingsutveksling</groupId>
-            <artifactId>common</artifactId>
-            <version>${project.parent.version}</version>
+            <artifactId>service-registry-common</artifactId>
         </dependency>
-
         <dependency>
             <groupId>no.difi.meldingsutveksling</groupId>
             <artifactId>svarut-client</artifactId>
-            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>no.difi.meldingsutveksling</groupId>
+            <artifactId>service-registry-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>no.difi.meldingsutveksling</groupId>
+            <artifactId>kontakt-reservasjonsregister-client</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>stax2-api</artifactId>
+                    <groupId>org.codehaus.woodstox</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-eureka</artifactId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-hystrix</artifactId>
+            <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-config</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>no.difi.meldingsutveksling</groupId>
-            <artifactId>kontakt-reservasjonsregister-client</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-hateoas</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.security.oauth</groupId>
-            <artifactId>spring-security-oauth2</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.spockframework</groupId>
-            <artifactId>spock-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Not managed by spring, need to specify version -->
+        <dependency>
+            <groupId>org.springframework.security.oauth</groupId>
+            <artifactId>spring-security-oauth2</artifactId>
+            <version>2.3.6.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security.oauth.boot</groupId>
+            <artifactId>spring-security-oauth2-autoconfigure</artifactId>
+            <version>2.1.7.RELEASE</version>
         </dependency>
 
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
         </dependency>
-
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.codehaus.janino</groupId>
             <artifactId>janino</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
-        <!--Swagger-->
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger2</artifactId>
-            <version>${springfox.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger-ui</artifactId>
-            <version>${springfox.version}</version>
         </dependency>
 
         <dependency>
@@ -325,23 +297,18 @@
         <dependency>
             <groupId>no.difi.virksert</groupId>
             <artifactId>virksert-client</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>peppol-common</artifactId>
+                    <groupId>no.difi.vefa</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
-            <groupId>no.difi.meldingsutveksling</groupId>
-            <artifactId>service-registry-domain</artifactId>
-            <version>${project.parent.version}</version>
+            <groupId>no.difi.virksert</groupId>
+            <artifactId>virksert-move</artifactId>
         </dependency>
-        <dependency>
-            <groupId>cglib</groupId>
-            <artifactId>cglib-nodep</artifactId>
-            <version>3.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-configuration-processor</artifactId>
-            <optional>true</optional>
-        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
@@ -356,16 +323,16 @@
         <dependency>
             <groupId>no.difi.move-common</groupId>
             <artifactId>security</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>json-smart</artifactId>
+                    <groupId>net.minidev</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>no.difi.move-common</groupId>
             <artifactId>cloud</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>no.difi.virksert</groupId>
-            <artifactId>virksert-move</artifactId>
-            <version>1.0.3-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -376,17 +343,55 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
         </dependency>
-
         <dependency>
-            <groupId>com.jayway.jsonpath</groupId>
-            <artifactId>json-path</artifactId>
-            <version>2.2.0</version>
+            <groupId>com.sun.xml.messaging.saaj</groupId>
+            <artifactId>saaj-impl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
         </dependency>
 
+
+        <!--Swagger-->
         <dependency>
-            <groupId>net.minidev</groupId>
-            <artifactId>json-smart</artifactId>
-            <version>2.2.1</version>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.spockframework</groupId>
+            <artifactId>spock-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib-nodep</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>

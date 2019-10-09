@@ -1,30 +1,29 @@
 package no.difi.meldingsutveksling.serviceregistry.svarut;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.ws.client.core.WebServiceTemplate;
 
 import javax.xml.bind.JAXBElement;
 
-@Component
 @Slf4j
+@Component
+@RequiredArgsConstructor
 public class SvarUtClient {
 
-    private WebServiceTemplate wsTemplate;
-    private ServiceregistryProperties props;
+    private final WebServiceTemplate wsTemplate;
+    private final ServiceregistryProperties props;
 
-    @Autowired
-    SvarUtClient(WebServiceTemplate wsTemplate, ServiceregistryProperties props) {
-        this.wsTemplate = wsTemplate;
-        this.props = props;
-    }
-
-    public RetrieveMottakerSystemForOrgnrResponse retrieveMottakerSystemForOrgnr(RetrieveMottakerSystemForOrgnr payload) {
+    @SuppressWarnings("unchecked")
+    public RetrieveMottakerSystemForOrgnrResponse retrieveMottakerSystemForOrgnr(RetrieveMottakerSystemForOrgnr payload) throws SvarUtClientException {
         String url = props.getSvarut().getForsendelsesserviceUrl().toString();
-        JAXBElement<RetrieveMottakerSystemForOrgnrResponse> response = (JAXBElement<RetrieveMottakerSystemForOrgnrResponse>) wsTemplate.marshalSendAndReceive(url, payload);
-        return response.getValue();
+        try {
+            JAXBElement<RetrieveMottakerSystemForOrgnrResponse> response = (JAXBElement<RetrieveMottakerSystemForOrgnrResponse>) wsTemplate.marshalSendAndReceive(url, payload);
+            return response.getValue();
+        } catch (Exception e) {
+            throw new SvarUtClientException(e);
+        }
     }
-
 }
