@@ -99,7 +99,6 @@ public class ServiceRecordFactory {
         return Optional.empty();
     }
 
-    // TODO: Sjekk tokens utan preauthorize
     @SuppressWarnings("squid:S1166")
     public List<ServiceRecord> createArkivmeldingServiceRecords(String orgnr, Authentication authentication, Integer targetSecurityLevel)
             throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
@@ -205,7 +204,6 @@ public class ServiceRecordFactory {
         return einnsynServiceRecord;
     }
 
-    // TODO: Sjekk tokens utan preauthorize
     public List<ServiceRecord> createEinnsynServiceRecords(String orgnr) throws CertificateNotFoundException {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
         Set<Process> einnsynProcesses = processService.findAll(ProcessCategory.EINNSYN);
