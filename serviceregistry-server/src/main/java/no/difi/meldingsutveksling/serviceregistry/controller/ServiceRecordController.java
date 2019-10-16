@@ -245,6 +245,35 @@ public class ServiceRecordController {
         return ResponseEntity.ok(payloadSigner.sign(json));
     }
 
+    @GetMapping(value = "/info/{identifier}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity info(@PathVariable("identifier") String identifier) {
+        Entity entity = new Entity();
+        Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
+        if (!entityInfo.isPresent()) {
+            return notFoundResponse(String.format("Entity with identifier '%s' not found.", identifier));
+        }
+        entity.setInfoRecord(entityInfo.get());
+        return ResponseEntity.ok(entity);
+    }
+
+    @GetMapping(value = "/info/{identifier}", produces = "application/jose")
+    @ResponseBody
+    public ResponseEntity signed(@PathVariable("identifier") String identifier) throws EntitySignerException {
+        ResponseEntity entity = info(identifier);
+        if (entity.getStatusCode() != HttpStatus.OK) {
+            return entity;
+        }
+        String json;
+        try {
+            json = new ObjectMapper().writeValueAsString(entity.getBody());
+        } catch (JsonProcessingException e) {
+            log.error(markerFrom(requestScope), "Failed to convert entity to json", e);
+            throw new ServiceRegistryException(e);
+        }
+        return ResponseEntity.ok(payloadSigner.sign(json));
+    }
+
     @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find endpoint url for service of requested organization")
     @ExceptionHandler(EndpointUrlNotFound.class)
     public void endpointNotFound(HttpServletRequest req, Exception e) {
