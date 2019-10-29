@@ -196,7 +196,6 @@ public class ServiceRecordController {
     @ResponseBody
     public ResponseEntity signed(
             @PathVariable("identifier") String identifier,
-            @RequestParam(name = "notification", defaultValue = "NOT_OBLIGATED") Notification obligation,
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             @RequestParam(name = "conversationId", required = false) String conversationId,
             Authentication auth,
@@ -215,6 +214,60 @@ public class ServiceRecordController {
             throw new ServiceRegistryException(e);
         }
 
+        return ResponseEntity.ok(payloadSigner.sign(json));
+    }
+
+    @GetMapping(value = "/identifier/{identifier}/process/{processIdentifier}", produces = "application/jose")
+    @ResponseBody
+    public ResponseEntity signed(@PathVariable("identifier") String identifier,
+                                 @PathVariable("processIdentifier") String processIdentifier,
+                                 @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
+                                 @RequestParam(name = "conversationId", required = false) String conversationId,
+                                 Authentication auth,
+                                 HttpServletRequest request)
+            throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException,
+            DsfLookupException, BrregNotFoundException, SvarUtClientException, EntitySignerException {
+        ResponseEntity entity = entity(identifier, processIdentifier, securityLevel, conversationId, auth, request);
+        if (entity.getStatusCode() != HttpStatus.OK) {
+            return entity;
+        }
+        String json;
+        try {
+            json = new ObjectMapper().writeValueAsString(entity.getBody());
+        } catch (JsonProcessingException e) {
+            log.error(markerFrom(requestScope), "Failed to convert entity to json", e);
+            throw new ServiceRegistryException(e);
+        }
+
+        return ResponseEntity.ok(payloadSigner.sign(json));
+    }
+
+    @GetMapping(value = "/info/{identifier}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity info(@PathVariable("identifier") String identifier) {
+        Entity entity = new Entity();
+        Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
+        if (!entityInfo.isPresent()) {
+            return notFoundResponse(String.format("Entity with identifier '%s' not found.", identifier));
+        }
+        entity.setInfoRecord(entityInfo.get());
+        return ResponseEntity.ok(entity);
+    }
+
+    @GetMapping(value = "/info/{identifier}", produces = "application/jose")
+    @ResponseBody
+    public ResponseEntity signed(@PathVariable("identifier") String identifier) throws EntitySignerException {
+        ResponseEntity entity = info(identifier);
+        if (entity.getStatusCode() != HttpStatus.OK) {
+            return entity;
+        }
+        String json;
+        try {
+            json = new ObjectMapper().writeValueAsString(entity.getBody());
+        } catch (JsonProcessingException e) {
+            log.error(markerFrom(requestScope), "Failed to convert entity to json", e);
+            throw new ServiceRegistryException(e);
+        }
         return ResponseEntity.ok(payloadSigner.sign(json));
     }
 

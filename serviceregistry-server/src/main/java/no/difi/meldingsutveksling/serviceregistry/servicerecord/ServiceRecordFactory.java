@@ -1,5 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.extern.slf4j.Slf4j;
@@ -123,7 +124,7 @@ public class ServiceRecordFactory {
             if (properties.getFeature().isEnableDpfDpv()) {
                 Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
                 if (hasSvarUt.isPresent()) {
-                    serviceRecord = createDpfServiceRecord(orgnr, process, targetSecurityLevel);
+                    serviceRecord = createDpfServiceRecord(orgnr, process, hasSvarUt.get());
                 } else {
                     if (targetSecurityLevel != null && targetSecurityLevel == 4) {
                         throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", orgnr, targetSecurityLevel));
@@ -263,11 +264,11 @@ public class ServiceRecordFactory {
                     serviceRecords.add(createDigitalServiceRecord(personResource, identifier, p));
                     break;
                 case PRINT:
-                    serviceRecords.add(createPrintServiceRecord(identifier, onBehalfOrgnr, token, personResource, p));
+                    createPrintServiceRecord(identifier, onBehalfOrgnr, token, personResource, p).ifPresent(serviceRecords::add);
                     break;
                 case DPV:
                 default:
-                    serviceRecords.add(createPrintServiceRecord(identifier, onBehalfOrgnr, token, personResource, p));
+                    createPrintServiceRecord(identifier, onBehalfOrgnr, token, personResource, p).ifPresent(serviceRecords::add);
                     serviceRecords.add(createDigitalDpvServiceRecord(identifier, p));
             }
         }
@@ -298,7 +299,7 @@ public class ServiceRecordFactory {
         return serviceRecord;
     }
 
-    private ServiceRecord createPrintServiceRecord(String identifier,
+    private Optional<ServiceRecord> createPrintServiceRecord(String identifier,
                                                    String onBehalfOrgnr,
                                                    String token,
                                                    PersonResource personResource,
@@ -308,6 +309,10 @@ public class ServiceRecordFactory {
         Optional<DSFResource> dsfResource = krrService.getDSFInfo(lookup(identifier).token(token));
         if (!dsfResource.isPresent()) {
             throw new DsfLookupException(String.format("Receiver found in KRR on behalf of '%s', but not in DSF.", onBehalfOrgnr));
+        }
+        if (Strings.isNullOrEmpty(dsfResource.get().getPostAddress())) {
+            // Some receivers have secret address - skip
+            return Optional.empty();
         }
         String[] codeArea = dsfResource.get().getPostAddress().split(" ");
         PostAddress postAddress = new PostAddress(dsfResource.get().getName(),
@@ -335,7 +340,7 @@ public class ServiceRecordFactory {
                 .orElseThrow(this::getServiceRegistryException);
         dpiServiceRecord.setDocumentTypes(Lists.newArrayList(docType.getIdentifier()));
         dpiServiceRecord.setProcess(p.getIdentifier());
-        return dpiServiceRecord;
+        return Optional.of(dpiServiceRecord);
     }
 
     private ServiceRegistryException getServiceRegistryException() {
