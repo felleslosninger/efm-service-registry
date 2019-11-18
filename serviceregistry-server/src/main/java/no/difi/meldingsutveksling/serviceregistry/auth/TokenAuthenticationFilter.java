@@ -43,6 +43,10 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     private void setOauthAuthentication(Map<String, Object> claims) {
         Object clientId = claims.getOrDefault("client_orgno", null);
+        if (null == clientId) {
+            logger.warn("Could not authenticate request (claims missing).");
+            return;
+        }
         List<String> scopes = Arrays.asList(((String) claims.get("scope")).split(" "));
         OAuth2Request request = new OAuth2Request(null, (String) clientId, null, true, new HashSet<>(scopes), null, null, null, null);
         OAuth2Authentication authentication = new OAuth2Authentication(request, null);

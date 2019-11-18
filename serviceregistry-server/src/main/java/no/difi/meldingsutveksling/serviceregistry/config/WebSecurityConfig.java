@@ -62,7 +62,7 @@ public class WebSecurityConfig {
     @Configuration
     @ConditionalOnBean(TokenAuthenticationFilter.class)
     @Order(3)
-    public class OIDCTokenFilter extends WebSecurityConfigurerAdapter {
+    public static class OIDCTokenFilter extends WebSecurityConfigurerAdapter {
 
         private final TokenAuthenticationFilter tokenAuthenticationFilter;
 
@@ -71,8 +71,11 @@ public class WebSecurityConfig {
         }
 
         @Override
-        protected void configure(final HttpSecurity http) {
+        protected void configure(final HttpSecurity http) throws Exception {
             http.addFilterBefore(tokenAuthenticationFilter, BasicAuthenticationFilter.class);
+            http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                    .and().csrf().disable()
+            .authorizeRequests().anyRequest().authenticated();
         }
     }
 
