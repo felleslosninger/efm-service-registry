@@ -35,7 +35,10 @@ public class BrregClientImpl implements BrregClient {
      */
     @Override
     public Optional<BrregEnhet> getBrregEnhetByOrgnr(String orgnr) {
-        return getEnhet("enhetsregisteret/api/enheter/", orgnr);
+        String apiVersjon = "application/vnd.brreg.enhetsregisteret.enhet.v1+json";
+        HttpEntity<BrregEnhet> entity = getEntityFromHeader(apiVersjon);
+
+        return getEnhet("enhetsregisteret/api/enheter/", orgnr, entity);
     }
 
     /**
@@ -45,16 +48,16 @@ public class BrregClientImpl implements BrregClient {
      */
     @Override
     public Optional<BrregEnhet> getBrregUnderenhetByOrgnr(String orgnr) {
-        return getEnhet("enhetsregisteret/api/underenheter/", orgnr);
+        String apiVersjon = "application/vnd.brreg.enhetsregisteret.underenhet.v1+json";
+        HttpEntity<BrregEnhet> entity = getEntityFromHeader(apiVersjon);
+
+        return getEnhet("enhetsregisteret/api/underenheter/", orgnr, entity);
     }
 
-    private Optional<BrregEnhet> getEnhet(String registerUriPart, String orgnr) {
+    private Optional<BrregEnhet> getEnhet(String registerUriPart, String orgnr, HttpEntity entity) {
         URI currentURI = uri.resolve(String.format("%s/%s.json", registerUriPart, orgnr));
 
         RestTemplate rt = new RestTemplate();
-        HttpHeaders header = new HttpHeaders();
-        header.set("Accept", "application/vnd.brreg.enhetsregisteret.v1+json");
-        HttpEntity<BrregEnhet> entity = new HttpEntity<>(header);
         rt.exchange(currentURI, HttpMethod.GET, entity, BrregEnhet.class);
 
         try {
@@ -67,5 +70,13 @@ public class BrregClientImpl implements BrregClient {
         }
         return Optional.empty();
 
+    }
+
+    private HttpEntity<BrregEnhet> getEntityFromHeader(String apiVersjon) {
+        HttpHeaders header = new HttpHeaders();
+        header.set("Accept", apiVersjon);
+        HttpEntity<BrregEnhet> entity = new HttpEntity<>(header);
+
+        return entity;
     }
 }
