@@ -16,7 +16,7 @@ public class BrregEnhet {
 
     private String organisasjonsnummer;
     private String navn;
-    private String organisasjonsform;
+    private BrregOrganisasjonsform organisasjonsform;
     private BrregPostadresse postadresse;
     private BrregPostadresse forretningsadresse;
 
