@@ -3,11 +3,11 @@ package no.difi.meldingsutveksling.serviceregistry.client.brreg;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.Optional;
 
 /**
@@ -35,7 +35,7 @@ public class BrregClientImpl implements BrregClient {
      */
     @Override
     public Optional<BrregEnhet> getBrregEnhetByOrgnr(String orgnr) {
-        return getEnhet("enhetsregisteret/enhet", orgnr);
+        return getEnhet("enhetsregisteret/api/enheter/", orgnr);
     }
 
     /**
@@ -45,13 +45,18 @@ public class BrregClientImpl implements BrregClient {
      */
     @Override
     public Optional<BrregEnhet> getBrregUnderenhetByOrgnr(String orgnr) {
-        return getEnhet("enhetsregisteret/underenhet", orgnr);
+        return getEnhet("enhetsregisteret/api/underenheter/", orgnr);
     }
 
     private Optional<BrregEnhet> getEnhet(String registerUriPart, String orgnr) {
         URI currentURI = uri.resolve(String.format("%s/%s.json", registerUriPart, orgnr));
 
         RestTemplate rt = new RestTemplate();
+        HttpHeaders header = new HttpHeaders();
+        header.set("Accept", "application/vnd.brreg.enhetsregisteret.v1+json");
+        HttpEntity<BrregEnhet> entity = new HttpEntity<>(header);
+        rt.exchange(currentURI, HttpMethod.GET, entity, BrregEnhet.class);
+
         try {
             ResponseEntity<BrregEnhet> response = rt.getForEntity(currentURI, BrregEnhet.class);
             if (response.getStatusCode() == HttpStatus.OK) {
