@@ -1,9 +1,8 @@
 package no.difi.meldingsutveksling.serviceregistry.service.brreg.dev;
 
 import lombok.RequiredArgsConstructor;
-import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
-import no.difi.meldingsutveksling.serviceregistry.model.BrregPostadresse;
-import no.difi.meldingsutveksling.serviceregistry.persistence.BrregEnhetRepository;
+import no.difi.meldingsutveksling.serviceregistry.model.BrregMockEnhet;
+import no.difi.meldingsutveksling.serviceregistry.persistence.BrregMockEnhetRepository;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -13,19 +12,18 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class TestEnvironmentEnheter {
 
-    private final BrregEnhetRepository brregMockRepo;
+    private final BrregMockEnhetRepository brregMockRepo;
 
     /**
      * Add test users if they don't exist.
      */
     @PostConstruct
     private void init() {
-        BrregPostadresse defaultPostadr = new BrregPostadresse("Postboks 1337", "1337", "OSLO", "Norge");
         createBrregEnhet("Biristrand og Tjøtta", "ORGL", "910075918");
         createBrregEnhet("Lote og Årviksand", "ORGL", "910077473");
         createBrregEnhet("Stårheim og Røst", "ORGL", "910094092");
         createBrregEnhet("Røn og Ranheim", "ORGL", "810076402");
-        createBrregEnhet("Dølemo og Ramberg", "ORGL", "910076787", defaultPostadr);
+        createBrregEnhet("Dølemo og Ramberg", "ORGL", "910076787");
         createBrregEnhet("Østby og Sandøy", "ORGL", "910094548");
         createBrregEnhet("Reipå og Bugøynes", "ORGL", "910085379");
         createBrregEnhet("Norfold og Henningsvær", "AS", "910071696");
@@ -40,31 +38,18 @@ public class TestEnvironmentEnheter {
     }
 
     private void createBrregEnhet(String navn, String organisasjonsform, String organisasjonsnummer) {
-        BrregEnhet brregEnhet = new BrregEnhet();
-        brregEnhet.setOrganisasjonsnummer(organisasjonsnummer);
-        brregEnhet.setNavn(navn);
-        brregEnhet.setOrganisasjonsform(organisasjonsform);
-        addBrregEnhet(brregEnhet);
+        addBrregEnhet(BrregMockEnhet.of(organisasjonsnummer, navn, organisasjonsform));
     }
 
-    private void createBrregEnhet(String navn, String organisasjonsform, String organisasjonsnummer, BrregPostadresse adr) {
-        BrregEnhet brregEnhet = new BrregEnhet();
-        brregEnhet.setOrganisasjonsnummer(organisasjonsnummer);
-        brregEnhet.setNavn(navn);
-        brregEnhet.setOrganisasjonsform(organisasjonsform);
-        brregEnhet.setPostadresse(adr);
-        addBrregEnhet(brregEnhet);
-    }
-
-    public boolean addBrregEnhet(BrregEnhet enhet) {
-        Optional<BrregEnhet> existing = brregMockRepo.findById(enhet.getOrganisasjonsnummer());
+    public boolean addBrregEnhet(BrregMockEnhet enhet) {
+        Optional<BrregMockEnhet> existing = brregMockRepo.findById(enhet.getOrgnr());
         if (existing.isPresent()) return false;
 
         brregMockRepo.save(enhet);
         return true;
     }
 
-    public Optional<BrregEnhet> getBrregEnhet(String orgnr) {
+    public Optional<BrregMockEnhet> getBrregEnhet(String orgnr) {
         return brregMockRepo.findById(orgnr);
     }
 

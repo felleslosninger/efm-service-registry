@@ -2,7 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
+import no.difi.meldingsutveksling.serviceregistry.model.BrregMockEnhet;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.dev.TestEnvironmentEnheter;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,7 +15,7 @@ public class AddMockEnhetController {
 
     @PostMapping("/addmockenhet")
     @ResponseBody
-    public String addMockEnhet(@RequestBody BrregEnhet enhet) {
+    public String addMockEnhet(@RequestBody BrregMockEnhet enhet) {
         log.info("Adding {} to Brreg mock", enhet);
         if (testEnheter.addBrregEnhet(enhet)) {
             return "Lagt til i mock";
