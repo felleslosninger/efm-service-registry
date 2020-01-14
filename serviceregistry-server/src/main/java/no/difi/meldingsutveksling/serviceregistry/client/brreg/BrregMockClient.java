@@ -2,6 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.client.brreg;
 
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
+import no.difi.meldingsutveksling.serviceregistry.model.BrregMockEnhet;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.dev.TestEnvironmentEnheter;
 
 import java.net.URISyntaxException;
@@ -21,10 +22,10 @@ public class BrregMockClient implements BrregClient {
 
     @Override
     public Optional<BrregEnhet> getBrregEnhetByOrgnr(String orgnr) {
-
-        Optional<BrregEnhet> enhet = enheter.getBrregEnhet(orgnr);
-        if (enhet.isPresent()) {
-            return enhet;
+        Optional<BrregMockEnhet> enhet = enheter.getBrregEnhet(orgnr);
+        Optional<BrregEnhet> brregEnhet = enhet.map(this::mapToBrregEnhet);
+        if (brregEnhet.isPresent()) {
+            return brregEnhet;
         }
 
         return clientImpl.getBrregEnhetByOrgnr(orgnr);
@@ -32,11 +33,19 @@ public class BrregMockClient implements BrregClient {
 
     @Override
     public Optional<BrregEnhet> getBrregUnderenhetByOrgnr(String orgnr) {
-        Optional<BrregEnhet> enhet = enheter.getBrregEnhet(orgnr);
-        if (enhet.isPresent()) {
-            return enhet;
+        Optional<BrregMockEnhet> enhet = enheter.getBrregEnhet(orgnr);
+        Optional<BrregEnhet> brregEnhet = enhet.map(this::mapToBrregEnhet);
+        if (brregEnhet.isPresent()) {
+            return brregEnhet;
         }
 
         return clientImpl.getBrregUnderenhetByOrgnr(orgnr);
+    }
+
+    private BrregEnhet mapToBrregEnhet(BrregMockEnhet mockEnhet) {
+        return new BrregEnhet()
+                .setOrganisasjonsnummer(mockEnhet.getOrgnr())
+                .setNavn(mockEnhet.getName())
+                .setOrganisasjonsform(mockEnhet.getOrgform());
     }
 }
