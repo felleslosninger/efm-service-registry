@@ -4,8 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import no.difi.meldingsutveksling.serviceregistry.model.datahotell.DatahotellEntry;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
@@ -56,12 +55,12 @@ public class OrganizationInfo implements EntityInfo {
                 || isNullOrEmpty(enhet.getPpostnr())
                 || isNullOrEmpty(enhet.getPpoststed())
                 || isNullOrEmpty(enhet.getPpostland())) {
-            postadresse = new BrregPostadresse(getAdresseliste(enhet.getForretningsadr()),
+            postadresse = new BrregPostadresse(Collections.singletonList(enhet.getForretningsadr()),
                     enhet.getForradrpostnr(),
                     enhet.getForradrpoststed(),
                     enhet.getForradrland());
         } else {
-            postadresse = new BrregPostadresse(getAdresseliste(enhet.getPostadresse()),
+            postadresse = new BrregPostadresse(Collections.singletonList(enhet.getPostadresse()),
                     enhet.getPpostnr(),
                     enhet.getPpoststed(),
                     enhet.getPpostland());
@@ -113,12 +112,6 @@ public class OrganizationInfo implements EntityInfo {
             organizationInfo.postadresse = postadresse;
             return this;
         }
-    }
-
-    private static List<String> getAdresseliste(String adresse) {
-        List<String> adresseListe = new ArrayList<>();
-        adresseListe.add(adresse);
-        return adresseListe;
     }
 
 }
