@@ -55,7 +55,7 @@ public class BrregClientImpl implements BrregClient {
     }
 
     private Optional<BrregEnhet> getEnhet(String registerUriPart, String orgnr, HttpEntity entity) {
-        URI currentURI = uri.resolve(String.format(registerUriPart, orgnr));
+        URI currentURI = uri.resolve(String.format("%s/%s", registerUriPart, orgnr));
         RestTemplate rt = new RestTemplate();
 
         try {
