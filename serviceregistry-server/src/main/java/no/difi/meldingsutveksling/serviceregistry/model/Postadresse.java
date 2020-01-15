@@ -19,6 +19,9 @@ public class Postadresse {
     private String land;
 
     public static Postadresse of(BrregPostadresse brregPostadresse) {
+        if (brregPostadresse == null) {
+            return null;
+        }
         return new Postadresse()
                 .setAdresse(brregPostadresse.getAdresse() == null ? null : String.join(" ", brregPostadresse.getAdresse()))
                 .setLand(brregPostadresse.getLand())
