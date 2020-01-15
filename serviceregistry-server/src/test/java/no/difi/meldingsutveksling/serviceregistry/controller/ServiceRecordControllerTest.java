@@ -9,8 +9,8 @@ import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
-import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
+import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.AuthenticationService;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
@@ -44,8 +44,6 @@ import java.net.URL;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.interfaces.RSAPublicKey;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
@@ -96,7 +94,7 @@ public class ServiceRecordControllerTest {
 
     @Before
     public void setup() {
-        BrregPostadresse testAdr = new BrregPostadresse(mockAdresse(), "1337", "teststed", "testland");
+        Postadresse testAdr = new Postadresse("Skrivarvegen 42", "1337", "teststed", "testland");
         OrganizationInfo ORGLinfo = new OrganizationInfo("42", "foo",
                 testAdr, new OrganizationType("ORGL"));
         OrganizationInfo ORGinfo = new OrganizationInfo("50", "bar",
@@ -459,10 +457,4 @@ public class ServiceRecordControllerTest {
         return processMock;
     }
 
-    private List<String> mockAdresse()  {
-        List<String> adresseListe = new ArrayList<>();
-        adresseListe.add("Skrivarvegen 42");
-
-        return adresseListe;
-    }
 }

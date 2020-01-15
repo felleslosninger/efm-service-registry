@@ -6,10 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
@@ -23,14 +20,4 @@ public class BrregPostadresse {
     private String poststed;
     private String land;
 
-    public String getGateAdresse() {
-        String gateAdresse = "";
-        if (adresse != null) {
-            gateAdresse = String.join(" ", adresse);
-            return gateAdresse;
-        }
-        else
-            return null;
-        // gjer noko anna her
-    }
 }

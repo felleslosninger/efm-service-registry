@@ -327,7 +327,7 @@ public class ServiceRecordFactory {
         if (senderEntity.isPresent() && senderEntity.get() instanceof OrganizationInfo) {
             OrganizationInfo orginfo = (OrganizationInfo) senderEntity.get();
             returnAddress = new PostAddress(orginfo.getOrganizationName(),
-                    orginfo.getPostadresse().getGateAdresse(),
+                    orginfo.getPostadresse().getAdresse(),
                     orginfo.getPostadresse().getPostnummer(),
                     orginfo.getPostadresse().getPoststed(),
                     orginfo.getPostadresse().getLand());

@@ -19,7 +19,7 @@ public class OrganizationInfo implements EntityInfo {
     private String organizationName;
     @JsonIgnore
     private OrganizationType organizationType;
-    private BrregPostadresse postadresse;
+    private Postadresse postadresse;
 
     public OrganizationInfo() {
     }
@@ -29,7 +29,7 @@ public class OrganizationInfo implements EntityInfo {
      * @param organizationName as name implies
      * @param organizationType or organization form as defined in BRREG
      */
-    public OrganizationInfo(String organisationNumber, String organizationName, BrregPostadresse postadresse,
+    public OrganizationInfo(String organisationNumber, String organizationName, Postadresse postadresse,
                             OrganizationType organizationType) {
         this.identifier = organisationNumber;
         this.organizationName = organizationName;
@@ -41,12 +41,12 @@ public class OrganizationInfo implements EntityInfo {
         if (brregEnhet.getPostadresse() == null) {
             return new OrganizationInfo(brregEnhet.getOrganisasjonsnummer(),
                     brregEnhet.getNavn(),
-                    brregEnhet.getForretningsadresse(),
+                    Postadresse.of(brregEnhet.getForretningsadresse()),
                     new OrganizationType(brregEnhet.getOrganisasjonsform().getKode()));
         }
         return new OrganizationInfo(brregEnhet.getOrganisasjonsnummer(),
                 brregEnhet.getNavn(),
-                brregEnhet.getPostadresse(),
+                Postadresse.of(brregEnhet.getPostadresse()),
                 new OrganizationType(brregEnhet.getOrganisasjonsform().getKode()));
     }
 
@@ -68,7 +68,7 @@ public class OrganizationInfo implements EntityInfo {
         }
         return new OrganizationInfo(enhet.getOrgnr(),
                 enhet.getNavn(),
-                postadresse,
+                Postadresse.of(postadresse),
                 new OrganizationType(enhet.getOrganisasjonsform()));
     }
 
@@ -109,7 +109,7 @@ public class OrganizationInfo implements EntityInfo {
             return this;
         }
 
-        public Builder withPostadresse(BrregPostadresse postadresse) {
+        public Builder withPostadresse(Postadresse postadresse) {
             organizationInfo.postadresse = postadresse;
             return this;
         }

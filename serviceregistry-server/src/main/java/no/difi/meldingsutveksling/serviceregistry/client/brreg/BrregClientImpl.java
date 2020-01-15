@@ -7,7 +7,6 @@ import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
-import java.util.Collections;
 import java.util.Optional;
 
 /**
@@ -35,10 +34,9 @@ public class BrregClientImpl implements BrregClient {
      */
     @Override
     public Optional<BrregEnhet> getBrregEnhetByOrgnr(String orgnr) {
-        String apiVersjon = "application/vnd.brreg.enhetsregisteret.enhet.v1+json";
-        HttpEntity<BrregEnhet> entity = getEntityFromHeader(apiVersjon);
-
-        return getEnhet("enhetsregisteret/api/enheter/", orgnr, entity);
+        return getEnhet("enhetsregisteret/api/enheter/",
+                "application/vnd.brreg.enhetsregisteret.enhet.v1+json",
+                orgnr);
     }
 
     /**
@@ -48,20 +46,22 @@ public class BrregClientImpl implements BrregClient {
      */
     @Override
     public Optional<BrregEnhet> getBrregUnderenhetByOrgnr(String orgnr) {
-        String apiVersjon = "application/vnd.brreg.enhetsregisteret.underenhet.v1+json";
-        HttpEntity<BrregEnhet> entity = getEntityFromHeader(apiVersjon);
-
-        return getEnhet("enhetsregisteret/api/underenheter/", orgnr, entity);
+        return getEnhet("enhetsregisteret/api/underenheter/",
+                "application/vnd.brreg.enhetsregisteret.underenhet.v1+json",
+                orgnr);
     }
 
-    private Optional<BrregEnhet> getEnhet(String registerUriPart, String orgnr, HttpEntity entity) {
+    private Optional<BrregEnhet> getEnhet(String registerUriPart, String apiVersjon, String orgnr) {
         URI currentURI = uri.resolve(String.format("%s/%s", registerUriPart, orgnr));
         RestTemplate rt = new RestTemplate();
 
+        HttpHeaders header = new HttpHeaders();
+        header.set("Accept", apiVersjon);
+        HttpEntity<Object> entity = new HttpEntity<>(header);
         try {
             ResponseEntity<BrregEnhet> response = rt.exchange(currentURI, HttpMethod.GET, entity, BrregEnhet.class);
             if (response.getStatusCode() == HttpStatus.OK) {
-                return Optional.of(response.getBody());
+                return Optional.ofNullable(response.getBody());
             }
         } catch (Exception e) {
             log.error(String.format("Error looking up entity with identifier=%s in brreg", orgnr), e);
@@ -70,11 +70,4 @@ public class BrregClientImpl implements BrregClient {
 
     }
 
-    private HttpEntity<BrregEnhet> getEntityFromHeader(String apiVersjon) {
-        HttpHeaders header = new HttpHeaders();
-        header.set("Accept", apiVersjon);
-        HttpEntity<BrregEnhet> entity = new HttpEntity<>(header);
-
-        return entity;
-    }
 }
