@@ -55,13 +55,11 @@ public class BrregClientImpl implements BrregClient {
     }
 
     private Optional<BrregEnhet> getEnhet(String registerUriPart, String orgnr, HttpEntity entity) {
-        URI currentURI = uri.resolve(String.format("%s/%s.json", registerUriPart, orgnr));
-
+        URI currentURI = uri.resolve(String.format(registerUriPart, orgnr));
         RestTemplate rt = new RestTemplate();
-        rt.exchange(currentURI, HttpMethod.GET, entity, BrregEnhet.class);
 
         try {
-            ResponseEntity<BrregEnhet> response = rt.getForEntity(currentURI, BrregEnhet.class);
+            ResponseEntity<BrregEnhet> response = rt.exchange(currentURI, HttpMethod.GET, entity, BrregEnhet.class);
             if (response.getStatusCode() == HttpStatus.OK) {
                 return Optional.of(response.getBody());
             }
