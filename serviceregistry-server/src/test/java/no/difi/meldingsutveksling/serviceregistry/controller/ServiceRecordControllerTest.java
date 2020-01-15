@@ -44,6 +44,8 @@ import java.net.URL;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.interfaces.RSAPublicKey;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
@@ -94,7 +96,7 @@ public class ServiceRecordControllerTest {
 
     @Before
     public void setup() {
-        BrregPostadresse testAdr = new BrregPostadresse("testadresse", "1337", "teststed", "testland");
+        BrregPostadresse testAdr = new BrregPostadresse(mockAdresse(), "1337", "teststed", "testland");
         OrganizationInfo ORGLinfo = new OrganizationInfo("42", "foo",
                 testAdr, new OrganizationType("ORGL"));
         OrganizationInfo ORGinfo = new OrganizationInfo("50", "bar",
@@ -455,5 +457,12 @@ public class ServiceRecordControllerTest {
         Process processMock = mock(Process.class);
         when(processMock.getCategory()).thenReturn(category);
         return processMock;
+    }
+
+    private List<String> mockAdresse()  {
+        List<String> adresseListe = new ArrayList<>();
+        adresseListe.add("Skrivarvegen 42");
+
+        return adresseListe;
     }
 }

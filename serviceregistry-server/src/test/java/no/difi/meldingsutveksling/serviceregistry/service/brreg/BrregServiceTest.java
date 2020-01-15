@@ -1,15 +1,14 @@
 package no.difi.meldingsutveksling.serviceregistry.service.brreg;
 
 import no.difi.meldingsutveksling.serviceregistry.client.brreg.BrregClientImpl;
-import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
-import no.difi.meldingsutveksling.serviceregistry.model.BrregPostadresse;
-import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
-import no.difi.meldingsutveksling.serviceregistry.model.OrganizationInfo;
+import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
@@ -30,11 +29,12 @@ public class BrregServiceTest {
     public void brregHasOrganizationInfo() throws BrregNotFoundException {
         String orgNavn = "DIREKTORATET FOR FORVALTNING OG IKT";
         String orgNr = "991825827";
-        final String organisasjonsform = "ORGL";
-        BrregPostadresse postAddr = new BrregPostadresse("Skrivarvegen 2", "6863", "Hermansverk", "NO");
+        final String orgKode = "ORGL";
+        BrregOrganisasjonsform organisasjonsform = new BrregOrganisasjonsform(orgKode);
+        BrregPostadresse postAddr = new BrregPostadresse(mockAdresse(), "6863", "Hermansverk", "NO");
 
         difi = new OrganizationInfo.Builder()
-                .withOrganizationType(organisasjonsform)
+                .withOrganizationType(orgKode)
                 .withOrganizationName(orgNavn)
                 .withOrganizationNumber(orgNr)
                 .withPostadresse(postAddr)
@@ -59,11 +59,12 @@ public class BrregServiceTest {
     public void shouldReturnBusinessAddressIfOrgHasNoPostAddress() throws BrregNotFoundException {
         String orgNavn2 = "DØNNA KOMMUNE";
         String orgNr2 = "945114878";
-        final String organisasjonsform2 = "KOMM";
-        BrregPostadresse forretningsAddr2 = new BrregPostadresse("Skrivarvegen 42", "6863", "Hermansverk", "NO");
+        final String orgKode2 = "KOMM";
+        BrregOrganisasjonsform organisasjonsform2 = new BrregOrganisasjonsform(orgKode2);
+        BrregPostadresse forretningsAddr2 = new BrregPostadresse(mockAdresse(), "6863", "Hermansverk", "NO");
 
         donna = new OrganizationInfo.Builder()
-                .withOrganizationType(organisasjonsform2)
+                .withOrganizationType(orgKode2)
                 .withOrganizationName(orgNavn2)
                 .withOrganizationNumber(orgNr2)
                 .withPostadresse(forretningsAddr2)
@@ -82,6 +83,13 @@ public class BrregServiceTest {
 
         OrganizationInfo actual = (OrganizationInfo) brregService.getOrganizationInfo(donna.getIdentifier()).get();
         assertEquals(donna.getPostadresse(), actual.getPostadresse());
+    }
+
+    private List<String> mockAdresse()  {
+        List<String> adresseListe = new ArrayList<>();
+        adresseListe.add("Skrivarvegen 42");
+
+        return adresseListe;
     }
 
 }
