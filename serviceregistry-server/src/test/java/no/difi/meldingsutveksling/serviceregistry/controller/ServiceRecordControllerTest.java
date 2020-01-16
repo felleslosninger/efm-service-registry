@@ -9,8 +9,8 @@ import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
-import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
+import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.AuthenticationService;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
@@ -94,7 +94,7 @@ public class ServiceRecordControllerTest {
 
     @Before
     public void setup() {
-        BrregPostadresse testAdr = new BrregPostadresse("testadresse", "1337", "teststed", "testland");
+        Postadresse testAdr = new Postadresse("Skrivarvegen 42", "1337", "teststed", "testland");
         OrganizationInfo ORGLinfo = new OrganizationInfo("42", "foo",
                 testAdr, new OrganizationType("ORGL"));
         OrganizationInfo ORGinfo = new OrganizationInfo("50", "bar",
@@ -456,4 +456,5 @@ public class ServiceRecordControllerTest {
         when(processMock.getCategory()).thenReturn(category);
         return processMock;
     }
+
 }
