@@ -1,26 +1,23 @@
 package no.difi.meldingsutveksling.serviceregistry.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-
-import javax.persistence.*;
-import javax.persistence.Entity;
+import lombok.NoArgsConstructor;
 
 /**
  * A POJO representing the JSON object returned from BRREG
  */
-@Entity
 @JsonIgnoreProperties
+@NoArgsConstructor
+@AllArgsConstructor
 @Data
 public class BrregEnhet {
 
-    @Id
     private String organisasjonsnummer;
     private String navn;
-    private String organisasjonsform;
-    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private BrregOrganisasjonsform organisasjonsform;
     private BrregPostadresse postadresse;
-    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private BrregPostadresse forretningsadresse;
 
 }

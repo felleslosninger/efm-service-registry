@@ -3,8 +3,7 @@ package no.difi.meldingsutveksling.serviceregistry.client.brreg;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
@@ -35,7 +34,9 @@ public class BrregClientImpl implements BrregClient {
      */
     @Override
     public Optional<BrregEnhet> getBrregEnhetByOrgnr(String orgnr) {
-        return getEnhet("enhetsregisteret/enhet", orgnr);
+        return getEnhet("enhetsregisteret/api/enheter/",
+                "application/vnd.brreg.enhetsregisteret.enhet.v1+json",
+                orgnr);
     }
 
     /**
@@ -45,17 +46,22 @@ public class BrregClientImpl implements BrregClient {
      */
     @Override
     public Optional<BrregEnhet> getBrregUnderenhetByOrgnr(String orgnr) {
-        return getEnhet("enhetsregisteret/underenhet", orgnr);
+        return getEnhet("enhetsregisteret/api/underenheter/",
+                "application/vnd.brreg.enhetsregisteret.underenhet.v1+json",
+                orgnr);
     }
 
-    private Optional<BrregEnhet> getEnhet(String registerUriPart, String orgnr) {
-        URI currentURI = uri.resolve(String.format("%s/%s.json", registerUriPart, orgnr));
-
+    private Optional<BrregEnhet> getEnhet(String registerUriPart, String apiVersjon, String orgnr) {
+        URI currentURI = uri.resolve(String.format("%s/%s", registerUriPart, orgnr));
         RestTemplate rt = new RestTemplate();
+
+        HttpHeaders header = new HttpHeaders();
+        header.set("Accept", apiVersjon);
+        HttpEntity<Object> entity = new HttpEntity<>(header);
         try {
-            ResponseEntity<BrregEnhet> response = rt.getForEntity(currentURI, BrregEnhet.class);
+            ResponseEntity<BrregEnhet> response = rt.exchange(currentURI, HttpMethod.GET, entity, BrregEnhet.class);
             if (response.getStatusCode() == HttpStatus.OK) {
-                return Optional.of(response.getBody());
+                return Optional.ofNullable(response.getBody());
             }
         } catch (Exception e) {
             log.error(String.format("Error looking up entity with identifier=%s in brreg", orgnr), e);
@@ -63,4 +69,5 @@ public class BrregClientImpl implements BrregClient {
         return Optional.empty();
 
     }
+
 }
