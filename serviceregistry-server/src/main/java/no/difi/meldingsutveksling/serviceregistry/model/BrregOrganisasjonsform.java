@@ -6,18 +6,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class BrregPostadresse {
+public class BrregOrganisasjonsform {
 
-    private List<String> adresse;
-    private String postnummer;
-    private String poststed;
-    private String land;
+    private String kode;
 
 }

@@ -3,6 +3,7 @@ package no.difi.meldingsutveksling.serviceregistry.client.brreg;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregMockEnhet;
+import no.difi.meldingsutveksling.serviceregistry.model.BrregOrganisasjonsform;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.dev.TestEnvironmentEnheter;
 
 import java.net.URISyntaxException;
@@ -46,6 +47,6 @@ public class BrregMockClient implements BrregClient {
         return new BrregEnhet()
                 .setOrganisasjonsnummer(mockEnhet.getOrgnr())
                 .setNavn(mockEnhet.getName())
-                .setOrganisasjonsform(mockEnhet.getOrgform());
+                .setOrganisasjonsform(new BrregOrganisasjonsform(mockEnhet.getOrgform()));
     }
 }
