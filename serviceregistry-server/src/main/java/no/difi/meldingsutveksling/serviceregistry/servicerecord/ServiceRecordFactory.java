@@ -25,6 +25,7 @@ import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
 import no.difi.vefa.peppol.common.model.ProcessIdentifier;
 import no.difi.virksert.client.lang.VirksertClientException;
 import org.apache.commons.io.IOUtils;
+import org.apache.tomcat.jni.Proc;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
@@ -170,13 +171,17 @@ public class ServiceRecordFactory {
 
     private ServiceRecord createDpoServiceRecord(String orgnr, Process process) throws CertificateNotFoundException {
         String pem = lookupPemCertificate(orgnr);
-        ServiceRecord arkivmeldingServiceRecord = ArkivmeldingServiceRecord.of(DPO, orgnr, properties.getDpo().getEndpointURL().toString(), pem);
-        arkivmeldingServiceRecord.setProcess(process.getIdentifier());
-        arkivmeldingServiceRecord.getService().setServiceCode(properties.getDpo().getServiceCode());
-        arkivmeldingServiceRecord.getService().setServiceEditionCode(properties.getDpo().getServiceEditionCode());
-        arkivmeldingServiceRecord.setDocumentTypes(process.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+        ServiceRecord serviceRecord;
+        if(process.getCategory().equals(ProcessCategory.AVTALT)) {
+             serviceRecord = AvtaltServiceRecord.of(DPO, orgnr, properties.getDpo().getEndpointURL().toString(), pem);
+        } else { serviceRecord = ArkivmeldingServiceRecord.of(DPO, orgnr, properties.getDpo().getEndpointURL().toString(), pem);}
 
-        return arkivmeldingServiceRecord;
+        serviceRecord.setProcess(process.getIdentifier());
+        serviceRecord.getService().setServiceCode(properties.getDpo().getServiceCode());
+        serviceRecord.getService().setServiceEditionCode(properties.getDpo().getServiceEditionCode());
+        serviceRecord.setDocumentTypes(process.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+
+        return serviceRecord;
     }
 
     private ServiceRecord createDpfServiceRecord(String orgnr, Process process, Integer securityLevel) {
@@ -219,6 +224,27 @@ public class ServiceRecordFactory {
         }
 
         return serviceRecords;
+    }
+
+    public Optional<ServiceRecord> createAvtaltServiceRecord(String orgnr, String processIdentifier) throws CertificateNotFoundException {
+        Optional<ServiceRecord> optionalServiceRecord = Optional.empty();
+        Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
+        if (!optionalProcess.isPresent()) {
+            return Optional.empty();
+        }
+
+        Process process = optionalProcess.get();
+        Set<ProcessIdentifier> processIdentifiers = getSmpRegistrations(orgnr, Sets.newHashSet(process));
+        if (processIdentifiers.isEmpty()) {
+            return Optional.empty();
+        }
+        if (processIdentifiers.stream()
+                .map(ProcessIdentifier::getIdentifier)
+                .anyMatch(identifier -> identifier.equals(processIdentifier))) {
+            optionalServiceRecord = Optional.of(createDpoServiceRecord(orgnr, process));
+        }
+
+        return optionalServiceRecord;
     }
 
     private ArkivmeldingServiceRecord createDpvServiceRecord(String orgnr, Process process) {

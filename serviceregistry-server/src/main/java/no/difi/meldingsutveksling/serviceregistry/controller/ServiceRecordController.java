@@ -141,6 +141,12 @@ public class ServiceRecordController {
             }
             serviceRecord = dpeServiceRecord.get();
         }
+        if(processCategory == ProcessCategory.AVTALT) {
+            Optional<ServiceRecord> avtaltDpoServiceRecord = serviceRecordFactory.createAvtaltServiceRecord(identifier, processIdentifier);
+            if(!avtaltDpoServiceRecord.isPresent()) {
+                return notFoundResponse(String.format("Avtalt process '%s' not found for receiver '%s'.", processIdentifier, identifier));
+            }
+        }
         entity.getServiceRecords().add(serviceRecord);
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
