@@ -307,6 +307,12 @@ public class ServiceRecordController {
         return ResponseEntity.badRequest().body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
     }
 
+    @ExceptionHandler(ProcessNotFoundException.class)
+    public ResponseEntity processNotFound(HttpServletRequest request, Exception e) {
+        log.error(markerFrom(requestScope), "Exception occured on {}", request.getRequestURL(), e);
+        return ResponseEntity.badRequest().body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
+    }
+
     @ExceptionHandler(KRRClientException.class)
     public ResponseEntity krrClientException(HttpServletRequest request, Exception e) {
         log.error(markerFrom(requestScope), "Exception occurred on {}", request.getRequestURL(), e);
