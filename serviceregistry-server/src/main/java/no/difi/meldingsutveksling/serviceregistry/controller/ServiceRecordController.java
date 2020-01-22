@@ -7,6 +7,7 @@ import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.krr.DsfLookupException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
@@ -100,7 +101,7 @@ public class ServiceRecordController {
                                  Authentication auth,
                                  HttpServletRequest request)
             throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException,
-            DsfLookupException, BrregNotFoundException, SvarUtClientException {
+            DsfLookupException, BrregNotFoundException, SvarUtClientException, ProcessNotFoundException {
         MDC.put("entity", identifier);
         requestScope.setConversationId(conversationId);
         requestScope.setIdentifier(identifier);
@@ -146,6 +147,7 @@ public class ServiceRecordController {
             if(!avtaltDpoServiceRecord.isPresent()) {
                 return notFoundResponse(String.format("Avtalt process '%s' not found for receiver '%s'.", processIdentifier, identifier));
             }
+            serviceRecord = avtaltDpoServiceRecord.get();
         }
         entity.getServiceRecords().add(serviceRecord);
         return new ResponseEntity<>(entity, HttpStatus.OK);
@@ -187,6 +189,7 @@ public class ServiceRecordController {
         } else {
             entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
             entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(identifier));
+            entity.getServiceRecords().addAll(serviceRecordFactory.createAvtaltServiceRecords(identifier));
         }
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
@@ -235,7 +238,7 @@ public class ServiceRecordController {
                                  Authentication auth,
                                  HttpServletRequest request)
             throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException,
-            DsfLookupException, BrregNotFoundException, SvarUtClientException, EntitySignerException {
+            DsfLookupException, BrregNotFoundException, SvarUtClientException, EntitySignerException, ProcessNotFoundException {
         ResponseEntity entity = entity(identifier, processIdentifier, securityLevel, conversationId, auth, request);
         if (entity.getStatusCode() != HttpStatus.OK) {
             return entity;
