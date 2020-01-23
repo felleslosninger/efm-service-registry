@@ -60,19 +60,18 @@ public class DatahotellClient {
         }
 
         RestTemplate rt = new RestTemplate();
-        ResponseEntity<DatahotellRespons> response;
         try {
-            response = rt.getForEntity(uri, DatahotellRespons.class);
+            ResponseEntity<DatahotellRespons> response = rt.getForEntity(uri, DatahotellRespons.class);
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null && !response.getBody().getEntries().isEmpty()) {
+                return Optional.of(response.getBody().getEntries().get(0));
+            }
         } catch (HttpClientErrorException e) {
-            log.error("Error looking up {}", uri, e);
-            return Optional.empty();
-        }
-        if (response.getStatusCode() == HttpStatus.OK && !response.getBody().getEntries().isEmpty()) {
-            return Optional.of(response.getBody().getEntries().get(0));
-        } else {
-            return Optional.empty();
+            if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
+                log.error("Error looking up {}", uri, e);
+            }
         }
 
+        return Optional.empty();
     }
 
 }
