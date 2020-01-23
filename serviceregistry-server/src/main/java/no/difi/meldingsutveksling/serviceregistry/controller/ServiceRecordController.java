@@ -95,10 +95,8 @@ public class ServiceRecordController {
             throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException,
             DsfLookupException, BrregNotFoundException, SvarUtClientException {
         MDC.put("entity", identifier);
-        requestScope.setConversationId(conversationId);
-        requestScope.setIdentifier(identifier);
         String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
-        requestScope.setClientId(clientOrgnr);
+        fillRequestScope(identifier, conversationId, clientOrgnr);
         Optional<EntityInfo> optionalEntityInfo = entityService.getEntityInfo(identifier);
         if (!optionalEntityInfo.isPresent()) {
             return notFoundResponse(String.format("Entity with identifier '%s' not found.", identifier));
@@ -156,10 +154,8 @@ public class ServiceRecordController {
             HttpServletRequest request)
             throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException, BrregNotFoundException, SvarUtClientException {
         MDC.put("identifier", identifier);
-        requestScope.setConversationId(conversationId);
-        requestScope.setIdentifier(identifier);
         String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
-        requestScope.setClientId(clientOrgnr);
+        fillRequestScope(identifier, conversationId, clientOrgnr);
         Entity entity = new Entity();
         Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
         if (!entityInfo.isPresent()) {
@@ -176,6 +172,12 @@ public class ServiceRecordController {
             entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(identifier));
         }
         return new ResponseEntity<>(entity, HttpStatus.OK);
+    }
+
+    private void fillRequestScope(String identifier, String conversationId, String clientOrgnr) {
+        requestScope.setConversationId(conversationId);
+        requestScope.setIdentifier(identifier);
+        requestScope.setClientId(clientOrgnr);
     }
 
     private ResponseEntity<?> errorResponse(HttpStatus status, String message) {
@@ -199,18 +201,7 @@ public class ServiceRecordController {
             throws EntitySignerException, SecurityLevelNotFoundException, KRRClientException,
             CertificateNotFoundException, DsfLookupException, BrregNotFoundException, SvarUtClientException {
         ResponseEntity<?> entity = entity(identifier, securityLevel, conversationId, auth, request);
-        if (entity.getStatusCode() != HttpStatus.OK) {
-            return entity;
-        }
-        String json;
-        try {
-            json = new ObjectMapper().writeValueAsString(entity.getBody());
-        } catch (JsonProcessingException e) {
-            log.error(markerFrom(requestScope), "Failed to convert entity to json", e);
-            throw new ServiceRegistryException(e);
-        }
-
-        return ResponseEntity.ok(payloadSigner.sign(json));
+        return signEntity(entity);
     }
 
     @GetMapping(value = "/identifier/{identifier}/process/{processIdentifier}", produces = "application/jose")
@@ -224,18 +215,7 @@ public class ServiceRecordController {
             throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException,
             DsfLookupException, BrregNotFoundException, SvarUtClientException, EntitySignerException {
         ResponseEntity<?> entity = entity(identifier, processIdentifier, securityLevel, conversationId, auth, request);
-        if (entity.getStatusCode() != HttpStatus.OK) {
-            return entity;
-        }
-        String json;
-        try {
-            json = new ObjectMapper().writeValueAsString(entity.getBody());
-        } catch (JsonProcessingException e) {
-            log.error(markerFrom(requestScope), "Failed to convert entity to json", e);
-            throw new ServiceRegistryException(e);
-        }
-
-        return ResponseEntity.ok(payloadSigner.sign(json));
+        return signEntity(entity);
     }
 
     @GetMapping(value = "/info/{identifier}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -254,6 +234,10 @@ public class ServiceRecordController {
     @ResponseBody
     public ResponseEntity<?> signed(@PathVariable("identifier") String identifier) throws EntitySignerException {
         ResponseEntity<?> entity = info(identifier);
+        return signEntity(entity);
+    }
+
+    private ResponseEntity<?> signEntity(ResponseEntity<?> entity) throws EntitySignerException {
         if (entity.getStatusCode() != HttpStatus.OK) {
             return entity;
         }
@@ -264,6 +248,7 @@ public class ServiceRecordController {
             log.error(markerFrom(requestScope), "Failed to convert entity to json", e);
             throw new ServiceRegistryException(e);
         }
+
         return ResponseEntity.ok(payloadSigner.sign(json));
     }
 
