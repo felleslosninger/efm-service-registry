@@ -42,6 +42,7 @@ import java.util.stream.Collectors;
 import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
 import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 import static no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory.AVTALT;
+import static no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory.EINNSYN;
 import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.*;
 
 /**
@@ -148,26 +149,21 @@ public class ServiceRecordFactory {
         return serviceRecord;
     }
 
+    public Optional<ServiceRecord> createServiceRecord(String orgnr, String processIdentifier) throws CertificateNotFoundException, ProcessNotFoundException {
+        Process process = processService.findByIdentifier(processIdentifier).orElseThrow(() -> new ProcessNotFoundException(processIdentifier));
 
-    public Optional<ServiceRecord> createEinnsynServiceRecord(String orgnr, String processIdentifier) throws CertificateNotFoundException {
-        Optional<ServiceRecord> optionalServiceRecord = Optional.empty();
-        Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
-        if (!optionalProcess.isPresent()) {
-            return Optional.empty();
-        }
-
-        Process process = optionalProcess.get();
-        Set<ProcessIdentifier> processIdentifiers = getSmpRegistrations(orgnr, Sets.newHashSet(process));
-        if (processIdentifiers.isEmpty()) {
-            return Optional.empty();
-        }
-        if (processIdentifiers.stream()
+        if (getSmpRegistrations(orgnr, Sets.newHashSet(process))
+                .stream()
                 .map(ProcessIdentifier::getIdentifier)
                 .anyMatch(identifier -> identifier.equals(processIdentifier))) {
-            optionalServiceRecord = Optional.of(createDpeServiceRecord(orgnr, process));
+            if(process.getCategory() == EINNSYN ) {
+                return Optional.of(createDpeServiceRecord(orgnr, process));
+            }
+            else if (process.getCategory() == AVTALT) {
+                return Optional.of(createDpoServiceRecord(orgnr, process));
+            }
         }
-
-        return optionalServiceRecord;
+        return Optional.empty();
     }
 
     private ServiceRecord createDpoServiceRecord(String orgnr, Process process) throws CertificateNotFoundException {
@@ -227,19 +223,6 @@ public class ServiceRecordFactory {
         }
 
         return serviceRecords;
-    }
-
-    public Optional<ServiceRecord> createAvtaltServiceRecord(String orgnr, String processIdentifier) throws CertificateNotFoundException, ProcessNotFoundException {
-        Process process = processService.findByIdentifier(processIdentifier).orElseThrow(() -> new ProcessNotFoundException(processIdentifier));
-
-        if (getSmpRegistrations(orgnr, Sets.newHashSet(process))
-                .stream()
-                .map(ProcessIdentifier::getIdentifier)
-                .anyMatch(identifier -> identifier.equals(processIdentifier))) {
-            return Optional.of(createDpoServiceRecord(orgnr, process));
-        }
-
-        return Optional.empty();
     }
 
     public List<ServiceRecord> createAvtaltServiceRecords(String orgnr) throws CertificateNotFoundException {

@@ -3,6 +3,7 @@ package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 import com.google.common.collect.Sets;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.model.DocumentType;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
@@ -318,9 +319,9 @@ public class ServiceRecordFactoryTest {
 
     @Test
     public void createEinnsynServiceRecord_ProcessIsNotFound_ShouldReturnNotFound() throws
-            CertificateNotFoundException {
+            CertificateNotFoundException, ProcessNotFoundException {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.empty());
-        Optional<ServiceRecord> result = factory.createEinnsynServiceRecord(ORGNR, "NotFound");
+        Optional<ServiceRecord> result = factory.createServiceRecord(ORGNR, "NotFound");
         assertFalse(result.isPresent());
     }
 
@@ -348,15 +349,15 @@ public class ServiceRecordFactoryTest {
 
     @Test
     public void createEinnsynServiceRecord_HasOrgnrAndProcessidentifier_ShouldReturnDpeServiceRecord() throws
-            CertificateNotFoundException {
-        Optional<ServiceRecord> result = factory.createEinnsynServiceRecord(ORGNR_EINNSYN_JOURNALPOST, EINNSYN_PROCESS_JOURNALPOST);
+            CertificateNotFoundException, ProcessNotFoundException {
+        Optional<ServiceRecord> result = factory.createServiceRecord(ORGNR_EINNSYN_JOURNALPOST, EINNSYN_PROCESS_JOURNALPOST);
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPE, result.get().getService().getIdentifier());
     }
 
     @Test
     public void createEinnsynServiceRecord_HasOrgnrWhileProcessidentifierMatchNotFoundInElma_ShouldNotReturnDpeServiceRecord
-            () throws CertificateNotFoundException {
+            () throws CertificateNotFoundException, ProcessNotFoundException {
         DocumentType einnsynResponseDocumentType = new DocumentType()
                 .setIdentifier(EINNSYN_DOCTYPE_RESPONSE_KVITTERING)
                 .setIdentifier(EINNSYN_DOCTYPE_RESPONSE_STATUS);
@@ -373,7 +374,7 @@ public class ServiceRecordFactoryTest {
                 .thenReturn(Sets.newHashSet(ProcessIdentifier.of(EINNSYN_PROCESS_RESPONSE)));
 
         when(processService.findByIdentifier(EINNSYN_PROCESS_RESPONSE)).thenReturn(Optional.empty());
-        Optional<ServiceRecord> result = factory.createEinnsynServiceRecord(ORGNR_EINNSYN_RESPONSE, EINNSYN_PROCESS_RESPONSE);
+        Optional<ServiceRecord> result = factory.createServiceRecord(ORGNR_EINNSYN_RESPONSE, EINNSYN_PROCESS_RESPONSE);
         assertFalse(result.isPresent());
     }
 

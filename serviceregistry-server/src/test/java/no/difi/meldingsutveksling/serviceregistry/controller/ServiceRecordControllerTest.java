@@ -468,7 +468,7 @@ public class ServiceRecordControllerTest {
     public void getWithProcessIdentifier_EinnsynServiceRecordShouldMatchExpectedValues() throws Exception {
         Process processMock = mockProcess(ProcessCategory.EINNSYN);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
-        when(serviceRecordFactory.createEinnsynServiceRecord(anyString(), anyString())).thenReturn(Optional.of(DPE_SERVICE_RECORD));
+        when(serviceRecordFactory.createServiceRecord(anyString(), anyString())).thenReturn(Optional.of(DPE_SERVICE_RECORD));
 
         mvc.perform(get("/identifier/50/process/ProcessID").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

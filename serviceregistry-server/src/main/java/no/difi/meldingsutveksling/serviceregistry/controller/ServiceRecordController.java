@@ -127,23 +127,23 @@ public class ServiceRecordController {
             entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr));
         }
         if (processCategory == ProcessCategory.ARKIVMELDING) {
-            Optional<ServiceRecord> osr = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier, securityLevel);
-            if (osr.isPresent()) {
-                serviceRecord = osr.get();
+            Optional<ServiceRecord> optionalServiceRecord = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier, securityLevel);
+            if (optionalServiceRecord.isPresent()) {
+                serviceRecord = optionalServiceRecord.get();
             }
             if (serviceRecord == null) {
                 return notFoundResponse(String.format("Arkivmelding process '%s' not found for receiver '%s'.", processIdentifier, identifier));
             }
         }
         if (processCategory == ProcessCategory.EINNSYN) {
-            Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createEinnsynServiceRecord(identifier, processIdentifier);
+            Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createServiceRecord(identifier, processIdentifier);
             if (!dpeServiceRecord.isPresent()) {
                 return notFoundResponse(String.format("eInnsyn process '%s' not found for receiver '%s'.", processIdentifier, identifier));
             }
             serviceRecord = dpeServiceRecord.get();
         }
         if(processCategory == ProcessCategory.AVTALT) {
-            Optional<ServiceRecord> avtaltDpoServiceRecord = serviceRecordFactory.createAvtaltServiceRecord(identifier, processIdentifier);
+            Optional<ServiceRecord> avtaltDpoServiceRecord = serviceRecordFactory.createServiceRecord(identifier, processIdentifier);
             if(!avtaltDpoServiceRecord.isPresent()) {
                 return notFoundResponse(String.format("Avtalt process '%s' not found for receiver '%s'.", processIdentifier, identifier));
             }
