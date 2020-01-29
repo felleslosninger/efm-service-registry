@@ -95,8 +95,8 @@ public class ServiceRecordFactoryTest {
     private static String ARKIVMELDING_DOCTYPE = "urn:no:difi:arkivmelding:xsd::arkivmelding";
     private static String ARKIVMELDING_PROCESS_ADMIN = "urn:no:difi:profile:arkivmelding:administrasjon:ver1.0";
     private static String ARKIVMELDING_PROCESS_SKATT = "urn:no:difi:profile:arkivmelding:skatterOgAvgifter:ver1.0";
-    private static String AVTALT_PROCESS = "urn:no:difi:profile:avtalt:beta:ver1.0";
-    private static String AVTALT_DOCTYPE = "urn:no:difi:avtalt:xsd::beta";
+    private static String AVTALT_PROCESS = "urn:no:difi:profile:avtalt:avtalt:ver1.0";
+    private static String AVTALT_DOCTYPE = "urn:no:difi:avtalt:xsd::avtalt";
     private static String EINNSYN_PROCESS_JOURNALPOST = "urn:no:difi:profile:einnsyn:journalpost:ver1.0";
     private static String EINNSYN_DOCTYPE_JOURNALPOST = "urn:no:difi:einnsyn:xsd::publisering";
     private static String EINNSYN_PROCESS_RESPONSE = "urn:no:difi:profile:einnsyn:response:ver1.0";
