@@ -95,8 +95,8 @@ public class ServiceRecordController {
             throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException,
             DsfLookupException, BrregNotFoundException, SvarUtClientException {
         MDC.put("entity", identifier);
-        String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
-        fillRequestScope(identifier, conversationId, clientOrgnr);
+        String clientId = authenticationService.getAuthorizedClientIdentifier(auth, request);
+        fillRequestScope(identifier, conversationId, clientId);
         Optional<EntityInfo> optionalEntityInfo = entityService.getEntityInfo(identifier);
         if (!optionalEntityInfo.isPresent()) {
             return notFoundResponse(String.format("Entity with identifier '%s' not found.", identifier));
@@ -111,10 +111,10 @@ public class ServiceRecordController {
         ServiceRecord serviceRecord = null;
         ProcessCategory processCategory = optionalProcess.get().getCategory();
         if (processCategory.equals(ProcessCategory.DIGITALPOST) && shouldCreateServiceRecordForCitizen().test(entityInfo)) {
-            if (clientOrgnr == null) {
+            if (clientId == null) {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
             }
-            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr));
+            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientId));
         }
         if (processCategory == ProcessCategory.ARKIVMELDING) {
             Optional<ServiceRecord> osr = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier, securityLevel);
@@ -174,10 +174,10 @@ public class ServiceRecordController {
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
-    private void fillRequestScope(String identifier, String conversationId, String clientOrgnr) {
+    private void fillRequestScope(String identifier, String conversationId, String clientId) {
         requestScope.setConversationId(conversationId);
         requestScope.setIdentifier(identifier);
-        requestScope.setClientId(clientOrgnr);
+        requestScope.setClientId(clientId);
     }
 
     private ResponseEntity<?> errorResponse(HttpStatus status, String message) {

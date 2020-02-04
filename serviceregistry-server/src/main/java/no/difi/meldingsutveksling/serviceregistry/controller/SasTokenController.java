@@ -30,7 +30,7 @@ public class SasTokenController {
 
     @PreAuthorize("#oauth2.hasScope('move/dpe.read')")
     @GetMapping(value = "/sastoken", produces = "application/jose")
-    public ResponseEntity getToken(Authentication auth) throws EntitySignerException {
+    public ResponseEntity<?> getToken(Authentication auth) throws EntitySignerException {
 
         if (auth == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
