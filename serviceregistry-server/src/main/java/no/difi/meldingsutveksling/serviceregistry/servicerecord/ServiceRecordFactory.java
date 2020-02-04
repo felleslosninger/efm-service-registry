@@ -3,6 +3,7 @@ package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
@@ -46,56 +47,24 @@ import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier
  * Factory method class to create Service Records based on lookup endpoint urls and certificates corresponding to those services
  */
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class ServiceRecordFactory {
 
     private final KrrService krrService;
-    private ServiceregistryProperties properties;
-    private VirkSertService virksertService;
-    private ELMALookupService elmaLookupService;
-    private EntityService entityService;
-    private SvarUtService svarUtService;
-    private ProcessService processService;
-    private DocumentTypeService documentTypeService;
-    private SRRequestScope requestScope;
-
-    /**
-     * Creates factory to create ServiceRecord using provided environment and services
-     *
-     * @param properties          - parameters needed to contact the provided services
-     * @param virksertService     - used to lookup virksomhetssertifikat (certificate)
-     * @param elmaLookupService   - used to lookup hostname of Altinn formidlingstjeneste
-     * @param krrService          - used to lookup parameters needed to use DPI transportation
-     * @param entityService       - used to look up information about citizens and organizations in Brønnøysundregisteret and Datahotellet.
-     * @param svarUtService       - used to determine whether an organization utilizes FIKS.
-     * @param documentTypeService
-     * @param requestScope
-     */
-    @SuppressWarnings("squid:S00107")
-    public ServiceRecordFactory(ServiceregistryProperties properties,
-                                VirkSertService virksertService,
-                                ELMALookupService elmaLookupService,
-                                KrrService krrService,
-                                EntityService entityService,
-                                SvarUtService svarUtService,
-                                ProcessService processService,
-                                DocumentTypeService documentTypeService,
-                                SRRequestScope requestScope) {
-        this.properties = properties;
-        this.virksertService = virksertService;
-        this.elmaLookupService = elmaLookupService;
-        this.krrService = krrService;
-        this.entityService = entityService;
-        this.svarUtService = svarUtService;
-        this.processService = processService;
-        this.documentTypeService = documentTypeService;
-        this.requestScope = requestScope;
-    }
+    private final ServiceregistryProperties properties;
+    private final VirkSertService virksertService;
+    private final ELMALookupService elmaLookupService;
+    private final EntityService entityService;
+    private final SvarUtService svarUtService;
+    private final ProcessService processService;
+    private final DocumentTypeService documentTypeService;
+    private final SRRequestScope requestScope;
 
     public Optional<ServiceRecord> createArkivmeldingServiceRecord(String orgnr, String processIdentifier, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
         if (optionalProcess.isPresent()) {
-            return Optional.of(createArkivmeldingServiceRecord(orgnr, targetSecurityLevel, optionalProcess.get()));
+            return Optional.ofNullable(createArkivmeldingServiceRecord(orgnr, targetSecurityLevel, optionalProcess.get()));
         }
         return Optional.empty();
     }
@@ -244,9 +213,7 @@ public class ServiceRecordFactory {
                                                                String onBehalfOrgnr) throws KRRClientException, DsfLookupException, BrregNotFoundException {
 
         String token = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
-        PersonResource personResource = krrService.getCitizenInfo(lookup(identifier)
-                .onBehalfOf(onBehalfOrgnr)
-                .token(token));
+        PersonResource personResource = krrService.getCitizenInfo(lookup(identifier).token(token));
 
         Set<Process> digitalpostProcesses = processService.findAll(ProcessCategory.DIGITALPOST);
         List<ServiceRecord> serviceRecords = Lists.newArrayList();

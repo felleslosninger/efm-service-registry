@@ -1,17 +1,17 @@
 package no.difi.meldingsutveksling.serviceregistry.svarut;
 
-import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.springframework.ws.transport.http.HttpUrlConnectionMessageSender;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.util.Base64;
 
-@Data
+@RequiredArgsConstructor
 public class PreauthMessageSender extends HttpUrlConnectionMessageSender {
 
-    private String user;
-    private String pass;
+    private final String user;
+    private final String pass;
 
     @Override
     protected void prepareConnection(HttpURLConnection connection) throws IOException {
