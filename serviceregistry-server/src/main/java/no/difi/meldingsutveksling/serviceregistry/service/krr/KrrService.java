@@ -29,7 +29,7 @@ public class KrrService {
     }
 
     @Cacheable(CacheConfig.DSF_CACHE)
-    public Optional<DSFResource> getDSFInfo(LookupParameters params) throws KRRClientException {
+    public Optional<DSFResource> getDSFInfo(LookupParameters params) throws DsfLookupException {
         return dsfClient.getDSFResource(params.getIdentifier(), params.getToken());
     }
 
