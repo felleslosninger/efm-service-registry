@@ -349,11 +349,42 @@ public class ServiceRecordControllerTest {
     }
 
     @Test
+    public void getWithProcessIdentifier_AvtaltResolvesToDpo_ServiceRecordShouldMatchExpectedValues() throws Exception {
+        Process processMock = mockProcess(ProcessCategory.AVTALT);
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
+        when(serviceRecordFactory.createServiceRecord(any(), any())).thenReturn(Optional.of(DPO_SERVICE_RECORD));
+
+        mvc.perform(get("/identifier/42/process/ProcessID").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("42")))
+                .andExpect(jsonPath("$.serviceRecords[0].pemCertificate", is("-----BEGIN CERTIFICATE-----\npem123\n-----END CERTIFICATE-----\n")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPO")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.serviceCode", is("123")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.serviceEditionCode", is("321")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("http://endpoint.here")))
+                .andExpect(jsonPath("$.infoRecord.identifier", is("42")))
+                .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")));
+    }
+
+    @Test
     public void getWithProcessIdentifier_ArkivmeldingResultsInCertificateException_ShouldReturnErrorResponse() throws Exception {
         Process processMock = mockProcess(ProcessCategory.ARKIVMELDING);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         final String message = "Certificate not found.";
         when(serviceRecordFactory.createArkivmeldingServiceRecord(any(), any(), any()))
+                .thenThrow(new CertificateNotFoundException(message, new VirksertClientException("")));
+
+        mvc.perform(get("/identifier/42/process/ProcessID").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error_description", is(message)));
+    }
+
+    @Test
+    public void getWithProcessIdentifier_AvtaltmeldingResultsInCertificateException_ShouldReturnErrorResponse() throws Exception {
+        Process processMock = mockProcess(ProcessCategory.AVTALT);
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
+        final String message = "Certificate not found.";
+        when(serviceRecordFactory.createServiceRecord(any(), any()))
                 .thenThrow(new CertificateNotFoundException(message, new VirksertClientException("")));
 
         mvc.perform(get("/identifier/42/process/ProcessID").accept(MediaType.APPLICATION_JSON))
@@ -437,7 +468,7 @@ public class ServiceRecordControllerTest {
     public void getWithProcessIdentifier_EinnsynServiceRecordShouldMatchExpectedValues() throws Exception {
         Process processMock = mockProcess(ProcessCategory.EINNSYN);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
-        when(serviceRecordFactory.createEinnsynServiceRecord(anyString(), anyString())).thenReturn(Optional.of(DPE_SERVICE_RECORD));
+        when(serviceRecordFactory.createServiceRecord(anyString(), anyString())).thenReturn(Optional.of(DPE_SERVICE_RECORD));
 
         mvc.perform(get("/identifier/50/process/ProcessID").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

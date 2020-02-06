@@ -7,6 +7,7 @@ import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.krr.DsfLookupException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
@@ -93,7 +94,7 @@ public class ServiceRecordController {
                                  Authentication auth,
                                  HttpServletRequest request)
             throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException,
-            DsfLookupException, BrregNotFoundException, SvarUtClientException {
+            DsfLookupException, BrregNotFoundException, SvarUtClientException, ProcessNotFoundException {
         MDC.put("entity", identifier);
         String clientId = authenticationService.getAuthorizedClientIdentifier(auth, request);
         fillRequestScope(identifier, conversationId, clientId);
@@ -117,20 +118,27 @@ public class ServiceRecordController {
             entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientId));
         }
         if (processCategory == ProcessCategory.ARKIVMELDING) {
-            Optional<ServiceRecord> osr = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier, securityLevel);
-            if (osr.isPresent()) {
-                serviceRecord = osr.get();
+            Optional<ServiceRecord> optionalServiceRecord = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier, securityLevel);
+            if (optionalServiceRecord.isPresent()) {
+                serviceRecord = optionalServiceRecord.get();
             }
             if (serviceRecord == null) {
                 return notFoundResponse(String.format("Arkivmelding process '%s' not found for receiver '%s'.", processIdentifier, identifier));
             }
         }
         if (processCategory == ProcessCategory.EINNSYN) {
-            Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createEinnsynServiceRecord(identifier, processIdentifier);
+            Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createServiceRecord(identifier, processIdentifier);
             if (!dpeServiceRecord.isPresent()) {
                 return notFoundResponse(String.format("eInnsyn process '%s' not found for receiver '%s'.", processIdentifier, identifier));
             }
             serviceRecord = dpeServiceRecord.get();
+        }
+        if(processCategory == ProcessCategory.AVTALT) {
+            Optional<ServiceRecord> avtaltDpoServiceRecord = serviceRecordFactory.createServiceRecord(identifier, processIdentifier);
+            if(!avtaltDpoServiceRecord.isPresent()) {
+                return notFoundResponse(String.format("Avtalt process '%s' not found for receiver '%s'.", processIdentifier, identifier));
+            }
+            serviceRecord = avtaltDpoServiceRecord.get();
         }
         entity.getServiceRecords().add(serviceRecord);
         return new ResponseEntity<>(entity, HttpStatus.OK);
@@ -170,6 +178,7 @@ public class ServiceRecordController {
         } else {
             entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
             entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(identifier));
+            entity.getServiceRecords().addAll(serviceRecordFactory.createAvtaltServiceRecords(identifier));
         }
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
@@ -200,8 +209,7 @@ public class ServiceRecordController {
             HttpServletRequest request)
             throws EntitySignerException, SecurityLevelNotFoundException, KRRClientException,
             CertificateNotFoundException, DsfLookupException, BrregNotFoundException, SvarUtClientException {
-        ResponseEntity<?> entity = entity(identifier, securityLevel, conversationId, auth, request);
-        return signEntity(entity);
+        return signEntity(entity(identifier, securityLevel, conversationId, auth, request));
     }
 
     @GetMapping(value = "/identifier/{identifier}/process/{processIdentifier}", produces = "application/jose")
@@ -213,9 +221,8 @@ public class ServiceRecordController {
                                  Authentication auth,
                                  HttpServletRequest request)
             throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException,
-            DsfLookupException, BrregNotFoundException, SvarUtClientException, EntitySignerException {
-        ResponseEntity<?> entity = entity(identifier, processIdentifier, securityLevel, conversationId, auth, request);
-        return signEntity(entity);
+            DsfLookupException, BrregNotFoundException, SvarUtClientException, EntitySignerException, ProcessNotFoundException {
+        return signEntity(entity(identifier, processIdentifier, securityLevel, conversationId, auth, request));
     }
 
     @GetMapping(value = "/info/{identifier}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -233,8 +240,7 @@ public class ServiceRecordController {
     @GetMapping(value = "/info/{identifier}", produces = "application/jose")
     @ResponseBody
     public ResponseEntity<?> signed(@PathVariable("identifier") String identifier) throws EntitySignerException {
-        ResponseEntity<?> entity = info(identifier);
-        return signEntity(entity);
+        return signEntity(info(identifier));
     }
 
     private ResponseEntity<?> signEntity(ResponseEntity<?> entity) throws EntitySignerException {
@@ -273,6 +279,12 @@ public class ServiceRecordController {
     @ExceptionHandler(SecurityLevelNotFoundException.class)
     public ResponseEntity<?> securityLevelNotFound(HttpServletRequest request, Exception e) {
         log.warn(markerFrom(requestScope), "Security level not found for {}", request.getRequestURL(), e);
+        return ResponseEntity.badRequest().body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
+    }
+
+    @ExceptionHandler(ProcessNotFoundException.class)
+    public ResponseEntity processNotFound(HttpServletRequest request, Exception e) {
+        log.error(markerFrom(requestScope), "Exception occured on {}", request.getRequestURL(), e);
         return ResponseEntity.badRequest().body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
     }
 

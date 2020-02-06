@@ -9,6 +9,7 @@ import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
@@ -41,6 +42,8 @@ import java.util.stream.Collectors;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
 import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
+import static no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory.AVTALT;
+import static no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory.EINNSYN;
 import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.*;
 
 /**
@@ -115,37 +118,38 @@ public class ServiceRecordFactory {
         return serviceRecord;
     }
 
+    public Optional<ServiceRecord> createServiceRecord(String orgnr, String processIdentifier) throws CertificateNotFoundException, ProcessNotFoundException {
+        Process process = processService.findByIdentifier(processIdentifier).orElseThrow(() -> new ProcessNotFoundException(processIdentifier));
 
-    public Optional<ServiceRecord> createEinnsynServiceRecord(String orgnr, String processIdentifier) throws CertificateNotFoundException {
-        Optional<ServiceRecord> optionalServiceRecord = Optional.empty();
-        Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
-        if (!optionalProcess.isPresent()) {
-            return Optional.empty();
-        }
-
-        Process process = optionalProcess.get();
-        Set<ProcessIdentifier> processIdentifiers = getSmpRegistrations(orgnr, Sets.newHashSet(process));
-        if (processIdentifiers.isEmpty()) {
-            return Optional.empty();
-        }
-        if (processIdentifiers.stream()
+        if (getSmpRegistrations(orgnr, Sets.newHashSet(process))
+                .stream()
                 .map(ProcessIdentifier::getIdentifier)
                 .anyMatch(identifier -> identifier.equals(processIdentifier))) {
-            optionalServiceRecord = Optional.of(createDpeServiceRecord(orgnr, process));
+            if(process.getCategory() == EINNSYN ) {
+                return Optional.of(createDpeServiceRecord(orgnr, process));
+            }
+            else if (process.getCategory() == AVTALT) {
+                return Optional.of(createDpoServiceRecord(orgnr, process));
+            }
         }
-
-        return optionalServiceRecord;
+        return Optional.empty();
     }
 
     private ServiceRecord createDpoServiceRecord(String orgnr, Process process) throws CertificateNotFoundException {
         String pem = lookupPemCertificate(orgnr);
-        ServiceRecord arkivmeldingServiceRecord = ArkivmeldingServiceRecord.of(DPO, orgnr, properties.getDpo().getEndpointURL().toString(), pem);
-        arkivmeldingServiceRecord.setProcess(process.getIdentifier());
-        arkivmeldingServiceRecord.getService().setServiceCode(properties.getDpo().getServiceCode());
-        arkivmeldingServiceRecord.getService().setServiceEditionCode(properties.getDpo().getServiceEditionCode());
-        arkivmeldingServiceRecord.setDocumentTypes(process.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+        ServiceRecord serviceRecord;
+        if(process.getCategory() == AVTALT) {
+             serviceRecord = AvtaltServiceRecord.of(DPO, orgnr, properties.getDpo().getEndpointURL().toString(), pem);
+        } else {
+            serviceRecord = ArkivmeldingServiceRecord.of(DPO, orgnr, properties.getDpo().getEndpointURL().toString(), pem);
+          }
 
-        return arkivmeldingServiceRecord;
+        serviceRecord.setProcess(process.getIdentifier());
+        serviceRecord.getService().setServiceCode(properties.getDpo().getServiceCode());
+        serviceRecord.getService().setServiceEditionCode(properties.getDpo().getServiceEditionCode());
+        serviceRecord.setDocumentTypes(process.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+
+        return serviceRecord;
     }
 
     private ServiceRecord createDpfServiceRecord(String orgnr, Process process, Integer securityLevel) {
@@ -184,6 +188,23 @@ public class ServiceRecordFactory {
         for (Process p : einnsynProcesses) {
             if (processIdentifiers.contains(p.getIdentifier())) {
                 serviceRecords.add(createDpeServiceRecord(orgnr, p));
+            }
+        }
+
+        return serviceRecords;
+    }
+
+    public List<ServiceRecord> createAvtaltServiceRecords(String orgnr) throws CertificateNotFoundException {
+        ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
+        Set<Process> avtaltProcesses = processService.findAll(AVTALT);
+
+        Set<String> processIdentifiers = getSmpRegistrations(orgnr, avtaltProcesses).stream()
+                .map(ProcessIdentifier::getIdentifier)
+                .collect(Collectors.toSet());
+
+        for (Process p : avtaltProcesses) {
+            if (processIdentifiers.contains(p.getIdentifier())) {
+                serviceRecords.add(createDpoServiceRecord(orgnr, p));
             }
         }
 
