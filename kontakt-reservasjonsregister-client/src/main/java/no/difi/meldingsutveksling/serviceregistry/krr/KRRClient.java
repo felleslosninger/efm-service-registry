@@ -11,6 +11,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.cert.CertificateException;
+import java.util.Objects;
 
 public class KRRClient {
 
@@ -46,7 +47,7 @@ public class KRRClient {
         String payload;
         try {
             JWTDecoder jwtDecoder = new JWTDecoder();
-            payload = jwtDecoder.getPayload(response.getBody());
+            payload = jwtDecoder.getPayload(Objects.requireNonNull(response.getBody()));
         } catch (CertificateException | BadJWSException e) {
             throw new KRRClientException("Error during decoding JWT response from KRR" ,e);
         }

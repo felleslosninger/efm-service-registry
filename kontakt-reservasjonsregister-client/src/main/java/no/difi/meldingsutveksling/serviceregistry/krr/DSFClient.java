@@ -11,6 +11,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.cert.CertificateException;
+import java.util.Objects;
 import java.util.Optional;
 
 public class DSFClient {
@@ -21,13 +22,13 @@ public class DSFClient {
         this.endpointURL= endpointURL;
     }
 
-    public Optional<DSFResource> getDSFResource(String identifier, String token) throws KRRClientException {
+    public Optional<DSFResource> getDSFResource(String identifier, String token) throws DsfLookupException {
 
         URI uri;
         try {
              uri = endpointURL.toURI();
         } catch (URISyntaxException e) {
-            throw new KRRClientException("Failed to create URI instance of \"" + endpointURL + "\"", e);
+            throw new DsfLookupException("Failed to create URI instance of \"" + endpointURL + "\"", e);
         }
 
         PersonRequest request = PersonRequest.of(identifier);
@@ -41,16 +42,16 @@ public class DSFClient {
         ResponseEntity<String> response = rt.exchange(uri, HttpMethod.POST, httpEntity, String.class);
 
         if (response.getStatusCode() != HttpStatus.OK) {
-            throw new KRRClientException(String.format("DSF endpoint returned %s (%s)", response.getStatusCode().value(),
+            throw new DsfLookupException(String.format("DSF endpoint returned %s (%s)", response.getStatusCode().value(),
                     response.getStatusCode().getReasonPhrase()));
         }
 
         String payload;
         try {
             JWTDecoder jwtDecoder = new JWTDecoder();
-            payload = jwtDecoder.getPayload(response.getBody());
+            payload = jwtDecoder.getPayload(Objects.requireNonNull(response.getBody()));
         } catch (CertificateException | BadJWSException e) {
-            throw new KRRClientException("Error during decoding JWT response from KRR" ,e);
+            throw new DsfLookupException("Error during decoding JWT response from DSF" ,e);
         }
 
         ObjectMapper om = new ObjectMapper();
@@ -58,7 +59,7 @@ public class DSFClient {
         try {
             dsfResponse = om.readValue(payload, DSFResponse.class);
         } catch (IOException e) {
-            throw new KRRClientException("Error mapping payload to " + DSFResponse.class.getName(), e);
+            throw new DsfLookupException("Error mapping payload to " + DSFResponse.class.getName(), e);
         }
 
         if (dsfResponse.getPersons() == null || dsfResponse.getPersons().isEmpty()) {

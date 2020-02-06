@@ -35,7 +35,6 @@ import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -270,7 +269,7 @@ public class ServiceRecordFactoryTest {
     @Test
     public void createArkivmeldingServiceRecord_NoSmpNorSvarUtRegistration_ShouldReturnDpvServiceRecord() throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
-        when(lookupService.lookup(anyString(), anySetOf(String.class))).thenReturn(new ArrayList());
+        when(lookupService.lookup(anyString(), anySet())).thenReturn(Lists.newArrayList());
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
         Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR, ARKIVMELDING_PROCESS_SKATT, null);

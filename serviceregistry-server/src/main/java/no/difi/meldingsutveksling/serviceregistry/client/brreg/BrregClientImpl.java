@@ -4,6 +4,7 @@ import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
@@ -63,8 +64,10 @@ public class BrregClientImpl implements BrregClient {
             if (response.getStatusCode() == HttpStatus.OK) {
                 return Optional.ofNullable(response.getBody());
             }
-        } catch (Exception e) {
-            log.error(String.format("Error looking up entity with identifier=%s in brreg", orgnr), e);
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
+                log.error(String.format("Error looking up entity with identifier=%s in brreg", orgnr), e);
+            }
         }
         return Optional.empty();
 

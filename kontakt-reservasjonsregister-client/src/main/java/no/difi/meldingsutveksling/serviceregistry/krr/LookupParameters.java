@@ -5,16 +5,10 @@ import lombok.Data;
 @Data
 public class LookupParameters {
     private final String identifier;
-    private String clientOrgnr;
     private String token;
 
     private LookupParameters(String identifier) {
         this.identifier = identifier;
-    }
-
-    public LookupParameters onBehalfOf(String clientOrgnr) {
-        setClientOrgnr(clientOrgnr);
-        return this;
     }
 
     public static LookupParameters lookup(String identifier) {

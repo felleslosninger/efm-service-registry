@@ -1,19 +1,16 @@
 package no.difi.meldingsutveksling.serviceregistry.service;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import lombok.extern.slf4j.Slf4j;
+import no.difi.meldingsutveksling.serviceregistry.CacheConfig;
 import no.difi.meldingsutveksling.serviceregistry.model.CitizenInfo;
 import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
 import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.isCitizen;
 import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
@@ -26,7 +23,6 @@ import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory
 @Slf4j
 public class EntityService {
 
-    private final LoadingCache<String, Optional<EntityInfo>> entityCache;
     private final BrregService brregService;
     private final SRRequestScope requestScope;
 
@@ -34,38 +30,23 @@ public class EntityService {
                          SRRequestScope requestScope) {
         this.brregService = brregService;
         this.requestScope = requestScope;
-        this.entityCache = CacheBuilder.newBuilder()
-                .expireAfterWrite(1, TimeUnit.DAYS)
-                .build(new CacheLoader<String, Optional<EntityInfo>>() {
-                    @Override
-                    public Optional<EntityInfo> load(String key) throws Exception {
-                        return loadEntityInfo(key);
-                    }
-                });
     }
 
     /**
-     * @param identifier for an entity either an organization number or a fodselsnummer
+     * @param identifier for an entity either an organization number or a personal identification number
      * @return info needed to send messages to the entity
      */
-    private Optional<EntityInfo> loadEntityInfo(String identifier) throws BrregNotFoundException {
+    @Cacheable(CacheConfig.BRREG_CACHE)
+    public Optional<EntityInfo> getEntityInfo(String identifier) {
         if (isCitizen().test(identifier)) {
             return Optional.of(new CitizenInfo(identifier));
         } else {
-            return brregService.getOrganizationInfo(identifier);
-        }
-    }
-
-    /**
-     * @param identifier for an entity either an organization number or a fodselsnummer
-     * @return info needed to send messages to the entity
-     */
-    public Optional<EntityInfo> getEntityInfo(String identifier) {
-        try {
-            return entityCache.get(identifier);
-        } catch (ExecutionException e) {
-            log.error(markerFrom(requestScope), "Could not find entity for the requested identifier={}", identifier, e);
-            return Optional.empty();
+            try {
+                return brregService.getOrganizationInfo(identifier);
+            } catch (BrregNotFoundException e) {
+                log.error(markerFrom(requestScope), "Could not find entity for the requested identifier={}", identifier, e);
+                return Optional.empty();
+            }
         }
     }
 
