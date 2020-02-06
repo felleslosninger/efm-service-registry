@@ -384,7 +384,7 @@ public class ServiceRecordControllerTest {
         Process processMock = mockProcess(ProcessCategory.AVTALT);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         final String message = "Certificate not found.";
-        when(serviceRecordFactory.createArkivmeldingServiceRecord(any(), any(), any()))
+        when(serviceRecordFactory.createServiceRecord(any(), any()))
                 .thenThrow(new CertificateNotFoundException(message, new VirksertClientException("")));
 
         mvc.perform(get("/identifier/42/process/ProcessID").accept(MediaType.APPLICATION_JSON))
