@@ -350,12 +350,11 @@ public class ServiceRecordFactoryTest {
         return result.stream().filter(serviceRecord -> serviceIdentifier == serviceRecord.getService().getIdentifier()).count();
     }
 
-    @Test
+    @Test(expected = ProcessNotFoundException.class)
     public void createEinnsynServiceRecord_ProcessIsNotFound_ShouldReturnNotFound() throws
             CertificateNotFoundException, ProcessNotFoundException {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.empty());
-        Optional<ServiceRecord> result = factory.createServiceRecord(ORGNR, "NotFound");
-        assertFalse(result.isPresent());
+        factory.createServiceRecord(ORGNR, "NotFound");
     }
 
     @Test
@@ -404,9 +403,8 @@ public class ServiceRecordFactoryTest {
         einnsynResponseProcess.setDocumentTypes(Lists.newArrayList(einnsynResponseDocumentType));
         when(processService.findByIdentifier(EINNSYN_PROCESS_RESPONSE)).thenReturn(responseProcess);
         when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_EINNSYN_RESPONSE)), anySet()))
-                .thenReturn(Sets.newHashSet(ProcessIdentifier.of(EINNSYN_PROCESS_RESPONSE)));
+                .thenReturn(Sets.newHashSet());
 
-        when(processService.findByIdentifier(EINNSYN_PROCESS_RESPONSE)).thenReturn(Optional.empty());
         Optional<ServiceRecord> result = factory.createServiceRecord(ORGNR_EINNSYN_RESPONSE, EINNSYN_PROCESS_RESPONSE);
         assertFalse(result.isPresent());
     }
