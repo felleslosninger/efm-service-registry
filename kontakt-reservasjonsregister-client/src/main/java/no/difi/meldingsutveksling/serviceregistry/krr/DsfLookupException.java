@@ -6,4 +6,8 @@ public class DsfLookupException extends Exception {
         super(message);
     }
 
+    public DsfLookupException(String message, Throwable e) {
+        super(message, e);
+    }
+
 }

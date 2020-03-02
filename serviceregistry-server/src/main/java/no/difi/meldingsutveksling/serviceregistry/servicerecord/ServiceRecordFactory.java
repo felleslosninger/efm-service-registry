@@ -3,11 +3,13 @@ package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.Notification;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
@@ -40,62 +42,32 @@ import java.util.stream.Collectors;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
 import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
+import static no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory.AVTALT;
+import static no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory.EINNSYN;
 import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.*;
 
 /**
  * Factory method class to create Service Records based on lookup endpoint urls and certificates corresponding to those services
  */
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class ServiceRecordFactory {
 
     private final KrrService krrService;
-    private ServiceregistryProperties properties;
-    private VirkSertService virksertService;
-    private ELMALookupService elmaLookupService;
-    private EntityService entityService;
-    private SvarUtService svarUtService;
-    private ProcessService processService;
-    private DocumentTypeService documentTypeService;
-    private SRRequestScope requestScope;
-
-    /**
-     * Creates factory to create ServiceRecord using provided environment and services
-     *
-     * @param properties          - parameters needed to contact the provided services
-     * @param virksertService     - used to lookup virksomhetssertifikat (certificate)
-     * @param elmaLookupService   - used to lookup hostname of Altinn formidlingstjeneste
-     * @param krrService          - used to lookup parameters needed to use DPI transportation
-     * @param entityService       - used to look up information about citizens and organizations in Brønnøysundregisteret and Datahotellet.
-     * @param svarUtService       - used to determine whether an organization utilizes FIKS.
-     * @param documentTypeService
-     * @param requestScope
-     */
-    @SuppressWarnings("squid:S00107")
-    public ServiceRecordFactory(ServiceregistryProperties properties,
-                                VirkSertService virksertService,
-                                ELMALookupService elmaLookupService,
-                                KrrService krrService,
-                                EntityService entityService,
-                                SvarUtService svarUtService,
-                                ProcessService processService,
-                                DocumentTypeService documentTypeService,
-                                SRRequestScope requestScope) {
-        this.properties = properties;
-        this.virksertService = virksertService;
-        this.elmaLookupService = elmaLookupService;
-        this.krrService = krrService;
-        this.entityService = entityService;
-        this.svarUtService = svarUtService;
-        this.processService = processService;
-        this.documentTypeService = documentTypeService;
-        this.requestScope = requestScope;
-    }
+    private final ServiceregistryProperties properties;
+    private final VirkSertService virksertService;
+    private final ELMALookupService elmaLookupService;
+    private final EntityService entityService;
+    private final SvarUtService svarUtService;
+    private final ProcessService processService;
+    private final DocumentTypeService documentTypeService;
+    private final SRRequestScope requestScope;
 
     public Optional<ServiceRecord> createArkivmeldingServiceRecord(String orgnr, String processIdentifier, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
         if (optionalProcess.isPresent()) {
-            return Optional.of(createArkivmeldingServiceRecord(orgnr, targetSecurityLevel, optionalProcess.get()));
+            return Optional.ofNullable(createArkivmeldingServiceRecord(orgnr, targetSecurityLevel, optionalProcess.get()));
         }
         return Optional.empty();
     }
@@ -146,37 +118,38 @@ public class ServiceRecordFactory {
         return serviceRecord;
     }
 
+    public Optional<ServiceRecord> createServiceRecord(String orgnr, String processIdentifier) throws CertificateNotFoundException, ProcessNotFoundException {
+        Process process = processService.findByIdentifier(processIdentifier).orElseThrow(() -> new ProcessNotFoundException(processIdentifier));
 
-    public Optional<ServiceRecord> createEinnsynServiceRecord(String orgnr, String processIdentifier) throws CertificateNotFoundException {
-        Optional<ServiceRecord> optionalServiceRecord = Optional.empty();
-        Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
-        if (!optionalProcess.isPresent()) {
-            return Optional.empty();
-        }
-
-        Process process = optionalProcess.get();
-        Set<ProcessIdentifier> processIdentifiers = getSmpRegistrations(orgnr, Sets.newHashSet(process));
-        if (processIdentifiers.isEmpty()) {
-            return Optional.empty();
-        }
-        if (processIdentifiers.stream()
+        if (getSmpRegistrations(orgnr, Sets.newHashSet(process))
+                .stream()
                 .map(ProcessIdentifier::getIdentifier)
                 .anyMatch(identifier -> identifier.equals(processIdentifier))) {
-            optionalServiceRecord = Optional.of(createDpeServiceRecord(orgnr, process));
+            if(process.getCategory() == EINNSYN ) {
+                return Optional.of(createDpeServiceRecord(orgnr, process));
+            }
+            else if (process.getCategory() == AVTALT) {
+                return Optional.of(createDpoServiceRecord(orgnr, process));
+            }
         }
-
-        return optionalServiceRecord;
+        return Optional.empty();
     }
 
     private ServiceRecord createDpoServiceRecord(String orgnr, Process process) throws CertificateNotFoundException {
         String pem = lookupPemCertificate(orgnr);
-        ServiceRecord arkivmeldingServiceRecord = ArkivmeldingServiceRecord.of(DPO, orgnr, properties.getDpo().getEndpointURL().toString(), pem);
-        arkivmeldingServiceRecord.setProcess(process.getIdentifier());
-        arkivmeldingServiceRecord.getService().setServiceCode(properties.getDpo().getServiceCode());
-        arkivmeldingServiceRecord.getService().setServiceEditionCode(properties.getDpo().getServiceEditionCode());
-        arkivmeldingServiceRecord.setDocumentTypes(process.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+        ServiceRecord serviceRecord;
+        if(process.getCategory() == AVTALT) {
+             serviceRecord = AvtaltServiceRecord.of(DPO, orgnr, properties.getDpo().getEndpointURL().toString(), pem);
+        } else {
+            serviceRecord = ArkivmeldingServiceRecord.of(DPO, orgnr, properties.getDpo().getEndpointURL().toString(), pem);
+          }
 
-        return arkivmeldingServiceRecord;
+        serviceRecord.setProcess(process.getIdentifier());
+        serviceRecord.getService().setServiceCode(properties.getDpo().getServiceCode());
+        serviceRecord.getService().setServiceEditionCode(properties.getDpo().getServiceEditionCode());
+        serviceRecord.setDocumentTypes(process.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+
+        return serviceRecord;
     }
 
     private ServiceRecord createDpfServiceRecord(String orgnr, Process process, Integer securityLevel) {
@@ -221,6 +194,23 @@ public class ServiceRecordFactory {
         return serviceRecords;
     }
 
+    public List<ServiceRecord> createAvtaltServiceRecords(String orgnr) throws CertificateNotFoundException {
+        ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
+        Set<Process> avtaltProcesses = processService.findAll(AVTALT);
+
+        Set<String> processIdentifiers = getSmpRegistrations(orgnr, avtaltProcesses).stream()
+                .map(ProcessIdentifier::getIdentifier)
+                .collect(Collectors.toSet());
+
+        for (Process p : avtaltProcesses) {
+            if (processIdentifiers.contains(p.getIdentifier())) {
+                serviceRecords.add(createDpoServiceRecord(orgnr, p));
+            }
+        }
+
+        return serviceRecords;
+    }
+
     private ArkivmeldingServiceRecord createDpvServiceRecord(String orgnr, Process process) {
         ArkivmeldingServiceRecord dpvServiceRecord = ArkivmeldingServiceRecord.of(DPV, orgnr, properties.getDpv().getEndpointURL().toString());
         dpvServiceRecord.getService().setServiceCode(process.getServiceCode());
@@ -244,9 +234,7 @@ public class ServiceRecordFactory {
                                                                String onBehalfOrgnr) throws KRRClientException, DsfLookupException, BrregNotFoundException {
 
         String token = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
-        PersonResource personResource = krrService.getCitizenInfo(lookup(identifier)
-                .onBehalfOf(onBehalfOrgnr)
-                .token(token));
+        PersonResource personResource = krrService.getCitizenInfo(lookup(identifier).token(token));
 
         Set<Process> digitalpostProcesses = processService.findAll(ProcessCategory.DIGITALPOST);
         List<ServiceRecord> serviceRecords = Lists.newArrayList();

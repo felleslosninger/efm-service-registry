@@ -6,6 +6,7 @@ package no.difi.meldingsutveksling.serviceregistry.model;
 public enum ProcessCategory {
     ARKIVMELDING,
     EINNSYN,
-    DIGITALPOST
+    DIGITALPOST,
+    AVTALT
 }
 

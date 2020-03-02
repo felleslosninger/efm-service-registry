@@ -3,6 +3,7 @@ package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 import com.google.common.collect.Sets;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.model.DocumentType;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
@@ -34,7 +35,6 @@ import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -94,6 +94,8 @@ public class ServiceRecordFactoryTest {
     private static String ARKIVMELDING_DOCTYPE = "urn:no:difi:arkivmelding:xsd::arkivmelding";
     private static String ARKIVMELDING_PROCESS_ADMIN = "urn:no:difi:profile:arkivmelding:administrasjon:ver1.0";
     private static String ARKIVMELDING_PROCESS_SKATT = "urn:no:difi:profile:arkivmelding:skatterOgAvgifter:ver1.0";
+    private static String AVTALT_PROCESS = "urn:no:difi:profile:avtalt:avtalt:ver1.0";
+    private static String AVTALT_DOCTYPE = "urn:no:difi:avtalt:xsd::avtalt";
     private static String EINNSYN_PROCESS_JOURNALPOST = "urn:no:difi:profile:einnsyn:journalpost:ver1.0";
     private static String EINNSYN_DOCTYPE_JOURNALPOST = "urn:no:difi:einnsyn:xsd::publisering";
     private static String EINNSYN_PROCESS_RESPONSE = "urn:no:difi:profile:einnsyn:response:ver1.0";
@@ -129,6 +131,8 @@ public class ServiceRecordFactoryTest {
         ServiceregistryProperties.ELMA elmaProps = new ServiceregistryProperties.ELMA();
         elmaProps.setLookupIcd(ELMA_LOOKUP_ICD);
         when(props.getElma()).thenReturn(elmaProps);
+
+        //Prosess og dokumenttype Arkivmelding
         DocumentType documentType = new DocumentType()
                 .setIdentifier(ARKIVMELDING_DOCTYPE);
         Process processAdmin = new Process()
@@ -147,6 +151,20 @@ public class ServiceRecordFactoryTest {
         when(processService.findAll(ProcessCategory.ARKIVMELDING)).thenReturn(Sets.newHashSet(processAdmin, processSkatt));
         when(processService.getDefaultArkivmeldingProcess()).thenReturn(processAdmin);
         when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_FIKS)), anySet())).thenReturn(Sets.newHashSet());
+
+        //Prosess og dokumenttype Avtalt
+        DocumentType documentTypeAvtalt = new DocumentType()
+                .setIdentifier(AVTALT_DOCTYPE);
+        Process processAvtalt = new Process().setIdentifier(AVTALT_PROCESS)
+                .setCategory(ProcessCategory.AVTALT)
+                .setServiceCode("4192")
+                .setServiceEditionCode("270815");
+        processAvtalt.setDocumentTypes(Lists.newArrayList(documentTypeAvtalt));
+        documentTypeAvtalt.setProcesses(Lists.newArrayList(processAvtalt));
+        when(processService.findAll(ProcessCategory.AVTALT)).thenReturn(Sets.newHashSet(processAvtalt));
+        when(processService.getDefaultArkivmeldingProcess()).thenReturn(processAvtalt);
+        when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR)), anySet())).thenReturn(Sets.newHashSet());
+
 
         Process vedtakProcess = new Process()
                 .setIdentifier(DIGITALPOST_PROCESS_VEDTAK)
@@ -199,6 +217,22 @@ public class ServiceRecordFactoryTest {
         assertEquals(ServiceIdentifier.DPO, result.get().getService().getIdentifier());
     }
 
+    @Test
+    public void createAvtaltServiceRecord_OrganizationHasAvtaltInSmp_ShouldReturnDpoServiceRecord() throws CertificateNotFoundException, ProcessNotFoundException {
+        Process processMock = mock(Process.class);
+        when(processMock.getIdentifier()).thenReturn(AVTALT_PROCESS);
+        when(processMock.getCategory()).thenReturn(ProcessCategory.AVTALT);
+        when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
+
+        when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR)), anySet()))
+                .thenReturn(Sets.newHashSet(ProcessIdentifier.of(AVTALT_PROCESS)));
+
+        Optional<ServiceRecord> result = factory.createServiceRecord(ORGNR, AVTALT_PROCESS);
+
+        assertTrue(result.isPresent());
+        assertEquals(ServiceIdentifier.DPO, result.get().getService().getIdentifier());
+    }
+
     @Test(expected = CertificateNotFoundException.class)
     public void createArkivMeldingServiceRecord_CertificateMissingForSmpProcess_ShouldThrowDedicatedException() throws SecurityLevelNotFoundException, VirksertClientException, CertificateNotFoundException, SvarUtClientException {
         Process processMock = mock(Process.class);
@@ -235,7 +269,7 @@ public class ServiceRecordFactoryTest {
     @Test
     public void createArkivmeldingServiceRecord_NoSmpNorSvarUtRegistration_ShouldReturnDpvServiceRecord() throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
-        when(lookupService.lookup(anyString(), anySetOf(String.class))).thenReturn(new ArrayList());
+        when(lookupService.lookup(anyString(), anySet())).thenReturn(Lists.newArrayList());
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
         Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR, ARKIVMELDING_PROCESS_SKATT, null);
@@ -316,12 +350,11 @@ public class ServiceRecordFactoryTest {
         return result.stream().filter(serviceRecord -> serviceIdentifier == serviceRecord.getService().getIdentifier()).count();
     }
 
-    @Test
+    @Test(expected = ProcessNotFoundException.class)
     public void createEinnsynServiceRecord_ProcessIsNotFound_ShouldReturnNotFound() throws
-            CertificateNotFoundException {
+            CertificateNotFoundException, ProcessNotFoundException {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.empty());
-        Optional<ServiceRecord> result = factory.createEinnsynServiceRecord(ORGNR, "NotFound");
-        assertFalse(result.isPresent());
+        factory.createServiceRecord(ORGNR, "NotFound");
     }
 
     @Test
@@ -348,15 +381,15 @@ public class ServiceRecordFactoryTest {
 
     @Test
     public void createEinnsynServiceRecord_HasOrgnrAndProcessidentifier_ShouldReturnDpeServiceRecord() throws
-            CertificateNotFoundException {
-        Optional<ServiceRecord> result = factory.createEinnsynServiceRecord(ORGNR_EINNSYN_JOURNALPOST, EINNSYN_PROCESS_JOURNALPOST);
+            CertificateNotFoundException, ProcessNotFoundException {
+        Optional<ServiceRecord> result = factory.createServiceRecord(ORGNR_EINNSYN_JOURNALPOST, EINNSYN_PROCESS_JOURNALPOST);
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPE, result.get().getService().getIdentifier());
     }
 
     @Test
     public void createEinnsynServiceRecord_HasOrgnrWhileProcessidentifierMatchNotFoundInElma_ShouldNotReturnDpeServiceRecord
-            () throws CertificateNotFoundException {
+            () throws CertificateNotFoundException, ProcessNotFoundException {
         DocumentType einnsynResponseDocumentType = new DocumentType()
                 .setIdentifier(EINNSYN_DOCTYPE_RESPONSE_KVITTERING)
                 .setIdentifier(EINNSYN_DOCTYPE_RESPONSE_STATUS);
@@ -370,10 +403,9 @@ public class ServiceRecordFactoryTest {
         einnsynResponseProcess.setDocumentTypes(Lists.newArrayList(einnsynResponseDocumentType));
         when(processService.findByIdentifier(EINNSYN_PROCESS_RESPONSE)).thenReturn(responseProcess);
         when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_EINNSYN_RESPONSE)), anySet()))
-                .thenReturn(Sets.newHashSet(ProcessIdentifier.of(EINNSYN_PROCESS_RESPONSE)));
+                .thenReturn(Sets.newHashSet());
 
-        when(processService.findByIdentifier(EINNSYN_PROCESS_RESPONSE)).thenReturn(Optional.empty());
-        Optional<ServiceRecord> result = factory.createEinnsynServiceRecord(ORGNR_EINNSYN_RESPONSE, EINNSYN_PROCESS_RESPONSE);
+        Optional<ServiceRecord> result = factory.createServiceRecord(ORGNR_EINNSYN_RESPONSE, EINNSYN_PROCESS_RESPONSE);
         assertFalse(result.isPresent());
     }
 
