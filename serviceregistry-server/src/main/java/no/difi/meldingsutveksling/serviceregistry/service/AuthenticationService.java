@@ -1,7 +1,11 @@
 package no.difi.meldingsutveksling.serviceregistry.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.common.OAuth2AccessToken;
+import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
+import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
@@ -10,10 +14,15 @@ import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class AuthenticationService {
 
+    private final TokenStore tokenStore;
+
     public String getAuthorizedClientIdentifier(Authentication auth, HttpServletRequest request) {
-        String clientOrgnr = auth == null ? null : (String) auth.getPrincipal();
+        OAuth2AuthenticationDetails details = (OAuth2AuthenticationDetails) auth.getDetails();
+        OAuth2AccessToken oAuth2AccessToken = tokenStore.readAccessToken(details.getTokenValue());
+        String clientOrgnr = (String) oAuth2AccessToken.getAdditionalInformation().get("client_orgno");
         if (clientOrgnr != null) {
             log.debug(String.format("Authorized lookup request by %s", clientOrgnr),
                     markerFrom(request.getRemoteAddr(), request.getRemoteHost(), clientOrgnr));
