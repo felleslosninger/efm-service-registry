@@ -3,6 +3,10 @@
 
 [#info-org]
 == Organization
+[caption=""]
+.Path parameters
+include::{snippets}/info/org/path-parameters.adoc[]
+
 [source,http,role="primary"]
 .Curl
 include::{snippets}/info/org/curl-request.adoc[]
@@ -15,8 +19,16 @@ include::{snippets}/info/org/http-request.adoc[]
 .Response
 include::{snippets}/info/org/http-response.adoc[]
 
+[source,http,role="secondary", caption=""]
+.Headers
+include::{snippets}/info/org/request-headers.adoc[]
+
 [#info-person]
 == Person
+[caption=""]
+.Path parameters
+include::{snippets}/info/person/path-parameters.adoc[]
+
 [source,http,role="primary"]
 .Curl
 include::{snippets}/info/person/curl-request.adoc[]
@@ -28,3 +40,7 @@ include::{snippets}/info/person/http-request.adoc[]
 [source,http,role="secondary"]
 .Response
 include::{snippets}/info/person/http-response.adoc[]
+
+[source,http,role="secondary",caption=""]
+.Headers
+include::{snippets}/info/person/request-headers.adoc[]
