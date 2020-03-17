@@ -1,0 +1,37 @@
+:doctype: book
+:toc: left
+:toc-title: Table of Contents
+:toclevels: 3
+:toc-collapsable:
+:linkcss:
+:stylesdir: assets/css
+:stylesheet: asciidoctor.css
+:icons: font
+:source-highlighter: highlightjs
+:imagesdir: images/eformidling
+
+= Service Registry API Specification
+Version {project-version}
+
+== The services
+
+|===
+|HTTP Method |URL |Description |Media type(s)
+
+|GET
+|<<get-service-records,/identifier/{identifier}>>
+|<<get-service-records>>
+|application/json, application/jose
+|GET
+|<<service-record-process,/identifier/{identifier}/process/{processIdentifier}>>
+|<<service-record-process>>
+|application/json, application/jose
+|GET
+|<<info-records,/info/{identifier}>>
+|<<info-records>>
+|application/json, application/jose
+
+|===
+
+include::servicerecord.adoc[leveloffset=+1]
+include::inforecord.adoc[leveloffset=+1]

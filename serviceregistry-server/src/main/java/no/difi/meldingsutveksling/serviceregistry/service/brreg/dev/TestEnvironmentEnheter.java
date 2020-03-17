@@ -2,7 +2,6 @@ package no.difi.meldingsutveksling.serviceregistry.service.brreg.dev;
 
 import lombok.RequiredArgsConstructor;
 import no.difi.meldingsutveksling.serviceregistry.model.BrregMockEnhet;
-import no.difi.meldingsutveksling.serviceregistry.model.BrregOrganisasjonsform;
 import no.difi.meldingsutveksling.serviceregistry.persistence.BrregMockEnhetRepository;
 import org.springframework.stereotype.Component;
 

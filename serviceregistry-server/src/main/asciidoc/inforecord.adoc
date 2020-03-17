@@ -1,0 +1,30 @@
+[#info-records]
+= Lookup info records
+
+[#info-org]
+== Organization
+[source,http,role="primary"]
+.Curl
+include::{snippets}/info/org/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/info/org/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/info/org/http-response.adoc[]
+
+[#info-person]
+== Person
+[source,http,role="primary"]
+.Curl
+include::{snippets}/info/person/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/info/person/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/info/person/http-response.adoc[]

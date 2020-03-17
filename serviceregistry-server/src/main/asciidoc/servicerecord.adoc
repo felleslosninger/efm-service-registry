@@ -1,0 +1,109 @@
+= Service Records
+
+[#get-service-records]
+== Lookup all service records
+The service is used to get the info record, and all possible service records for the specified identifier
+
+[#identifier-org]
+=== Organization
+[source,http,role="primary"]
+.Curl
+include::{snippets}/identifier/org/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/identifier/org/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/identifier/org/http-response.adoc[]
+
+[#identifier-person]
+=== Person
+[source,http,role="primary"]
+.Curl
+include::{snippets}/identifier/person/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/identifier/person/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/identifier/person/http-response.adoc[]
+
+[#errors]
+=== Errors
+==== Identifier not found
+[source,http,role="primary"]
+.Curl
+include::{snippets}/identifier/notfound/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/identifier/notfound/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/identifier/notfound/http-response.adoc[]
+
+==== Receiver does not have given security level
+This only applies to receivers on the KS Fiks platform. https://ks-no.github.io/fiks-platform/
+[source,http,role="primary"]
+.Curl
+include::{snippets}/identifier/sec-level-not-found/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/identifier/sec-level-not-found/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/identifier/sec-level-not-found/http-response.adoc[]
+
+
+[#service-record-process]
+== Lookup by process
+One may lookup a single service record by its given process. A list of valid processes can be found here: https://difi.github.io/felleslosninger/eformidling_nm_message.html
+
+[#dpo]
+=== Arkivmelding
+[source,http,role="primary"]
+.Curl
+include::{snippets}/identifier/arkivmelding/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/identifier/arkivmelding/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/identifier/arkivmelding/http-response.adoc[]
+
+[#dpv]
+=== eInnsyn
+[source,http,role="primary"]
+.Curl
+include::{snippets}/identifier/einnsyn/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/identifier/einnsyn/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/identifier/einnsyn/http-response.adoc[]
+
+[#dpe]
+=== Digital post
+[source,http,role="primary"]
+.Curl
+include::{snippets}/identifier/digital/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/identifier/digital/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/identifier/digital/http-response.adoc[]
