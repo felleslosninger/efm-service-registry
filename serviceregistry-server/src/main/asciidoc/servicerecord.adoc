@@ -1,0 +1,174 @@
+= Service Records
+
+[#get-service-records]
+== Lookup all service records
+The service is used to get the info record, and all possible service records for the specified identifier
+
+[#identifier-org]
+=== Organization
+[caption=""]
+include::{snippets}/identifier/org/path-parameters.adoc[]
+
+[caption=""]
+.Request parameters
+include::{snippets}/identifier/org/request-parameters.adoc[]
+
+[caption=""]
+.Headers
+include::{snippets}/identifier/org/request-headers.adoc[]
+
+[source,http,role="primary"]
+.Curl
+include::{snippets}/identifier/org/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/identifier/org/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/identifier/org/http-response.adoc[]
+
+
+[#identifier-person]
+=== Person
+[caption=""]
+.Path parameters
+include::{snippets}/identifier/person/path-parameters.adoc[]
+
+[caption=""]
+.Request parameters
+include::{snippets}/identifier/person/request-parameters.adoc[]
+
+[caption=""]
+.Headers
+include::{snippets}/identifier/person/request-headers.adoc[]
+
+[source,http,role="primary"]
+.Curl
+include::{snippets}/identifier/person/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/identifier/person/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/identifier/person/http-response.adoc[]
+
+
+[#errors]
+=== Errors
+==== Identifier not found
+[source,http,role="primary"]
+.Curl
+include::{snippets}/identifier/notfound/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/identifier/notfound/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/identifier/notfound/http-response.adoc[]
+
+
+==== Receiver does not have given security level
+This only applies to receivers on the KS Fiks platform. https://ks-no.github.io/fiks-platform/
+[source,http,role="primary"]
+.Curl
+include::{snippets}/identifier/sec-level-not-found/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/identifier/sec-level-not-found/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/identifier/sec-level-not-found/http-response.adoc[]
+
+
+[#service-record-process]
+== Lookup by process
+One may lookup a single service record by its given process. A list of valid processes can be found here: https://difi.github.io/felleslosninger/eformidling_nm_message.html
+
+[#identifier-arkivmelding]
+=== Arkivmelding
+[caption=""]
+.Path parameters
+include::{snippets}/identifier/arkivmelding/path-parameters.adoc[]
+
+[caption=""]
+.Request parameters
+include::{snippets}/identifier/arkivmelding/request-parameters.adoc[]
+
+[caption=""]
+.Headers
+include::{snippets}/identifier/arkivmelding/request-headers.adoc[]
+
+[source,http,role="primary"]
+.Curl
+include::{snippets}/identifier/arkivmelding/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/identifier/arkivmelding/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/identifier/arkivmelding/http-response.adoc[]
+
+
+[#identifier-einnsyn]
+=== eInnsyn
+[caption=""]
+.Path parameters
+include::{snippets}/identifier/einnsyn/path-parameters.adoc[]
+
+[caption=""]
+.Request parameters
+include::{snippets}/identifier/einnsyn/request-parameters.adoc[]
+
+[caption=""]
+.Headers
+include::{snippets}/identifier/einnsyn/request-headers.adoc[]
+
+[source,http,role="primary"]
+.Curl
+include::{snippets}/identifier/einnsyn/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/identifier/einnsyn/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/identifier/einnsyn/http-response.adoc[]
+
+
+[#identifier-digital]
+=== Digital post
+[caption=""]
+.Path parameters
+include::{snippets}/identifier/digital/path-parameters.adoc[]
+
+[caption=""]
+.Request parameters
+include::{snippets}/identifier/digital/request-parameters.adoc[]
+
+[caption=""]
+.Headers
+include::{snippets}/identifier/digital/request-headers.adoc[]
+
+[source,http,role="primary"]
+.Curl
+include::{snippets}/identifier/digital/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/identifier/digital/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/identifier/digital/http-response.adoc[]
+
