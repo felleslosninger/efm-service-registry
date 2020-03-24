@@ -10,7 +10,7 @@ public class SRService {
     @NonNull
     private ServiceIdentifier identifier;
     @NonNull
-    protected String endpointUrl;
+    private String endpointUrl;
     private String serviceCode;
     private String serviceEditionCode;
     private Integer securityLevel;

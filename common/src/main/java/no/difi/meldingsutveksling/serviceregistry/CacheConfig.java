@@ -41,11 +41,11 @@ public class CacheConfig extends CachingConfigurerSupport {
                                 .build()),
                 new CaffeineCache(KRR_CACHE,
                         Caffeine.newBuilder()
-                                .expireAfterWrite(1, TimeUnit.HOURS)
+                                .expireAfterWrite(5, TimeUnit.MINUTES)
                                 .build()),
                 new CaffeineCache(DSF_CACHE,
                         Caffeine.newBuilder()
-                                .expireAfterWrite(1, TimeUnit.HOURS)
+                                .expireAfterWrite(5, TimeUnit.MINUTES)
                                 .build())
         ));
         return cacheManager;

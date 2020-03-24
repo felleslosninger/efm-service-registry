@@ -21,6 +21,9 @@ import no.difi.vefa.peppol.common.model.ProcessIdentifier;
 import no.difi.vefa.peppol.lookup.LookupClient;
 import no.difi.virksert.client.lang.VirksertClientException;
 import no.ks.fiks.io.client.FiksIOKlient;
+import no.ks.fiks.io.client.model.FiksOrgId;
+import no.ks.fiks.io.client.model.Konto;
+import no.ks.fiks.io.client.model.KontoId;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,6 +42,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -102,21 +106,28 @@ public class ServiceRecordFactoryTest {
     private static String ORGNR_EINNSYN_JOURNALPOST = "123123123";
     private static String ORGNR_EINNSYN_RESPONSE = "987987987";
     private static String ORGNR_EINNSYN = "123987654";
-    private static String ARKIVMELDING_DOCTYPE = "urn:no:difi:arkivmelding:xsd::arkivmelding";
-    private static String ARKIVMELDING_PROCESS_ADMIN = "urn:no:difi:profile:arkivmelding:administrasjon:ver1.0";
-    private static String ARKIVMELDING_PROCESS_SKATT = "urn:no:difi:profile:arkivmelding:skatterOgAvgifter:ver1.0";
-    private static String AVTALT_PROCESS = "urn:no:difi:profile:avtalt:avtalt:ver1.0";
-    private static String AVTALT_DOCTYPE = "urn:no:difi:avtalt:xsd::avtalt";
-    private static String EINNSYN_PROCESS_JOURNALPOST = "urn:no:difi:profile:einnsyn:journalpost:ver1.0";
-    private static String EINNSYN_DOCTYPE_JOURNALPOST = "urn:no:difi:einnsyn:xsd::publisering";
-    private static String EINNSYN_PROCESS_RESPONSE = "urn:no:difi:profile:einnsyn:response:ver1.0";
-    private static String EINNSYN_DOCTYPE_RESPONSE_KVITTERING = "urn:no:difi:einnsyn:xsd::einnsyn_kvittering";
-    private static String EINNSYN_DOCTYPE_RESPONSE_STATUS = "urn:no:difi:eformidling:xsd::status";
-    private static String DIGITALPOST_PROCESS_VEDTAK = "urn:no:difi:profile:digitalpost:vedtak:ver1.0";
-    private static String DIGITALPOST_DOCTYPE_PRINT = "urn:no:difi:digitalpost:xsd:fysisk::print";
     private static String PERSONNUMMER = "01234567890";
     private static final String ELMA_LOOKUP_ICD = "0192";
     private static final OrganizationType ORGL = new OrganizationType("ORGL");
+
+    private static String ARKIVMELDING_PROCESS_ADMIN = "urn:no:difi:profile:arkivmelding:administrasjon:ver1.0";
+    private static String ARKIVMELDING_PROCESS_SKATT = "urn:no:difi:profile:arkivmelding:skatterOgAvgifter:ver1.0";
+    private static String ARKIVMELDING_DOCTYPE = "urn:no:difi:arkivmelding:xsd::arkivmelding";
+
+    private static String AVTALT_PROCESS = "urn:no:difi:profile:avtalt:avtalt:ver1.0";
+    private static String AVTALT_DOCTYPE = "urn:no:difi:avtalt:xsd::avtalt";
+
+    private static String EINNSYN_PROCESS_JOURNALPOST = "urn:no:difi:profile:einnsyn:journalpost:ver1.0";
+    private static String EINNSYN_DOCTYPE_JOURNALPOST = "urn:no:difi:einnsyn:xsd::publisering";
+    private static String EINNSYN_PROCESS_INNSYNSKRAV = "urn:no:difi:profile:einnsyn:innsynskrav:ver1.0";
+    private static String EINNSYN_DOCTYPE_INNSYNSKRAV = "urn:no:difi:einnsyn:xsd::innsynskrav";
+    private static String EINNSYN_PROCESS_RESPONSE = "urn:no:difi:profile:einnsyn:response:ver1.0";
+    private static String EINNSYN_DOCTYPE_RESPONSE_KVITTERING = "urn:no:difi:einnsyn:xsd::einnsyn_kvittering";
+    private static String EINNSYN_DOCTYPE_RESPONSE_STATUS = "urn:no:difi:eformidling:xsd::status";
+
+    private static String DIGITALPOST_PROCESS_VEDTAK = "urn:no:difi:profile:digitalpost:vedtak:ver1.0";
+    private static String DIGITALPOST_DOCTYPE_PRINT = "urn:no:difi:digitalpost:xsd:fysisk::print";
+
 
     @Before
     public void init() throws MalformedURLException {
@@ -143,6 +154,7 @@ public class ServiceRecordFactoryTest {
         fiks.setSvarut(svarUtConfig);
         ServiceregistryProperties.FiksIo fiksIo = new ServiceregistryProperties.FiksIo();
         fiksIo.setOrgFormFilter(Collections.singletonList("KOMM"));
+        fiksIo.setProcessIdentifier(EINNSYN_PROCESS_INNSYNSKRAV);
         fiks.setIo(fiksIo);
         when(props.getFiks()).thenReturn(fiks);
 
@@ -200,14 +212,24 @@ public class ServiceRecordFactoryTest {
         Process einnsynJournalpostProcess = new Process()
                 .setIdentifier(EINNSYN_PROCESS_JOURNALPOST)
                 .setCategory(ProcessCategory.EINNSYN)
-                .setServiceCode("567")
-                .setServiceEditionCode("5678");
-        Optional<Process> journalpostProcess = Optional.of(einnsynJournalpostProcess);
-        einnsynJournalpostProcess.setDocumentTypes(Lists.newArrayList(einnsynJournalpostDocumentType));
+                .setServiceCode("data")
+                .setDocumentTypes(Lists.newArrayList(einnsynJournalpostDocumentType));
         einnsynJournalpostDocumentType.setProcesses(Lists.newArrayList(einnsynJournalpostProcess));
-        when(processService.findAll(ProcessCategory.EINNSYN)).thenReturn(Sets.newHashSet(einnsynJournalpostProcess));
+        when(processService.findByIdentifier(EINNSYN_PROCESS_JOURNALPOST)).thenReturn(Optional.of(einnsynJournalpostProcess));
+
+        DocumentType einnsynInnsynskravDocumentType = new DocumentType()
+                .setIdentifier(EINNSYN_DOCTYPE_INNSYNSKRAV);
+        Process einnsynInnsynskravProcess = new Process()
+                .setIdentifier(EINNSYN_PROCESS_INNSYNSKRAV)
+                .setCategory(ProcessCategory.EINNSYN)
+                .setServiceCode("innsyn")
+                .setDocumentTypes(Lists.newArrayList(einnsynInnsynskravDocumentType));
+        einnsynInnsynskravDocumentType.setProcesses(Lists.newArrayList(einnsynInnsynskravProcess));
+        when(processService.findByIdentifier(EINNSYN_PROCESS_INNSYNSKRAV)).thenReturn(Optional.of(einnsynInnsynskravProcess));
+
+        when(processService.findAll(ProcessCategory.EINNSYN)).thenReturn(Sets.newHashSet(einnsynJournalpostProcess, einnsynInnsynskravProcess));
+
         when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_EINNSYN_JOURNALPOST)), anySet())).thenReturn(Sets.newHashSet());
-        when(processService.findByIdentifier(EINNSYN_PROCESS_JOURNALPOST)).thenReturn(journalpostProcess);
         when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_EINNSYN_JOURNALPOST)), anySet()))
                 .thenReturn(Sets.newHashSet(ProcessIdentifier.of(EINNSYN_PROCESS_JOURNALPOST)));
 
@@ -430,6 +452,26 @@ public class ServiceRecordFactoryTest {
 
         Optional<ServiceRecord> result = factory.createServiceRecord(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_RESPONSE).setOrganizationType(ORGL), EINNSYN_PROCESS_RESPONSE, 3);
         assertFalse(result.isPresent());
+    }
+
+    @Test
+    public void createEinnsynServiceRecord_HasFiksIoKonto_ShouldReturnDpfioServiceRecord() throws CertificateNotFoundException, ProcessNotFoundException {
+        String kommOrgnr = "111222333";
+        when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, kommOrgnr)), anySet())).thenReturn(Sets.newHashSet());
+        String kontoId = "10b58f58-3d8c-46d4-b17e-439ac66c79fc";
+        Konto konto = Konto.builder()
+                .kontoId(new KontoId(UUID.fromString(kontoId)))
+                .kontoNavn("Testkommune")
+                .fiksOrgId(new FiksOrgId(UUID.fromString("55e8572a-7515-4518-aa37-e20029a78739")))
+                .fiksOrgNavn("Testorg")
+                .build();
+        when(fiksIoService.lookup(any(), anyInt(), any())).thenReturn(Optional.of(konto));
+
+        OrganizationInfo kommOrg = new OrganizationInfo(kommOrgnr, new OrganizationType("KOMM"));
+        Optional<ServiceRecord> serviceRecord = factory.createServiceRecord(kommOrg, EINNSYN_PROCESS_INNSYNSKRAV, 3);
+        assertTrue(serviceRecord.isPresent());
+        assertEquals(ServiceIdentifier.DPFIO, serviceRecord.get().getService().getIdentifier());
+        assertEquals(kontoId, serviceRecord.get().getService().getEndpointUrl());
     }
 
 }

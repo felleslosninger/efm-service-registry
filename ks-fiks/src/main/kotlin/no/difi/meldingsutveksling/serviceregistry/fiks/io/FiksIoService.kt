@@ -1,10 +1,12 @@
 package no.difi.meldingsutveksling.serviceregistry.fiks.io
 
+import no.difi.meldingsutveksling.serviceregistry.CacheConfig
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties
 import no.difi.meldingsutveksling.serviceregistry.logger
 import no.ks.fiks.fiksio.client.api.katalog.model.KatalogKonto
 import no.ks.fiks.io.client.model.Konto
 import org.springframework.boot.web.client.RestTemplateBuilder
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -25,7 +27,8 @@ open class FiksIoService(private val props: ServiceregistryProperties) {
             .setReadTimeout(Duration.ofSeconds(3))
             .build()
 
-    fun lookup(orgnr: String, securityLevel: Int, token: String): Optional<Konto> {
+    @Cacheable(CacheConfig.FIKSIO_CACHE)
+    open fun lookup(orgnr: String, securityLevel: Int, token: String): Optional<Konto> {
         val headers = HttpHeaders()
         headers.add("IntegrasjonId", props.fiks.io.integrasjonId)
         headers.add("IntegrasjonPassord", props.fiks.io.integrasjonPassord)
