@@ -20,6 +20,7 @@ public class CacheConfig extends CachingConfigurerSupport {
     public static final String BRREG_CACHE = "brregCache";
     public static final String KRR_CACHE = "krrCache";
     public static final String DSF_CACHE = "dsfCache";
+    public static final String FIKSIO_CACHE = "fiksIoCache";
 
     @Override
     @Bean
@@ -27,6 +28,10 @@ public class CacheConfig extends CachingConfigurerSupport {
         SimpleCacheManager cacheManager = new SimpleCacheManager();
         cacheManager.setCaches(Arrays.asList(
                 new CaffeineCache(SVARUT_CACHE,
+                        Caffeine.newBuilder()
+                                .expireAfterWrite(5, TimeUnit.MINUTES)
+                                .build()),
+                new CaffeineCache(FIKSIO_CACHE,
                         Caffeine.newBuilder()
                                 .expireAfterWrite(5, TimeUnit.MINUTES)
                                 .build()),

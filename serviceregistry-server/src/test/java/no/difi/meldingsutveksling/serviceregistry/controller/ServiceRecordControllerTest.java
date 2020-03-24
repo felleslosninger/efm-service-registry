@@ -162,10 +162,10 @@ public class ServiceRecordControllerTest {
                 = new SikkerDigitalPostServiceRecord(false, serviceregistryProperties, personResource, ServiceIdentifier.DPI, "12345678901", postAddress, postAddress);
         dpiServiceRecord.setProcess(PROC_DIGITALPOST);
         dpiServiceRecord.setDocumentTypes(Arrays.asList(DOC_DIGITAL, DOC_PRINT));
-        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString()))
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), anyString()))
                 .thenReturn(Lists.newArrayList(dpiServiceRecord));
         when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), anyString(), anyInt())).thenReturn(Optional.empty());
-        when(serviceRecordFactory.createEinnsynServiceRecords(anyString())).thenReturn(Lists.newArrayList());
+        when(serviceRecordFactory.createEinnsynServiceRecords(any(), any())).thenReturn(Lists.newArrayList());
     }
 
     private HeaderDescriptor getAuthHeader() {
@@ -304,7 +304,7 @@ public class ServiceRecordControllerTest {
     public void get_CredentialsResolveToDpiAndDsfLookupFails_ShouldReturnErrorResponseBody() throws Exception {
         setupMocksForSuccessfulDpi();
         final String message = "identifier not found in DSF";
-        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString()))
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), anyString()))
                 .thenThrow(new DsfLookupException(message));
 
         mvc.perform(get("/identifier/12345678901")
@@ -340,7 +340,7 @@ public class ServiceRecordControllerTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         setupMocksForSuccessfulDpi();
         final String message = "identifier not found in DSF";
-        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString()))
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), anyString()))
                 .thenThrow(new DsfLookupException(message));
 
         mvc.perform(get("/identifier/12345678901")
@@ -353,7 +353,7 @@ public class ServiceRecordControllerTest {
     public void get_CredentialsResolveToDpiAndLookupGivesError_ShouldReturnErrorResponseBody() throws Exception {
         final String message = "Error looking up identifier in KRR";
         when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
-        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString()))
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), anyString()))
                 .thenThrow(new KRRClientException(new Exception(message)));
 
         mvc.perform(get("/identifier/12345678901")
@@ -368,7 +368,7 @@ public class ServiceRecordControllerTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         final String message = "Error looking up identifier in KRR";
         when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
-        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), any(), anyString()))
+        when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), anyString()))
                 .thenThrow(new KRRClientException(new Exception(message)));
 
         mvc.perform(get("/identifier/12345678901/process/some:process")
@@ -498,7 +498,7 @@ public class ServiceRecordControllerTest {
     public void getWithProcessIdentifier_AvtaltResolvesToDpo_ServiceRecordShouldMatchExpectedValues() throws Exception {
         Process processMock = mockProcess(ProcessCategory.AVTALT);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
-        when(serviceRecordFactory.createServiceRecord(any(), any())).thenReturn(Optional.of(DPO_SERVICE_RECORD));
+        when(serviceRecordFactory.createServiceRecord(any(), any(), any())).thenReturn(Optional.of(DPO_SERVICE_RECORD));
 
         mvc.perform(get("/identifier/123123123/process/ProcessID").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -530,7 +530,7 @@ public class ServiceRecordControllerTest {
         Process processMock = mockProcess(ProcessCategory.AVTALT);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         final String message = "Certificate not found.";
-        when(serviceRecordFactory.createServiceRecord(any(), any()))
+        when(serviceRecordFactory.createServiceRecord(any(), any(), any()))
                 .thenThrow(new CertificateNotFoundException(message, new VirksertClientException("")));
 
         mvc.perform(get("/identifier/123123123/process/ProcessID").accept(MediaType.APPLICATION_JSON))
@@ -618,7 +618,7 @@ public class ServiceRecordControllerTest {
     public void getWithProcessIdentifier_EinnsynServiceRecordShouldMatchExpectedValues() throws Exception {
         Process processMock = mockProcess(ProcessCategory.EINNSYN);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
-        when(serviceRecordFactory.createServiceRecord(anyString(), anyString())).thenReturn(Optional.of(DPE_SERVICE_RECORD));
+        when(serviceRecordFactory.createServiceRecord(any(), any(), any())).thenReturn(Optional.of(DPE_SERVICE_RECORD));
 
         mvc.perform(get("/identifier/{identifier}/process/{processIdentifier}", "123123123", PROC_EINNSYN_INNSYNSKRAV)
                 .accept(MediaType.APPLICATION_JSON)

@@ -11,6 +11,7 @@ import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksIoService;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.*;
@@ -26,10 +27,9 @@ import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
 import no.difi.vefa.peppol.common.model.ProcessIdentifier;
 import no.difi.virksert.client.lang.VirksertClientException;
+import no.ks.fiks.io.client.model.Konto;
 import org.apache.commons.io.IOUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -62,6 +62,7 @@ public class ServiceRecordFactory {
     private final SvarUtService svarUtService;
     private final ProcessService processService;
     private final DocumentTypeService documentTypeService;
+    private final FiksIoService fiksIoService;
     private final SRRequestScope requestScope;
 
     public Optional<ServiceRecord> createArkivmeldingServiceRecord(String orgnr, String processIdentifier, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
@@ -118,20 +119,30 @@ public class ServiceRecordFactory {
         return serviceRecord;
     }
 
-    public Optional<ServiceRecord> createServiceRecord(String orgnr, String processIdentifier) throws CertificateNotFoundException, ProcessNotFoundException {
-        Process process = processService.findByIdentifier(processIdentifier).orElseThrow(() -> new ProcessNotFoundException(processIdentifier));
+    public Optional<ServiceRecord> createServiceRecord(EntityInfo entityInfo, String processIdentifier, Integer securityLevel) throws CertificateNotFoundException, ProcessNotFoundException {
+        Process process = processService.findByIdentifier(processIdentifier)
+                .orElseThrow(() -> new ProcessNotFoundException(processIdentifier));
 
-        if (getSmpRegistrations(orgnr, Sets.newHashSet(process))
+        if (getSmpRegistrations(entityInfo.getIdentifier(), Sets.newHashSet(process))
                 .stream()
                 .map(ProcessIdentifier::getIdentifier)
                 .anyMatch(identifier -> identifier.equals(processIdentifier))) {
             if(process.getCategory() == EINNSYN ) {
-                return Optional.of(createDpeServiceRecord(orgnr, process));
+                return Optional.of(createDpeServiceRecord(entityInfo.getIdentifier(), process));
             }
             else if (process.getCategory() == AVTALT) {
-                return Optional.of(createDpoServiceRecord(orgnr, process));
+                return Optional.of(createDpoServiceRecord(entityInfo.getIdentifier(), process));
             }
         }
+
+        if (properties.getFiks().getIo().getOrgFormFilter().contains(entityInfo.getEntityType().getName()) &&
+                processIdentifier.equals(properties.getFiks().getIo().getProcessIdentifier())) {
+            Optional<Konto> konto = fiksIoService.lookup(entityInfo.getIdentifier(), securityLevel == null ? 3 : securityLevel, requestScope.getToken());
+            if (konto.isPresent()) {
+                return Optional.of(createDpfioServiceRecord(entityInfo.getIdentifier(), process, konto.get()));
+            }
+        }
+
         return Optional.empty();
     }
 
@@ -139,10 +150,10 @@ public class ServiceRecordFactory {
         String pem = lookupPemCertificate(orgnr);
         ServiceRecord serviceRecord;
         if(process.getCategory() == AVTALT) {
-             serviceRecord = AvtaltServiceRecord.of(DPO, orgnr, properties.getDpo().getEndpointURL().toString(), pem);
+            serviceRecord = AvtaltServiceRecord.of(DPO, orgnr, properties.getDpo().getEndpointURL().toString(), pem);
         } else {
             serviceRecord = ArkivmeldingServiceRecord.of(DPO, orgnr, properties.getDpo().getEndpointURL().toString(), pem);
-          }
+        }
 
         serviceRecord.setProcess(process.getIdentifier());
         serviceRecord.getService().setServiceCode(properties.getDpo().getServiceCode());
@@ -155,12 +166,12 @@ public class ServiceRecordFactory {
     private ServiceRecord createDpfServiceRecord(String orgnr, Process process, Integer securityLevel) {
         String pem;
         try {
-            pem = IOUtils.toString(properties.getSvarut().getCertificate().getInputStream(), StandardCharsets.UTF_8);
+            pem = IOUtils.toString(properties.getFiks().getSvarut().getCertificate().getInputStream(), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            log.error(markerFrom(requestScope), "Could not read certificate from {}", properties.getSvarut().getCertificate().toString());
+            log.error(markerFrom(requestScope), "Could not read certificate from {}", properties.getFiks().getSvarut().getCertificate().toString());
             throw new ServiceRegistryException(e);
         }
-        ServiceRecord arkivmeldingServiceRecord = ArkivmeldingServiceRecord.of(DPF, orgnr, properties.getSvarut().getServiceRecordUrl().toString(), pem);
+        ServiceRecord arkivmeldingServiceRecord = ArkivmeldingServiceRecord.of(DPF, orgnr, properties.getFiks().getSvarut().getServiceRecordUrl().toString(), pem);
         arkivmeldingServiceRecord.setProcess(process.getIdentifier());
         arkivmeldingServiceRecord.setDocumentTypes(process.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
         arkivmeldingServiceRecord.getService().setSecurityLevel(securityLevel);
@@ -176,19 +187,36 @@ public class ServiceRecordFactory {
         return einnsynServiceRecord;
     }
 
+    private ServiceRecord createDpfioServiceRecord(String orgnr, Process process, Konto konto) {
+        return DpfioServiceRecord.from(orgnr, konto, process.getIdentifier(),
+                process.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
+    }
 
-    public List<ServiceRecord> createEinnsynServiceRecords(String orgnr) throws CertificateNotFoundException {
+    public List<ServiceRecord> createEinnsynServiceRecords(EntityInfo entityInfo, Integer securityLevel) throws CertificateNotFoundException {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
         Set<Process> einnsynProcesses = processService.findAll(ProcessCategory.EINNSYN);
 
-        Set<String> processIdentifiers = getSmpRegistrations(orgnr, einnsynProcesses).stream()
+        Set<String> processIdentifiers = getSmpRegistrations(entityInfo.getIdentifier(), einnsynProcesses).stream()
                 .map(ProcessIdentifier::getIdentifier)
                 .collect(Collectors.toSet());
 
-        for (Process p : einnsynProcesses) {
-            if (processIdentifiers.contains(p.getIdentifier())) {
-                serviceRecords.add(createDpeServiceRecord(orgnr, p));
+        if (!processIdentifiers.isEmpty()) {
+            for (Process p : einnsynProcesses) {
+                if (processIdentifiers.contains(p.getIdentifier())) {
+                    serviceRecords.add(createDpeServiceRecord(entityInfo.getIdentifier(), p));
+                }
             }
+            return serviceRecords;
+        }
+
+        if (properties.getFiks().getIo().getOrgFormFilter().contains(entityInfo.getEntityType().getName())) {
+            Optional<Konto> konto = fiksIoService.lookup(entityInfo.getIdentifier(), securityLevel == null ? 3 : securityLevel, requestScope.getToken());
+            konto.ifPresent(k -> {
+                String processIdentifier = properties.getFiks().getIo().getProcessIdentifier();
+                Process p = processService.findByIdentifier(processIdentifier)
+                        .orElseThrow(() -> new ServiceRegistryException("Fiks IO eInnsyn default process '" + processIdentifier + "' not found"));
+                serviceRecords.add(createDpfioServiceRecord(entityInfo.getIdentifier(), p, k));
+            });
         }
 
         return serviceRecords;
@@ -230,11 +258,9 @@ public class ServiceRecordFactory {
 
     @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
     public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
-                                                               Authentication auth,
                                                                String onBehalfOrgnr) throws KRRClientException, DsfLookupException, BrregNotFoundException {
 
-        String token = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
-        PersonResource personResource = krrService.getCitizenInfo(lookup(identifier).token(token));
+        PersonResource personResource = krrService.getCitizenInfo(lookup(identifier).token(requestScope.getToken()));
 
         Set<Process> digitalpostProcesses = processService.findAll(ProcessCategory.DIGITALPOST);
         List<ServiceRecord> serviceRecords = Lists.newArrayList();
@@ -253,11 +279,11 @@ public class ServiceRecordFactory {
                     serviceRecords.add(createDigitalServiceRecord(personResource, identifier, p));
                     break;
                 case PRINT:
-                    createPrintServiceRecord(identifier, onBehalfOrgnr, token, personResource, p).ifPresent(serviceRecords::add);
+                    createPrintServiceRecord(identifier, onBehalfOrgnr, requestScope.getToken(), personResource, p).ifPresent(serviceRecords::add);
                     break;
                 case DPV:
                 default:
-                    createPrintServiceRecord(identifier, onBehalfOrgnr, token, personResource, p).ifPresent(serviceRecords::add);
+                    createPrintServiceRecord(identifier, onBehalfOrgnr, requestScope.getToken(), personResource, p).ifPresent(serviceRecords::add);
                     serviceRecords.add(createDigitalDpvServiceRecord(identifier, p));
             }
         }
@@ -292,7 +318,7 @@ public class ServiceRecordFactory {
                                                    String onBehalfOrgnr,
                                                    String token,
                                                    PersonResource personResource,
-                                                   Process p) throws KRRClientException, DsfLookupException, BrregNotFoundException {
+                                                   Process p) throws DsfLookupException, BrregNotFoundException {
 
         krrService.setPrintDetails(personResource);
         Optional<DSFResource> dsfResource = krrService.getDSFInfo(lookup(identifier).token(token));

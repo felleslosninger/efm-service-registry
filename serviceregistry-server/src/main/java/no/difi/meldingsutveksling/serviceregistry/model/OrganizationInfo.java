@@ -23,6 +23,11 @@ public class OrganizationInfo implements EntityInfo {
     public OrganizationInfo() {
     }
 
+    public OrganizationInfo(String orgnr, OrganizationType type) {
+        this.identifier = orgnr;
+        this.organizationType = type;
+    }
+
     /**
      * @param organisationNumber of the recipient organization
      * @param organizationName as name implies

@@ -19,9 +19,13 @@ public class AuthenticationService {
 
     private final TokenStore tokenStore;
 
-    public String getAuthorizedClientIdentifier(Authentication auth, HttpServletRequest request) {
+    public String getToken(Authentication auth) {
         OAuth2AuthenticationDetails details = (OAuth2AuthenticationDetails) auth.getDetails();
-        OAuth2AccessToken oAuth2AccessToken = tokenStore.readAccessToken(details.getTokenValue());
+        return details.getTokenValue();
+    }
+
+    public String getAuthorizedClientIdentifier(Authentication auth, HttpServletRequest request) {
+        OAuth2AccessToken oAuth2AccessToken = tokenStore.readAccessToken(getToken(auth));
         String clientOrgnr = (String) oAuth2AccessToken.getAdditionalInformation().get("client_orgno");
         if (clientOrgnr != null) {
             log.debug(String.format("Authorized lookup request by %s", clientOrgnr),

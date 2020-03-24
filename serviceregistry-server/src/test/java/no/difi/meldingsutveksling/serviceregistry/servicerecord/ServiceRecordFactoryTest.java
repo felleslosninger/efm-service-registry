@@ -5,10 +5,9 @@ import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
-import no.difi.meldingsutveksling.serviceregistry.model.DocumentType;
+import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksIoService;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
-import no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory;
-import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
+import no.difi.meldingsutveksling.serviceregistry.model.*;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
@@ -21,6 +20,7 @@ import no.difi.move.common.oauth.KeystoreHelper;
 import no.difi.vefa.peppol.common.model.ProcessIdentifier;
 import no.difi.vefa.peppol.lookup.LookupClient;
 import no.difi.virksert.client.lang.VirksertClientException;
+import no.ks.fiks.io.client.FiksIOKlient;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,7 +29,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.security.core.token.TokenService;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.ws.transport.http.AbstractHttpWebServiceMessageSender;
@@ -37,6 +36,7 @@ import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -91,6 +91,12 @@ public class ServiceRecordFactoryTest {
     @MockBean
     private TokenStore tokenStore;
 
+    @MockBean
+    private FiksIOKlient fiksIOKlient;
+
+    @MockBean
+    private FiksIoService fiksIoService;
+
     private static String ORGNR = "123456789";
     private static String ORGNR_FIKS = "987654321";
     private static String ORGNR_EINNSYN_JOURNALPOST = "123123123";
@@ -110,32 +116,44 @@ public class ServiceRecordFactoryTest {
     private static String DIGITALPOST_DOCTYPE_PRINT = "urn:no:difi:digitalpost:xsd:fysisk::print";
     private static String PERSONNUMMER = "01234567890";
     private static final String ELMA_LOOKUP_ICD = "0192";
+    private static final OrganizationType ORGL = new OrganizationType("ORGL");
 
     @Before
     public void init() throws MalformedURLException {
         ServiceregistryProperties.FeatureToggle feature = new ServiceregistryProperties.FeatureToggle();
         feature.setEnableDpfDpv(true);
         when(props.getFeature()).thenReturn(feature);
+
         ServiceregistryProperties.Altinn dpoConfig = new ServiceregistryProperties.Altinn();
         dpoConfig.setEndpointURL(new URL("http://test"));
         dpoConfig.setServiceCode("1234");
         dpoConfig.setServiceEditionCode("123456");
         when(props.getDpo()).thenReturn(dpoConfig);
+
         ServiceregistryProperties.PostVirksomhet dpvConfig = new ServiceregistryProperties.PostVirksomhet();
         dpvConfig.setEndpointURL(new URL("http://foo"));
         when(props.getDpv()).thenReturn(dpvConfig);
+
         ServiceregistryProperties.SvarUt svarUtConfig = new ServiceregistryProperties.SvarUt();
         svarUtConfig.setCertificate(new ByteArrayResource("cert1234".getBytes()));
         svarUtConfig.setServiceRecordUrl(new URL("http://foo"));
         svarUtConfig.setUser("foo");
         svarUtConfig.setPassword("bar");
-        when(props.getSvarut()).thenReturn(svarUtConfig);
+        ServiceregistryProperties.Fiks fiks = new ServiceregistryProperties.Fiks();
+        fiks.setSvarut(svarUtConfig);
+        ServiceregistryProperties.FiksIo fiksIo = new ServiceregistryProperties.FiksIo();
+        fiksIo.setOrgFormFilter(Collections.singletonList("KOMM"));
+        fiks.setIo(fiksIo);
+        when(props.getFiks()).thenReturn(fiks);
+
         ServiceregistryProperties.DigitalPostInnbygger dpiProps = new ServiceregistryProperties.DigitalPostInnbygger();
         dpiProps.setVedtakProcess(DIGITALPOST_PROCESS_VEDTAK);
         when(props.getDpi()).thenReturn(dpiProps);
+
         ServiceregistryProperties.ELMA elmaProps = new ServiceregistryProperties.ELMA();
         elmaProps.setLookupIcd(ELMA_LOOKUP_ICD);
         when(props.getElma()).thenReturn(elmaProps);
+
 
         //Prosess og dokumenttype Arkivmelding
         DocumentType documentType = new DocumentType()
@@ -232,7 +250,7 @@ public class ServiceRecordFactoryTest {
         when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR)), anySet()))
                 .thenReturn(Sets.newHashSet(ProcessIdentifier.of(AVTALT_PROCESS)));
 
-        Optional<ServiceRecord> result = factory.createServiceRecord(ORGNR, AVTALT_PROCESS);
+        Optional<ServiceRecord> result = factory.createServiceRecord(new OrganizationInfo(ORGNR, ORGL), AVTALT_PROCESS, null);
 
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPO, result.get().getService().getIdentifier());
@@ -359,12 +377,12 @@ public class ServiceRecordFactoryTest {
     public void createEinnsynServiceRecord_ProcessIsNotFound_ShouldReturnNotFound() throws
             CertificateNotFoundException, ProcessNotFoundException {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.empty());
-        factory.createServiceRecord(ORGNR, "NotFound");
+        factory.createServiceRecord(new OrganizationInfo(ORGNR, ORGL), "NotFound", null);
     }
 
     @Test
     public void createEinnsynServiceRecords_ShouldReturnDpeServiceRecord() throws CertificateNotFoundException {
-        List<ServiceRecord> result = factory.createEinnsynServiceRecords(ORGNR_EINNSYN_JOURNALPOST);
+        List<ServiceRecord> result = factory.createEinnsynServiceRecords(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_JOURNALPOST), 3);
         assertEquals(1, result.size());
         ServiceRecord journalpostServiceRecord = result.stream().filter(r -> EINNSYN_PROCESS_JOURNALPOST.equals(r.getProcess())).findFirst().orElseThrow(RuntimeException::new);
         assertEquals(ServiceIdentifier.DPE, journalpostServiceRecord.getService().getIdentifier());
@@ -373,21 +391,21 @@ public class ServiceRecordFactoryTest {
     @Test
     public void createEinnsynServiceRecords_OrgnrNotInElma_ShouldNotReturnDpeServiceRecord() throws CertificateNotFoundException {
         when(lookupService.lookup(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_EINNSYN_RESPONSE)), anySet())).thenReturn(Lists.newArrayList());
-        List<ServiceRecord> result = factory.createEinnsynServiceRecords(ORGNR_EINNSYN_RESPONSE);
+        List<ServiceRecord> result = factory.createEinnsynServiceRecords(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_RESPONSE).setOrganizationType(ORGL), 3);
         assertTrue(result.isEmpty());
     }
 
     @Test
     public void createEinnsynServiceRecords_EndpointurlNotFound_ShouldNotReturnDpeServiceRecord() throws
             CertificateNotFoundException {
-        List<ServiceRecord> result = factory.createEinnsynServiceRecords(ORGNR_EINNSYN);
+        List<ServiceRecord> result = factory.createEinnsynServiceRecords(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN).setOrganizationType(ORGL), 3);
         assertTrue(result.isEmpty());
     }
 
     @Test
     public void createEinnsynServiceRecord_HasOrgnrAndProcessidentifier_ShouldReturnDpeServiceRecord() throws
             CertificateNotFoundException, ProcessNotFoundException {
-        Optional<ServiceRecord> result = factory.createServiceRecord(ORGNR_EINNSYN_JOURNALPOST, EINNSYN_PROCESS_JOURNALPOST);
+        Optional<ServiceRecord> result = factory.createServiceRecord(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_JOURNALPOST), EINNSYN_PROCESS_JOURNALPOST, 3);
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPE, result.get().getService().getIdentifier());
     }
@@ -410,7 +428,7 @@ public class ServiceRecordFactoryTest {
         when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_EINNSYN_RESPONSE)), anySet()))
                 .thenReturn(Sets.newHashSet());
 
-        Optional<ServiceRecord> result = factory.createServiceRecord(ORGNR_EINNSYN_RESPONSE, EINNSYN_PROCESS_RESPONSE);
+        Optional<ServiceRecord> result = factory.createServiceRecord(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_RESPONSE).setOrganizationType(ORGL), EINNSYN_PROCESS_RESPONSE, 3);
         assertFalse(result.isPresent());
     }
 

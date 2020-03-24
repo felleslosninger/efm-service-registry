@@ -5,4 +5,6 @@ package no.difi.meldingsutveksling.serviceregistry.model;
  */
 public interface EntityType {
 
+    String getName();
+
 }

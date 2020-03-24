@@ -12,6 +12,7 @@ import org.springframework.core.io.Resource;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.net.URL;
+import java.util.List;
 
 /**
  *
@@ -35,9 +36,7 @@ public class ServiceregistryProperties {
     @Valid
     private Sign sign;
     @Valid
-    private FIKS fiks = new FIKS();
-    @Valid
-    private SvarUt svarut;
+    private ServiceregistryProperties.Fiks fiks = new Fiks();
 
     @Data
     public static class ELMA {
@@ -119,12 +118,27 @@ public class ServiceregistryProperties {
     }
 
     @Data
-    public static class FIKS {
-        @NotNull
-        private URL adresseServiceURL;
+    public static class Fiks {
         @Valid
         private SvarUt svarut;
+        @Valid
+        private FiksIo io;
+    }
 
+    @Data
+    public static class FiksIo {
+        @NotNull
+        private String endpointUrl;
+        @NotNull
+        private String einnsynProtocol;
+        @NotNull
+        private String processIdentifier;
+        @NotNull
+        private List<String> orgFormFilter;
+        @NotNull
+        private String integrasjonId;
+        @NotNull
+        private String integrasjonPassord;
     }
 
     @Data

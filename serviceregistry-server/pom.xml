@@ -297,7 +297,7 @@
         </dependency>
         <dependency>
             <groupId>no.difi.meldingsutveksling</groupId>
-            <artifactId>svarut-client</artifactId>
+            <artifactId>ks-fiks</artifactId>
         </dependency>
         <dependency>
             <groupId>no.difi.meldingsutveksling</groupId>

@@ -18,5 +18,6 @@ public class SRRequestScope {
     private String clientId;
     private String identifier;
     private String conversationId;
+    private String token;
 
 }

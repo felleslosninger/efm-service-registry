@@ -97,7 +97,7 @@ public class ServiceRecordController {
             DsfLookupException, BrregNotFoundException, SvarUtClientException, ProcessNotFoundException {
         MDC.put("entity", identifier);
         String clientId = authenticationService.getAuthorizedClientIdentifier(auth, request);
-        fillRequestScope(identifier, conversationId, clientId);
+        fillRequestScope(identifier, conversationId, clientId, authenticationService.getToken(auth));
         Optional<EntityInfo> optionalEntityInfo = entityService.getEntityInfo(identifier);
         if (!optionalEntityInfo.isPresent()) {
             return notFoundResponse(String.format("Entity with identifier '%s' not found.", identifier));
@@ -115,7 +115,7 @@ public class ServiceRecordController {
             if (clientId == null) {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
             }
-            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientId));
+            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, clientId));
         }
         if (processCategory == ProcessCategory.ARKIVMELDING) {
             Optional<ServiceRecord> optionalServiceRecord = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier, securityLevel);
@@ -127,14 +127,14 @@ public class ServiceRecordController {
             }
         }
         if (processCategory == ProcessCategory.EINNSYN) {
-            Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createServiceRecord(identifier, processIdentifier);
+            Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createServiceRecord(entityInfo, processIdentifier, securityLevel);
             if (!dpeServiceRecord.isPresent()) {
                 return notFoundResponse(String.format("eInnsyn process '%s' not found for receiver '%s'.", processIdentifier, identifier));
             }
             serviceRecord = dpeServiceRecord.get();
         }
         if(processCategory == ProcessCategory.AVTALT) {
-            Optional<ServiceRecord> avtaltDpoServiceRecord = serviceRecordFactory.createServiceRecord(identifier, processIdentifier);
+            Optional<ServiceRecord> avtaltDpoServiceRecord = serviceRecordFactory.createServiceRecord(entityInfo, processIdentifier, securityLevel);
             if(!avtaltDpoServiceRecord.isPresent()) {
                 return notFoundResponse(String.format("Avtalt process '%s' not found for receiver '%s'.", processIdentifier, identifier));
             }
@@ -163,7 +163,7 @@ public class ServiceRecordController {
             throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException, BrregNotFoundException, SvarUtClientException {
         MDC.put("identifier", identifier);
         String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
-        fillRequestScope(identifier, conversationId, clientOrgnr);
+        fillRequestScope(identifier, conversationId, clientOrgnr, authenticationService.getToken(auth));
         Entity entity = new Entity();
         Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
         if (!entityInfo.isPresent()) {
@@ -174,19 +174,20 @@ public class ServiceRecordController {
             if (clientOrgnr == null) {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
             }
-            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, auth, clientOrgnr));
+            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, clientOrgnr));
         } else {
             entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
-            entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(identifier));
+            entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(entityInfo.get(), securityLevel));
             entity.getServiceRecords().addAll(serviceRecordFactory.createAvtaltServiceRecords(identifier));
         }
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
-    private void fillRequestScope(String identifier, String conversationId, String clientId) {
+    private void fillRequestScope(String identifier, String conversationId, String clientId, String token) {
         requestScope.setConversationId(conversationId);
         requestScope.setIdentifier(identifier);
         requestScope.setClientId(clientId);
+        requestScope.setToken(token);
     }
 
     private ResponseEntity<?> errorResponse(HttpStatus status, String message) {
