@@ -72,7 +72,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(value = ServiceRecordController.class)
-@TestPropertySource("classpath:controller-test.properties")
+@TestPropertySource("classpath:application-test.properties")
 @Import({PayloadSigner.class, SRConfig.class})
 @AutoConfigureRestDocs
 public class ServiceRecordControllerTest {
