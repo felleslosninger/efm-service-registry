@@ -39,7 +39,11 @@ public class BrregService {
     }
 
     public Optional<EntityInfo> getOrgInfoFromDatahotell(String orgnr, Throwable e) throws BrregNotFoundException {
-        log.warn("Brreg lookup failed, using hotell.difi.no instead", e);
+        if (e instanceof BrregNotFoundException) {
+            log.warn("Brreg lookup failed, using hotell.difi.no instead: {}", e.getMessage());
+        } else {
+            log.error("Brreg lookup threw exception, using hotell.difi.no as fallback", e);
+        }
         return datahotellClient.getOrganizationInfo(orgnr);
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.Optional;
 
 /**
@@ -62,6 +63,11 @@ public class BrregClientImpl implements BrregClient {
         try {
             ResponseEntity<BrregEnhet> response = rt.exchange(currentURI, HttpMethod.GET, entity, BrregEnhet.class);
             if (response.getStatusCode() == HttpStatus.OK) {
+                if (response.getBody() != null && response.getBody().getSlettedato() != null) {
+                    if (response.getBody().getSlettedato().isBefore(LocalDate.now())) {
+                        return Optional.empty();
+                    }
+                }
                 return Optional.ofNullable(response.getBody());
             }
         } catch (HttpClientErrorException e) {

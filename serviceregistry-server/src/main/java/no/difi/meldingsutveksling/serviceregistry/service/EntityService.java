@@ -44,7 +44,7 @@ public class EntityService {
             try {
                 return brregService.getOrganizationInfo(identifier);
             } catch (BrregNotFoundException e) {
-                log.error(markerFrom(requestScope), "Could not find entity for the requested identifier={}", identifier, e);
+                log.error(markerFrom(requestScope), "Could not find entity for the requested identifier={}: {}", identifier, e.getMessage());
                 return Optional.empty();
             }
         }
