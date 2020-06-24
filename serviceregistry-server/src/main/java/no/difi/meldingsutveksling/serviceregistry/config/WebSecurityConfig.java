@@ -18,14 +18,18 @@ public class WebSecurityConfig {
 
     @Configuration
     @Order(0)
-    public static class ActuatorFilter extends WebSecurityConfigurerAdapter {
+    public static class BasicAuthFilter extends WebSecurityConfigurerAdapter {
         @Override
         protected void configure(HttpSecurity http) throws Exception {
             http.antMatcher("/manage/**")
                     .authorizeRequests()
                     .antMatchers("/manage/health").permitAll()
                     .antMatchers("/manage/**").authenticated()
-                    .and().httpBasic();
+                    .and().httpBasic()
+                    .and()
+                    .antMatcher("/jwk")
+                        .authorizeRequests()
+                        .antMatchers("/jwk").permitAll();
         }
     }
 
