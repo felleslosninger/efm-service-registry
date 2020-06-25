@@ -3,9 +3,7 @@ package no.difi.meldingsutveksling.serviceregistry.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
-import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
-import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,12 +15,11 @@ import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory
 @RequiredArgsConstructor
 public class AuthenticationService {
 
-    private final TokenStore tokenStore;
+    private static final String CLAIM_CLIENT_ORGNO = "client_orgno";
 
     public String getAuthorizedClientIdentifier(Authentication auth, HttpServletRequest request) {
-        OAuth2AuthenticationDetails details = (OAuth2AuthenticationDetails) auth.getDetails();
-        OAuth2AccessToken oAuth2AccessToken = tokenStore.readAccessToken(details.getTokenValue());
-        String clientOrgnr = (String) oAuth2AccessToken.getAdditionalInformation().get("client_orgno");
+        JwtAuthenticationToken token = (JwtAuthenticationToken) auth;
+        String clientOrgnr = token.getToken().getClaimAsString(CLAIM_CLIENT_ORGNO);
         if (clientOrgnr != null) {
             log.debug(String.format("Authorized lookup request by %s", clientOrgnr),
                     markerFrom(request.getRemoteAddr(), request.getRemoteHost(), clientOrgnr));
