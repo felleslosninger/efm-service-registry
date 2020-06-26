@@ -2,6 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import no.difi.meldingsutveksling.serviceregistry.controller.AdminController;
 import no.difi.meldingsutveksling.serviceregistry.model.DocumentType;
 import no.difi.meldingsutveksling.serviceregistry.model.Process;
 import no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory;

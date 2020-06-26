@@ -29,7 +29,7 @@ import no.difi.virksert.client.lang.VirksertClientException;
 import org.apache.commons.io.IOUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -228,12 +228,13 @@ public class ServiceRecordFactory {
         }
     }
 
-    @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
+    @PreAuthorize("hasAuthority('SCOPE_move/dpi.read')")
     public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
                                                                Authentication auth,
                                                                String onBehalfOrgnr) throws KRRClientException, DsfLookupException, BrregNotFoundException {
 
-        String token = ((OAuth2AuthenticationDetails) auth.getDetails()).getTokenValue();
+        JwtAuthenticationToken jwtToken = (JwtAuthenticationToken) auth;
+        String token = jwtToken.getToken().getTokenValue();
         PersonResource personResource = krrService.getCitizenInfo(lookup(identifier).token(token));
 
         Set<Process> digitalpostProcesses = processService.findAll(ProcessCategory.DIGITALPOST);

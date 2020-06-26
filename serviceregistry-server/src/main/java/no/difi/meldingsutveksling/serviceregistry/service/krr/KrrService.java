@@ -1,26 +1,29 @@
 package no.difi.meldingsutveksling.serviceregistry.service.krr;
 
+import lombok.SneakyThrows;
 import no.difi.meldingsutveksling.serviceregistry.CacheConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.net.URL;
 import java.util.Optional;
 
 @Service
 public class KrrService {
 
-    private ServiceregistryProperties properties;
-    private KRRClient krrClient;
-    private DSFClient dsfClient;
+    private final ServiceregistryProperties properties;
+    private final KRRClient krrClient;
+    private final DSFClient dsfClient;
 
-    @Autowired
-    KrrService(ServiceregistryProperties properties) {
-        this.properties = properties;
-        this.krrClient = new KRRClient(properties.getKrr().getEndpointURL());
-        this.dsfClient = new DSFClient(properties.getKrr().getDsfEndpointURL());
+    @SneakyThrows
+    public KrrService(ServiceregistryProperties srProps, OAuth2ResourceServerProperties resourceServerProperties) {
+        URL jwkUrl = new URL(resourceServerProperties.getJwt().getJwkSetUri());
+        this.properties = srProps;
+        this.krrClient = new KRRClient(srProps.getKrr().getEndpointURL(), jwkUrl);
+        this.dsfClient = new DSFClient(srProps.getKrr().getDsfEndpointURL(), jwkUrl);
     }
 
     @Cacheable(CacheConfig.KRR_CACHE)

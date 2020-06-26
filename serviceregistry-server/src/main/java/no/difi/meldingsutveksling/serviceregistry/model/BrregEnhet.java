@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 /**
  * A POJO representing the JSON object returned from BRREG
  */
@@ -19,5 +21,6 @@ public class BrregEnhet {
     private BrregOrganisasjonsform organisasjonsform;
     private BrregPostadresse postadresse;
     private BrregPostadresse forretningsadresse;
+    private LocalDate slettedato;
 
 }
