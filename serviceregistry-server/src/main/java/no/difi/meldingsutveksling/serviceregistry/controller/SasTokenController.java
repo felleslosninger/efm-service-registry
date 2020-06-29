@@ -28,7 +28,7 @@ public class SasTokenController {
         this.payloadSigner = payloadSigner;
     }
 
-    @PreAuthorize("#oauth2.hasScope('move/dpe.read')")
+    @PreAuthorize("hasAuthority('SCOPE_move/dpe.read')")
     @GetMapping(value = "/sastoken", produces = "application/jose")
     public ResponseEntity<?> getToken(Authentication auth) throws EntitySignerException {
 
