@@ -46,7 +46,7 @@ public class KRRClient {
         String payload;
         try {
             JWTDecoder jwtDecoder = new JWTDecoder();
-            payload = jwtDecoder.getPayload(Objects.requireNonNull(response.getBody()), jwkUrl);
+            payload = jwtDecoder.getPayload(Objects.requireNonNull(response.getBody()));
         } catch (CertificateException | BadJWSException e) {
             throw new KRRClientException("Error during decoding JWT response from KRR" ,e);
         }

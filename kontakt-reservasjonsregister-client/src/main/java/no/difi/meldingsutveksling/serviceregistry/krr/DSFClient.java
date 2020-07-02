@@ -48,7 +48,7 @@ public class DSFClient {
         String payload;
         try {
             JWTDecoder jwtDecoder = new JWTDecoder();
-            payload = jwtDecoder.getPayload(Objects.requireNonNull(response.getBody()), jwkUrl);
+            payload = jwtDecoder.getPayload(Objects.requireNonNull(response.getBody()));
         } catch (CertificateException | BadJWSException e) {
             throw new DsfLookupException("Error during decoding JWT response from DSF" ,e);
         }
