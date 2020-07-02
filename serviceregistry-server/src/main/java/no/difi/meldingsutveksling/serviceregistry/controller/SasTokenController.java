@@ -35,7 +35,7 @@ public class SasTokenController {
         if (auth == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        log.debug(String.format("SAS token request by %s", (String) auth.getPrincipal()));
+        log.debug(String.format("SAS token request by %s", auth.toString()));
 
         String sasToken = props.getAuth().getSasToken();
         if (Strings.isNullOrEmpty(sasToken)) {
