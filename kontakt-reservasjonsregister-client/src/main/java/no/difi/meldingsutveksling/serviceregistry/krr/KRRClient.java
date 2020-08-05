@@ -2,6 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.krr;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.proc.BadJWSException;
+import lombok.RequiredArgsConstructor;
 import no.difi.move.common.oauth.JWTDecoder;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
@@ -13,13 +14,11 @@ import java.net.URL;
 import java.security.cert.CertificateException;
 import java.util.Objects;
 
+@RequiredArgsConstructor
 public class KRRClient {
 
-    private URL endpointURL;
-
-    public KRRClient(URL endpointURL) {
-        this.endpointURL= endpointURL;
-    }
+    private final URL endpointURL;
+    private final URL jwkUrl;
 
     public PersonResource getPersonResource(String identifier, String token) throws KRRClientException {
 

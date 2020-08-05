@@ -256,12 +256,11 @@ public class ServiceRecordFactory {
         }
     }
 
-    @PreAuthorize("#oauth2.hasScope('move/dpi.read')")
+    @PreAuthorize("hasAuthority('SCOPE_move/dpi.read')")
     public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
                                                                String onBehalfOrgnr) throws KRRClientException, DsfLookupException, BrregNotFoundException {
 
         PersonResource personResource = krrService.getCitizenInfo(lookup(identifier).token(requestScope.getToken()));
-
         Set<Process> digitalpostProcesses = processService.findAll(ProcessCategory.DIGITALPOST);
         List<ServiceRecord> serviceRecords = Lists.newArrayList();
         for (Process p : digitalpostProcesses) {

@@ -32,7 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.security.oauth2.provider.token.TokenStore;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.ws.transport.http.AbstractHttpWebServiceMessageSender;
 import org.springframework.ws.transport.http.HttpComponentsMessageSender;
@@ -51,6 +51,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@TestPropertySource("classpath:application-test.properties")
 public class ServiceRecordFactoryTest {
 
     @Autowired
@@ -91,9 +92,6 @@ public class ServiceRecordFactoryTest {
 
     @MockBean
     private ServiceregistryProperties props;
-
-    @MockBean
-    private TokenStore tokenStore;
 
     @MockBean
     private FiksIOKlient fiksIOKlient;

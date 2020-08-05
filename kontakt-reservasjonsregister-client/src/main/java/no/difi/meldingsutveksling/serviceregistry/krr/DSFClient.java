@@ -2,6 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.krr;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.proc.BadJWSException;
+import lombok.RequiredArgsConstructor;
 import no.difi.move.common.oauth.JWTDecoder;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
@@ -14,13 +15,11 @@ import java.security.cert.CertificateException;
 import java.util.Objects;
 import java.util.Optional;
 
+@RequiredArgsConstructor
 public class DSFClient {
 
-    private URL endpointURL;
-
-    public DSFClient(URL endpointURL) {
-        this.endpointURL= endpointURL;
-    }
+    private final URL endpointURL;
+    private final URL jwkUrl;
 
     public Optional<DSFResource> getDSFResource(String identifier, String token) throws DsfLookupException {
 

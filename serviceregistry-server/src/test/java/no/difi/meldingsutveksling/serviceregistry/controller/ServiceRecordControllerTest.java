@@ -37,9 +37,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.restdocs.headers.HeaderDescriptor;
-import org.springframework.restdocs.headers.HeaderDocumentation;
 import org.springframework.restdocs.request.ParameterDescriptor;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -62,7 +62,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
@@ -72,8 +71,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @RunWith(SpringRunner.class)
 @WebMvcTest(value = ServiceRecordController.class)
-@TestPropertySource("classpath:controller-test.properties")
+@TestPropertySource("classpath:application-test.properties")
 @Import({PayloadSigner.class, SRConfig.class})
+@WithMockUser
 @AutoConfigureRestDocs
 public class ServiceRecordControllerTest {
 
@@ -122,6 +122,9 @@ public class ServiceRecordControllerTest {
     @Autowired
     private PayloadSigner payloadSigner;
 
+    @MockBean
+    private JwtDecoder jwtDecoder;
+
     @Before
     public void setup() {
         DPO_SERVICE_RECORD.setProcess(PROC_ARKIVMELDING_ADMINISTRASJON);
@@ -168,10 +171,6 @@ public class ServiceRecordControllerTest {
         when(serviceRecordFactory.createEinnsynServiceRecords(any(), any())).thenReturn(Lists.newArrayList());
     }
 
-    private HeaderDescriptor getAuthHeader() {
-        return HeaderDocumentation.headerWithName("Authorization").description("Bearer <JWT>");
-    }
-
     private ParameterDescriptor getIdentifierParam() {
         return parameterWithName("identifier").description("Organization number, or personal identification number");
     }
@@ -192,15 +191,13 @@ public class ServiceRecordControllerTest {
     @Test
     public void testOrgInfoRecordShouldMatchExpectedValues() throws Exception {
         mvc.perform(get("/info/{identifier}", "123123123")
-                .accept(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer eySomeJwtToken123"))
+                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.infoRecord.identifier", is("123123123")))
                 .andExpect(jsonPath("$.infoRecord.organizationName", is("foo")))
                 .andDo(document("info/org",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
-                        requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam())
                 ));
     }
@@ -209,15 +206,13 @@ public class ServiceRecordControllerTest {
     public void testPersonInfoRecordShouldMatchExpectedValues() throws Exception {
         setupMocksForSuccessfulDpi();
         mvc.perform(get("/info/{identifier}", "12345678901")
-                .accept(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer eySomeJwtToken123"))
+                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.infoRecord.identifier", is("12345678901")))
                 .andExpect(jsonPath("$.infoRecord.entityType.name", is("citizen")))
                 .andDo(document("info/person",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
-                        requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam())
                 ));
     }
@@ -227,8 +222,7 @@ public class ServiceRecordControllerTest {
         when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), any()))
                 .thenReturn(Lists.newArrayList(DPO_SERVICE_RECORD, DPV_SERVICE_RECORD, DPE_SERVICE_RECORD));
         mvc.perform(get("/identifier/{identifier}", "123123123")
-                .accept(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer eySomeJwtToken123"))
+                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("123123123")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPO")))
@@ -241,7 +235,6 @@ public class ServiceRecordControllerTest {
                 .andDo(document("identifier/org",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
-                        requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam()),
                         requestParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
@@ -275,7 +268,7 @@ public class ServiceRecordControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("123123123")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPV")))
-                .andExpect(jsonPath("$.serviceRecords[0].pemCertificate", isEmptyOrNullString()))
+                .andExpect(jsonPath("$.serviceRecords[0].pemCertificate", is(emptyOrNullString())))
                 .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("http://endpoint.here")))
                 .andExpect(jsonPath("$.infoRecord.identifier", is("123123123")))
                 .andExpect(jsonPath("$.infoRecord.organizationName", is("foo")))
@@ -286,15 +279,13 @@ public class ServiceRecordControllerTest {
     public void get_CredentialsResolveToDpi_ServiceRecordShouldMatchExpectedValues() throws Exception {
         setupMocksForSuccessfulDpi();
         mvc.perform(get("/identifier/{identifier}", "12345678901")
-                .accept(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer eySomeJwtToken123"))
+                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("12345678901")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPI")))
                 .andDo(document("identifier/person",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
-                        requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam()),
                         requestParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
@@ -320,15 +311,13 @@ public class ServiceRecordControllerTest {
         setupMocksForSuccessfulDpi();
 
         mvc.perform(get("/identifier/{identifier}/process/{processIdentifier}", "12345678901", PROC_DIGITALPOST)
-                .accept(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer eySomeJwtToken123"))
+                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("12345678901")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPI")))
                 .andDo(document("identifier/digital",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
-                        requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam(), getProcessParam()),
                         requestParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
@@ -399,13 +388,11 @@ public class ServiceRecordControllerTest {
     @Test
     public void get_EntityNotFound_ShouldReturnNotFound() throws Exception {
         mvc.perform(get("/identifier/{identifier}", "404040404")
-                .accept(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer eySomeJwtToken123"))
+                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andDo(document("identifier/notfound",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
-                        requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam()),
                         requestParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
@@ -448,12 +435,11 @@ public class ServiceRecordControllerTest {
         when(serviceRecordFactory.createArkivmeldingServiceRecord(any(), any(), any())).thenReturn(Optional.of(DPV_SERVICE_RECORD));
 
         mvc.perform(get("/identifier/{identifier}/process/{processIdentifier}", "123123123", PROC_ARKIVMELDING_TEKNISKE_TJENESTER)
-                .accept(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer eySomeJwtToken123"))
+                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("123123123")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPV")))
-                .andExpect(jsonPath("$.serviceRecords[0].pemCertificate", isEmptyOrNullString()))
+                .andExpect(jsonPath("$.serviceRecords[0].pemCertificate", is(emptyOrNullString())))
                 .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("http://endpoint.here")))
                 .andExpect(jsonPath("$.infoRecord.identifier", is("123123123")))
                 .andExpect(jsonPath("$.infoRecord.organizationName", is("foo")))
@@ -461,7 +447,6 @@ public class ServiceRecordControllerTest {
                 .andDo(document("identifier/dpv",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
-                        requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam(), getProcessParam()),
                         requestParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
@@ -474,8 +459,7 @@ public class ServiceRecordControllerTest {
         when(serviceRecordFactory.createArkivmeldingServiceRecord(any(), any(), any())).thenReturn(Optional.of(DPO_SERVICE_RECORD));
 
         mvc.perform(get("/identifier/{identifier}/process/{processIdentifier}", "123123123", PROC_ARKIVMELDING_ADMINISTRASJON)
-                .accept(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer eySomeJwtToken123"))
+                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("123123123")))
                 .andExpect(jsonPath("$.serviceRecords[0].pemCertificate", is("-----BEGIN CERTIFICATE-----\npem123\n-----END CERTIFICATE-----\n")))
@@ -488,7 +472,6 @@ public class ServiceRecordControllerTest {
                 .andDo(document("identifier/arkivmelding",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
-                        requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam(), getProcessParam()),
                         requestParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
@@ -601,14 +584,12 @@ public class ServiceRecordControllerTest {
         final String message = "security level not found";
         when(serviceRecordFactory.createArkivmeldingServiceRecords(anyString(), anyInt())).thenThrow(new SecurityLevelNotFoundException(message));
         mvc.perform(get("/identifier/{identifier}?securityLevel=4", "321321321")
-                .accept(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer eySomeJwtToken123"))
+                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_description", is(message)))
                 .andDo(document("identifier/sec-level-not-found",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
-                        requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam()),
                         requestParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
@@ -621,8 +602,7 @@ public class ServiceRecordControllerTest {
         when(serviceRecordFactory.createServiceRecord(any(), any(), any())).thenReturn(Optional.of(DPE_SERVICE_RECORD));
 
         mvc.perform(get("/identifier/{identifier}/process/{processIdentifier}", "123123123", PROC_EINNSYN_INNSYNSKRAV)
-                .accept(MediaType.APPLICATION_JSON)
-                .header("Authorization", "Bearer eySomeJwtToken123"))
+                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("123123123")))
                 .andExpect(jsonPath("$.serviceRecords[0].pemCertificate", is("-----BEGIN CERTIFICATE-----\npem567\n-----END CERTIFICATE-----\n")))
@@ -633,7 +613,6 @@ public class ServiceRecordControllerTest {
                 .andDo(document("identifier/einnsyn",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
-                        requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam(), getProcessParam()),
                         requestParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));

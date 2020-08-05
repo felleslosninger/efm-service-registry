@@ -28,14 +28,14 @@ public class SasTokenController {
         this.payloadSigner = payloadSigner;
     }
 
-    @PreAuthorize("#oauth2.hasScope('move/dpe.read')")
+    @PreAuthorize("hasAuthority('SCOPE_move/dpe.read')")
     @GetMapping(value = "/sastoken", produces = "application/jose")
     public ResponseEntity<?> getToken(Authentication auth) throws EntitySignerException {
 
         if (auth == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        log.debug(String.format("SAS token request by %s", (String) auth.getPrincipal()));
+        log.debug(String.format("SAS token request by %s", auth.toString()));
 
         String sasToken = props.getAuth().getSasToken();
         if (Strings.isNullOrEmpty(sasToken)) {
