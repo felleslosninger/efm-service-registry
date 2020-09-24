@@ -39,10 +39,11 @@ public class SRConfig implements WebMvcConfigurer {
     @Bean
     public KeystoreHelper keystoreHelper(ServiceregistryProperties srProps) {
         KeystoreProperties props = new KeystoreProperties();
-        props.setAlias(srProps.getSign().getJks().getAlias());
-        props.setEntryPassword(srProps.getSign().getJks().getPassword());
-        props.setStorePassword(srProps.getSign().getJks().getPassword());
-        props.setLocation(srProps.getSign().getJks().getKeystore());
+        props.setAlias(srProps.getSign().getKeystore().getAlias());
+        props.setEntryPassword(srProps.getSign().getKeystore().getPassword());
+        props.setStorePassword(srProps.getSign().getKeystore().getPassword());
+        props.setType(srProps.getSign().getKeystore().getType());
+        props.setLocation(srProps.getSign().getKeystore().getPath());
 
         return new KeystoreHelper(props);
     }

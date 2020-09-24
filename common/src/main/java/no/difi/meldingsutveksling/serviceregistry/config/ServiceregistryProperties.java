@@ -51,7 +51,7 @@ public class ServiceregistryProperties {
     @Data
     public static class Sign {
         @NotNull
-        private Keystore jks;
+        private Keystore keystore;
     }
 
     @Data
@@ -115,7 +115,8 @@ public class ServiceregistryProperties {
     public static class Keystore {
         private String alias;
         private String password;
-        private Resource keystore;
+        private String type;
+        private Resource path;
     }
 
     @Data
