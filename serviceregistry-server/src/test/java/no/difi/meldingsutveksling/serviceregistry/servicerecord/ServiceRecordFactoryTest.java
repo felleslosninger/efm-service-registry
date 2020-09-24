@@ -126,7 +126,9 @@ public class ServiceRecordFactoryTest {
         svarUtConfig.setServiceRecordUrl(new URL("http://foo"));
         svarUtConfig.setUser("foo");
         svarUtConfig.setPassword("bar");
-        when(props.getSvarut()).thenReturn(svarUtConfig);
+        ServiceregistryProperties.FIKS fiksConfig = new ServiceregistryProperties.FIKS();
+        fiksConfig.setSvarut(svarUtConfig);
+        when(props.getFiks()).thenReturn(fiksConfig);
         ServiceregistryProperties.DigitalPostInnbygger dpiProps = new ServiceregistryProperties.DigitalPostInnbygger();
         dpiProps.setVedtakProcess(DIGITALPOST_PROCESS_VEDTAK);
         when(props.getDpi()).thenReturn(dpiProps);

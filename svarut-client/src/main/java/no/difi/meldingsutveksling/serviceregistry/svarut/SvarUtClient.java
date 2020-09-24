@@ -18,7 +18,7 @@ public class SvarUtClient {
 
     @SuppressWarnings("unchecked")
     public RetrieveMottakerSystemForOrgnrResponse retrieveMottakerSystemForOrgnr(RetrieveMottakerSystemForOrgnr payload) throws SvarUtClientException {
-        String url = props.getSvarut().getForsendelsesserviceUrl().toString();
+        String url = props.getFiks().getSvarut().getForsendelsesserviceUrl().toString();
         try {
             JAXBElement<RetrieveMottakerSystemForOrgnrResponse> response = (JAXBElement<RetrieveMottakerSystemForOrgnrResponse>) wsTemplate.marshalSendAndReceive(url, payload);
             return response.getValue();
