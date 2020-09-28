@@ -36,15 +36,11 @@ public class ServiceregistryProperties {
     private Sign sign;
     @Valid
     private FIKS fiks = new FIKS();
-    @Valid
-    private SvarUt svarut;
 
     @Data
     public static class ELMA {
         private String locatorUrl;
         private String defaultProcessIdentifier;
-        private String processIdentifier;
-        private String documentTypeIdentifier;
         private String lookupIcd;
     }
 
@@ -56,7 +52,6 @@ public class ServiceregistryProperties {
 
     @Data
     public static class Auth {
-        private boolean enable;
         private String sasToken;
     }
 
@@ -78,7 +73,6 @@ public class ServiceregistryProperties {
 
     @Data
     public static class FeatureToggle {
-        private boolean paaVegneAvOppslag = false;
         private boolean enableDpfDpv = true;
     }
 
@@ -121,11 +115,8 @@ public class ServiceregistryProperties {
 
     @Data
     public static class FIKS {
-        @NotNull
-        private URL adresseServiceURL;
         @Valid
         private SvarUt svarut;
-
     }
 
     @Data

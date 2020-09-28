@@ -155,12 +155,12 @@ public class ServiceRecordFactory {
     private ServiceRecord createDpfServiceRecord(String orgnr, Process process, Integer securityLevel) {
         String pem;
         try {
-            pem = IOUtils.toString(properties.getSvarut().getCertificate().getInputStream(), StandardCharsets.UTF_8);
+            pem = IOUtils.toString(properties.getFiks().getSvarut().getCertificate().getInputStream(), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            log.error(markerFrom(requestScope), "Could not read certificate from {}", properties.getSvarut().getCertificate().toString());
+            log.error(markerFrom(requestScope), "Could not read certificate from {}", properties.getFiks().getSvarut().getCertificate().toString());
             throw new ServiceRegistryException(e);
         }
-        ServiceRecord arkivmeldingServiceRecord = ArkivmeldingServiceRecord.of(DPF, orgnr, properties.getSvarut().getServiceRecordUrl().toString(), pem);
+        ServiceRecord arkivmeldingServiceRecord = ArkivmeldingServiceRecord.of(DPF, orgnr, properties.getFiks().getSvarut().getServiceRecordUrl().toString(), pem);
         arkivmeldingServiceRecord.setProcess(process.getIdentifier());
         arkivmeldingServiceRecord.setDocumentTypes(process.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList()));
         arkivmeldingServiceRecord.getService().setSecurityLevel(securityLevel);
