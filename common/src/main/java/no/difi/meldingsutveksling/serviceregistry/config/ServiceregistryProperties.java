@@ -68,7 +68,7 @@ public class ServiceregistryProperties {
         private URL endpointURL;
         private URL dsfEndpointURL;
         private String printAdress;
-        private String printCertificate;
+        private Resource printCertificate;
     }
 
     @Data
