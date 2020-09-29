@@ -19,8 +19,8 @@ public class SvarUtConfig {
     @Bean
     public AbstractHttpWebServiceMessageSender svarUtMessageSender(ServiceregistryProperties properties) {
         return new PreauthMessageSender(
-                properties.getSvarut().getUser(),
-                properties.getSvarut().getPassword());
+                properties.getFiks().getSvarut().getUser(),
+                properties.getFiks().getSvarut().getPassword());
     }
 
     @Bean
