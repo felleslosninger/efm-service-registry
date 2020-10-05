@@ -148,6 +148,7 @@ public class ServiceRecordFactoryTest {
         svarUtConfig.setServiceRecordUrl(new URL("http://foo"));
         svarUtConfig.setUser("foo");
         svarUtConfig.setPassword("bar");
+
         ServiceregistryProperties.Fiks fiks = new ServiceregistryProperties.Fiks();
         fiks.setSvarut(svarUtConfig);
         ServiceregistryProperties.FiksIo fiksIo = new ServiceregistryProperties.FiksIo();

@@ -46,8 +46,12 @@ public class WebSecurityConfig {
     }
 
     @Configuration
+    @RequiredArgsConstructor
     @Order(1)
     public static class AdminApiSecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+        private final SecurityProperties props;
+
         @Override
         protected void configure(HttpSecurity http) throws Exception {
             http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -57,6 +61,12 @@ public class WebSecurityConfig {
                     .authorizeRequests()
                     .antMatchers("/api/**").authenticated().and()
                     .httpBasic();
+        }
+
+        @Override
+        protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+            auth.inMemoryAuthentication().withUser(props.getUser().getName())
+                    .password("{noop}"+props.getUser().getPassword()).roles();
         }
     }
 

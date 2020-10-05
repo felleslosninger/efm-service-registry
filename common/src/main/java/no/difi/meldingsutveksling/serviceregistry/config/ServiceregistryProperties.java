@@ -36,26 +36,23 @@ public class ServiceregistryProperties {
     @Valid
     private Sign sign;
     @Valid
-    private ServiceregistryProperties.Fiks fiks = new Fiks();
+    private Fiks fiks;
 
     @Data
     public static class ELMA {
         private String locatorUrl;
         private String defaultProcessIdentifier;
-        private String processIdentifier;
-        private String documentTypeIdentifier;
         private String lookupIcd;
     }
 
     @Data
     public static class Sign {
         @NotNull
-        private Keystore jks;
+        private Keystore keystore;
     }
 
     @Data
     public static class Auth {
-        private boolean enable;
         private String sasToken;
     }
 
@@ -72,12 +69,11 @@ public class ServiceregistryProperties {
         private URL endpointURL;
         private URL dsfEndpointURL;
         private String printAdress;
-        private String printCertificate;
+        private Resource printCertificate;
     }
 
     @Data
     public static class FeatureToggle {
-        private boolean paaVegneAvOppslag = false;
         private boolean enableDpfDpv = true;
     }
 
@@ -114,7 +110,8 @@ public class ServiceregistryProperties {
     public static class Keystore {
         private String alias;
         private String password;
-        private Resource keystore;
+        private String type;
+        private Resource path;
     }
 
     @Data
