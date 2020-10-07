@@ -39,6 +39,13 @@ public class AdminController {
         return process.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PostMapping(value = "/processes/list", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Transactional
+    public ResponseEntity<?> addProcesses(@RequestBody List<Process> processes) {
+        processes.forEach(this::addProcess);
+        return ResponseEntity.ok().build();
+    }
+
     @ApiOperation(value = "Add a process", tags = {"Process", "Administration"})
     @PostMapping(value = "/processes", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Transactional
