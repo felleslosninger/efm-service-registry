@@ -50,9 +50,9 @@ public class ServiceRecordController {
     private final ServiceRecordFactory serviceRecordFactory;
     private final ProcessService processService;
     private final AuthenticationService authenticationService;
-    private EntityService entityService;
-    private PayloadSigner payloadSigner;
-    private SRRequestScope requestScope;
+    private final EntityService entityService;
+    private final PayloadSigner payloadSigner;
+    private final SRRequestScope requestScope;
 
     public ServiceRecordController(ServiceRecordFactory serviceRecordFactory,
                                    EntityService entityService,
@@ -113,13 +113,11 @@ public class ServiceRecordController {
             entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, clientId));
         }
         if (ProcessCategory.ARKIVMELDING == process.getCategory()) {
-            Optional<ServiceRecord> optionalServiceRecord = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, process, securityLevel);
-            if (optionalServiceRecord.isPresent()) {
-                serviceRecord = optionalServiceRecord.get();
-            }
-            if (serviceRecord == null) {
+            Optional<ServiceRecord> arkivmeldingServiceRecord = serviceRecordFactory.createArkivmeldingServiceRecord(entityInfo, process, securityLevel);
+            if (!arkivmeldingServiceRecord.isPresent()) {
                 return notFoundResponse(String.format("Arkivmelding process '%s' not found for receiver '%s'.", process.getIdentifier(), identifier));
             }
+            serviceRecord = arkivmeldingServiceRecord.get();
         }
         if (ProcessCategory.EINNSYN == process.getCategory()) {
             Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createServiceRecord(entityInfo, process, securityLevel);
@@ -160,19 +158,17 @@ public class ServiceRecordController {
         String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
         fillRequestScope(identifier, conversationId, clientOrgnr, authenticationService.getToken(auth));
         Entity entity = new Entity();
-        Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
-        if (!entityInfo.isPresent()) {
-            return notFoundResponse(String.format("Entity with identifier '%s' not found.", identifier));
-        }
-        entity.setInfoRecord(entityInfo.get());
-        if (shouldCreateServiceRecordForCitizen().test(entityInfo.get())) {
+        EntityInfo entityInfo = entityService.getEntityInfo(identifier)
+                .orElseThrow(() -> new EntityNotFoundException(identifier));
+        entity.setInfoRecord(entityInfo);
+        if (shouldCreateServiceRecordForCitizen().test(entityInfo)) {
             if (clientOrgnr == null) {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
             }
             entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, clientOrgnr));
         } else {
-            entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(identifier, securityLevel));
-            entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(entityInfo.get(), securityLevel));
+            entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(entityInfo, securityLevel));
+            entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(entityInfo, securityLevel));
             entity.getServiceRecords().addAll(serviceRecordFactory.createAvtaltServiceRecords(identifier));
         }
         return new ResponseEntity<>(entity, HttpStatus.OK);
@@ -260,10 +256,10 @@ public class ServiceRecordController {
         log.warn(markerFrom(requestScope), "Endpoint not found for {}", req.getRequestURL(), e);
     }
 
-    @ResponseStatus(value = HttpStatus.NOT_FOUND, reason = "Could not find entity for the requested identifier")
     @ExceptionHandler(EntityNotFoundException.class)
-    public void entityNotFound(HttpServletRequest req, Exception e) {
+    public ResponseEntity<?> entityNotFound(HttpServletRequest req, Exception e) {
         log.warn(markerFrom(requestScope), "Entity not found for {}", req.getRequestURL(), e);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
     }
 
     @ExceptionHandler(AccessDeniedException.class)

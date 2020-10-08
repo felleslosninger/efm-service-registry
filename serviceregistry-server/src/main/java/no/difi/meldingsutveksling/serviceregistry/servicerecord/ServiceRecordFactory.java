@@ -65,54 +65,46 @@ public class ServiceRecordFactory {
     private final FiksIoService fiksIoService;
     private final SRRequestScope requestScope;
 
-    public Optional<ServiceRecord> createArkivmeldingServiceRecord(String orgnr, Process process, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
-        return Optional.ofNullable(createArkivmeldingServiceRecord(orgnr, targetSecurityLevel, process));
-    }
-
     @SuppressWarnings("squid:S1166")
-    public List<ServiceRecord> createArkivmeldingServiceRecords(String orgnr, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
+    public List<ServiceRecord> createArkivmeldingServiceRecords(EntityInfo entityInfo, Integer securityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
         Set<Process> arkivmeldingProcesses = processService.findAll(ProcessCategory.ARKIVMELDING);
         for (Process process : arkivmeldingProcesses) {
-            ServiceRecord record = createArkivmeldingServiceRecord(orgnr, targetSecurityLevel, process);
-            if (null != record) {
-                serviceRecords.add(record);
-            }
+            createArkivmeldingServiceRecord(entityInfo, process, securityLevel)
+                    .ifPresent(serviceRecords::add);
         }
         return serviceRecords;
     }
 
-    private ServiceRecord createArkivmeldingServiceRecord(String orgnr, Integer targetSecurityLevel, Process process) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
-        ServiceRecord serviceRecord;
-        Set<String> processIdentifiers = getSmpRegistrations(orgnr, Sets.newHashSet(process)).stream()
+    public Optional<ServiceRecord> createArkivmeldingServiceRecord(EntityInfo entityInfo, Process process, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
+        Set<String> processIdentifiers = getSmpRegistrations(entityInfo.getIdentifier(), Sets.newHashSet(process)).stream()
                 .map(ProcessIdentifier::getIdentifier)
                 .collect(Collectors.toSet());
         if (processIdentifiers.isEmpty()) {
             if (properties.getFeature().isEnableDpfDpv()) {
-                Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(orgnr, targetSecurityLevel);
+                Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(entityInfo.getIdentifier(), targetSecurityLevel);
                 if (hasSvarUt.isPresent()) {
-                    serviceRecord = createDpfServiceRecord(orgnr, process, hasSvarUt.get());
+                    return Optional.of(createDpfServiceRecord(entityInfo.getIdentifier(), process, hasSvarUt.get()));
                 } else {
                     if (targetSecurityLevel != null && targetSecurityLevel == 4) {
-                        throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", orgnr, targetSecurityLevel));
+                        throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", entityInfo, targetSecurityLevel));
                     } else {
-                        serviceRecord = createDpvServiceRecord(orgnr, process);
+                        return Optional.of(createDpvServiceRecord(entityInfo.getIdentifier(), process));
                     }
                 }
             } else {
-                return null;
-            }
-        } else {
-            if (processIdentifiers.contains(process.getIdentifier())) {
-                serviceRecord = createDpoServiceRecord(orgnr, process);
-            } else {
-                if (targetSecurityLevel != null && targetSecurityLevel == 4) {
-                    return null;
-                }
-                serviceRecord = createDpvServiceRecord(orgnr, process);
+                return Optional.empty();
             }
         }
-        return serviceRecord;
+
+        if (processIdentifiers.contains(process.getIdentifier())) {
+            return Optional.of(createDpoServiceRecord(entityInfo.getIdentifier(), process));
+        } else {
+            if (targetSecurityLevel != null && targetSecurityLevel == 4) {
+                return Optional.empty();
+            }
+            return Optional.of(createDpvServiceRecord(entityInfo.getIdentifier(), process));
+        }
     }
 
     public Optional<ServiceRecord> createServiceRecord(EntityInfo entityInfo, Process process, Integer securityLevel) throws CertificateNotFoundException, ProcessNotFoundException {

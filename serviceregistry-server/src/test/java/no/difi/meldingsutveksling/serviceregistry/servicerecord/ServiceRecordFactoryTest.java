@@ -107,6 +107,9 @@ public class ServiceRecordFactoryTest {
     private static String PERSONNUMMER = "01234567890";
     private static final String ELMA_LOOKUP_ICD = "0192";
     private static final OrganizationType ORGL = new OrganizationType("ORGL");
+    private static final OrganizationType KOMM = new OrganizationType("ORGL");
+    private static final EntityInfo ORGNR_ORG = new OrganizationInfo(ORGNR, ORGL);
+    private static final EntityInfo ORGNR_FIKS_KOMM = new OrganizationInfo(ORGNR_FIKS, KOMM);
 
     private static String ARKIVMELDING_PROCESS_ADMIN = "urn:no:difi:profile:arkivmelding:administrasjon:ver1.0";
     private static String ARKIVMELDING_PROCESS_SKATT = "urn:no:difi:profile:arkivmelding:skatterOgAvgifter:ver1.0";
@@ -242,7 +245,7 @@ public class ServiceRecordFactoryTest {
     public void createArkivmeldingServiceRecord_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException() throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
-        factory.createArkivmeldingServiceRecord(ORGNR, mock(Process.class), 4);
+        factory.createArkivmeldingServiceRecord(ORGNR_ORG, mock(Process.class), 4);
     }
 
     @Test
@@ -252,7 +255,7 @@ public class ServiceRecordFactoryTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         setupLookupServiceMockToReturnAdministrationProcessMatch();
 
-        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR, processAdmin, null);
+        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR_ORG, processAdmin, null);
 
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPO, result.get().getService().getIdentifier());
@@ -282,7 +285,7 @@ public class ServiceRecordFactoryTest {
         setupLookupServiceMockToReturnAdministrationProcessMatch();
         when(virkSertService.getCertificate(anyString())).thenThrow(new VirksertClientException("certificate not found"));
 
-        factory.createArkivmeldingServiceRecord(ORGNR, processAdmin, null);
+        factory.createArkivmeldingServiceRecord(ORGNR_ORG, processAdmin, null);
     }
 
     @Test
@@ -290,7 +293,7 @@ public class ServiceRecordFactoryTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), eq(4))).thenReturn(Optional.of(4));
 
-        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR_FIKS, processSkatt, 4);
+        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR_FIKS_KOMM, processSkatt, 4);
 
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPF, result.get().getService().getIdentifier());
@@ -301,7 +304,7 @@ public class ServiceRecordFactoryTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
-        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR, processSkatt, null);
+        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR_ORG, processSkatt, null);
 
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPV, result.get().getService().getIdentifier());
@@ -313,7 +316,7 @@ public class ServiceRecordFactoryTest {
         when(lookupService.lookup(anyString(), anySet())).thenReturn(Lists.newArrayList());
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
-        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR, processSkatt, null);
+        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR_ORG, processSkatt, null);
 
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPV, result.get().getService().getIdentifier());
@@ -329,7 +332,7 @@ public class ServiceRecordFactoryTest {
         when(processService.findAll(ProcessCategory.ARKIVMELDING)).thenReturn(Sets.newHashSet());
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
-        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords("identifier", null);
+        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(new OrganizationInfo(), null);
 
         assertTrue(result.isEmpty());
     }
@@ -338,14 +341,14 @@ public class ServiceRecordFactoryTest {
     public void createArkivmeldingServiceRecords_CertificateNotFoundForSmpProcess_ShouldThrowDedicatedException() throws SecurityLevelNotFoundException, CertificateNotFoundException, VirksertClientException, SvarUtClientException {
         setupLookupServiceMockToReturnAdministrationProcessMatch();
         when(virkSertService.getCertificate(anyString())).thenThrow(new VirksertClientException("certificate not found"));
-        factory.createArkivmeldingServiceRecords(ORGNR, null);
+        factory.createArkivmeldingServiceRecords(ORGNR_ORG, null);
     }
 
     @Test
     public void createArkivmeldingServiceRecords_OrganizationHasAdministrasjonButNotSkattRegistrationInSmp_ShouldReturnCorrespondingDpoAndDpvServiceRecords() throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         setupLookupServiceMockToReturnAdministrationProcessMatch();
 
-        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR, null);
+        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR_ORG, null);
 
         assertEquals(2, result.size());
         ServiceRecord srAdmin = result.stream().filter(r -> ARKIVMELDING_PROCESS_ADMIN.equals(r.getProcess())).findFirst().orElseThrow(RuntimeException::new);
@@ -357,7 +360,7 @@ public class ServiceRecordFactoryTest {
     @Test
     public void createArkivmeldingServiceRecords_OrganizationHasSvarUtRegistration_ShouldReturnDpfServiceRecord() throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any())).thenReturn(Optional.of(3));
-        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR_FIKS, 3);
+        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR_FIKS_KOMM, 3);
         assertEquals(2, countServiceRecordsForServiceIdentifier(result, ServiceIdentifier.DPF));
     }
 
@@ -366,7 +369,7 @@ public class ServiceRecordFactoryTest {
         when(lookupService.lookup(anyString(), anySet())).thenReturn(Lists.newArrayList());
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
-        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR, null);
+        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR_ORG, null);
 
         assertEquals(2, countServiceRecordsForServiceIdentifier(result, ServiceIdentifier.DPV));
     }
@@ -375,7 +378,7 @@ public class ServiceRecordFactoryTest {
     public void createArkivmeldingServiceRecords_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException
             () throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any())).thenReturn(Optional.empty());
-        factory.createArkivmeldingServiceRecords(ORGNR_FIKS, 4);
+        factory.createArkivmeldingServiceRecords(ORGNR_FIKS_KOMM, 4);
     }
 
     @Test(expected = SvarUtClientException.class)
@@ -383,7 +386,7 @@ public class ServiceRecordFactoryTest {
             SvarUtClientException, SecurityLevelNotFoundException, CertificateNotFoundException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any()))
                 .thenThrow(new SvarUtClientException(new RuntimeException("service unavailable")));
-        factory.createArkivmeldingServiceRecords(ORGNR_FIKS, 3);
+        factory.createArkivmeldingServiceRecords(ORGNR_FIKS_KOMM, 3);
     }
 
     private long countServiceRecordsForServiceIdentifier(List<ServiceRecord> result, ServiceIdentifier
