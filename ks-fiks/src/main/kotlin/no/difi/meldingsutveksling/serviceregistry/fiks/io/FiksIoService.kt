@@ -3,6 +3,7 @@ package no.difi.meldingsutveksling.serviceregistry.fiks.io
 import no.difi.meldingsutveksling.serviceregistry.CacheConfig
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties
+import no.difi.meldingsutveksling.serviceregistry.domain.EntityInfo
 import no.difi.meldingsutveksling.serviceregistry.domain.Process
 import no.difi.meldingsutveksling.serviceregistry.logger
 import no.ks.fiks.fiksio.client.api.katalog.model.KatalogKonto
@@ -32,18 +33,20 @@ open class FiksIoService(private val props: ServiceregistryProperties,
             .build()
 
     @Cacheable(CacheConfig.FIKSIO_CACHE)
-    open fun lookup(orgnr: String, process: Process, securityLevel: Int): Optional<Konto> {
-        val headers = HttpHeaders()
+    open fun lookup(entity: EntityInfo, process: Process, securityLevel: Int): Optional<Konto> {
+        if (!props.fiks.io.orgFormFilter.contains(entity.entityType.name)) return Optional.empty()
+
         val fiksProtocol = fiksProtocolRepository.findByProcessesIdentifier(process.identifier)
                 ?: return Optional.empty()
 
+        val headers = HttpHeaders()
         headers.add("IntegrasjonId", props.fiks.io.integrasjonId)
         headers.add("IntegrasjonPassord", props.fiks.io.integrasjonPassord)
         headers.add("Authorization", "Bearer ${requestScope.token}")
         val httpEntity = HttpEntity<Any>(headers)
 
         val uri = UriComponentsBuilder.fromUriString("/fiks-io/katalog/api/v1/lookup")
-                .queryParam("identifikator", "ORG_NO.$orgnr")
+                .queryParam("identifikator", "ORG_NO.${entity.identifier}")
                 .queryParam("meldingProtokoll", fiksProtocol.identifier)
                 .queryParam("sikkerhetsniva", securityLevel)
                 .build().toUriString()
@@ -54,7 +57,7 @@ open class FiksIoService(private val props: ServiceregistryProperties,
                 Optional.ofNullable(Konto.fromKatalogModel(it))
             } ?: Optional.empty()
         } catch (e: HttpClientErrorException) {
-            val errorMsg = "Error looking up $orgnr in Fiks Kontokatalog"
+            val errorMsg = "Error looking up ${entity.identifier} in Fiks Kontokatalog"
             when  {
                 e.statusCode.is4xxClientError -> log.debug(errorMsg, e)
                 else -> log.error(errorMsg, e)

@@ -76,18 +76,23 @@ public class ServiceRecordFactory {
         return serviceRecords;
     }
 
-    public Optional<ServiceRecord> createArkivmeldingServiceRecord(EntityInfo entityInfo, Process process, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
+    public Optional<ServiceRecord> createArkivmeldingServiceRecord(EntityInfo entityInfo, Process process, Integer securityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         Set<String> processIdentifiers = getSmpRegistrations(entityInfo.getIdentifier(), Sets.newHashSet(process)).stream()
                 .map(ProcessIdentifier::getIdentifier)
                 .collect(Collectors.toSet());
         if (processIdentifiers.isEmpty()) {
             if (properties.getFeature().isEnableDpfDpv()) {
-                Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(entityInfo.getIdentifier(), targetSecurityLevel);
+                Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(entityInfo.getIdentifier(), securityLevel);
                 if (hasSvarUt.isPresent()) {
                     return Optional.of(createDpfServiceRecord(entityInfo.getIdentifier(), process, hasSvarUt.get()));
                 } else {
-                    if (targetSecurityLevel != null && targetSecurityLevel == 4) {
-                        throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", entityInfo, targetSecurityLevel));
+                    Optional<Konto> konto = fiksIoService.lookup(entityInfo, process, securityLevel == null ? 3 : securityLevel);
+                    if (konto.isPresent()) {
+                        return Optional.of(createDpfioServiceRecord(entityInfo.getIdentifier(), process, konto.get()));
+                    }
+
+                    if (securityLevel != null && securityLevel == 4) {
+                        throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", entityInfo, securityLevel));
                     } else {
                         return Optional.of(createDpvServiceRecord(entityInfo.getIdentifier(), process));
                     }
@@ -100,7 +105,7 @@ public class ServiceRecordFactory {
         if (processIdentifiers.contains(process.getIdentifier())) {
             return Optional.of(createDpoServiceRecord(entityInfo.getIdentifier(), process));
         } else {
-            if (targetSecurityLevel != null && targetSecurityLevel == 4) {
+            if (securityLevel != null && securityLevel == 4) {
                 return Optional.empty();
             }
             return Optional.of(createDpvServiceRecord(entityInfo.getIdentifier(), process));
@@ -120,14 +125,8 @@ public class ServiceRecordFactory {
             }
         }
 
-        if (properties.getFiks().getIo().getOrgFormFilter().contains(entityInfo.getEntityType().getName())) {
-            Optional<Konto> konto = fiksIoService.lookup(entityInfo.getIdentifier(), process, securityLevel == null ? 3 : securityLevel);
-            if (konto.isPresent()) {
-                return Optional.of(createDpfioServiceRecord(entityInfo.getIdentifier(), process, konto.get()));
-            }
-        }
-
-        return Optional.empty();
+        Optional<Konto> konto = fiksIoService.lookup(entityInfo, process, securityLevel == null ? 3 : securityLevel);
+        return konto.map(value -> createDpfioServiceRecord(entityInfo.getIdentifier(), process, value));
     }
 
     private ServiceRecord createDpoServiceRecord(String orgnr, Process process) throws CertificateNotFoundException {
@@ -193,12 +192,10 @@ public class ServiceRecordFactory {
             return serviceRecords;
         }
 
-        if (properties.getFiks().getIo().getOrgFormFilter().contains(entityInfo.getEntityType().getName())) {
-            einnsynProcesses.forEach(p -> {
-                Optional<Konto> konto = fiksIoService.lookup(entityInfo.getIdentifier(), p, securityLevel == null ? 3 : securityLevel);
-                konto.ifPresent(k -> serviceRecords.add(createDpfioServiceRecord(entityInfo.getIdentifier(), p, k)));
-            });
-        }
+        einnsynProcesses.forEach(p -> {
+            Optional<Konto> konto = fiksIoService.lookup(entityInfo, p, securityLevel == null ? 3 : securityLevel);
+            konto.ifPresent(k -> serviceRecords.add(createDpfioServiceRecord(entityInfo.getIdentifier(), p, k)));
+        });
 
         return serviceRecords;
     }
