@@ -1,6 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.businesslogic;
 
-import no.difi.meldingsutveksling.serviceregistry.model.OrganizationInfo;
+import no.difi.meldingsutveksling.serviceregistry.domain.OrganizationInfo;
 import org.junit.Test;
 
 import static org.hamcrest.core.IsEqual.equalTo;

@@ -1,6 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.client.brreg;
 
-import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
+import no.difi.meldingsutveksling.serviceregistry.domain.BrregEnhet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;

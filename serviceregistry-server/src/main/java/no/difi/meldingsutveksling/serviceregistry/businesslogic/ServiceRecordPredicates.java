@@ -1,6 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.businesslogic;
 
-import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
+import no.difi.meldingsutveksling.serviceregistry.domain.EntityInfo;
 
 import java.util.function.Predicate;
 import java.util.regex.Pattern;

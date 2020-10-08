@@ -2,20 +2,20 @@ package no.difi.meldingsutveksling.serviceregistry.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import no.difi.meldingsutveksling.Notification;
+import no.difi.meldingsutveksling.serviceregistry.domain.Notification;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
-import no.difi.meldingsutveksling.serviceregistry.EntityNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EndpointUrlNotFound;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.krr.DsfLookupException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
-import no.difi.meldingsutveksling.serviceregistry.model.Entity;
-import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
-import no.difi.meldingsutveksling.serviceregistry.model.Process;
-import no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory;
-import no.difi.meldingsutveksling.serviceregistry.response.ErrorResponse;
+import no.difi.meldingsutveksling.serviceregistry.domain.Entity;
+import no.difi.meldingsutveksling.serviceregistry.domain.EntityInfo;
+import no.difi.meldingsutveksling.serviceregistry.domain.Process;
+import no.difi.meldingsutveksling.serviceregistry.domain.ProcessCategory;
+import no.difi.meldingsutveksling.serviceregistry.ErrorResponse;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.AuthenticationService;
@@ -25,7 +25,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundExc
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
-import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
+import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import org.jboss.logging.MDC;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -282,7 +282,7 @@ public class ServiceRecordController {
     }
 
     @ExceptionHandler(ProcessNotFoundException.class)
-    public ResponseEntity processNotFound(HttpServletRequest request, Exception e) {
+    public ResponseEntity<?> processNotFound(HttpServletRequest request, Exception e) {
         log.error(markerFrom(requestScope), "Exception occured on {}", request.getRequestURL(), e);
         return ResponseEntity.badRequest().body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
     }

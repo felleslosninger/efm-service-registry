@@ -1,6 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.client.brreg;
 
-import no.difi.meldingsutveksling.serviceregistry.model.BrregEnhet;
+import no.difi.meldingsutveksling.serviceregistry.domain.BrregEnhet;
 
 import java.util.Optional;
 

@@ -3,8 +3,8 @@ package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import org.junit.Test;
 
-import static no.difi.meldingsutveksling.Notification.NOT_OBLIGATED;
-import static no.difi.meldingsutveksling.Notification.OBLIGATED;
+import static no.difi.meldingsutveksling.serviceregistry.domain.Notification.NOT_OBLIGATED;
+import static no.difi.meldingsutveksling.serviceregistry.domain.Notification.OBLIGATED;
 import static no.difi.meldingsutveksling.serviceregistry.servicerecord.DpiMessageRouter.TargetRecord.DPI;
 import static no.difi.meldingsutveksling.serviceregistry.servicerecord.DpiMessageRouter.TargetRecord.DPV;
 import static no.difi.meldingsutveksling.serviceregistry.servicerecord.DpiMessageRouter.TargetRecord.PRINT;

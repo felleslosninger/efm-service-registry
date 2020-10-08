@@ -2,7 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.logging;
 
 import net.logstash.logback.marker.LogstashMarker;
 import net.logstash.logback.marker.Markers;
-import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
+import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 
 public class SRMarkerFactory {
 

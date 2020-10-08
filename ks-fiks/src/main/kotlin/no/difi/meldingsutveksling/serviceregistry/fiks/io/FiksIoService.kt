@@ -1,7 +1,9 @@
 package no.difi.meldingsutveksling.serviceregistry.fiks.io
 
 import no.difi.meldingsutveksling.serviceregistry.CacheConfig
+import no.difi.meldingsutveksling.serviceregistry.SRRequestScope
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties
+import no.difi.meldingsutveksling.serviceregistry.domain.Process
 import no.difi.meldingsutveksling.serviceregistry.logger
 import no.ks.fiks.fiksio.client.api.katalog.model.KatalogKonto
 import no.ks.fiks.io.client.model.Konto
@@ -18,7 +20,9 @@ import java.time.Duration
 import java.util.*
 
 @Component
-open class FiksIoService(private val props: ServiceregistryProperties) {
+open class FiksIoService(private val props: ServiceregistryProperties,
+                         private val fiksProtocolRepository: FiksProtocolRepository,
+                         private val requestScope: SRRequestScope) {
     val log = logger()
 
     private val rt: RestTemplate = RestTemplateBuilder()
@@ -28,16 +32,19 @@ open class FiksIoService(private val props: ServiceregistryProperties) {
             .build()
 
     @Cacheable(CacheConfig.FIKSIO_CACHE)
-    open fun lookup(orgnr: String, securityLevel: Int, token: String): Optional<Konto> {
+    open fun lookup(orgnr: String, process: Process, securityLevel: Int): Optional<Konto> {
         val headers = HttpHeaders()
+        val fiksProtocol = fiksProtocolRepository.findByProcessesIdentifier(process.identifier)
+                ?: return Optional.empty()
+
         headers.add("IntegrasjonId", props.fiks.io.integrasjonId)
         headers.add("IntegrasjonPassord", props.fiks.io.integrasjonPassord)
-        headers.add("Authorization", "Bearer $token")
+        headers.add("Authorization", "Bearer ${requestScope.token}")
         val httpEntity = HttpEntity<Any>(headers)
 
         val uri = UriComponentsBuilder.fromUriString("/fiks-io/katalog/api/v1/lookup")
                 .queryParam("identifikator", "ORG_NO.$orgnr")
-                .queryParam("meldingProtokoll", props.fiks.io.einnsynProtocol)
+                .queryParam("meldingProtokoll", fiksProtocol.identifier)
                 .queryParam("sikkerhetsniva", securityLevel)
                 .build().toUriString()
 

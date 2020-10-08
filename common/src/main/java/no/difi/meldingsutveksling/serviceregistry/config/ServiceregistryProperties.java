@@ -127,10 +127,6 @@ public class ServiceregistryProperties {
         @NotNull
         private String endpointUrl;
         @NotNull
-        private String einnsynProtocol;
-        @NotNull
-        private String processIdentifier;
-        @NotNull
         private List<String> orgFormFilter;
         @NotNull
         private String integrasjonId;

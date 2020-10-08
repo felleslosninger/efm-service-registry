@@ -6,8 +6,8 @@ import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperti
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksIoService;
-import no.difi.meldingsutveksling.serviceregistry.model.Process;
-import no.difi.meldingsutveksling.serviceregistry.model.*;
+import no.difi.meldingsutveksling.serviceregistry.domain.Process;
+import no.difi.meldingsutveksling.serviceregistry.domain.*;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
@@ -15,7 +15,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
-import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
+import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.move.common.oauth.KeystoreHelper;
 import no.difi.vefa.peppol.common.model.ProcessIdentifier;
 import no.difi.vefa.peppol.lookup.LookupClient;
@@ -153,7 +153,6 @@ public class ServiceRecordFactoryTest {
         fiks.setSvarut(svarUtConfig);
         ServiceregistryProperties.FiksIo fiksIo = new ServiceregistryProperties.FiksIo();
         fiksIo.setOrgFormFilter(Collections.singletonList("KOMM"));
-        fiksIo.setProcessIdentifier(EINNSYN_PROCESS_INNSYNSKRAV);
         fiks.setIo(fiksIo);
         when(props.getFiks()).thenReturn(fiks);
 
@@ -464,7 +463,7 @@ public class ServiceRecordFactoryTest {
                 .fiksOrgId(new FiksOrgId(UUID.fromString("55e8572a-7515-4518-aa37-e20029a78739")))
                 .fiksOrgNavn("Testorg")
                 .build();
-        when(fiksIoService.lookup(any(), anyInt(), any())).thenReturn(Optional.of(konto));
+        when(fiksIoService.lookup(any(), any(), anyInt())).thenReturn(Optional.of(konto));
 
         OrganizationInfo kommOrg = new OrganizationInfo(kommOrgnr, new OrganizationType("KOMM"));
         Optional<ServiceRecord> serviceRecord = factory.createServiceRecord(kommOrg, EINNSYN_PROCESS_INNSYNSKRAV, 3);

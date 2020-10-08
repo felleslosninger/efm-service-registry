@@ -5,7 +5,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import no.difi.meldingsutveksling.Notification;
+import no.difi.meldingsutveksling.serviceregistry.domain.Notification;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
@@ -13,8 +13,8 @@ import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundExce
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksIoService;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
-import no.difi.meldingsutveksling.serviceregistry.model.Process;
-import no.difi.meldingsutveksling.serviceregistry.model.*;
+import no.difi.meldingsutveksling.serviceregistry.domain.Process;
+import no.difi.meldingsutveksling.serviceregistry.domain.*;
 import no.difi.meldingsutveksling.serviceregistry.service.DocumentTypeService;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
@@ -24,7 +24,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
-import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
+import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.vefa.peppol.common.model.ProcessIdentifier;
 import no.difi.virksert.client.lang.VirksertClientException;
 import no.ks.fiks.io.client.model.Konto;
@@ -42,9 +42,9 @@ import java.util.stream.Collectors;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
 import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
-import static no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory.AVTALT;
-import static no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory.EINNSYN;
-import static no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier.*;
+import static no.difi.meldingsutveksling.serviceregistry.domain.ProcessCategory.AVTALT;
+import static no.difi.meldingsutveksling.serviceregistry.domain.ProcessCategory.EINNSYN;
+import static no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier.*;
 
 /**
  * Factory method class to create Service Records based on lookup endpoint urls and certificates corresponding to those services
@@ -135,9 +135,8 @@ public class ServiceRecordFactory {
             }
         }
 
-        if (properties.getFiks().getIo().getOrgFormFilter().contains(entityInfo.getEntityType().getName()) &&
-                processIdentifier.equals(properties.getFiks().getIo().getProcessIdentifier())) {
-            Optional<Konto> konto = fiksIoService.lookup(entityInfo.getIdentifier(), securityLevel == null ? 3 : securityLevel, requestScope.getToken());
+        if (properties.getFiks().getIo().getOrgFormFilter().contains(entityInfo.getEntityType().getName())) {
+            Optional<Konto> konto = fiksIoService.lookup(entityInfo.getIdentifier(), process, securityLevel == null ? 3 : securityLevel);
             if (konto.isPresent()) {
                 return Optional.of(createDpfioServiceRecord(entityInfo.getIdentifier(), process, konto.get()));
             }
@@ -210,12 +209,9 @@ public class ServiceRecordFactory {
         }
 
         if (properties.getFiks().getIo().getOrgFormFilter().contains(entityInfo.getEntityType().getName())) {
-            Optional<Konto> konto = fiksIoService.lookup(entityInfo.getIdentifier(), securityLevel == null ? 3 : securityLevel, requestScope.getToken());
-            konto.ifPresent(k -> {
-                String processIdentifier = properties.getFiks().getIo().getProcessIdentifier();
-                Process p = processService.findByIdentifier(processIdentifier)
-                        .orElseThrow(() -> new ServiceRegistryException("Fiks IO eInnsyn default process '" + processIdentifier + "' not found"));
-                serviceRecords.add(createDpfioServiceRecord(entityInfo.getIdentifier(), p, k));
+            einnsynProcesses.forEach(p -> {
+                Optional<Konto> konto = fiksIoService.lookup(entityInfo.getIdentifier(), p, securityLevel == null ? 3 : securityLevel);
+                konto.ifPresent(k -> serviceRecords.add(createDpfioServiceRecord(entityInfo.getIdentifier(), p, k)));
             });
         }
 

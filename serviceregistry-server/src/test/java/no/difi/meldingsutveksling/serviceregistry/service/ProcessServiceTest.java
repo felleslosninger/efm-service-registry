@@ -1,7 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.service;
 
-import no.difi.meldingsutveksling.serviceregistry.model.DocumentType;
-import no.difi.meldingsutveksling.serviceregistry.model.Process;
+import no.difi.meldingsutveksling.serviceregistry.domain.DocumentType;
+import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.persistence.ProcessRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;

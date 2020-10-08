@@ -1,6 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.servicerecord;
 
-import no.difi.meldingsutveksling.serviceregistry.model.ServiceIdentifier;
+import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier;
 
 public class DpeServiceRecord extends ServiceRecord {
 
