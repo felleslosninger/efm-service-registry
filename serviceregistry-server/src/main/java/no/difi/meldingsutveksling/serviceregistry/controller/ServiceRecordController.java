@@ -100,41 +100,38 @@ public class ServiceRecordController {
         if (!optionalEntityInfo.isPresent()) {
             return notFoundResponse(String.format("Entity with identifier '%s' not found.", identifier));
         }
-        Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
-        if (!optionalProcess.isPresent()) {
-            return notFoundResponse(String.format("Process with identifier '%s' not found.", processIdentifier));
-        }
+        Process process = processService.findByIdentifier(processIdentifier)
+                .orElseThrow(() -> new ProcessNotFoundException(processIdentifier));
         Entity entity = new Entity();
         EntityInfo entityInfo = optionalEntityInfo.get();
         entity.setInfoRecord(entityInfo);
         ServiceRecord serviceRecord = null;
-        ProcessCategory processCategory = optionalProcess.get().getCategory();
-        if (processCategory.equals(ProcessCategory.DIGITALPOST) && shouldCreateServiceRecordForCitizen().test(entityInfo)) {
+        if (ProcessCategory.DIGITALPOST == process.getCategory() && shouldCreateServiceRecordForCitizen().test(entityInfo)) {
             if (clientId == null) {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
             }
             entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, clientId));
         }
-        if (processCategory == ProcessCategory.ARKIVMELDING) {
-            Optional<ServiceRecord> optionalServiceRecord = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, processIdentifier, securityLevel);
+        if (ProcessCategory.ARKIVMELDING == process.getCategory()) {
+            Optional<ServiceRecord> optionalServiceRecord = serviceRecordFactory.createArkivmeldingServiceRecord(identifier, process, securityLevel);
             if (optionalServiceRecord.isPresent()) {
                 serviceRecord = optionalServiceRecord.get();
             }
             if (serviceRecord == null) {
-                return notFoundResponse(String.format("Arkivmelding process '%s' not found for receiver '%s'.", processIdentifier, identifier));
+                return notFoundResponse(String.format("Arkivmelding process '%s' not found for receiver '%s'.", process.getIdentifier(), identifier));
             }
         }
-        if (processCategory == ProcessCategory.EINNSYN) {
-            Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createServiceRecord(entityInfo, processIdentifier, securityLevel);
+        if (ProcessCategory.EINNSYN == process.getCategory()) {
+            Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createServiceRecord(entityInfo, process, securityLevel);
             if (!dpeServiceRecord.isPresent()) {
-                return notFoundResponse(String.format("eInnsyn process '%s' not found for receiver '%s'.", processIdentifier, identifier));
+                return notFoundResponse(String.format("eInnsyn process '%s' not found for receiver '%s'.", process.getIdentifier(), identifier));
             }
             serviceRecord = dpeServiceRecord.get();
         }
-        if(processCategory == ProcessCategory.AVTALT) {
-            Optional<ServiceRecord> avtaltDpoServiceRecord = serviceRecordFactory.createServiceRecord(entityInfo, processIdentifier, securityLevel);
+        if(ProcessCategory.AVTALT == process.getCategory()) {
+            Optional<ServiceRecord> avtaltDpoServiceRecord = serviceRecordFactory.createServiceRecord(entityInfo, process, securityLevel);
             if(!avtaltDpoServiceRecord.isPresent()) {
-                return notFoundResponse(String.format("Avtalt process '%s' not found for receiver '%s'.", processIdentifier, identifier));
+                return notFoundResponse(String.format("Avtalt process '%s' not found for receiver '%s'.", process.getIdentifier(), identifier));
             }
             serviceRecord = avtaltDpoServiceRecord.get();
         }
@@ -284,7 +281,7 @@ public class ServiceRecordController {
     @ExceptionHandler(ProcessNotFoundException.class)
     public ResponseEntity<?> processNotFound(HttpServletRequest request, Exception e) {
         log.error(markerFrom(requestScope), "Exception occured on {}", request.getRequestURL(), e);
-        return ResponseEntity.badRequest().body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ErrorResponse.builder().errorDescription(e.getMessage()).build());
     }
 
     @ExceptionHandler(KRRClientException.class)

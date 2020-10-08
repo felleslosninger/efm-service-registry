@@ -126,6 +126,11 @@ public class ServiceRecordFactoryTest {
     private static String DIGITALPOST_PROCESS_VEDTAK = "urn:no:difi:profile:digitalpost:vedtak:ver1.0";
     private static String DIGITALPOST_DOCTYPE_PRINT = "urn:no:difi:digitalpost:xsd:fysisk::print";
 
+    private static Process processAdmin;
+    private static Process processAvtalt;
+    private static Process processSkatt;
+    private static Process einnsynJournalpostProcess;
+    private static Process einnsynInnsynskravProcess;
 
     @Before
     public void init() throws MalformedURLException {
@@ -168,12 +173,12 @@ public class ServiceRecordFactoryTest {
         //Prosess og dokumenttype Arkivmelding
         DocumentType documentType = new DocumentType()
                 .setIdentifier(ARKIVMELDING_DOCTYPE);
-        Process processAdmin = new Process()
+        processAdmin = new Process()
                 .setIdentifier(ARKIVMELDING_PROCESS_ADMIN)
                 .setCategory(ProcessCategory.ARKIVMELDING)
                 .setServiceCode("4192")
                 .setServiceEditionCode("270815");
-        Process processSkatt = new Process()
+        processSkatt = new Process()
                 .setIdentifier(ARKIVMELDING_PROCESS_SKATT)
                 .setCategory(ProcessCategory.ARKIVMELDING)
                 .setServiceCode("4192")
@@ -188,7 +193,7 @@ public class ServiceRecordFactoryTest {
         //Prosess og dokumenttype Avtalt
         DocumentType documentTypeAvtalt = new DocumentType()
                 .setIdentifier(AVTALT_DOCTYPE);
-        Process processAvtalt = new Process().setIdentifier(AVTALT_PROCESS)
+        processAvtalt = new Process().setIdentifier(AVTALT_PROCESS)
                 .setCategory(ProcessCategory.AVTALT)
                 .setServiceCode("4192")
                 .setServiceEditionCode("270815");
@@ -207,7 +212,7 @@ public class ServiceRecordFactoryTest {
 
         DocumentType einnsynJournalpostDocumentType = new DocumentType()
                 .setIdentifier(EINNSYN_DOCTYPE_JOURNALPOST);
-        Process einnsynJournalpostProcess = new Process()
+        einnsynJournalpostProcess = new Process()
                 .setIdentifier(EINNSYN_PROCESS_JOURNALPOST)
                 .setCategory(ProcessCategory.EINNSYN)
                 .setServiceCode("data")
@@ -217,7 +222,7 @@ public class ServiceRecordFactoryTest {
 
         DocumentType einnsynInnsynskravDocumentType = new DocumentType()
                 .setIdentifier(EINNSYN_DOCTYPE_INNSYNSKRAV);
-        Process einnsynInnsynskravProcess = new Process()
+        einnsynInnsynskravProcess = new Process()
                 .setIdentifier(EINNSYN_PROCESS_INNSYNSKRAV)
                 .setCategory(ProcessCategory.EINNSYN)
                 .setServiceCode("innsyn")
@@ -233,18 +238,11 @@ public class ServiceRecordFactoryTest {
 
     }
 
-    @Test
-    public void createArkivmeldingServiceRecord_ProcessIsNotFound_ShouldReturnNotFound() throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
-        when(processService.findByIdentifier(anyString())).thenReturn(Optional.empty());
-        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR, "NotFound", null);
-        assertFalse(result.isPresent());
-    }
-
     @Test(expected = SecurityLevelNotFoundException.class)
     public void createArkivmeldingServiceRecord_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException() throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
-        factory.createArkivmeldingServiceRecord(ORGNR, "Found", 4);
+        factory.createArkivmeldingServiceRecord(ORGNR, mock(Process.class), 4);
     }
 
     @Test
@@ -254,7 +252,7 @@ public class ServiceRecordFactoryTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         setupLookupServiceMockToReturnAdministrationProcessMatch();
 
-        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR, ARKIVMELDING_PROCESS_ADMIN, null);
+        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR, processAdmin, null);
 
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPO, result.get().getService().getIdentifier());
@@ -270,7 +268,7 @@ public class ServiceRecordFactoryTest {
         when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR)), anySet()))
                 .thenReturn(Sets.newHashSet(ProcessIdentifier.of(AVTALT_PROCESS)));
 
-        Optional<ServiceRecord> result = factory.createServiceRecord(new OrganizationInfo(ORGNR, ORGL), AVTALT_PROCESS, null);
+        Optional<ServiceRecord> result = factory.createServiceRecord(new OrganizationInfo(ORGNR, ORGL), processAvtalt, null);
 
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPO, result.get().getService().getIdentifier());
@@ -284,7 +282,7 @@ public class ServiceRecordFactoryTest {
         setupLookupServiceMockToReturnAdministrationProcessMatch();
         when(virkSertService.getCertificate(anyString())).thenThrow(new VirksertClientException("certificate not found"));
 
-        factory.createArkivmeldingServiceRecord(ORGNR, ARKIVMELDING_PROCESS_ADMIN, null);
+        factory.createArkivmeldingServiceRecord(ORGNR, processAdmin, null);
     }
 
     @Test
@@ -292,7 +290,7 @@ public class ServiceRecordFactoryTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), eq(4))).thenReturn(Optional.of(4));
 
-        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR_FIKS, ARKIVMELDING_PROCESS_SKATT, 4);
+        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR_FIKS, processSkatt, 4);
 
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPF, result.get().getService().getIdentifier());
@@ -303,7 +301,7 @@ public class ServiceRecordFactoryTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
-        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR, ARKIVMELDING_PROCESS_SKATT, null);
+        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR, processSkatt, null);
 
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPV, result.get().getService().getIdentifier());
@@ -315,7 +313,7 @@ public class ServiceRecordFactoryTest {
         when(lookupService.lookup(anyString(), anySet())).thenReturn(Lists.newArrayList());
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
-        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR, ARKIVMELDING_PROCESS_SKATT, null);
+        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR, processSkatt, null);
 
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPV, result.get().getService().getIdentifier());
@@ -393,13 +391,6 @@ public class ServiceRecordFactoryTest {
         return result.stream().filter(serviceRecord -> serviceIdentifier == serviceRecord.getService().getIdentifier()).count();
     }
 
-    @Test(expected = ProcessNotFoundException.class)
-    public void createEinnsynServiceRecord_ProcessIsNotFound_ShouldReturnNotFound() throws
-            CertificateNotFoundException, ProcessNotFoundException {
-        when(processService.findByIdentifier(anyString())).thenReturn(Optional.empty());
-        factory.createServiceRecord(new OrganizationInfo(ORGNR, ORGL), "NotFound", null);
-    }
-
     @Test
     public void createEinnsynServiceRecords_ShouldReturnDpeServiceRecord() throws CertificateNotFoundException {
         List<ServiceRecord> result = factory.createEinnsynServiceRecords(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_JOURNALPOST), 3);
@@ -425,7 +416,7 @@ public class ServiceRecordFactoryTest {
     @Test
     public void createEinnsynServiceRecord_HasOrgnrAndProcessidentifier_ShouldReturnDpeServiceRecord() throws
             CertificateNotFoundException, ProcessNotFoundException {
-        Optional<ServiceRecord> result = factory.createServiceRecord(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_JOURNALPOST), EINNSYN_PROCESS_JOURNALPOST, 3);
+        Optional<ServiceRecord> result = factory.createServiceRecord(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_JOURNALPOST), einnsynJournalpostProcess, 3);
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPE, result.get().getService().getIdentifier());
     }
@@ -448,7 +439,7 @@ public class ServiceRecordFactoryTest {
         when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_EINNSYN_RESPONSE)), anySet()))
                 .thenReturn(Sets.newHashSet());
 
-        Optional<ServiceRecord> result = factory.createServiceRecord(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_RESPONSE).setOrganizationType(ORGL), EINNSYN_PROCESS_RESPONSE, 3);
+        Optional<ServiceRecord> result = factory.createServiceRecord(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_RESPONSE).setOrganizationType(ORGL), einnsynResponseProcess, 3);
         assertFalse(result.isPresent());
     }
 
@@ -466,7 +457,7 @@ public class ServiceRecordFactoryTest {
         when(fiksIoService.lookup(any(), any(), anyInt())).thenReturn(Optional.of(konto));
 
         OrganizationInfo kommOrg = new OrganizationInfo(kommOrgnr, new OrganizationType("KOMM"));
-        Optional<ServiceRecord> serviceRecord = factory.createServiceRecord(kommOrg, EINNSYN_PROCESS_INNSYNSKRAV, 3);
+        Optional<ServiceRecord> serviceRecord = factory.createServiceRecord(kommOrg, einnsynInnsynskravProcess, 3);
         assertTrue(serviceRecord.isPresent());
         assertEquals(ServiceIdentifier.DPFIO, serviceRecord.get().getService().getIdentifier());
         assertEquals(kontoId, serviceRecord.get().getService().getEndpointUrl());

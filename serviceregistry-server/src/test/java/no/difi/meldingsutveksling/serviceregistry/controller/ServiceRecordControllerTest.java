@@ -167,7 +167,7 @@ public class ServiceRecordControllerTest {
         dpiServiceRecord.setDocumentTypes(Arrays.asList(DOC_DIGITAL, DOC_PRINT));
         when(serviceRecordFactory.createDigitalpostServiceRecords(anyString(), anyString()))
                 .thenReturn(Lists.newArrayList(dpiServiceRecord));
-        when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), anyString(), anyInt())).thenReturn(Optional.empty());
+        when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), any(), anyInt())).thenReturn(Optional.empty());
         when(serviceRecordFactory.createEinnsynServiceRecords(any(), any())).thenReturn(Lists.newArrayList());
     }
 
@@ -543,7 +543,7 @@ public class ServiceRecordControllerTest {
         Process processMock = mockProcess(ProcessCategory.ARKIVMELDING);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         final String message = "security level not found";
-        when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), anyString(), anyInt())).thenThrow(new SecurityLevelNotFoundException(message));
+        when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), any(), anyInt())).thenThrow(new SecurityLevelNotFoundException(message));
 
         mvc.perform(get("/identifier/321321321/process/"+PROC_ARKIVMELDING_ADMINISTRASJON+"?securityLevel=4")
                 .accept(MediaType.APPLICATION_JSON))
@@ -555,7 +555,7 @@ public class ServiceRecordControllerTest {
     public void getWithProcessIdentifier_ArkivmeldingResolvesToEmptyRecord_ShouldReturnErrorResponseBody() throws Exception {
         Process processMock = mockProcess(ProcessCategory.ARKIVMELDING);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
-        when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), anyString(), anyInt())).thenReturn(Optional.empty());
+        when(serviceRecordFactory.createArkivmeldingServiceRecord(anyString(), any(), anyInt())).thenReturn(Optional.empty());
 
         MockHttpServletResponse result = mvc.perform(get("/identifier/123123123/process/some:invalid:process?securityLevel=2")
                 .accept(MediaType.APPLICATION_JSON))

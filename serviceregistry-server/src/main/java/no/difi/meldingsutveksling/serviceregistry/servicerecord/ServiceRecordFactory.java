@@ -65,12 +65,8 @@ public class ServiceRecordFactory {
     private final FiksIoService fiksIoService;
     private final SRRequestScope requestScope;
 
-    public Optional<ServiceRecord> createArkivmeldingServiceRecord(String orgnr, String processIdentifier, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
-        Optional<Process> optionalProcess = processService.findByIdentifier(processIdentifier);
-        if (optionalProcess.isPresent()) {
-            return Optional.ofNullable(createArkivmeldingServiceRecord(orgnr, targetSecurityLevel, optionalProcess.get()));
-        }
-        return Optional.empty();
+    public Optional<ServiceRecord> createArkivmeldingServiceRecord(String orgnr, Process process, Integer targetSecurityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
+        return Optional.ofNullable(createArkivmeldingServiceRecord(orgnr, targetSecurityLevel, process));
     }
 
     @SuppressWarnings("squid:S1166")
@@ -119,14 +115,11 @@ public class ServiceRecordFactory {
         return serviceRecord;
     }
 
-    public Optional<ServiceRecord> createServiceRecord(EntityInfo entityInfo, String processIdentifier, Integer securityLevel) throws CertificateNotFoundException, ProcessNotFoundException {
-        Process process = processService.findByIdentifier(processIdentifier)
-                .orElseThrow(() -> new ProcessNotFoundException(processIdentifier));
-
+    public Optional<ServiceRecord> createServiceRecord(EntityInfo entityInfo, Process process, Integer securityLevel) throws CertificateNotFoundException, ProcessNotFoundException {
         if (getSmpRegistrations(entityInfo.getIdentifier(), Sets.newHashSet(process))
                 .stream()
                 .map(ProcessIdentifier::getIdentifier)
-                .anyMatch(identifier -> identifier.equals(processIdentifier))) {
+                .anyMatch(identifier -> identifier.equals(process.getIdentifier()))) {
             if(process.getCategory() == EINNSYN ) {
                 return Optional.of(createDpeServiceRecord(entityInfo.getIdentifier(), process));
             }
