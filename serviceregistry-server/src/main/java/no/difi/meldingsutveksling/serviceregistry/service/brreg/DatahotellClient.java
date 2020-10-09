@@ -5,7 +5,7 @@ import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.domain.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.domain.OrganizationInfo;
-import no.difi.meldingsutveksling.serviceregistry.domain.datahotell.DatahotellEntry;
+import no.difi.meldingsutveksling.serviceregistry.domain.DatahotellEntry;
 import no.difi.meldingsutveksling.serviceregistry.domain.datahotell.DatahotellRespons;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

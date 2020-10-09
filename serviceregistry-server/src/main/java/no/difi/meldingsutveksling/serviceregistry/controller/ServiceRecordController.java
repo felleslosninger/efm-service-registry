@@ -22,8 +22,8 @@ import no.difi.meldingsutveksling.serviceregistry.service.AuthenticationService;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
-import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecord;
-import no.difi.meldingsutveksling.serviceregistry.servicerecord.ServiceRecordFactory;
+import no.difi.meldingsutveksling.serviceregistry.record.ServiceRecord;
+import no.difi.meldingsutveksling.serviceregistry.record.ServiceRecordService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import org.jboss.logging.MDC;
@@ -47,21 +47,21 @@ import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory
 public class ServiceRecordController {
 
     private static final Logger log = LoggerFactory.getLogger(ServiceRecordController.class);
-    private final ServiceRecordFactory serviceRecordFactory;
+    private final ServiceRecordService serviceRecordService;
     private final ProcessService processService;
     private final AuthenticationService authenticationService;
     private final EntityService entityService;
     private final PayloadSigner payloadSigner;
     private final SRRequestScope requestScope;
 
-    public ServiceRecordController(ServiceRecordFactory serviceRecordFactory,
+    public ServiceRecordController(ServiceRecordService serviceRecordService,
                                    EntityService entityService,
                                    PayloadSigner payloadSigner,
                                    ProcessService processService,
                                    AuthenticationService authenticationService,
                                    SRRequestScope requestScope) {
         this.entityService = entityService;
-        this.serviceRecordFactory = serviceRecordFactory;
+        this.serviceRecordService = serviceRecordService;
         this.payloadSigner = payloadSigner;
         this.processService = processService;
         this.authenticationService = authenticationService;
@@ -110,24 +110,24 @@ public class ServiceRecordController {
             if (clientId == null) {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
             }
-            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, clientId));
+            entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientId));
         }
         if (ProcessCategory.ARKIVMELDING == process.getCategory()) {
-            Optional<ServiceRecord> arkivmeldingServiceRecord = serviceRecordFactory.createArkivmeldingServiceRecord(entityInfo, process, securityLevel);
+            Optional<ServiceRecord> arkivmeldingServiceRecord = serviceRecordService.createArkivmeldingServiceRecord(entityInfo, process, securityLevel);
             if (!arkivmeldingServiceRecord.isPresent()) {
                 return notFoundResponse(String.format("Arkivmelding process '%s' not found for receiver '%s'.", process.getIdentifier(), identifier));
             }
             serviceRecord = arkivmeldingServiceRecord.get();
         }
         if (ProcessCategory.EINNSYN == process.getCategory()) {
-            Optional<ServiceRecord> dpeServiceRecord = serviceRecordFactory.createServiceRecord(entityInfo, process, securityLevel);
+            Optional<ServiceRecord> dpeServiceRecord = serviceRecordService.createServiceRecord(entityInfo, process, securityLevel);
             if (!dpeServiceRecord.isPresent()) {
                 return notFoundResponse(String.format("eInnsyn process '%s' not found for receiver '%s'.", process.getIdentifier(), identifier));
             }
             serviceRecord = dpeServiceRecord.get();
         }
         if(ProcessCategory.AVTALT == process.getCategory()) {
-            Optional<ServiceRecord> avtaltDpoServiceRecord = serviceRecordFactory.createServiceRecord(entityInfo, process, securityLevel);
+            Optional<ServiceRecord> avtaltDpoServiceRecord = serviceRecordService.createServiceRecord(entityInfo, process, securityLevel);
             if(!avtaltDpoServiceRecord.isPresent()) {
                 return notFoundResponse(String.format("Avtalt process '%s' not found for receiver '%s'.", process.getIdentifier(), identifier));
             }
@@ -165,11 +165,11 @@ public class ServiceRecordController {
             if (clientOrgnr == null) {
                 return errorResponse(HttpStatus.UNAUTHORIZED, "No authentication provided.");
             }
-            entity.getServiceRecords().addAll(serviceRecordFactory.createDigitalpostServiceRecords(identifier, clientOrgnr));
+            entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientOrgnr));
         } else {
-            entity.getServiceRecords().addAll(serviceRecordFactory.createArkivmeldingServiceRecords(entityInfo, securityLevel));
-            entity.getServiceRecords().addAll(serviceRecordFactory.createEinnsynServiceRecords(entityInfo, securityLevel));
-            entity.getServiceRecords().addAll(serviceRecordFactory.createAvtaltServiceRecords(identifier));
+            entity.getServiceRecords().addAll(serviceRecordService.createArkivmeldingServiceRecords(entityInfo, securityLevel));
+            entity.getServiceRecords().addAll(serviceRecordService.createEinnsynServiceRecords(entityInfo, securityLevel));
+            entity.getServiceRecords().addAll(serviceRecordService.createAvtaltServiceRecords(identifier));
         }
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }

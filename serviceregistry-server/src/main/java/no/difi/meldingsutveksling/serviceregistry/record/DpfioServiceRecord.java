@@ -1,4 +1,4 @@
-package no.difi.meldingsutveksling.serviceregistry.servicerecord;
+package no.difi.meldingsutveksling.serviceregistry.record;
 
 import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier;
 import no.ks.fiks.io.client.model.Konto;
@@ -14,10 +14,12 @@ public class DpfioServiceRecord extends ServiceRecord {
     public static DpfioServiceRecord from(String orgnr,
                                         Konto kontoId,
                                         String processIdentifier,
+                                        String fiksProtocol,
                                         List<String> documentTypes) {
         DpfioServiceRecord dpfioServiceRecord = new DpfioServiceRecord(ServiceIdentifier.DPFIO,
                 orgnr,
                 kontoId.getKontoId().toString());
+        dpfioServiceRecord.getService().setServiceCode(fiksProtocol);
         dpfioServiceRecord.setProcess(processIdentifier);
         dpfioServiceRecord.setDocumentTypes(documentTypes);
         return dpfioServiceRecord;

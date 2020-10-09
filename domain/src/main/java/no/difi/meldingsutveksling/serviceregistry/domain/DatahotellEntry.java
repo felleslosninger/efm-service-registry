@@ -1,4 +1,4 @@
-package no.difi.meldingsutveksling.serviceregistry.domain.datahotell;
+package no.difi.meldingsutveksling.serviceregistry.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;

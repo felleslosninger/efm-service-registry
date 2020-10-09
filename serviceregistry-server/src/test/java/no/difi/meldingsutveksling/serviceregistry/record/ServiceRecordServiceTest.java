@@ -1,13 +1,16 @@
-package no.difi.meldingsutveksling.serviceregistry.servicerecord;
+package no.difi.meldingsutveksling.serviceregistry.record;
 
 import com.google.common.collect.Sets;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import no.difi.meldingsutveksling.serviceregistry.domain.Process;
+import no.difi.meldingsutveksling.serviceregistry.domain.*;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksIoService;
-import no.difi.meldingsutveksling.serviceregistry.domain.Process;
-import no.difi.meldingsutveksling.serviceregistry.domain.*;
+import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksProtocol;
+import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksProtocolRepository;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
@@ -15,7 +18,6 @@ import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
-import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.move.common.oauth.KeystoreHelper;
 import no.difi.vefa.peppol.common.model.ProcessIdentifier;
 import no.difi.vefa.peppol.lookup.LookupClient;
@@ -52,10 +54,10 @@ import static org.mockito.Mockito.when;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @TestPropertySource("classpath:application-test.properties")
-public class ServiceRecordFactoryTest {
+public class ServiceRecordServiceTest {
 
     @Autowired
-    private ServiceRecordFactory factory;
+    private ServiceRecordService service;
 
     @MockBean
     private VirkSertService virkSertService;
@@ -98,6 +100,9 @@ public class ServiceRecordFactoryTest {
 
     @MockBean
     private FiksIoService fiksIoService;
+
+    @MockBean
+    private FiksProtocolRepository fiksProtocolRepository;
 
     private static String ORGNR = "123456789";
     private static String ORGNR_FIKS = "987654321";
@@ -245,33 +250,35 @@ public class ServiceRecordFactoryTest {
     public void createArkivmeldingServiceRecord_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException() throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
-        factory.createArkivmeldingServiceRecord(ORGNR_ORG, mock(Process.class), 4);
+        service.createArkivmeldingServiceRecord(ORGNR_ORG, mock(Process.class), 4);
     }
 
     @Test
-    public void createArkivMeldingServiceRecord_OrganizationHasAdministrationInSmp_ShouldReturnDpoServiceRecord() throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
+    public void createArkivMeldingServiceRecord_OrganizationHasAdministrationInSmp_ShouldReturnDpoServiceRecord() throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException, VirksertClientException {
         Process processMock = mock(Process.class);
         when(processMock.getIdentifier()).thenReturn(ARKIVMELDING_PROCESS_ADMIN);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
+        when(virkSertService.getCertificate(anyString())).thenReturn("pem123");
         setupLookupServiceMockToReturnAdministrationProcessMatch();
 
-        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR_ORG, processAdmin, null);
+        Optional<ServiceRecord> result = service.createArkivmeldingServiceRecord(ORGNR_ORG, processAdmin, null);
 
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPO, result.get().getService().getIdentifier());
     }
 
     @Test
-    public void createAvtaltServiceRecord_OrganizationHasAvtaltInSmp_ShouldReturnDpoServiceRecord() throws CertificateNotFoundException, ProcessNotFoundException {
+    public void createAvtaltServiceRecord_OrganizationHasAvtaltInSmp_ShouldReturnDpoServiceRecord() throws CertificateNotFoundException, VirksertClientException {
         Process processMock = mock(Process.class);
         when(processMock.getIdentifier()).thenReturn(AVTALT_PROCESS);
         when(processMock.getCategory()).thenReturn(ProcessCategory.AVTALT);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
+        when(virkSertService.getCertificate(anyString())).thenReturn("pem123");
 
         when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR)), anySet()))
                 .thenReturn(Sets.newHashSet(ProcessIdentifier.of(AVTALT_PROCESS)));
 
-        Optional<ServiceRecord> result = factory.createServiceRecord(new OrganizationInfo(ORGNR, ORGL), processAvtalt, null);
+        Optional<ServiceRecord> result = service.createServiceRecord(new OrganizationInfo(ORGNR, ORGL), processAvtalt, null);
 
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPO, result.get().getService().getIdentifier());
@@ -285,7 +292,7 @@ public class ServiceRecordFactoryTest {
         setupLookupServiceMockToReturnAdministrationProcessMatch();
         when(virkSertService.getCertificate(anyString())).thenThrow(new VirksertClientException("certificate not found"));
 
-        factory.createArkivmeldingServiceRecord(ORGNR_ORG, processAdmin, null);
+        service.createArkivmeldingServiceRecord(ORGNR_ORG, processAdmin, null);
     }
 
     @Test
@@ -293,7 +300,7 @@ public class ServiceRecordFactoryTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), eq(4))).thenReturn(Optional.of(4));
 
-        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR_FIKS_KOMM, processSkatt, 4);
+        Optional<ServiceRecord> result = service.createArkivmeldingServiceRecord(ORGNR_FIKS_KOMM, processSkatt, 4);
 
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPF, result.get().getService().getIdentifier());
@@ -304,7 +311,7 @@ public class ServiceRecordFactoryTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
-        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR_ORG, processSkatt, null);
+        Optional<ServiceRecord> result = service.createArkivmeldingServiceRecord(ORGNR_ORG, processSkatt, null);
 
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPV, result.get().getService().getIdentifier());
@@ -316,7 +323,7 @@ public class ServiceRecordFactoryTest {
         when(lookupService.lookup(anyString(), anySet())).thenReturn(Lists.newArrayList());
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
-        Optional<ServiceRecord> result = factory.createArkivmeldingServiceRecord(ORGNR_ORG, processSkatt, null);
+        Optional<ServiceRecord> result = service.createArkivmeldingServiceRecord(ORGNR_ORG, processSkatt, null);
 
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPV, result.get().getService().getIdentifier());
@@ -332,7 +339,7 @@ public class ServiceRecordFactoryTest {
         when(processService.findAll(ProcessCategory.ARKIVMELDING)).thenReturn(Sets.newHashSet());
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
-        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(new OrganizationInfo(), null);
+        List<ServiceRecord> result = service.createArkivmeldingServiceRecords(new OrganizationInfo(), null);
 
         assertTrue(result.isEmpty());
     }
@@ -341,14 +348,15 @@ public class ServiceRecordFactoryTest {
     public void createArkivmeldingServiceRecords_CertificateNotFoundForSmpProcess_ShouldThrowDedicatedException() throws SecurityLevelNotFoundException, CertificateNotFoundException, VirksertClientException, SvarUtClientException {
         setupLookupServiceMockToReturnAdministrationProcessMatch();
         when(virkSertService.getCertificate(anyString())).thenThrow(new VirksertClientException("certificate not found"));
-        factory.createArkivmeldingServiceRecords(ORGNR_ORG, null);
+        service.createArkivmeldingServiceRecords(ORGNR_ORG, null);
     }
 
     @Test
-    public void createArkivmeldingServiceRecords_OrganizationHasAdministrasjonButNotSkattRegistrationInSmp_ShouldReturnCorrespondingDpoAndDpvServiceRecords() throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
+    public void createArkivmeldingServiceRecords_OrganizationHasAdministrasjonButNotSkattRegistrationInSmp_ShouldReturnCorrespondingDpoAndDpvServiceRecords() throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException, VirksertClientException {
         setupLookupServiceMockToReturnAdministrationProcessMatch();
+        when(virkSertService.getCertificate(anyString())).thenReturn("pem123");
 
-        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR_ORG, null);
+        List<ServiceRecord> result = service.createArkivmeldingServiceRecords(ORGNR_ORG, null);
 
         assertEquals(2, result.size());
         ServiceRecord srAdmin = result.stream().filter(r -> ARKIVMELDING_PROCESS_ADMIN.equals(r.getProcess())).findFirst().orElseThrow(RuntimeException::new);
@@ -360,7 +368,7 @@ public class ServiceRecordFactoryTest {
     @Test
     public void createArkivmeldingServiceRecords_OrganizationHasSvarUtRegistration_ShouldReturnDpfServiceRecord() throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any())).thenReturn(Optional.of(3));
-        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR_FIKS_KOMM, 3);
+        List<ServiceRecord> result = service.createArkivmeldingServiceRecords(ORGNR_FIKS_KOMM, 3);
         assertEquals(2, countServiceRecordsForServiceIdentifier(result, ServiceIdentifier.DPF));
     }
 
@@ -369,7 +377,7 @@ public class ServiceRecordFactoryTest {
         when(lookupService.lookup(anyString(), anySet())).thenReturn(Lists.newArrayList());
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
 
-        List<ServiceRecord> result = factory.createArkivmeldingServiceRecords(ORGNR_ORG, null);
+        List<ServiceRecord> result = service.createArkivmeldingServiceRecords(ORGNR_ORG, null);
 
         assertEquals(2, countServiceRecordsForServiceIdentifier(result, ServiceIdentifier.DPV));
     }
@@ -378,7 +386,7 @@ public class ServiceRecordFactoryTest {
     public void createArkivmeldingServiceRecords_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException
             () throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any())).thenReturn(Optional.empty());
-        factory.createArkivmeldingServiceRecords(ORGNR_FIKS_KOMM, 4);
+        service.createArkivmeldingServiceRecords(ORGNR_FIKS_KOMM, 4);
     }
 
     @Test(expected = SvarUtClientException.class)
@@ -386,7 +394,7 @@ public class ServiceRecordFactoryTest {
             SvarUtClientException, SecurityLevelNotFoundException, CertificateNotFoundException {
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any()))
                 .thenThrow(new SvarUtClientException(new RuntimeException("service unavailable")));
-        factory.createArkivmeldingServiceRecords(ORGNR_FIKS_KOMM, 3);
+        service.createArkivmeldingServiceRecords(ORGNR_FIKS_KOMM, 3);
     }
 
     private long countServiceRecordsForServiceIdentifier(List<ServiceRecord> result, ServiceIdentifier
@@ -395,8 +403,9 @@ public class ServiceRecordFactoryTest {
     }
 
     @Test
-    public void createEinnsynServiceRecords_ShouldReturnDpeServiceRecord() throws CertificateNotFoundException {
-        List<ServiceRecord> result = factory.createEinnsynServiceRecords(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_JOURNALPOST), 3);
+    public void createEinnsynServiceRecords_ShouldReturnDpeServiceRecord() throws CertificateNotFoundException, VirksertClientException {
+        when(virkSertService.getCertificate(anyString())).thenReturn("pem123");
+        List<ServiceRecord> result = service.createEinnsynServiceRecords(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_JOURNALPOST), 3);
         assertEquals(1, result.size());
         ServiceRecord journalpostServiceRecord = result.stream().filter(r -> EINNSYN_PROCESS_JOURNALPOST.equals(r.getProcess())).findFirst().orElseThrow(RuntimeException::new);
         assertEquals(ServiceIdentifier.DPE, journalpostServiceRecord.getService().getIdentifier());
@@ -405,21 +414,21 @@ public class ServiceRecordFactoryTest {
     @Test
     public void createEinnsynServiceRecords_OrgnrNotInElma_ShouldNotReturnDpeServiceRecord() throws CertificateNotFoundException {
         when(lookupService.lookup(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_EINNSYN_RESPONSE)), anySet())).thenReturn(Lists.newArrayList());
-        List<ServiceRecord> result = factory.createEinnsynServiceRecords(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_RESPONSE).setOrganizationType(ORGL), 3);
+        List<ServiceRecord> result = service.createEinnsynServiceRecords(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_RESPONSE).setOrganizationType(ORGL), 3);
         assertTrue(result.isEmpty());
     }
 
     @Test
     public void createEinnsynServiceRecords_EndpointurlNotFound_ShouldNotReturnDpeServiceRecord() throws
             CertificateNotFoundException {
-        List<ServiceRecord> result = factory.createEinnsynServiceRecords(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN).setOrganizationType(ORGL), 3);
+        List<ServiceRecord> result = service.createEinnsynServiceRecords(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN).setOrganizationType(ORGL), 3);
         assertTrue(result.isEmpty());
     }
 
     @Test
-    public void createEinnsynServiceRecord_HasOrgnrAndProcessidentifier_ShouldReturnDpeServiceRecord() throws
-            CertificateNotFoundException, ProcessNotFoundException {
-        Optional<ServiceRecord> result = factory.createServiceRecord(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_JOURNALPOST), einnsynJournalpostProcess, 3);
+    public void createEinnsynServiceRecord_HasOrgnrAndProcessidentifier_ShouldReturnDpeServiceRecord() throws CertificateNotFoundException, VirksertClientException {
+        when(virkSertService.getCertificate(anyString())).thenReturn("pem123");
+        Optional<ServiceRecord> result = service.createServiceRecord(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_JOURNALPOST), einnsynJournalpostProcess, 3);
         assertTrue(result.isPresent());
         assertEquals(ServiceIdentifier.DPE, result.get().getService().getIdentifier());
     }
@@ -442,7 +451,7 @@ public class ServiceRecordFactoryTest {
         when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR_EINNSYN_RESPONSE)), anySet()))
                 .thenReturn(Sets.newHashSet());
 
-        Optional<ServiceRecord> result = factory.createServiceRecord(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_RESPONSE).setOrganizationType(ORGL), einnsynResponseProcess, 3);
+        Optional<ServiceRecord> result = service.createServiceRecord(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_RESPONSE).setOrganizationType(ORGL), einnsynResponseProcess, 3);
         assertFalse(result.isPresent());
     }
 
@@ -458,9 +467,11 @@ public class ServiceRecordFactoryTest {
                 .fiksOrgNavn("Testorg")
                 .build();
         when(fiksIoService.lookup(any(), any(), anyInt())).thenReturn(Optional.of(konto));
+        when(fiksProtocolRepository.findByProcessesIdentifier(einnsynInnsynskravProcess.getIdentifier()))
+                .thenReturn(new FiksProtocol(null, "proto.test", Sets.newHashSet(einnsynInnsynskravProcess)));
 
         OrganizationInfo kommOrg = new OrganizationInfo(kommOrgnr, new OrganizationType("KOMM"));
-        Optional<ServiceRecord> serviceRecord = factory.createServiceRecord(kommOrg, einnsynInnsynskravProcess, 3);
+        Optional<ServiceRecord> serviceRecord = service.createServiceRecord(kommOrg, einnsynInnsynskravProcess, 3);
         assertTrue(serviceRecord.isPresent());
         assertEquals(ServiceIdentifier.DPFIO, serviceRecord.get().getService().getIdentifier());
         assertEquals(kontoId, serviceRecord.get().getService().getEndpointUrl());

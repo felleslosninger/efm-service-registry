@@ -2,7 +2,6 @@ package no.difi.meldingsutveksling.serviceregistry.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
-import no.difi.meldingsutveksling.serviceregistry.domain.datahotell.DatahotellEntry;
 
 import java.util.Collections;
 

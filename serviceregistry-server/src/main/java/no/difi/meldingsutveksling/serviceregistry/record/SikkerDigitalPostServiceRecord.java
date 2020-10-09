@@ -1,4 +1,4 @@
-package no.difi.meldingsutveksling.serviceregistry.servicerecord;
+package no.difi.meldingsutveksling.serviceregistry.record;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;

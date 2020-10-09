@@ -1,12 +1,12 @@
-package no.difi.meldingsutveksling.serviceregistry.servicerecord;
+package no.difi.meldingsutveksling.serviceregistry.record;
 
 import no.difi.meldingsutveksling.serviceregistry.domain.Notification;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 
 import static no.difi.meldingsutveksling.serviceregistry.domain.Notification.OBLIGATED;
-import static no.difi.meldingsutveksling.serviceregistry.servicerecord.DpiMessageRouter.TargetRecord.DPI;
-import static no.difi.meldingsutveksling.serviceregistry.servicerecord.DpiMessageRouter.TargetRecord.DPV;
-import static no.difi.meldingsutveksling.serviceregistry.servicerecord.DpiMessageRouter.TargetRecord.PRINT;
+import static no.difi.meldingsutveksling.serviceregistry.record.DpiMessageRouter.TargetRecord.DPI;
+import static no.difi.meldingsutveksling.serviceregistry.record.DpiMessageRouter.TargetRecord.DPV;
+import static no.difi.meldingsutveksling.serviceregistry.record.DpiMessageRouter.TargetRecord.PRINT;
 
 public class DpiMessageRouter {
 

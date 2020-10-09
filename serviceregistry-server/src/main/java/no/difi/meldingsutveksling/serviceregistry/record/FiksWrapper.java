@@ -1,4 +1,4 @@
-package no.difi.meldingsutveksling.serviceregistry.servicerecord;
+package no.difi.meldingsutveksling.serviceregistry.record;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
