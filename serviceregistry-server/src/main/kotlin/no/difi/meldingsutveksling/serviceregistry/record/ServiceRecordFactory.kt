@@ -128,7 +128,6 @@ class ServiceRecordFactory(private val fiksProtocolRepository: FiksProtocolRepos
         return Optional.of(dpiServiceRecord)
     }
 
-    // TODO handle protocol not found
     fun createDpfioServiceRecord(orgnr: String, process: Process, konto: Konto): ServiceRecord {
         val protocol = fiksProtocolRepository.findByProcessesIdentifier(process.identifier)
                 ?: throw FiksProtocolNotFoundException(process.identifier)
