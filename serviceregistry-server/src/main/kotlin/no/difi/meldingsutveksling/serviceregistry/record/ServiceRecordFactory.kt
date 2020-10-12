@@ -4,8 +4,6 @@ import com.google.common.base.Strings
 import no.difi.meldingsutveksling.serviceregistry.*
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties
 import no.difi.meldingsutveksling.serviceregistry.domain.*
-import no.difi.meldingsutveksling.serviceregistry.domain.ProcessCategory.ARKIVMELDING
-import no.difi.meldingsutveksling.serviceregistry.domain.ProcessCategory.AVTALT
 import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksProtocolRepository
 import no.difi.meldingsutveksling.serviceregistry.krr.DsfLookupException
 import no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters
@@ -40,37 +38,27 @@ class ServiceRecordFactory(private val fiksProtocolRepository: FiksProtocolRepos
 
     @Throws(CertificateNotFoundException::class)
     fun createDpoServiceRecord(orgnr: String, process: Process): ServiceRecord {
-        val serviceRecord = when (process.category) {
-            ARKIVMELDING -> ArkivmeldingServiceRecord.of(ServiceIdentifier.DPO, orgnr, properties.dpo.endpointURL.toString(), lookupPemCertificate(orgnr))
-            AVTALT -> ArkivmeldingServiceRecord.of(ServiceIdentifier.DPO, orgnr, properties.dpo.endpointURL.toString(), lookupPemCertificate(orgnr))
-            else -> throw IllegalArgumentException("Category ${process.category} not valid for DPO service record")
-        }
-
-        serviceRecord.process = process.identifier
+        val serviceRecord = ServiceRecord(ServiceIdentifier.DPO, orgnr, process, properties.dpo.endpointURL.toString())
+        serviceRecord.pemCertificate = lookupPemCertificate(orgnr)
         serviceRecord.service.serviceCode = properties.dpo.serviceCode
         serviceRecord.service.serviceEditionCode = properties.dpo.serviceEditionCode
-        serviceRecord.documentTypes = process.documentTypes.map { it.identifier }.toList()
         return serviceRecord
     }
 
     fun createDpfServiceRecord(orgnr: String, process: Process, securityLevel: Int): ServiceRecord {
-        val pem = try {
+        val serviceRecord = ServiceRecord(ServiceIdentifier.DPF, orgnr, process, properties.fiks.svarut.serviceRecordUrl.toString())
+        serviceRecord.pemCertificate = try {
             IOUtils.toString(properties.fiks.svarut.certificate.inputStream, StandardCharsets.UTF_8)
         } catch (e: IOException) {
             log.error(SRMarkerFactory.markerFrom(requestScope), "Could not read certificate from {}", properties.fiks.svarut.certificate.toString())
             throw ServiceRegistryException(e)
         }
-        val arkivmeldingServiceRecord: ServiceRecord = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPF, orgnr, properties.fiks.svarut.serviceRecordUrl.toString(), pem)
-        arkivmeldingServiceRecord.process = process.identifier
-        arkivmeldingServiceRecord.documentTypes = process.documentTypes.map { it.identifier }.toList()
-        arkivmeldingServiceRecord.service.securityLevel = securityLevel
-        return arkivmeldingServiceRecord
+        serviceRecord.service.securityLevel = securityLevel
+        return serviceRecord
     }
 
-    fun createDigitalServiceRecord(personResource: PersonResource, identifier: String, p: Process): ServiceRecord? {
-        val serviceRecord = SikkerDigitalPostServiceRecord(false, properties, personResource, ServiceIdentifier.DPI,
-                identifier, null, null)
-        serviceRecord.process = p.identifier
+    fun createDigitalServiceRecord(personResource: PersonResource, identifier: String, process: Process): ServiceRecord? {
+        val serviceRecord = SikkerDigitalPostServiceRecord(identifier, process, personResource, properties.dpi.endpointURL.toString(), false, null, null)
         documentTypeService.findByBusinessMessageType(BusinessMessageTypes.DIGITAL)
                 .orElseThrow { missingDocTypeException(BusinessMessageTypes.DIGITAL) }
                 .let { serviceRecord.documentTypes = listOf(it.identifier) }
@@ -78,11 +66,10 @@ class ServiceRecordFactory(private val fiksProtocolRepository: FiksProtocolRepos
     }
 
     fun createDigitalDpvServiceRecord(identifier: String, process: Process): ServiceRecord {
-        val dpvServiceRecord = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPV, identifier, properties.dpv.endpointURL.toString())
+        val dpvServiceRecord = ServiceRecord(ServiceIdentifier.DPV, identifier, process, properties.dpv.endpointURL.toString())
         val defaultArkivmeldingProcess = processService.defaultArkivmeldingProcess
         dpvServiceRecord.service.serviceCode = defaultArkivmeldingProcess.serviceCode
         dpvServiceRecord.service.serviceEditionCode = defaultArkivmeldingProcess.serviceEditionCode
-        dpvServiceRecord.process = process.identifier
         documentTypeService.findByBusinessMessageType(BusinessMessageTypes.DIGITAL_DPV)
                 .orElseThrow { missingDocTypeException(BusinessMessageTypes.DIGITAL_DPV) }
                 .let { dpvServiceRecord.documentTypes = listOf(it.identifier) }
@@ -119,38 +106,34 @@ class ServiceRecordFactory(private val fiksProtocolRepository: FiksProtocolRepos
         } else {
             throw BrregNotFoundException(String.format("Sender with identifier=%s not found in BRREG", onBehalfOrgnr))
         }
-        val dpiServiceRecord = SikkerDigitalPostServiceRecord(true, properties, personResource, ServiceIdentifier.DPI,
-                identifier, postAddress, returnAddress)
-        dpiServiceRecord.process = p.identifier
+        val printRecord = SikkerDigitalPostServiceRecord(identifier, p, personResource,
+                properties.dpi.endpointURL.toString(), true, postAddress, returnAddress)
         documentTypeService.findByBusinessMessageType(BusinessMessageTypes.PRINT)
                 .orElseThrow { missingDocTypeException(BusinessMessageTypes.PRINT) }
-                .let { dpiServiceRecord.documentTypes = listOf(it.identifier) }
-        return Optional.of(dpiServiceRecord)
+                .let { printRecord.documentTypes = listOf(it.identifier) }
+        return Optional.of(printRecord)
     }
 
     fun createDpfioServiceRecord(orgnr: String, process: Process, konto: Konto): ServiceRecord {
         val protocol = fiksProtocolRepository.findByProcessesIdentifier(process.identifier)
                 ?: throw FiksProtocolNotFoundException(process.identifier)
-        return DpfioServiceRecord.from(orgnr, konto, process.identifier, protocol.identifier,
-                process.documentTypes.map { it.identifier }.toList())
+        val record = ServiceRecord(ServiceIdentifier.DPFIO, orgnr, process, konto.kontoId.toString())
+        record.service.serviceCode = protocol.identifier
+        return record
     }
 
-    fun createDpvServiceRecord(orgnr: String, process: Process): ArkivmeldingServiceRecord {
-        val dpvServiceRecord = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPV, orgnr, properties.dpv.endpointURL.toString())
+    fun createDpvServiceRecord(orgnr: String, process: Process): ServiceRecord {
+        val dpvServiceRecord = ServiceRecord(ServiceIdentifier.DPV, orgnr, process, properties.dpv.endpointURL.toString())
         dpvServiceRecord.service.serviceCode = process.serviceCode
         dpvServiceRecord.service.serviceEditionCode = process.serviceEditionCode
-        dpvServiceRecord.process = process.identifier
-        dpvServiceRecord.documentTypes = process.documentTypes.map { it.identifier }.toList()
         return dpvServiceRecord
     }
 
     @Throws(CertificateNotFoundException::class)
     fun createDpeServiceRecord(orgnr: String, process: Process): ServiceRecord {
-        val pemCertificate: String = lookupPemCertificate(orgnr)
-        val einnsynServiceRecord: ServiceRecord = DpeServiceRecord.of(pemCertificate, orgnr, ServiceIdentifier.DPE, process.serviceCode)
-        einnsynServiceRecord.process = process.identifier
-        einnsynServiceRecord.documentTypes = process.documentTypes.map { it.identifier }.toList()
-        return einnsynServiceRecord
+        val serviceRecord = ServiceRecord(ServiceIdentifier.DPE, orgnr, process, process.serviceCode)
+        serviceRecord.pemCertificate = lookupPemCertificate(orgnr)
+        return serviceRecord
     }
 
     private fun lookupPemCertificate(orgnr: String): String {

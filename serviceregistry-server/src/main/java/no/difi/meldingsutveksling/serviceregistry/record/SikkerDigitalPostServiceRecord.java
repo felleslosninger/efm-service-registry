@@ -1,11 +1,13 @@
 package no.difi.meldingsutveksling.serviceregistry.record;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.*;
-import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import no.difi.meldingsutveksling.serviceregistry.domain.Process;
+import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
-import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier;
 
 import static no.difi.meldingsutveksling.serviceregistry.krr.PersonResource.Varslingsstatus.KAN_VARSLES;
 
@@ -15,8 +17,6 @@ import static no.difi.meldingsutveksling.serviceregistry.krr.PersonResource.Vars
 @EqualsAndHashCode(callSuper = true)
 public class SikkerDigitalPostServiceRecord extends ServiceRecord {
 
-    @JsonIgnore
-    private final ServiceregistryProperties properties;
     private final String orgnrPostkasse;
     private final String postkasseAdresse;
     private final String mobilnummer;
@@ -26,16 +26,15 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
     private final PostAddress postAddress;
     private final PostAddress returnAddress;
 
-    public SikkerDigitalPostServiceRecord(boolean isFysiskPost,
-                                          ServiceregistryProperties properties,
+    public SikkerDigitalPostServiceRecord(String identifier,
+                                          Process process,
                                           PersonResource personResource,
-                                          ServiceIdentifier serviceIdentifier,
-                                          String organisationNumber,
+                                          String endpointUrl,
+                                          boolean isFysiskPost,
                                           PostAddress postAddress,
                                           PostAddress returnAddress) {
-        super(serviceIdentifier, organisationNumber, properties.getDpi().getEndpointURL().toString());
+        super(ServiceIdentifier.DPI, identifier, process, endpointUrl);
         setPemCertificate(personResource.getCertificate());
-        this.properties = properties;
 
         fysiskPost = isFysiskPost;
         if (isFysiskPost) {

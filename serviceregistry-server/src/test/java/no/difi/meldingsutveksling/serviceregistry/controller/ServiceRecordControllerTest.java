@@ -5,24 +5,23 @@ import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
-import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
-import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.*;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.krr.*;
+import no.difi.meldingsutveksling.serviceregistry.record.ServiceRecord;
+import no.difi.meldingsutveksling.serviceregistry.record.ServiceRecordService;
+import no.difi.meldingsutveksling.serviceregistry.record.SikkerDigitalPostServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.AuthenticationService;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
-import no.difi.meldingsutveksling.serviceregistry.record.ArkivmeldingServiceRecord;
-import no.difi.meldingsutveksling.serviceregistry.record.DpeServiceRecord;
-import no.difi.meldingsutveksling.serviceregistry.record.ServiceRecordService;
-import no.difi.meldingsutveksling.serviceregistry.record.SikkerDigitalPostServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
-import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.virksert.client.lang.VirksertClientException;
 import org.assertj.core.util.Lists;
 import org.hamcrest.Matchers;
@@ -52,9 +51,9 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Optional;
 
+import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -77,10 +76,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureRestDocs
 public class ServiceRecordControllerTest {
 
-    private static final ArkivmeldingServiceRecord DPO_SERVICE_RECORD = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPO, "123123123", "http://endpoint.here", "pem123");
-    private static final ArkivmeldingServiceRecord DPV_SERVICE_RECORD = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPV, "123123123", "http://endpoint.here");
-    private static final ArkivmeldingServiceRecord DPF_SERVICE_RECORD = ArkivmeldingServiceRecord.of(ServiceIdentifier.DPF, "321321321", "http://endpoint.here", "pem234");
-    private static final DpeServiceRecord DPE_SERVICE_RECORD = DpeServiceRecord.of("pem567", "123123123", ServiceIdentifier.DPE, "innsyn");
+    private static ServiceRecord DPO_SERVICE_RECORD;
+    private static ServiceRecord DPV_SERVICE_RECORD;
+    private static ServiceRecord DPF_SERVICE_RECORD;
+    private static ServiceRecord DPE_SERVICE_RECORD;
 
     private static final String PROC_ARKIVMELDING_ADMINISTRASJON = "urn:no:difi:profile:arkivmelding:administrasjon:ver1.0";
     private static final String PROC_ARKIVMELDING_TEKNISKE_TJENESTER = "urn:no:difi:profile:arkivmelding:tekniskeTjenester:ver1.0";
@@ -127,21 +126,29 @@ public class ServiceRecordControllerTest {
 
     @Before
     public void setup() {
-        DPO_SERVICE_RECORD.setProcess(PROC_ARKIVMELDING_ADMINISTRASJON);
-        DPO_SERVICE_RECORD.setDocumentTypes(Collections.singletonList(DOC_ARKIVMELDING));
+        Process adminProcess = new Process()
+                .setIdentifier(PROC_ARKIVMELDING_ADMINISTRASJON)
+                .setDocumentTypes(singletonList(new DocumentType().setIdentifier(DOC_ARKIVMELDING)));
+        DPO_SERVICE_RECORD = new ServiceRecord(ServiceIdentifier.DPO, "123123123", adminProcess, "http://endpoint.here");
+        DPO_SERVICE_RECORD.setPemCertificate("pem123");
         DPO_SERVICE_RECORD.getService().setServiceEditionCode(SEC_DPO);
         DPO_SERVICE_RECORD.getService().setServiceCode(SC_DPO);
 
-        DPV_SERVICE_RECORD.setProcess(PROC_ARKIVMELDING_TEKNISKE_TJENESTER);
-        DPV_SERVICE_RECORD.setDocumentTypes(Collections.singletonList(DOC_ARKIVMELDING));
+        Process tekniskeTjenesterProcess = new Process()
+                .setIdentifier(PROC_ARKIVMELDING_TEKNISKE_TJENESTER)
+                .setDocumentTypes(singletonList(new DocumentType().setIdentifier(PROC_ARKIVMELDING_TEKNISKE_TJENESTER)));
+        DPV_SERVICE_RECORD = new ServiceRecord(ServiceIdentifier.DPV, "123123123", tekniskeTjenesterProcess, "http://endpoint.here");
         DPV_SERVICE_RECORD.getService().setServiceCode(SC_DPV);
         DPV_SERVICE_RECORD.getService().setServiceEditionCode(SEC_DPV);
 
-        DPF_SERVICE_RECORD.setProcess(PROC_ARKIVMELDING_ADMINISTRASJON);
-        DPF_SERVICE_RECORD.setDocumentTypes(Collections.singletonList(DOC_ARKIVMELDING));
+        DPF_SERVICE_RECORD = new ServiceRecord(ServiceIdentifier.DPF, "321321321", adminProcess, "http://endpoint.here");
+        DPF_SERVICE_RECORD.setPemCertificate("pem234");
 
-        DPE_SERVICE_RECORD.setProcess(PROC_EINNSYN_INNSYNSKRAV);
-        DPE_SERVICE_RECORD.setDocumentTypes(Collections.singletonList(DOC_INNSYNSKRAV));
+        Process innsynskravProcess = new Process()
+                .setIdentifier(PROC_EINNSYN_INNSYNSKRAV)
+                .setDocumentTypes(singletonList(new DocumentType().setIdentifier(DOC_INNSYNSKRAV)));
+        DPE_SERVICE_RECORD = new ServiceRecord(ServiceIdentifier.DPE, "123123123", innsynskravProcess, "innsyn");
+        DPE_SERVICE_RECORD.setPemCertificate("pem567");
 
         Postadresse testAdr = new Postadresse("Skrivarvegen 42", "1337", "teststed", "testland");
         OrganizationInfo info123123123 = new OrganizationInfo("123123123", "foo",
@@ -157,12 +164,14 @@ public class ServiceRecordControllerTest {
     }
 
     private void setupMocksForSuccessfulDpi() throws MalformedURLException, KRRClientException, DsfLookupException, SecurityLevelNotFoundException, CertificateNotFoundException, BrregNotFoundException, SvarUtClientException {
-        ServiceregistryProperties serviceregistryProperties = fakePropertiesForDpi();
+        ServiceregistryProperties props = fakePropertiesForDpi();
         when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
         PersonResource personResource = fakePersonResourceForDpi();
         PostAddress postAddress = new PostAddress("Address name", "Street x", "Postal code", "Area", "Country");
-        SikkerDigitalPostServiceRecord dpiServiceRecord
-                = new SikkerDigitalPostServiceRecord(false, serviceregistryProperties, personResource, ServiceIdentifier.DPI, "12345678901", postAddress, postAddress);
+        Process digitalpostProcess = new Process().setIdentifier(PROC_DIGITALPOST)
+                .setDocumentTypes(Arrays.asList(new DocumentType().setIdentifier(DOC_DIGITAL), new DocumentType().setIdentifier(DOC_PRINT)));
+        SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord("12345678901", digitalpostProcess, personResource,
+                props.getDpi().getEndpointURL().toString(), false, postAddress, postAddress);
         dpiServiceRecord.setProcess(PROC_DIGITALPOST);
         dpiServiceRecord.setDocumentTypes(Arrays.asList(DOC_DIGITAL, DOC_PRINT));
         when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString()))
