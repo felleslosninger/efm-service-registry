@@ -50,9 +50,4 @@ open class FiksProtocolController(val processService: ProcessService,
         return find?.let { ResponseEntity.ok(it) } ?: ResponseEntity.notFound().build<Any>()
     }
 
-    @ExceptionHandler(value = [(ProcessNotFoundException::class)])
-    fun notFoundExceptionHandler(e: Exception): ResponseEntity<*> {
-        return ResponseEntity.badRequest().body(ErrorResponse.builder().errorDescription(e.message).build())
-    }
-
 }
