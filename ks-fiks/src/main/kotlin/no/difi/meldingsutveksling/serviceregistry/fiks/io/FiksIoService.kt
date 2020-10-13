@@ -6,17 +6,18 @@ import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperti
 import no.difi.meldingsutveksling.serviceregistry.domain.EntityInfo
 import no.difi.meldingsutveksling.serviceregistry.domain.Process
 import no.difi.meldingsutveksling.serviceregistry.logger
+import no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom
 import no.ks.fiks.fiksio.client.api.katalog.model.KatalogKonto
 import no.ks.fiks.io.client.model.Konto
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.cache.annotation.Cacheable
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
-import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestTemplate
-import org.springframework.web.util.UriComponentsBuilder
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.util.UriBuilder
+import reactor.core.publisher.Mono
+import java.net.URI
 import java.time.Duration
 import java.util.*
 
@@ -26,10 +27,12 @@ open class FiksIoService(private val props: ServiceregistryProperties,
                          private val requestScope: SRRequestScope) {
     val log = logger()
 
-    private val rt: RestTemplate = RestTemplateBuilder()
-            .rootUri(props.fiks.io.endpointUrl)
-            .setConnectTimeout(Duration.ofSeconds(3))
-            .setReadTimeout(Duration.ofSeconds(3))
+    private val wc = WebClient.builder()
+            .baseUrl(props.fiks.io.endpointUrl)
+            .defaultHeaders {
+                it.set("IntegrasjonId", props.fiks.io.integrasjonId)
+                it.set("IntegrasjonPassord", props.fiks.io.integrasjonPassord)
+            }
             .build()
 
     @Cacheable(CacheConfig.FIKSIO_CACHE)
@@ -39,31 +42,40 @@ open class FiksIoService(private val props: ServiceregistryProperties,
         val fiksProtocol = fiksProtocolRepository.findByProcessesIdentifier(process.identifier)
                 ?: return Optional.empty()
 
-        val headers = HttpHeaders()
-        headers.add("IntegrasjonId", props.fiks.io.integrasjonId)
-        headers.add("IntegrasjonPassord", props.fiks.io.integrasjonPassord)
-        headers.add("Authorization", "Bearer ${requestScope.token}")
-        val httpEntity = HttpEntity<Any>(headers)
-
-        val uri = UriComponentsBuilder.fromUriString("/fiks-io/katalog/api/v1/lookup")
-                .queryParam("identifikator", "ORG_NO.${entity.identifier}")
-                .queryParam("meldingProtokoll", fiksProtocol.identifier)
-                .queryParam("sikkerhetsniva", securityLevel)
-                .build().toUriString()
-
-        try {
-            val res = rt.exchange(uri, HttpMethod.GET, httpEntity, KatalogKonto::class.java)
-            return res.body?.let {
-                Optional.ofNullable(Konto.fromKatalogModel(it))
-            } ?: Optional.empty()
-        } catch (e: HttpClientErrorException) {
-            val errorMsg = "Error looking up ${entity.identifier} in Fiks Kontokatalog"
-            when  {
-                e.statusCode.is4xxClientError -> log.debug(errorMsg, e)
-                else -> log.error(errorMsg, e)
-            }
+        val uriBuilder: (UriBuilder) -> URI = {
+            it.path("/fiks-io/katalog/api/v1/lookup")
+                    .queryParam("identifikator", "ORG_NO.${entity.identifier}")
+                    .queryParam("meldingProtokoll", fiksProtocol.identifier)
+                    .queryParam("sikkerhetsniva", securityLevel)
+                    .build()
         }
-        return Optional.empty()
+        return wc.get()
+                .uri(uriBuilder)
+                .header("Authorization", "Bearer ${requestScope.token}")
+                .exchange()
+                .flatMap { r ->
+                    when {
+                        r.statusCode() == HttpStatus.NOT_FOUND -> {
+                            Mono.empty<KatalogKonto>() }
+                        r.statusCode().is4xxClientError -> {
+                            r.createException().flatMap {
+                                log.warn(markerFrom(requestScope), "Client error ${it.statusCode} when looking up ${it.request?.uri} - ${it.responseBodyAsString}")
+                                Mono.empty<KatalogKonto>()
+                            }
+                        }
+                        r.statusCode().isError -> {
+                            r.createException().flatMap {
+                                log.error(markerFrom(requestScope), "Server error when looking up ${it.request?.uri}")
+                                Mono.error<KatalogKonto>(it)
+                            }
+                        }
+                        else -> {
+                            r.bodyToMono(KatalogKonto::class.java)
+                        }
+                    }
+                }
+                .block(Duration.ofSeconds(3))
+                ?.let { Optional.of(Konto.fromKatalogModel(it)) } ?: Optional.empty()
     }
 
 }

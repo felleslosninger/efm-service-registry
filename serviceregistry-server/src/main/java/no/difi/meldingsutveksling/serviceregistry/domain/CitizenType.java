@@ -1,15 +1,14 @@
 package no.difi.meldingsutveksling.serviceregistry.domain;
 
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 
 import java.io.Serializable;
 
 @Data
+@RequiredArgsConstructor
 public class CitizenType implements Serializable, EntityType {
-    public final String name;
 
-    public CitizenType(String name) {
-        this.name = name;
-    }
+    private final String name;
 
 }
