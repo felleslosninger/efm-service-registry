@@ -1,7 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.service.brreg;
 
 import no.difi.meldingsutveksling.serviceregistry.client.brreg.BrregClientImpl;
-import no.difi.meldingsutveksling.serviceregistry.model.*;
+import no.difi.meldingsutveksling.serviceregistry.domain.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;

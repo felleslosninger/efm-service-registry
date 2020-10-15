@@ -1,6 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.controller;
 
-import no.difi.meldingsutveksling.Notification;
+import no.difi.meldingsutveksling.serviceregistry.domain.Notification;
 
 import java.beans.PropertyEditorSupport;
 

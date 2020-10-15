@@ -17,6 +17,11 @@ public class AuthenticationService {
 
     private static final String CLAIM_CLIENT_ORGNO = "client_orgno";
 
+    public String getToken(Authentication auth) {
+        JwtAuthenticationToken jwtToken = (JwtAuthenticationToken) auth;
+        return jwtToken.getToken().getTokenValue();
+    }
+
     public String getAuthorizedClientIdentifier(Authentication auth, HttpServletRequest request) {
         JwtAuthenticationToken token = (JwtAuthenticationToken) auth;
         String clientOrgnr = token.getToken().getClaimAsString(CLAIM_CLIENT_ORGNO);

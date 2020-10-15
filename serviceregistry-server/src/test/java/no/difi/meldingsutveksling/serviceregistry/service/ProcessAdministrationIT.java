@@ -2,9 +2,9 @@ package no.difi.meldingsutveksling.serviceregistry.service;
 
 import no.difi.meldingsutveksling.serviceregistry.MoveServiceRegistryApplication;
 import no.difi.meldingsutveksling.serviceregistry.client.brreg.BrregClient;
-import no.difi.meldingsutveksling.serviceregistry.model.DocumentType;
-import no.difi.meldingsutveksling.serviceregistry.model.Process;
-import no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory;
+import no.difi.meldingsutveksling.serviceregistry.domain.DocumentType;
+import no.difi.meldingsutveksling.serviceregistry.domain.Process;
+import no.difi.meldingsutveksling.serviceregistry.domain.ProcessCategory;
 import no.difi.meldingsutveksling.serviceregistry.persistence.DocumentTypeRepository;
 import no.difi.meldingsutveksling.serviceregistry.persistence.ProcessRepository;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;

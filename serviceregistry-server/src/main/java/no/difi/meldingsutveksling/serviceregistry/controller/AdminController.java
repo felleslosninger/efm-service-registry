@@ -6,8 +6,8 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import no.difi.meldingsutveksling.serviceregistry.model.DocumentType;
-import no.difi.meldingsutveksling.serviceregistry.model.Process;
+import no.difi.meldingsutveksling.serviceregistry.domain.DocumentType;
+import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.service.DocumentTypeService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import org.springframework.http.HttpStatus;
@@ -37,6 +37,13 @@ public class AdminController {
     public ResponseEntity<Process> getProcess(@ApiParam("Process identifier") @PathVariable String identifier) {
         Optional<Process> process = processService.findByIdentifier(identifier);
         return process.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping(value = "/processes/list", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Transactional
+    public ResponseEntity<?> addProcesses(@RequestBody List<Process> processes) {
+        processes.forEach(this::addProcess);
+        return ResponseEntity.ok().build();
     }
 
     @ApiOperation(value = "Add a process", tags = {"Process", "Administration"})
