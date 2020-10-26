@@ -21,7 +21,7 @@ EXPOSE 9099
 
 ENV APP_DIR=/var/lib/difi \
     APP_JAVA_PARAMS="" \
-    APP_PROFILE=dev \
+    APP_PROFILE=dev
 
 RUN apk add --update \
         curl \
@@ -29,7 +29,7 @@ RUN apk add --update \
         ca-certificates \
         openssl  && \
         update-ca-certificates && \
-	rm -rf /var/cache/apk/* && \
+	rm -rf /var/cache/apk/*
 
 #
 # Start the application
@@ -41,11 +41,10 @@ ADD *.jar ${APP_DIR}/app.jar
 ADD run.sh ${APP_DIR}/
 
 RUN chown -R java:java /var/lib/difi
-RUN chmod a+x /sbin/tini
 RUN chmod +x ${APP_DIR}/*
 
 USER java
 
 RUN ls -l /var/lib/difi/run.sh
 
-ENTRYPOINT ["/sbin/tini", "-g", "--", "./run.sh"]
+ENTRYPOINT ["sh", "/var/lib/difi/run.sh"]
