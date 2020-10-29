@@ -1,5 +1,5 @@
 FROM openjdk:8-jre-alpine
-MAINTAINER Digitaliseringsdirektoratet <lab@digdir.no>
+MAINTAINER Digitaliseringsdirektoratet <servicedesk@digdir.no.>
 
 LABEL package="no.digdir" artifact="serviceregistry" version="1.0" description="Digitaliseringsdirektoratet (Digdir)"
 
