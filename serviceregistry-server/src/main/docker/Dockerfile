@@ -1,7 +1,7 @@
 FROM openjdk:8-jre-alpine
-MAINTAINER DIFI <espen.korra@difi.no>
+MAINTAINER Digitaliseringsdirektoratet <lab@digdir.no>
 
-LABEL package="no.difi" artifact="serviceregistry" version="1.0" description="Direktoratet for forvaltning og IKT (Difi)"
+LABEL package="no.digdir" artifact="serviceregistry" version="1.0" description="Digitaliseringsdirektoratet (Digdir)"
 
 RUN addgroup -g 1001 java  && adduser -u 1001 -S java -G java
 
@@ -19,17 +19,9 @@ EXPOSE 9099
 # Install application
 #
 
-ENV APP_DIR=/var/lib/difi \
+ENV APP_DIR=/var/lib/digdir \
     APP_JAVA_PARAMS="" \
     APP_PROFILE=dev
-
-RUN apk add --update \
-        curl \
-        tini \
-        ca-certificates \
-        openssl  && \
-        update-ca-certificates && \
-	rm -rf /var/cache/apk/*
 
 #
 # Start the application
@@ -40,11 +32,9 @@ WORKDIR ${APP_DIR}
 ADD *.jar ${APP_DIR}/app.jar
 ADD run.sh ${APP_DIR}/
 
-RUN chown -R java:java /var/lib/difi
+RUN chown -R java:java ${APP_DIR}
 RUN chmod +x ${APP_DIR}/*
 
 USER java
 
-RUN ls -l /var/lib/difi/run.sh
-
-ENTRYPOINT ["sh", "/var/lib/difi/run.sh"]
+ENTRYPOINT ["sh", "/var/lib/digdir/run.sh"]
