@@ -1,8 +1,0 @@
-version: '3.1'
-
-services:
-  sr:
-    image: #sett inn navn på imaget du har laget her
-    environment:
-    - APP_PROFILE=dev
-    - APP_JAVA_PARAMS=
