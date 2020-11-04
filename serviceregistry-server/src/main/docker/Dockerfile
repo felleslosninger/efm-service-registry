@@ -1,9 +1,10 @@
-FROM openjdk:8-jre-alpine
+FROM openjdk:8-jre-slim
 MAINTAINER Digitaliseringsdirektoratet <servicedesk@digdir.no.>
 
 LABEL package="no.digdir" artifact="serviceregistry" version="1.0" description="Digitaliseringsdirektoratet (Digdir)"
 
-RUN addgroup -g 1001 java  && adduser -u 1001 -S java -G java
+RUN groupadd -o -g 1000 java \
+    && useradd -o -r -m -u 1000 -g 1000 java
 
 RUN chown -R java:java /opt
 
