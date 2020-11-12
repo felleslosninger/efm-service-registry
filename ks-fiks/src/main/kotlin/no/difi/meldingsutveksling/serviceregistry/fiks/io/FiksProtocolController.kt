@@ -1,6 +1,5 @@
 package no.difi.meldingsutveksling.serviceregistry.fiks.io
 
-import no.difi.meldingsutveksling.serviceregistry.ErrorResponse
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService
 import org.springframework.http.ResponseEntity
@@ -19,7 +18,8 @@ open class FiksProtocolController(val processService: ProcessService,
     @Throws(ProcessNotFoundException::class)
     open fun addProtocol(@RequestBody request: FiksProtocolRequestBody): ResponseEntity<*> {
         val protocol: String = request.protocol ?: return ResponseEntity.badRequest().body("protocol cannot be empty")
-        val efmProcesses: Set<String> = request.efmProcesses?.toSet() ?: return ResponseEntity.badRequest().body("efmProcesses cannot be empty")
+        val efmProcesses: Set<String> = request.efmProcesses?.toSet()
+                ?: return ResponseEntity.badRequest().body("efmProcesses cannot be empty")
 
         val proto = efmProcesses.map {
             processService.findByIdentifier(it).orElseThrow { throw ProcessNotFoundException(it) }
