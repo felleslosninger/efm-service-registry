@@ -166,6 +166,7 @@ public class ServiceRecordServiceTest {
         fiks.setSvarut(svarUtConfig);
         ServiceregistryProperties.FiksIo fiksIo = new ServiceregistryProperties.FiksIo();
         fiksIo.setOrgformFilter(Collections.singletonList("KOMM"));
+        fiksIo.setEnable(true);
         fiks.setIo(fiksIo);
         when(props.getFiks()).thenReturn(fiks);
 
