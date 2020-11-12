@@ -23,6 +23,7 @@ import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import no.difi.vefa.peppol.common.model.ProcessIdentifier;
 import no.ks.fiks.io.client.model.Konto;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
@@ -49,7 +50,7 @@ public class ServiceRecordService {
     private final ELMALookupService elmaLookupService;
     private final SvarUtService svarUtService;
     private final ProcessService processService;
-    private final FiksIoService fiksIoService;
+    private final ObjectProvider<FiksIoService> fiksIoService;
     private final SRRequestScope requestScope;
     private final ServiceRecordFactory serviceRecordFactory;
 
@@ -74,9 +75,11 @@ public class ServiceRecordService {
                 if (hasSvarUt.isPresent()) {
                     return Optional.of(serviceRecordFactory.createDpfServiceRecord(entityInfo.getIdentifier(), process, hasSvarUt.get()));
                 } else {
-                    Optional<Konto> konto = fiksIoService.lookup(entityInfo, process, securityLevel == null ? 3 : securityLevel);
-                    if (konto.isPresent()) {
-                        return Optional.of(serviceRecordFactory.createDpfioServiceRecord(entityInfo.getIdentifier(), process, konto.get()));
+                    if (properties.getFiks().getIo().isEnable() && fiksIoService.getIfAvailable() != null) {
+                        Optional<Konto> konto = fiksIoService.getIfAvailable().lookup(entityInfo, process, securityLevel == null ? 3 : securityLevel);
+                        if (konto.isPresent()) {
+                            return Optional.of(serviceRecordFactory.createDpfioServiceRecord(entityInfo.getIdentifier(), process, konto.get()));
+                        }
                     }
 
                     if (securityLevel != null && securityLevel == 4) {
@@ -105,21 +108,24 @@ public class ServiceRecordService {
                 .stream()
                 .map(ProcessIdentifier::getIdentifier)
                 .anyMatch(identifier -> identifier.equals(process.getIdentifier()))) {
-            if(process.getCategory() == EINNSYN ) {
+            if (process.getCategory() == EINNSYN) {
                 return Optional.of(serviceRecordFactory.createDpeServiceRecord(entityInfo.getIdentifier(), process));
-            }
-            else if (process.getCategory() == AVTALT) {
+            } else if (process.getCategory() == AVTALT) {
                 return Optional.of(serviceRecordFactory.createDpoServiceRecord(entityInfo.getIdentifier(), process));
             }
         }
 
-        Optional<Konto> konto = fiksIoService.lookup(entityInfo, process, securityLevel == null ? 3 : securityLevel);
-        return konto.map(value -> serviceRecordFactory.createDpfioServiceRecord(entityInfo.getIdentifier(), process, value));
+        if (properties.getFiks().getIo().isEnable() && fiksIoService.getIfAvailable() != null) {
+            Optional<Konto> konto = fiksIoService.getIfAvailable().lookup(entityInfo, process, securityLevel == null ? 3 : securityLevel);
+            return konto.map(value -> serviceRecordFactory.createDpfioServiceRecord(entityInfo.getIdentifier(), process, value));
+        }
+
+        return Optional.empty();
     }
 
     public List<ServiceRecord> createEinnsynServiceRecords(EntityInfo entityInfo, Integer securityLevel) throws CertificateNotFoundException {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
-        Set<Process> einnsynProcesses = processService.findAll(ProcessCategory.EINNSYN);
+        Set<Process> einnsynProcesses = processService.findAll(EINNSYN);
 
         Set<String> processIdentifiers = getSmpRegistrations(entityInfo.getIdentifier(), einnsynProcesses).stream()
                 .map(ProcessIdentifier::getIdentifier)
@@ -134,10 +140,12 @@ public class ServiceRecordService {
             return serviceRecords;
         }
 
-        einnsynProcesses.forEach(p -> {
-            Optional<Konto> konto = fiksIoService.lookup(entityInfo, p, securityLevel == null ? 3 : securityLevel);
-            konto.ifPresent(k -> serviceRecords.add(serviceRecordFactory.createDpfioServiceRecord(entityInfo.getIdentifier(), p, k)));
-        });
+        if (properties.getFiks().getIo().isEnable() && fiksIoService.getIfAvailable() != null) {
+            einnsynProcesses.forEach(p -> {
+                Optional<Konto> konto = fiksIoService.getIfAvailable().lookup(entityInfo, p, securityLevel == null ? 3 : securityLevel);
+                konto.ifPresent(k -> serviceRecords.add(serviceRecordFactory.createDpfioServiceRecord(entityInfo.getIdentifier(), p, k)));
+            });
+        }
 
         return serviceRecords;
     }

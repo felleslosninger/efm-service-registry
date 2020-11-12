@@ -124,10 +124,11 @@ public class ServiceregistryProperties {
 
     @Data
     public static class FiksIo {
+        private boolean enable;
         @NotNull
         private String endpointUrl;
         @NotNull
-        private List<String> orgFormFilter;
+        private List<String> orgformFilter;
         @NotNull
         private String integrasjonId;
         @NotNull
