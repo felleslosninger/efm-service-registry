@@ -36,6 +36,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.restdocs.headers.HeaderDescriptor;
+import org.springframework.restdocs.headers.HeaderDocumentation;
 import org.springframework.restdocs.request.ParameterDescriptor;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -61,6 +63,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
@@ -196,6 +199,9 @@ public class ServiceRecordControllerTest {
         return parameterWithName("conversationId").optional().description("Conversation ID for the request. Used for logging purposes.");
     }
 
+    private HeaderDescriptor getAuthHeader() {
+        return HeaderDocumentation.headerWithName("Authorization").description("Bearer <JWT>").optional();
+    }
 
     @Test
     public void testOrgInfoRecordShouldMatchExpectedValues() throws Exception {
@@ -207,6 +213,7 @@ public class ServiceRecordControllerTest {
                 .andDo(document("info/org",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
+                        requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam())
                 ));
     }
@@ -222,6 +229,7 @@ public class ServiceRecordControllerTest {
                 .andDo(document("info/person",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
+                        requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam())
                 ));
     }
@@ -244,6 +252,7 @@ public class ServiceRecordControllerTest {
                 .andDo(document("identifier/org",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
+                        requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam()),
                         requestParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
@@ -295,6 +304,7 @@ public class ServiceRecordControllerTest {
                 .andDo(document("identifier/person",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
+                        requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam()),
                         requestParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
@@ -327,6 +337,7 @@ public class ServiceRecordControllerTest {
                 .andDo(document("identifier/digital",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
+                        requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam(), getProcessParam()),
                         requestParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
@@ -456,6 +467,7 @@ public class ServiceRecordControllerTest {
                 .andDo(document("identifier/dpv",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
+                        requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam(), getProcessParam()),
                         requestParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
@@ -481,6 +493,7 @@ public class ServiceRecordControllerTest {
                 .andDo(document("identifier/arkivmelding",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
+                        requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam(), getProcessParam()),
                         requestParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
@@ -622,6 +635,7 @@ public class ServiceRecordControllerTest {
                 .andDo(document("identifier/einnsyn",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
+                        requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam(), getProcessParam()),
                         requestParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));

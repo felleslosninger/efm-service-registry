@@ -13,7 +13,7 @@ open class FiksProtocolController(val processService: ProcessService,
 
     data class FiksProtocolRequestBody(var protocol: String?, var efmProcesses: Set<String>?)
 
-    @PostMapping("/add")
+    @PostMapping
     @Transactional
     @Throws(ProcessNotFoundException::class)
     open fun addProtocol(@RequestBody request: FiksProtocolRequestBody): ResponseEntity<*> {
@@ -33,18 +33,20 @@ open class FiksProtocolController(val processService: ProcessService,
         return ResponseEntity.ok(proto)
     }
 
-    @DeleteMapping("/delete/{identifier}")
+    @DeleteMapping("/{identifier}")
     @Transactional
-    open fun delProtocol(@PathVariable identifier: String) {
+    open fun delProtocol(@PathVariable identifier: String): ResponseEntity<*> {
+        fiksProtocolRepository.findByIdentifier(identifier) ?: return ResponseEntity.notFound().build<Any>()
         fiksProtocolRepository.deleteByIdentifier(identifier)
+        return ResponseEntity.ok().build<Any>()
     }
 
-    @GetMapping("/list")
+    @GetMapping
     open fun listProtocols(): ResponseEntity<*> {
         return ResponseEntity.ok(fiksProtocolRepository.findAll())
     }
 
-    @GetMapping("/find/{identifier}")
+    @GetMapping("/{identifier}")
     open fun findby(@PathVariable identifier: String): ResponseEntity<*> {
         val find = fiksProtocolRepository.findByIdentifier(identifier)
         return find?.let { ResponseEntity.ok(it) } ?: ResponseEntity.notFound().build<Any>()
