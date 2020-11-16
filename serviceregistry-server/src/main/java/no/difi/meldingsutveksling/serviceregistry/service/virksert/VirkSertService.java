@@ -51,7 +51,7 @@ public class VirkSertService {
             if (env.acceptsProfiles(Profiles.of("production"))) {
                 virksertClient = BusinessCertificateClient.of(virksertUrl, Mode.PRODUCTION);
             } else {
-                virksertClient = BusinessCertificateClient.of(virksertUrl, "/recipe-move-difiSigned.xml");
+                virksertClient = BusinessCertificateClient.of(virksertUrl, Mode.MOVE);
             }
         } catch (BusinessCertificateException e) {
             throw new ServiceRegistryException(e);
