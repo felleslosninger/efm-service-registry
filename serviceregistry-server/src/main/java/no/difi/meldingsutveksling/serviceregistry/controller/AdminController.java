@@ -2,7 +2,6 @@ package no.difi.meldingsutveksling.serviceregistry.controller;
 
 import com.google.common.collect.Lists;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +31,6 @@ public class AdminController {
     private final DocumentTypeService documentTypeService;
 
 
-    @ApiOperation(value = "Get a Process", tags = {"Process", "Administration"})
     @GetMapping(value = "/processes/{identifier:.+}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Process> getProcess(@ApiParam("Process identifier") @PathVariable String identifier) {
         Optional<Process> process = processService.findByIdentifier(identifier);
@@ -46,7 +44,6 @@ public class AdminController {
         return ResponseEntity.ok().build();
     }
 
-    @ApiOperation(value = "Add a process", tags = {"Process", "Administration"})
     @PostMapping(value = "/processes", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Transactional
     public ResponseEntity<?> addProcess(@ApiParam("Process data") @RequestBody Process process) {
@@ -76,7 +73,6 @@ public class AdminController {
         }
     }
 
-    @ApiOperation(value = "Delete a Process", tags = {"Process", "Administration"})
     @DeleteMapping(value = "/processes/{identifier:.+}")
     public ResponseEntity<?> deleteProcess(@ApiParam("Process identifier") @PathVariable String identifier) {
         try {
@@ -91,7 +87,6 @@ public class AdminController {
         }
     }
 
-    @ApiOperation(value = "List All Processes", tags = {"Process", "Administration"})
     @GetMapping(value = "/processes", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<Process>> getProcesses() {
         try {
@@ -101,7 +96,6 @@ public class AdminController {
         }
     }
 
-    @ApiOperation(value = "Update a Process", tags = {"Process", "Administration"})
     @PutMapping(value = "/processes/{processIdentifier:.+}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateProcess(@ApiParam("Process identifier") @PathVariable String processIdentifier,
                                         @ApiParam("Process data") @RequestBody Process processWithValuesForUpdate) {
@@ -116,14 +110,12 @@ public class AdminController {
         }
     }
 
-    @ApiOperation(value = "Get a Document Type", tags = {"Document Type", "Administration"})
     @GetMapping(value = "/documentTypes/{identifier}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DocumentType> getDocumentType(@ApiParam("Document type identifier") @PathVariable String identifier) {
         Optional<DocumentType> documentType = documentTypeService.findByIdentifier(identifier);
         return documentType.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @ApiOperation(value = "Add a Document Type", tags = {"Document Type", "Administration"})
     @PostMapping(value = "/documentTypes", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> addDocumentType(@ApiParam("Document type data") @RequestBody DocumentType documentType) {
         try {
@@ -141,7 +133,6 @@ public class AdminController {
         }
     }
 
-    @ApiOperation(value = "Delete a Document Type", tags = {"Document Type", "Administration"})
     @DeleteMapping(value = "/documentTypes/{identifier:.+}")
     public ResponseEntity<?> deleteDocumentType(@ApiParam("Document type identifier") @PathVariable String identifier) {
         try {
@@ -156,7 +147,6 @@ public class AdminController {
         }
     }
 
-    @ApiOperation(value = "List All Document Types", tags = {"Document Type", "Administration"})
     @GetMapping(value = "/documentTypes", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<DocumentType>> getDocumentTypes() {
         try {
