@@ -38,4 +38,4 @@ RUN chmod +x ${APP_DIR}/*
 
 USER java
 
-ENTRYPOINT ["sh", "/var/lib/digdir/run.sh"]
+ENTRYPOINT ["sh", "-c",  "java -jar ${APP_JAVA_PARAMS} ${APP_DIR}/app.jar --spring.profiles.active=${APP_PROFILE}", "$@"]
