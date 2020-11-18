@@ -1,0 +1,203 @@
+[#admin-api]
+= Manage eFormidling processes and document types
+
+|===
+|HTTP Method |URL |Description |Media type(s)
+
+|POST
+|<<admin-proc-post,/api/v1/processes>>
+|Add process
+|application/json
+
+|PUT
+|<<admin-proc-put,/api/v1/processes>>
+|Update process
+|application/json
+
+|DELETE
+|<<admin-proc-delete,/api/v1/processes/{identifier}>>
+|Delete process
+|application/json
+
+|GET
+|<<admin-proc-get,/api/v1/processes/{identifier}>>
+|Find process
+|application/json
+
+|GET
+|<<admin-proc-getall,/api/v1/processes>>
+|Get all processes
+|application/json
+
+|POST
+|<<admin-doctype-post,/api/v1/documentTypes>>
+|Add document type
+|application/json
+
+|DELETE
+|<<admin-doctype-delete,/api/v1/documentTypes/{identifier}>>
+|Delete document type
+|application/json
+
+|GET
+|<<admin-doctype-get,/api/v1/documentTypes/{identifier}>>
+|Find document type
+|application/json
+
+|GET
+|<<admin-doctype-getall,/api/v1/documentTypes>>
+|Get all document types
+|application/json
+
+|===
+
+[#admin-proc-post]
+== Add process
+
+[source,http,role="primary"]
+.Curl
+include::{snippets}/admin/processes/post/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/admin/processes/post/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/admin/processes/post/http-response.adoc[]
+
+[#admin-proc-put]
+== Update process
+
+[source,http,role="primary"]
+.Curl
+include::{snippets}/admin/processes/put/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/admin/processes/put/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/admin/processes/put/http-response.adoc[]
+
+[#admin-proc-delete]
+== Delete process
+
+[caption=""]
+.Path parameters
+include::{snippets}/admin/processes/delete/path-parameters.adoc[]
+
+[source,http,role="primary"]
+.Curl
+include::{snippets}/admin/processes/delete/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/admin/processes/delete/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/admin/processes/delete/http-response.adoc[]
+
+[#admin-proc-get]
+== Find process by identifier
+
+[caption=""]
+.Path parameters
+include::{snippets}/admin/processes/get/path-parameters.adoc[]
+
+[source,http,role="primary"]
+.Curl
+include::{snippets}/admin/processes/get/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/admin/processes/get/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/admin/processes/get/http-response.adoc[]
+
+[#admin-proc-getall]
+== Get all processes
+
+[source,http,role="primary"]
+.Curl
+include::{snippets}/admin/processes/getall/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/admin/processes/getall/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/admin/processes/getall/http-response.adoc[]
+
+[#admin-doctype-post]
+== Add document type
+
+[source,http,role="primary"]
+.Curl
+include::{snippets}/admin/documenttypes/post/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/admin/documenttypes/post/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/admin/documenttypes/post/http-response.adoc[]
+
+[#admin-doctype-delete]
+== Delete document type
+
+[caption=""]
+.Path parameters
+include::{snippets}/admin/documenttypes/delete/path-parameters.adoc[]
+
+[source,http,role="primary"]
+.Curl
+include::{snippets}/admin/documenttypes/delete/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/admin/documenttypes/delete/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/admin/documenttypes/delete/http-response.adoc[]
+
+[#admin-doctype-get]
+== Find document type by identifier
+
+[caption=""]
+.Path parameters
+include::{snippets}/admin/documenttypes/get/path-parameters.adoc[]
+
+[source,http,role="primary"]
+.Curl
+include::{snippets}/admin/documenttypes/get/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/admin/documenttypes/get/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/admin/documenttypes/get/http-response.adoc[]
+
+[#admin-doctype-getall]
+== Get all document types
+
+[source,http,role="primary"]
+.Curl
+include::{snippets}/admin/documenttypes/getall/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/admin/documenttypes/getall/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/admin/documenttypes/getall/http-response.adoc[]
