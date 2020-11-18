@@ -1,5 +1,4 @@
 FROM openjdk:8-jre-slim
-MAINTAINER Digitaliseringsdirektoratet <servicedesk@digdir.no.>
 
 LABEL package="no.digdir" artifact="serviceregistry" version="1.0" description="Digitaliseringsdirektoratet (Digdir)"
 
@@ -31,7 +30,6 @@ ENV APP_DIR=/var/lib/digdir \
 WORKDIR ${APP_DIR}
 
 ADD *.jar ${APP_DIR}/app.jar
-ADD run.sh ${APP_DIR}/
 
 RUN chown -R java:java ${APP_DIR}
 RUN chmod +x ${APP_DIR}/*
