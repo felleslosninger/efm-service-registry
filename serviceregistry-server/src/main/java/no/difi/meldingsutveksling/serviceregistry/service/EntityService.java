@@ -2,11 +2,11 @@ package no.difi.meldingsutveksling.serviceregistry.service;
 
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.CacheConfig;
-import no.difi.meldingsutveksling.serviceregistry.model.CitizenInfo;
-import no.difi.meldingsutveksling.serviceregistry.model.EntityInfo;
+import no.difi.meldingsutveksling.serviceregistry.domain.CitizenInfo;
+import no.difi.meldingsutveksling.serviceregistry.domain.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
-import no.difi.meldingsutveksling.serviceregistry.util.SRRequestScope;
+import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 

@@ -3,25 +3,30 @@ package no.difi.meldingsutveksling.serviceregistry.web;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import no.difi.meldingsutveksling.serviceregistry.controller.AdminController;
-import no.difi.meldingsutveksling.serviceregistry.model.DocumentType;
-import no.difi.meldingsutveksling.serviceregistry.model.Process;
-import no.difi.meldingsutveksling.serviceregistry.model.ProcessCategory;
+import no.difi.meldingsutveksling.serviceregistry.domain.DocumentType;
+import no.difi.meldingsutveksling.serviceregistry.domain.Process;
+import no.difi.meldingsutveksling.serviceregistry.domain.ProcessCategory;
 import no.difi.meldingsutveksling.serviceregistry.service.DocumentTypeService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.mock.http.MockHttpOutputMessage;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.restdocs.request.ParameterDescriptor;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
@@ -32,9 +37,20 @@ import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(SpringRunner.class)
+@WebMvcTest(value = AdminController.class)
+@ContextConfiguration(classes = AdminController.class)
+@TestPropertySource("classpath:application-test.properties")
+@AutoConfigureRestDocs
+@AutoConfigureMockMvc(addFilters = false)
 public class AdminControllerTest {
 
     private static final String PROCESSES_ENDPOINT_PATH = "/api/v1/processes";
@@ -42,20 +58,19 @@ public class AdminControllerTest {
     private static final URI DOCUMENT_TYPES_ENDPOINT_URI = UriComponentsBuilder.fromUriString(DOCUMENT_TYPES_ENDPOINT_PATH).build().toUri();
     private static final URI PROCESSES_ENDPOINT_URI = UriComponentsBuilder.fromUriString(PROCESSES_ENDPOINT_PATH).build().toUri();
 
-    @InjectMocks
-    private AdminController target;
-
+    @Autowired
     private MockMvc mockMvc;
-    private HttpMessageConverter messageConverter;
 
-    @Mock
+    @MockBean
     private ProcessService processServiceMock;
-    @Mock
+
+    @MockBean
     private DocumentTypeService documentTypeServiceMock;
+
+    private HttpMessageConverter<Object> messageConverter;
 
     @Before
     public void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(target).build();
         ObjectMapper objectMapper = new ObjectMapper().disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         messageConverter = new MappingJackson2HttpMessageConverter(objectMapper);
     }
@@ -84,7 +99,15 @@ public class AdminControllerTest {
         documentTypes.add(createDocumentType("DocumentTypeIdentifier"));
         Process process = createProcess("ProcessIdentifier", ProcessCategory.ARKIVMELDING, "code", "editionCode", documentTypes);
 
-        MockHttpServletResponse response = doPost(PROCESSES_ENDPOINT_URI, process);
+        MockHttpServletResponse response = mockMvc.perform(post(PROCESSES_ENDPOINT_URI)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(getJson(process)))
+                .andDo(print())
+                .andDo(document("admin/processes/post",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint())
+                ))
+                .andReturn().getResponse();
 
         assertEquals(HttpStatus.CREATED.value(), response.getStatus());
         verify(processServiceMock).add(any(Process.class));
@@ -97,27 +120,38 @@ public class AdminControllerTest {
         URI processUri = UriComponentsBuilder.fromUri(PROCESSES_ENDPOINT_URI)
                 .pathSegment("ProcessIdentifier").build().toUri();
 
-        MockHttpServletResponse response = doGet(processUri);
-
-        assertEquals(HttpStatus.NOT_FOUND.value(), response.getStatus());
+        mockMvc.perform(get(processUri)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @Test
     public void getProcess_ProcessFound_ResponseShouldBeOk() throws Exception {
-        Process process = createProcess("ProcessIdentifier", ProcessCategory.ARKIVMELDING, "code", "editionCode", new ArrayList<>());
+        String processIdentifier = "urn:no:difi:profile:foo:ver1.0";
+        Process process = createProcess(processIdentifier, ProcessCategory.ARKIVMELDING, "code", "editionCode", new ArrayList<>());
         when(processServiceMock.findByIdentifier(anyString())).thenReturn(Optional.of(process));
-        URI processUri = UriComponentsBuilder.fromUri(PROCESSES_ENDPOINT_URI)
-                .pathSegment("ProcessIdentifier").build().toUri();
 
-        MockHttpServletResponse response = doGet(processUri);
-
-        assertEquals(HttpStatus.OK.value(), response.getStatus());
+        mockMvc.perform(get(PROCESSES_ENDPOINT_PATH+"/{identifier}", processIdentifier)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andDo(document("admin/processes/get",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        pathParameters(getIdentifierParam())
+                ));
     }
 
     @Test
     public void getProcesses_Success_ResponseShouldBeOk() throws Exception {
-        MockHttpServletResponse response = doGet(PROCESSES_ENDPOINT_URI);
-        assertEquals(HttpStatus.OK.value(), response.getStatus());
+        mockMvc.perform(get(PROCESSES_ENDPOINT_URI)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andDo(document("admin/processes/getall",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint())
+                ));
         verify(processServiceMock).findAll();
     }
 
@@ -136,12 +170,16 @@ public class AdminControllerTest {
     public void deleteProcess_ProcessFound_ResponseShouldBeNoContent() throws Exception {
         Process processToDelete = mock(Process.class);
         when(processServiceMock.findByIdentifier(anyString())).thenReturn(Optional.of(processToDelete));
-        URI processUri = UriComponentsBuilder.fromUri(PROCESSES_ENDPOINT_URI)
-                .pathSegment("Process").build().toUri();
 
-        MockHttpServletResponse response = doDelete(processUri);
+        mockMvc.perform(delete(PROCESSES_ENDPOINT_PATH+"/{identifier}", "urn:no:difi:profile:foo:ver1.0"))
+                .andDo(print())
+                .andExpect(status().isNoContent())
+                .andDo(document("admin/processes/delete",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        pathParameters(getIdentifierParam())
+                ));
 
-        assertEquals(HttpStatus.NO_CONTENT.value(), response.getStatus());
         verify(processServiceMock).delete(processToDelete);
     }
 
@@ -161,9 +199,15 @@ public class AdminControllerTest {
         Process updatedValues = createProcess("n/a", null, "serviceCode2", null, null);
         when(processServiceMock.update(anyString(), any(Process.class))).thenReturn(true);
 
-        MockHttpServletResponse response = doPut(processUri, updatedValues);
-
-        assertEquals(HttpStatus.OK.value(), response.getStatus());
+        mockMvc.perform(put(processUri)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(getJson(updatedValues)))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andDo(document("admin/processes/put",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint())
+                ));
     }
 
     @Test
@@ -198,9 +242,16 @@ public class AdminControllerTest {
         when(documentTypeServiceMock.findByIdentifier(anyString())).thenReturn(Optional.empty());
         DocumentType documentType = createDocumentType("DocumentTypeID");
 
-        MockHttpServletResponse response = doPost(DOCUMENT_TYPES_ENDPOINT_URI, documentType);
+        mockMvc.perform(post(DOCUMENT_TYPES_ENDPOINT_URI)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(getJson(documentType)))
+                .andExpect(status().isCreated())
+                .andDo(print())
+                .andDo(document("admin/documenttypes/post",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint())
+                ));
 
-        assertEquals(HttpStatus.CREATED.value(), response.getStatus());
         verify(documentTypeServiceMock).add(any(DocumentType.class));
     }
 
@@ -217,20 +268,31 @@ public class AdminControllerTest {
 
     @Test
     public void getDocumentType_DocumentTypeFound_ResponseShouldBeOk() throws Exception {
-        DocumentType documentType = createDocumentType("identifier");
+        String docIdentifier = "urn:no:difi:foo:xsd::foo";
+        DocumentType documentType = createDocumentType(docIdentifier);
         when(documentTypeServiceMock.findByIdentifier(anyString())).thenReturn(Optional.of(documentType));
-        URI uri = UriComponentsBuilder.fromUri(DOCUMENT_TYPES_ENDPOINT_URI)
-                .pathSegment("ProcessIdentifier").build().toUri();
 
-        MockHttpServletResponse response = doGet(uri);
-
-        assertEquals(HttpStatus.OK.value(), response.getStatus());
+        mockMvc.perform(get(DOCUMENT_TYPES_ENDPOINT_PATH+"/{identifier}", docIdentifier)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andDo(document("admin/documenttypes/get",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        pathParameters(getIdentifierParam())
+                ));
     }
 
     @Test
     public void getDocumentTypes_Success_ResponseShouldBeOk() throws Exception {
-        MockHttpServletResponse response = doGet(DOCUMENT_TYPES_ENDPOINT_URI);
-        assertEquals(HttpStatus.OK.value(), response.getStatus());
+        mockMvc.perform(get(DOCUMENT_TYPES_ENDPOINT_URI)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andDo(document("admin/documenttypes/getall",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint())
+                ));
         verify(documentTypeServiceMock).findAll();
     }
 
@@ -249,12 +311,16 @@ public class AdminControllerTest {
     public void deleteDocumentType_DocumentTypeFound_ResponseShouldBeNoContent() throws Exception {
         DocumentType documentTypeToDelete = mock(DocumentType.class);
         when(documentTypeServiceMock.findByIdentifier(anyString())).thenReturn(Optional.of(documentTypeToDelete));
-        URI uri = UriComponentsBuilder.fromUri(DOCUMENT_TYPES_ENDPOINT_URI)
-                .pathSegment("DocumentType").build().toUri();
 
-        MockHttpServletResponse response = doDelete(uri);
+        mockMvc.perform(delete(DOCUMENT_TYPES_ENDPOINT_PATH+"/{identifier}", "urn:no:difi:foo:xsd::foo"))
+                .andExpect(status().isNoContent())
+                .andDo(print())
+                .andDo(document("admin/documenttypes/delete",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        pathParameters(getIdentifierParam())
+                ));
 
-        assertEquals(HttpStatus.NO_CONTENT.value(), response.getStatus());
         verify(documentTypeServiceMock).delete(documentTypeToDelete);
     }
 
@@ -297,6 +363,11 @@ public class AdminControllerTest {
                 .content(getJson(content)))
                 .andReturn().getResponse();
     }
+
+    private ParameterDescriptor getIdentifierParam() {
+        return parameterWithName("identifier").description("Identifier");
+    }
+
 
     private String getJson(Object o) throws IOException {
         MockHttpOutputMessage mockHttpOutputMessage = new MockHttpOutputMessage();

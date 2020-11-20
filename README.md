@@ -76,21 +76,21 @@ copy the URL directly into a Browser of REST client
 * The organisations that are managed by KS is hard coded in lack of a cental lookup service, the managed organsations are 910951688 and 910076787. A new Implementation of the KSLookup interface can be created when- and if a  central service becomes available.    
 * The persistent store for keeping how organisations want to receive messages (primary service) is kept in-memory at (as a map) the moment. This functionality might not be relevant for a production scenario - so very little effort went into it.  
 
-# Depenencies
+# Dependencies
 
-Please note, as of 7.4.2016:
+Please note, as of 16.11.2020:
 To build this module you need to have the following non public modules in your local maven repository
 
 ```xml
           <dependency>
               <groupId>no.difi.virksert</groupId>
               <artifactId>virksert-common</artifactId>
-              <version>1.0-SNAPSHOT</version>
+              <version>1.3.3</version>
           </dependency>
           <dependency>
               <groupId>no.difi.virksert</groupId>
               <artifactId>virksert-client</artifactId>
-              <version>1.0-SNAPSHOT</version>
+              <version>1.3.3</version>
           </dependency>
 ```
 

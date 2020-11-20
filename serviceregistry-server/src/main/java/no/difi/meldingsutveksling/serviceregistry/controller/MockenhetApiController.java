@@ -2,7 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import no.difi.meldingsutveksling.serviceregistry.model.BrregMockEnhet;
+import no.difi.meldingsutveksling.serviceregistry.domain.BrregMockEnhet;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.dev.TestEnvironmentEnheter;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;

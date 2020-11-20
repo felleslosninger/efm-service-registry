@@ -1,0 +1,96 @@
+[#fiks-api]
+= Manage FIKS protocol mappings
+
+|===
+|HTTP Method |URL |Description |Media type(s)
+
+|POST
+|<<fiks-post,/api/v1/fiks>>
+|Add/update mapping
+|application/json
+
+|DELETE
+|<<fiks-delete,/api/v1/fiks/{identifier}>>
+|Delete mapping
+|application/json
+
+|GET
+|<<fiks-get,/api/v1/fiks>>
+|List mappings
+|application/json
+
+|GET
+|<<fiks-findby,/api/v1/fiks/{identifier}>>
+|Find by identifier
+|application/json
+
+|===
+
+[#fiks-post]
+== Add/update mapping
+
+[source,http,role="primary"]
+.Curl
+include::{snippets}/fiks/post/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/fiks/post/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/fiks/post/http-response.adoc[]
+
+[#fiks-delete]
+== Delete mapping
+
+[caption=""]
+.Path parameters
+include::{snippets}/fiks/delete/path-parameters.adoc[]
+
+[source,http,role="primary"]
+.Curl
+include::{snippets}/fiks/delete/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/fiks/delete/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/fiks/delete/http-response.adoc[]
+
+[#fiks-get]
+== List mappings
+
+[source,http,role="primary"]
+.Curl
+include::{snippets}/fiks/get/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/fiks/get/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/fiks/get/http-response.adoc[]
+
+[#fiks-findby]
+== Find by identifier
+
+[caption=""]
+.Path parameters
+include::{snippets}/fiks/findby/path-parameters.adoc[]
+
+[source,http,role="primary"]
+.Curl
+include::{snippets}/fiks/findby/curl-request.adoc[]
+
+[source,http,role="secondary"]
+.Request
+include::{snippets}/fiks/findby/http-request.adoc[]
+
+[source,http,role="secondary"]
+.Response
+include::{snippets}/fiks/findby/http-response.adoc[]
+
