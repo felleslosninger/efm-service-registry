@@ -1,7 +1,13 @@
-FROM openjdk:8-jre-alpine
-MAINTAINER DIFI <espen.korra@difi.no>
+FROM openjdk:8-jre-slim
 
-LABEL package="no.difi" artifact="serviceregistry" version="1.0" description="Direktoratet for forvaltning og IKT (Difi)"
+LABEL package="no.digdir" artifact="serviceregistry" version="1.0" description="Digitaliseringsdirektoratet (Digdir)"
+
+RUN groupadd -o -g 1000 java \
+    && useradd -o -r -m -u 1000 -g 1000 java
+
+RUN chown -R java:java /opt
+
+RUN mkdir /logs && chown -R java:java /logs
 
 #
 # Open ports for incoming connections
@@ -13,20 +19,9 @@ EXPOSE 9099
 # Install application
 #
 
-ENV APP_DIR=/var/lib/difi \
+ENV APP_DIR=/var/lib/digdir \
     APP_JAVA_PARAMS="" \
-    APP_PROFILE=dev \
-    DOCKERIZE_VERSION=v0.2.0
-
-RUN apk add --update \
-        curl \
-        tini \
-        ca-certificates \
-        openssl  && \
-        update-ca-certificates && \
-	rm -rf /var/cache/apk/* && \
-        wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && \
-        tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+    APP_PROFILE=dev
 
 #
 # Start the application
@@ -34,7 +29,11 @@ RUN apk add --update \
 
 WORKDIR ${APP_DIR}
 
-ENTRYPOINT ["/sbin/tini", "-g", "--", "./run.sh"]
-
 ADD *.jar ${APP_DIR}/app.jar
-ADD run.sh ${APP_DIR}/
+
+RUN chown -R java:java ${APP_DIR}
+RUN chmod +x ${APP_DIR}/*
+
+USER java
+
+ENTRYPOINT ["sh", "-c",  "java -jar ${APP_JAVA_PARAMS} ${APP_DIR}/app.jar --spring.profiles.active=${APP_PROFILE}", "$@"]
