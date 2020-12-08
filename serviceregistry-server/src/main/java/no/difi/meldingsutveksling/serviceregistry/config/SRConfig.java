@@ -6,8 +6,7 @@ import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.util.Base64;
-import no.difi.move.common.config.KeystoreProperties;
-import no.difi.move.common.oauth.KeystoreHelper;
+import no.difi.move.common.cert.KeystoreHelper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -38,14 +37,7 @@ public class SRConfig implements WebMvcConfigurer {
 
     @Bean
     public KeystoreHelper keystoreHelper(ServiceregistryProperties srProps) {
-        KeystoreProperties props = new KeystoreProperties();
-        props.setAlias(srProps.getSign().getKeystore().getAlias());
-        props.setEntryPassword(srProps.getSign().getKeystore().getPassword());
-        props.setStorePassword(srProps.getSign().getKeystore().getPassword());
-        props.setType(srProps.getSign().getKeystore().getType());
-        props.setLocation(srProps.getSign().getKeystore().getPath());
-
-        return new KeystoreHelper(props);
+        return new KeystoreHelper(srProps.getSign().getKeystore());
     }
 
     @Bean

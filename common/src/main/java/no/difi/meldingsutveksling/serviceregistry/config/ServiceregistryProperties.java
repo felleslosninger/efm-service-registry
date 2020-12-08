@@ -6,6 +6,7 @@
 package no.difi.meldingsutveksling.serviceregistry.config;
 
 import lombok.Data;
+import no.difi.move.common.config.KeystoreProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.io.Resource;
 
@@ -48,7 +49,7 @@ public class ServiceregistryProperties {
     @Data
     public static class Sign {
         @NotNull
-        private Keystore keystore;
+        private KeystoreProperties keystore;
     }
 
     @Data
@@ -104,14 +105,6 @@ public class ServiceregistryProperties {
         private URL endpointURL;
         private String processIdentifier;
         private String schema;
-    }
-
-    @Data
-    public static class Keystore {
-        private String alias;
-        private String password;
-        private String type;
-        private Resource path;
     }
 
     @Data

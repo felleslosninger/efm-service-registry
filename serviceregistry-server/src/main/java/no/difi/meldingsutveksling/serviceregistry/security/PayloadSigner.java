@@ -4,7 +4,7 @@ import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.jwk.RSAKey;
 import lombok.RequiredArgsConstructor;
-import no.difi.move.common.oauth.KeystoreHelper;
+import no.difi.move.common.cert.KeystoreHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
