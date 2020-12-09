@@ -25,3 +25,12 @@ serviceregistry-server/sr-db.mv.db
 serviceregistry-server/sr-db.trace.db
 sr-db.mv.db
 sr-db.trace.db
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
