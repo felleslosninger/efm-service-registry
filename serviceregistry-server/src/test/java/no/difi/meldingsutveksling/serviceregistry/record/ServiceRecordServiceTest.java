@@ -14,7 +14,7 @@ import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksProtocolRepository
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
-import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
+import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
@@ -66,7 +66,7 @@ public class ServiceRecordServiceTest {
     private ELMALookupService lookupService;
 
     @MockBean
-    private KrrService krrService;
+    private KontaktInfoService kontaktInfoService;
 
     @MockBean
     private BrregService brregService;

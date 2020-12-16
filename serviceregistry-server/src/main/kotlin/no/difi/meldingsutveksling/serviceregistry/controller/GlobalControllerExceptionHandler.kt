@@ -6,8 +6,7 @@ import no.difi.meldingsutveksling.serviceregistry.SRRequestScope
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException
-import no.difi.meldingsutveksling.serviceregistry.krr.DsfLookupException
-import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException
+import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException
 import no.difi.meldingsutveksling.serviceregistry.logger
 import no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException
@@ -48,7 +47,7 @@ class GlobalControllerExceptionHandler(val requestScope: SRRequestScope) {
         return errorResponse(HttpStatus.NOT_FOUND, e.message)
     }
 
-    @ExceptionHandler(KRRClientException::class)
+    @ExceptionHandler(KontaktInfoException::class)
     fun krrClientException(request: HttpServletRequest, e: Exception): ResponseEntity<ErrorResponse> {
         log.error(markerFrom(requestScope), "Exception occurred on ${request.requestURL}", e)
         return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.message)
@@ -63,12 +62,6 @@ class GlobalControllerExceptionHandler(val requestScope: SRRequestScope) {
     @ExceptionHandler(CertificateNotFoundException::class)
     fun certificateNotFound(request: HttpServletRequest, e: Exception): ResponseEntity<ErrorResponse> {
         log.warn(markerFrom(requestScope), "Certificate not found for ${request.requestURL}", e)
-        return errorResponse(HttpStatus.BAD_REQUEST, e.message)
-    }
-
-    @ExceptionHandler(DsfLookupException::class)
-    fun dsfLookupException(request: HttpServletRequest, e: Exception): ResponseEntity<ErrorResponse> {
-        log.warn(markerFrom(requestScope), "DSF lookup failed for ${request.requestURL}", e)
         return errorResponse(HttpStatus.BAD_REQUEST, e.message)
     }
 

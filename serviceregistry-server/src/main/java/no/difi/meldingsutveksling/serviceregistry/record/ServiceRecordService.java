@@ -12,13 +12,12 @@ import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.*;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksIoService;
-import no.difi.meldingsutveksling.serviceregistry.krr.DsfLookupException;
-import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
+import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
-import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
+import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import no.difi.vefa.peppol.common.model.ProcessIdentifier;
@@ -45,7 +44,7 @@ import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lo
 @Slf4j
 public class ServiceRecordService {
 
-    private final KrrService krrService;
+    private final KontaktInfoService kontaktInfoService;
     private final ServiceregistryProperties properties;
     private final ELMALookupService elmaLookupService;
     private final SvarUtService svarUtService;
@@ -169,9 +168,9 @@ public class ServiceRecordService {
 
     @PreAuthorize("hasAuthority('SCOPE_move/dpi.read')")
     public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
-                                                               String onBehalfOrgnr) throws KRRClientException, DsfLookupException, BrregNotFoundException {
+                                                               String onBehalfOrgnr) throws KontaktInfoException, BrregNotFoundException {
 
-        PersonResource personResource = krrService.getCitizenInfo(lookup(identifier).token(requestScope.getToken()));
+        PersonResource personResource = kontaktInfoService.getCitizenInfo(lookup(identifier).token(requestScope.getToken()));
         Set<Process> digitalpostProcesses = processService.findAll(ProcessCategory.DIGITALPOST);
         List<ServiceRecord> serviceRecords = Lists.newArrayList();
         for (Process p : digitalpostProcesses) {

@@ -7,7 +7,7 @@ import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.ProcessCategory;
 import no.difi.meldingsutveksling.serviceregistry.persistence.DocumentTypeRepository;
 import no.difi.meldingsutveksling.serviceregistry.persistence.ProcessRepository;
-import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService;
+import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.vefa.peppol.common.model.TransportProfile;
 import no.difi.vefa.peppol.lookup.LookupClient;
@@ -43,7 +43,7 @@ public class ProcessAdministrationIT {
     private TransportProfile transportProfile;
 
     @MockBean
-    private KrrService krrService;
+    private KontaktInfoService kontaktInfoService;
 
     @MockBean
     private BrregClient brregClient;

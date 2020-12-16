@@ -12,6 +12,7 @@ import org.springframework.core.io.Resource;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.net.URI;
 import java.net.URL;
 import java.util.List;
 
@@ -67,8 +68,8 @@ public class ServiceregistryProperties {
 
     @Data
     public static class KontaktOgReservasjonsRegister {
-        private URL endpointURL;
-        private URL dsfEndpointURL;
+        private URI endpointURL;
+        private URI dsfEndpointURL;
         private String printAdress;
         private Resource printCertificate;
     }

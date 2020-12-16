@@ -7,38 +7,35 @@ import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import org.apache.commons.io.IOUtils;
-import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @Service
 @Slf4j
-public class KrrService {
+public class KontaktInfoService {
 
     private final ServiceregistryProperties properties;
     private final KRRClient krrClient;
     private final DSFClient dsfClient;
 
     @SneakyThrows
-    public KrrService(ServiceregistryProperties srProps, OAuth2ResourceServerProperties resourceServerProperties) {
-        URL jwkUrl = new URL(resourceServerProperties.getJwt().getJwkSetUri());
+    public KontaktInfoService(ServiceregistryProperties srProps) {
         this.properties = srProps;
-        this.krrClient = new KRRClient(srProps.getKrr().getEndpointURL(), jwkUrl);
-        this.dsfClient = new DSFClient(srProps.getKrr().getDsfEndpointURL(), jwkUrl);
+        this.krrClient = new KRRClient(srProps.getKrr().getEndpointURL());
+        this.dsfClient = new DSFClient(srProps.getKrr().getDsfEndpointURL());
     }
 
     @Cacheable(CacheConfig.KRR_CACHE)
-    public PersonResource getCitizenInfo(LookupParameters params) throws KRRClientException {
+    public PersonResource getCitizenInfo(LookupParameters params) throws KontaktInfoException {
         return krrClient.getPersonResource(params.getIdentifier(), params.getToken());
     }
 
     @Cacheable(CacheConfig.DSF_CACHE)
-    public Optional<DSFResource> getDSFInfo(LookupParameters params) throws DsfLookupException {
+    public Optional<DSFResource> getDSFInfo(LookupParameters params) throws KontaktInfoException {
         return dsfClient.getDSFResource(params.getIdentifier(), params.getToken());
     }
 

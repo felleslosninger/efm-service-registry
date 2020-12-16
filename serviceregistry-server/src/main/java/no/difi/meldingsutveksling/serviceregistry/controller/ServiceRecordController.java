@@ -12,8 +12,7 @@ import no.difi.meldingsutveksling.serviceregistry.domain.*;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
-import no.difi.meldingsutveksling.serviceregistry.krr.DsfLookupException;
-import no.difi.meldingsutveksling.serviceregistry.krr.KRRClientException;
+import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
 import no.difi.meldingsutveksling.serviceregistry.record.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.record.ServiceRecordService;
 import no.difi.meldingsutveksling.serviceregistry.security.EntitySignerException;
@@ -80,13 +79,13 @@ public class ServiceRecordController {
     @GetMapping(value = "/identifier/{identifier}/process/{processIdentifier}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> entity(@PathVariable("identifier") String identifier,
-                                 @PathVariable("processIdentifier") String processIdentifier,
-                                 @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
-                                 @RequestParam(name = "conversationId", required = false) String conversationId,
-                                 Authentication auth,
-                                 HttpServletRequest request)
-            throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException,
-            DsfLookupException, BrregNotFoundException, SvarUtClientException, ProcessNotFoundException {
+                                    @PathVariable("processIdentifier") String processIdentifier,
+                                    @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
+                                    @RequestParam(name = "conversationId", required = false) String conversationId,
+                                    Authentication auth,
+                                    HttpServletRequest request)
+            throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException,
+            BrregNotFoundException, SvarUtClientException, ProcessNotFoundException {
         MDC.put("entity", identifier);
         String clientId = authenticationService.getAuthorizedClientIdentifier(auth, request);
         fillRequestScope(identifier, conversationId, clientId, authenticationService.getToken(auth));
@@ -120,9 +119,9 @@ public class ServiceRecordController {
             }
             serviceRecord = dpeServiceRecord.get();
         }
-        if(ProcessCategory.AVTALT == process.getCategory()) {
+        if (ProcessCategory.AVTALT == process.getCategory()) {
             Optional<ServiceRecord> avtaltDpoServiceRecord = serviceRecordService.createServiceRecord(entityInfo, process, securityLevel);
-            if(!avtaltDpoServiceRecord.isPresent()) {
+            if (!avtaltDpoServiceRecord.isPresent()) {
                 return notFoundResponse(String.format("Avtalt process '%s' not found for receiver '%s'.", process.getIdentifier(), identifier));
             }
             serviceRecord = avtaltDpoServiceRecord.get();
@@ -147,7 +146,7 @@ public class ServiceRecordController {
             @RequestParam(name = "conversationId", required = false) String conversationId,
             Authentication auth,
             HttpServletRequest request)
-            throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException, DsfLookupException, BrregNotFoundException, SvarUtClientException {
+            throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException, BrregNotFoundException, SvarUtClientException {
         MDC.put("identifier", identifier);
         String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
         fillRequestScope(identifier, conversationId, clientOrgnr, authenticationService.getToken(auth));
@@ -193,21 +192,21 @@ public class ServiceRecordController {
             @RequestParam(name = "conversationId", required = false) String conversationId,
             Authentication auth,
             HttpServletRequest request)
-            throws EntitySignerException, SecurityLevelNotFoundException, KRRClientException,
-            CertificateNotFoundException, DsfLookupException, BrregNotFoundException, SvarUtClientException {
+            throws EntitySignerException, SecurityLevelNotFoundException, KontaktInfoException,
+            CertificateNotFoundException, BrregNotFoundException, SvarUtClientException {
         return signEntity(entity(identifier, securityLevel, conversationId, auth, request));
     }
 
     @GetMapping(value = "/identifier/{identifier}/process/{processIdentifier}", produces = "application/jose")
     @ResponseBody
     public ResponseEntity<?> signed(@PathVariable("identifier") String identifier,
-                                 @PathVariable("processIdentifier") String processIdentifier,
-                                 @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
-                                 @RequestParam(name = "conversationId", required = false) String conversationId,
-                                 Authentication auth,
-                                 HttpServletRequest request)
-            throws SecurityLevelNotFoundException, KRRClientException, CertificateNotFoundException,
-            DsfLookupException, BrregNotFoundException, SvarUtClientException, EntitySignerException, ProcessNotFoundException {
+                                    @PathVariable("processIdentifier") String processIdentifier,
+                                    @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
+                                    @RequestParam(name = "conversationId", required = false) String conversationId,
+                                    Authentication auth,
+                                    HttpServletRequest request)
+            throws SecurityLevelNotFoundException, KontaktInfoException, CertificateNotFoundException,
+            BrregNotFoundException, SvarUtClientException, EntitySignerException, ProcessNotFoundException {
         return signEntity(entity(identifier, processIdentifier, securityLevel, conversationId, auth, request));
     }
 

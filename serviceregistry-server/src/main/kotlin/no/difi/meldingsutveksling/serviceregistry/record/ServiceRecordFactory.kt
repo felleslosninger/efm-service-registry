@@ -5,16 +5,13 @@ import no.difi.meldingsutveksling.serviceregistry.*
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties
 import no.difi.meldingsutveksling.serviceregistry.domain.*
 import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksProtocolRepository
-import no.difi.meldingsutveksling.serviceregistry.krr.DsfLookupException
-import no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters
-import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource
-import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress
+import no.difi.meldingsutveksling.serviceregistry.krr.*
 import no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory
 import no.difi.meldingsutveksling.serviceregistry.service.DocumentTypeService
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException
-import no.difi.meldingsutveksling.serviceregistry.service.krr.KrrService
+import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService
 import no.difi.virksert.client.lang.VirksertClientException
 import no.ks.fiks.io.client.model.Konto
@@ -30,7 +27,7 @@ class ServiceRecordFactory(private val fiksProtocolRepository: FiksProtocolRepos
                            private val virkSertService: VirkSertService,
                            private val processService: ProcessService,
                            private val documentTypeService: DocumentTypeService,
-                           private val krrService: KrrService,
+                           private val kontaktInfoService: KontaktInfoService,
                            private val entityService: EntityService,
                            private val requestScope: SRRequestScope) {
 
@@ -76,15 +73,15 @@ class ServiceRecordFactory(private val fiksProtocolRepository: FiksProtocolRepos
         return dpvServiceRecord
     }
 
-    @Throws(DsfLookupException::class, BrregNotFoundException::class)
+    @Throws(KontaktInfoException::class, BrregNotFoundException::class)
     fun createPrintServiceRecord(identifier: String,
                                  onBehalfOrgnr: String,
                                  token: String,
                                  personResource: PersonResource,
                                  p: Process): Optional<ServiceRecord> {
-        krrService.setPrintDetails(personResource)
-        val dsfResource = krrService.getDSFInfo(LookupParameters.lookup(identifier).token(token))
-                .orElseThrow { DsfLookupException("Receiver found in KRR on behalf of '$onBehalfOrgnr', but not in DSF.") }
+        kontaktInfoService.setPrintDetails(personResource)
+        val dsfResource = kontaktInfoService.getDSFInfo(LookupParameters.lookup(identifier).token(token))
+                .orElseThrow { KontaktInfoException("Receiver found in KRR on behalf of '$onBehalfOrgnr', but not in DSF.") }
         if (Strings.isNullOrEmpty(dsfResource.postAddress)) {
             // Some receivers have secret address - skip
             return Optional.empty()

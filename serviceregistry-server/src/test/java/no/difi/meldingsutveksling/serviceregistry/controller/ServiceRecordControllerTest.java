@@ -166,7 +166,7 @@ public class ServiceRecordControllerTest {
         when(entityService.getEntityInfo("404040404")).thenReturn(Optional.empty());
     }
 
-    private void setupMocksForSuccessfulDpi() throws MalformedURLException, KRRClientException, DsfLookupException, SecurityLevelNotFoundException, CertificateNotFoundException, BrregNotFoundException, SvarUtClientException {
+    private void setupMocksForSuccessfulDpi() throws MalformedURLException, KontaktInfoException, SecurityLevelNotFoundException, CertificateNotFoundException, BrregNotFoundException, SvarUtClientException {
         ServiceregistryProperties props = fakePropertiesForDpi();
         when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
         PersonResource personResource = fakePersonResourceForDpi();
@@ -315,7 +315,7 @@ public class ServiceRecordControllerTest {
         setupMocksForSuccessfulDpi();
         final String message = "identifier not found in DSF";
         when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString()))
-                .thenThrow(new DsfLookupException(message));
+                .thenThrow(new KontaktInfoException(message));
 
         mvc.perform(get("/identifier/12345678901")
                 .accept(MediaType.APPLICATION_JSON))
@@ -350,7 +350,7 @@ public class ServiceRecordControllerTest {
         setupMocksForSuccessfulDpi();
         final String message = "identifier not found in DSF";
         when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString()))
-                .thenThrow(new DsfLookupException(message));
+                .thenThrow(new KontaktInfoException(message));
 
         mvc.perform(get("/identifier/12345678901")
                 .accept(MediaType.APPLICATION_JSON))
@@ -363,7 +363,7 @@ public class ServiceRecordControllerTest {
         final String message = "Error looking up identifier in KRR";
         when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
         when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString()))
-                .thenThrow(new KRRClientException(new Exception(message)));
+                .thenThrow(new KontaktInfoException(message));
 
         mvc.perform(get("/identifier/12345678901")
                 .accept(MediaType.APPLICATION_JSON))
@@ -378,7 +378,7 @@ public class ServiceRecordControllerTest {
         final String message = "Error looking up identifier in KRR";
         when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
         when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString()))
-                .thenThrow(new KRRClientException(new Exception(message)));
+                .thenThrow(new KontaktInfoException(message));
 
         mvc.perform(get("/identifier/12345678901/process/some:process")
                 .accept(MediaType.APPLICATION_JSON))
