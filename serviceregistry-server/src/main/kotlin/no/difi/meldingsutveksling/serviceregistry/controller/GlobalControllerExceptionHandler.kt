@@ -50,7 +50,7 @@ class GlobalControllerExceptionHandler(val requestScope: SRRequestScope) {
     @ExceptionHandler(KontaktInfoException::class)
     fun krrClientException(request: HttpServletRequest, e: Exception): ResponseEntity<ErrorResponse> {
         log.error(markerFrom(requestScope), "Exception occurred on ${request.requestURL}", e)
-        return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.message)
+        return errorResponse(HttpStatus.BAD_REQUEST, e.message)
     }
 
     @ExceptionHandler(SvarUtClientException::class)

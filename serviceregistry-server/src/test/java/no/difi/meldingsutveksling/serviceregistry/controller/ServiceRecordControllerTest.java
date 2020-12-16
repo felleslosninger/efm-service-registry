@@ -367,7 +367,7 @@ public class ServiceRecordControllerTest {
 
         mvc.perform(get("/identifier/12345678901")
                 .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isInternalServerError())
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_description", containsString(message)));
     }
 
@@ -382,7 +382,7 @@ public class ServiceRecordControllerTest {
 
         mvc.perform(get("/identifier/12345678901/process/some:process")
                 .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isInternalServerError())
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_description", containsString(message)));
     }
 
