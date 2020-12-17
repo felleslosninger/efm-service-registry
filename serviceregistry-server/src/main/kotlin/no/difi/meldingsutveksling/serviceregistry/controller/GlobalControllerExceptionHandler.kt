@@ -11,6 +11,7 @@ import no.difi.meldingsutveksling.serviceregistry.logger
 import no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException
+import no.difi.virksert.client.lang.VirksertClientException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
@@ -63,6 +64,12 @@ class GlobalControllerExceptionHandler(val requestScope: SRRequestScope) {
     fun certificateNotFound(request: HttpServletRequest, e: Exception): ResponseEntity<ErrorResponse> {
         log.warn(markerFrom(requestScope), "Certificate not found for ${request.requestURL}", e)
         return errorResponse(HttpStatus.BAD_REQUEST, e.message)
+    }
+
+    @ExceptionHandler(VirksertClientException::class)
+    fun virksertError(request: HttpServletRequest, e: Exception): ResponseEntity<ErrorResponse> {
+        log.warn(markerFrom(requestScope), "Virksert lookup failed for ${request.requestURL} -> ${e.message}")
+        return errorResponse(HttpStatus.NOT_FOUND, "Lookup failed for ${e.message}", "certificate_not_found")
     }
 
     @ExceptionHandler(BrregNotFoundException::class)
