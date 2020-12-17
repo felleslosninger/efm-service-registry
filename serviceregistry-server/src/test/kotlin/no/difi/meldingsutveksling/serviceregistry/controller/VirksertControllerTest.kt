@@ -4,6 +4,7 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope
+import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService
 import no.difi.virksert.client.lang.VirksertClientException
 import org.junit.Before
@@ -13,7 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation
+import org.springframework.http.MediaType
+import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get
 import org.springframework.restdocs.operation.preprocess.Preprocessors.*
 import org.springframework.test.context.ContextConfiguration
@@ -21,6 +23,7 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @RunWith(SpringRunner::class)
@@ -33,6 +36,9 @@ class VirksertControllerTest {
 
     @Autowired
     lateinit var mvc: MockMvc
+
+    @MockkBean
+    lateinit var payloadSigner: PayloadSigner
 
     @MockkBean
     lateinit var requestScope: SRRequestScope
@@ -58,13 +64,17 @@ class VirksertControllerTest {
 
     @Test
     fun `test controller should return certificate`() {
-        mvc.perform(get("/virksert/{identifier}", "910076787"))
+        mvc.perform(get("/virksert/{identifier}", "910076787").accept(MediaType.TEXT_PLAIN_VALUE))
             .andExpect(status().isOk)
             .andDo(print())
-            .andDo(MockMvcRestDocumentation.document("virksert/get",
-                preprocessRequest(prettyPrint()),
-                preprocessResponse(prettyPrint())
-            ))
+            .andExpect(content().string("pem123"))
+            .andDo(
+                document(
+                    "virksert/get",
+                    preprocessRequest(prettyPrint()),
+                    preprocessResponse(prettyPrint())
+                )
+            )
     }
 
     @Test
@@ -72,9 +82,12 @@ class VirksertControllerTest {
         mvc.perform(get("/virksert/{identifier}", "123123123"))
             .andExpect(status().isNotFound)
             .andDo(print())
-            .andDo(MockMvcRestDocumentation.document("virksert/notfound",
-                preprocessRequest(prettyPrint()),
-                preprocessResponse(prettyPrint())
-            ))
+            .andDo(
+                document(
+                    "virksert/notfound",
+                    preprocessRequest(prettyPrint()),
+                    preprocessResponse(prettyPrint())
+                )
+            )
     }
 }
