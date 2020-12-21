@@ -5,4 +5,4 @@ services:
     build: serviceregistry-server
     image: eformidling/serviceregistry-server
     labels:
-      kubernetesManifestFile: serviceregistry/deployment.yaml
+      kubernetesManifestFile: serviceregistry/sr.yaml
