@@ -5,4 +5,4 @@ services:
     build: serviceregistry-server
     image: eformidling/serviceregistry-server
     labels:
-      kubernetesManifestFile: eureka/deployment.yaml
+      kubernetesManifestFile: serviceregistry/deployment.yaml
