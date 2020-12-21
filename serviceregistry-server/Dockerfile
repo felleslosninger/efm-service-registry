@@ -29,7 +29,7 @@ ENV APP_DIR=/var/lib/digdir \
 
 WORKDIR ${APP_DIR}
 
-ADD *.jar ${APP_DIR}/app.jar
+ADD target/*.jar ${APP_DIR}/app.jar
 
 RUN chown -R java:java ${APP_DIR}
 RUN chmod +x ${APP_DIR}/*
