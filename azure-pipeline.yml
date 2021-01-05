@@ -14,6 +14,7 @@ extends:
     buildDockerArtifact: true
     coverageClassFilesDirectories: common/target/classes,domain/target/classes,kontakt-reservasjonsregister-client/target/classes,ks-fiks/target/classes,serviceregistry-server/target/classes
     coverageSourceDirectories: common/src/main,domain/src/main,kontakt-reservasjonsregister-client/src/main,ks-fiks/src/main,serviceregistry-server/src/main
+    coverageClassesFilter: +:no.difi.*,-:no.difi.meldingsutveksling.serviceregistry.svarut
 
 trigger:
   batch: true
