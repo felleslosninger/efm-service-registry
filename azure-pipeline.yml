@@ -12,6 +12,7 @@ extends:
     environmentRepository: git://eformidling/eformidling
     jdkVersion: 1.8
     buildDockerArtifact: true
+    coverageClassFilter: +:no.difi.*,-:no.difi.meldingsutveksling.serviceregistry.svarut*.*
 
 trigger:
   batch: true
