@@ -12,8 +12,8 @@ extends:
     environmentRepository: git://eformidling/eformidling
     jdkVersion: 1.8
     buildDockerArtifact: true
-    coverageClassFilesDirectories: common/target/classes, domain/target/classes, kontakt-reservasjonsregister-client/target/classes, ks-fiks/target/classes, serviceregistry-server/target/classes
-    coverageSourceDirectories: common/src/main, domain/src/main, kontakt-reservasjonsregister-client/src/main, ks-fiks/src/main, serviceregistry-server/src/main
+    coverageClassFilesDirectories: common/target/classes,domain/target/classes,kontakt-reservasjonsregister-client/target/classes,ks-fiks/target/classes,serviceregistry-server/target/classes
+    coverageSourceDirectories: common/src/main,domain/src/main,kontakt-reservasjonsregister-client/src/main,ks-fiks/src/main,serviceregistry-server/src/main
 
 trigger:
   batch: true
