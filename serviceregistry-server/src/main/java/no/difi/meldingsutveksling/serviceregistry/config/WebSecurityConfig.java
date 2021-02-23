@@ -9,8 +9,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.server.resource.authentication.JwtIssuerAuthenticationManagerResolver;
 
 @Configuration
 @EnableWebSecurity
@@ -40,7 +40,7 @@ public class WebSecurityConfig {
         @Override
         protected void configure(AuthenticationManagerBuilder auth) throws Exception {
             auth.inMemoryAuthentication().withUser(props.getUser().getName())
-                    .password("{noop}"+props.getUser().getPassword()).roles();
+                    .password("{noop}" + props.getUser().getPassword()).roles();
         }
 
     }
@@ -66,7 +66,7 @@ public class WebSecurityConfig {
         @Override
         protected void configure(AuthenticationManagerBuilder auth) throws Exception {
             auth.inMemoryAuthentication().withUser(props.getUser().getName())
-                    .password("{noop}"+props.getUser().getPassword()).roles();
+                    .password("{noop}" + props.getUser().getPassword()).roles();
         }
     }
 
@@ -96,14 +96,20 @@ public class WebSecurityConfig {
     }
 
     @Configuration
+    @RequiredArgsConstructor
     @Order(4)
     public static class OauthFilter extends WebSecurityConfigurerAdapter {
+        private final ServiceregistryProperties props;
+
         @Override
         protected void configure(HttpSecurity http) throws Exception {
+            var jwtIssuerAuthenticationManagerResolver =
+                    new JwtIssuerAuthenticationManagerResolver(props.getAuth().getMaskinportenIssuer(), props.getAuth().getOidcIssuer());
+
             http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and().csrf().disable();
             http.authorizeRequests().antMatchers("/**").authenticated()
-                    .and().oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt);
+                    .and().oauth2ResourceServer(o -> o.authenticationManagerResolver(jwtIssuerAuthenticationManagerResolver));
         }
     }
 
