@@ -56,6 +56,8 @@ public class ServiceregistryProperties {
     @Data
     public static class Auth {
         private String sasToken;
+        private String oidcIssuer;
+        private String maskinportenIssuer;
     }
 
     @Data
