@@ -66,37 +66,6 @@ public class ServiceRecordController {
         binder.registerCustomEditor(Notification.class, new NotificationEditor());
     }
 
-    @GetMapping(value = "/identifier/{identifier}/fiks/{protocol}", produces = {MediaType.APPLICATION_JSON_VALUE, "application/jose"})
-    public ResponseEntity<?> fiksEntity(@PathVariable String identifier,
-                                        @PathVariable String protocol,
-                                        @RequestParam(required = false) Integer securityLevel,
-                                        @RequestParam(required = false) String conversationId,
-                                        Authentication auth,
-                                        HttpServletRequest request) throws EntitySignerException {
-        MDC.put("identifier", identifier);
-        String clientId = authenticationService.getAuthorizedClientIdentifier(auth, request);
-        fillRequestScope(identifier, conversationId, clientId, authenticationService.getToken(auth));
-
-        Entity entity = new Entity();
-        EntityInfo entityInfo = entityService.getEntityInfo(identifier)
-            .orElseThrow(() -> new EntityNotFoundException(identifier));
-        entity.setInfoRecord(entityInfo);
-
-        Optional<ResponseEntity<Entity>> res = serviceRecordService.createFiksIoServiceRecord(entityInfo, protocol, securityLevel)
-            .map(r -> {
-                entity.getServiceRecords().add(r);
-                return ResponseEntity.ok(entity);
-            });
-        if (res.isEmpty()) {
-            return notFoundResponse(String.format("FIKS IO Konto with protocol %s not found for identifier %s", protocol, identifier));
-        }
-
-        if (MediaType.APPLICATION_JSON_VALUE.equals(request.getHeader(HttpHeaders.ACCEPT))) {
-            return res.get();
-        }
-        return signEntity(res.get());
-    }
-
     /**
      * Used to retrieve information needed to send a message within the provided process
      * to an entity with the provided identifier.
