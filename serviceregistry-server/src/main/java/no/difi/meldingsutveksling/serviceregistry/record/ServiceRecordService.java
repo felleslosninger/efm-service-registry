@@ -26,6 +26,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -53,6 +54,15 @@ public class ServiceRecordService {
     private final SRRequestScope requestScope;
     private final ServiceRecordFactory serviceRecordFactory;
 
+    public Optional<ServiceRecord> createFiksIoServiceRecord(EntityInfo entityInfo, String protocol, @Nullable Integer securityLevel) {
+        if (fiksIoService.getIfAvailable() != null) {
+            // TODO check if protocol is available
+            return fiksIoService.getIfAvailable().lookup(entityInfo, protocol, securityLevel == null ? 4 : securityLevel)
+                .map(k -> serviceRecordFactory.createDpfioServiceRecord(entityInfo.getIdentifier(), protocol, k));
+        }
+        return Optional.empty();
+    }
+
     @SuppressWarnings("squid:S1166")
     public List<ServiceRecord> createArkivmeldingServiceRecords(EntityInfo entityInfo, Integer securityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
@@ -74,7 +84,7 @@ public class ServiceRecordService {
                 if (hasSvarUt.isPresent()) {
                     return Optional.of(serviceRecordFactory.createDpfServiceRecord(entityInfo.getIdentifier(), process, hasSvarUt.get()));
                 } else {
-                    if (properties.getFiks().getIo().isEnable() && fiksIoService.getIfAvailable() != null) {
+                    if (fiksIoService.getIfAvailable() != null) {
                         Optional<Konto> konto = fiksIoService.getIfAvailable().lookup(entityInfo, process, securityLevel == null ? 3 : securityLevel);
                         if (konto.isPresent()) {
                             return Optional.of(serviceRecordFactory.createDpfioServiceRecord(entityInfo.getIdentifier(), process, konto.get()));

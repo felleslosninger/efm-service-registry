@@ -467,7 +467,7 @@ public class ServiceRecordServiceTest {
                 .fiksOrgId(new FiksOrgId(UUID.fromString("55e8572a-7515-4518-aa37-e20029a78739")))
                 .fiksOrgNavn("Testorg")
                 .build();
-        when(fiksIoService.lookup(any(), any(), anyInt())).thenReturn(Optional.of(konto));
+        when(fiksIoService.lookup(any(), any(Process.class), anyInt())).thenReturn(Optional.of(konto));
         when(fiksProtocolRepository.findByProcessesIdentifier(einnsynInnsynskravProcess.getIdentifier()))
                 .thenReturn(new FiksProtocol(null, "proto.test", Sets.newHashSet(einnsynInnsynskravProcess)));
 

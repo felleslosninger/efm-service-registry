@@ -5,7 +5,7 @@ public class EntityNotFoundException extends RuntimeException {
         super(cause);
     }
 
-    public EntityNotFoundException(String message) {
-        super(String.format("Entity with identifier '%s' not found.", message));
+    public EntityNotFoundException(String identifier) {
+        super(String.format("Entity with identifier '%s' not found.", identifier));
     }
 }
