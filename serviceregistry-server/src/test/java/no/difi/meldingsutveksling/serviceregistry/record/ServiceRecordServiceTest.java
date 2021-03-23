@@ -9,7 +9,6 @@ import no.difi.meldingsutveksling.serviceregistry.domain.*;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksIoService;
-import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksProtocol;
 import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksProtocolRepository;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
@@ -23,9 +22,6 @@ import no.difi.vefa.peppol.common.model.ProcessIdentifier;
 import no.difi.vefa.peppol.lookup.LookupClient;
 import no.difi.virksert.client.lang.VirksertClientException;
 import no.ks.fiks.io.client.FiksIOKlient;
-import no.ks.fiks.io.client.model.FiksOrgId;
-import no.ks.fiks.io.client.model.Konto;
-import no.ks.fiks.io.client.model.KontoId;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,7 +40,6 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -454,28 +449,6 @@ public class ServiceRecordServiceTest {
 
         Optional<ServiceRecord> result = service.createServiceRecord(new OrganizationInfo().setIdentifier(ORGNR_EINNSYN_RESPONSE).setOrganizationType(ORGL), einnsynResponseProcess, 3);
         assertFalse(result.isPresent());
-    }
-
-    @Test
-    public void createEinnsynServiceRecord_HasFiksIoKonto_ShouldReturnDpfioServiceRecord() throws CertificateNotFoundException, ProcessNotFoundException {
-        String kommOrgnr = "111222333";
-        when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, kommOrgnr)), anySet())).thenReturn(Sets.newHashSet());
-        String kontoId = "10b58f58-3d8c-46d4-b17e-439ac66c79fc";
-        Konto konto = Konto.builder()
-                .kontoId(new KontoId(UUID.fromString(kontoId)))
-                .kontoNavn("Testkommune")
-                .fiksOrgId(new FiksOrgId(UUID.fromString("55e8572a-7515-4518-aa37-e20029a78739")))
-                .fiksOrgNavn("Testorg")
-                .build();
-        when(fiksIoService.lookup(any(), any(Process.class), anyInt())).thenReturn(Optional.of(konto));
-        when(fiksProtocolRepository.findByProcessesIdentifier(einnsynInnsynskravProcess.getIdentifier()))
-                .thenReturn(new FiksProtocol(null, "proto.test", Sets.newHashSet(einnsynInnsynskravProcess)));
-
-        OrganizationInfo kommOrg = new OrganizationInfo(kommOrgnr, new OrganizationType("KOMM"));
-        Optional<ServiceRecord> serviceRecord = service.createServiceRecord(kommOrg, einnsynInnsynskravProcess, 3);
-        assertTrue(serviceRecord.isPresent());
-        assertEquals(ServiceIdentifier.DPFIO, serviceRecord.get().getService().getIdentifier());
-        assertEquals(kontoId, serviceRecord.get().getService().getEndpointUrl());
     }
 
 }

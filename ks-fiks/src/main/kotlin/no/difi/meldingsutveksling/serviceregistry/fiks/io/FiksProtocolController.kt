@@ -13,7 +13,7 @@ open class FiksProtocolController(
     private val fiksProtocolRepository: FiksProtocolRepository
 ) {
 
-    @PostMapping("{/identifier}")
+    @PostMapping("/{identifier}")
     @Transactional
     @Throws(ProcessNotFoundException::class)
     open fun addProtocol(@PathVariable identifier: String): ResponseEntity<*> {

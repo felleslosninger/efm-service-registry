@@ -22,7 +22,6 @@ import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import no.difi.vefa.peppol.common.model.ProcessIdentifier;
-import no.ks.fiks.io.client.model.Konto;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
@@ -67,7 +66,6 @@ public class ServiceRecordService {
     }
 
     public Optional<ServiceRecord> createFiksIoServiceRecord(EntityInfo entityInfo, String protocol, @Nullable Integer securityLevel) {
-
         if (fiksIoService.getIfAvailable() != null && fiksProtocolRepository.existsByIdentifier(protocol)) {
             return fiksIoService.getIfAvailable().lookup(entityInfo, protocol, securityLevel == null ? 4 : securityLevel)
                 .map(k -> serviceRecordFactory.createDpfioServiceRecord(entityInfo.getIdentifier(), protocol, k));
@@ -96,13 +94,6 @@ public class ServiceRecordService {
                 if (hasSvarUt.isPresent()) {
                     return Optional.of(serviceRecordFactory.createDpfServiceRecord(entityInfo.getIdentifier(), process, hasSvarUt.get()));
                 } else {
-                    if (fiksIoService.getIfAvailable() != null) {
-                        Optional<Konto> konto = fiksIoService.getIfAvailable().lookup(entityInfo, process, securityLevel == null ? 3 : securityLevel);
-                        if (konto.isPresent()) {
-                            return Optional.of(serviceRecordFactory.createDpfioServiceRecord(entityInfo.getIdentifier(), process, konto.get()));
-                        }
-                    }
-
                     if (securityLevel != null && securityLevel == 4) {
                         throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", entityInfo, securityLevel));
                     } else {
@@ -136,11 +127,6 @@ public class ServiceRecordService {
             }
         }
 
-        if (properties.getFiks().getIo().isEnable() && fiksIoService.getIfAvailable() != null) {
-            Optional<Konto> konto = fiksIoService.getIfAvailable().lookup(entityInfo, process, securityLevel == null ? 3 : securityLevel);
-            return konto.map(value -> serviceRecordFactory.createDpfioServiceRecord(entityInfo.getIdentifier(), process, value));
-        }
-
         return Optional.empty();
     }
 
@@ -159,13 +145,6 @@ public class ServiceRecordService {
                 }
             }
             return serviceRecords;
-        }
-
-        if (properties.getFiks().getIo().isEnable() && fiksIoService.getIfAvailable() != null) {
-            einnsynProcesses.forEach(p -> {
-                Optional<Konto> konto = fiksIoService.getIfAvailable().lookup(entityInfo, p, securityLevel == null ? 3 : securityLevel);
-                konto.ifPresent(k -> serviceRecords.add(serviceRecordFactory.createDpfioServiceRecord(entityInfo.getIdentifier(), p, k)));
-            });
         }
 
         return serviceRecords;

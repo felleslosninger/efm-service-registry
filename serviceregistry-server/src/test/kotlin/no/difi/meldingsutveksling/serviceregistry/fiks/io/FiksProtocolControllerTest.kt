@@ -76,16 +76,7 @@ class FiksProtocolControllerTest {
 
     @Test
     fun `test add protocol`() {
-        val body = """
-            {
-                "protocol": "foo.bar",
-                "efmProcesses": ["$testProcessIdentifier"]
-            }
-        """.trimIndent()
-
-        mvc.perform(post("/api/v1/fiks")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body))
+        mvc.perform(post("/api/v1/fiks/{identifier}", "foo.bar"))
                 .andExpect(status().isOk)
                 .andDo(print())
                 .andDo(document("fiks/post",
