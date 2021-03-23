@@ -12,6 +12,7 @@ import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.*;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksIoService;
+import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksProtocolRepository;
 import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
@@ -53,10 +54,21 @@ public class ServiceRecordService {
     private final ObjectProvider<FiksIoService> fiksIoService;
     private final SRRequestScope requestScope;
     private final ServiceRecordFactory serviceRecordFactory;
+    private final FiksProtocolRepository fiksProtocolRepository;
+
+    public List<ServiceRecord> createFiksIoServiceRecords(EntityInfo entityInfo, @Nullable Integer securityLevel) {
+        var records = Lists.<ServiceRecord>newArrayList();
+        if (fiksIoService.getIfAvailable() != null) {
+            for (var p: fiksProtocolRepository.findAll()) {
+                createFiksIoServiceRecord(entityInfo, p.getIdentifier(), securityLevel).ifPresent(records::add);
+            }
+        }
+        return records;
+    }
 
     public Optional<ServiceRecord> createFiksIoServiceRecord(EntityInfo entityInfo, String protocol, @Nullable Integer securityLevel) {
-        if (fiksIoService.getIfAvailable() != null) {
-            // TODO check if protocol is available
+
+        if (fiksIoService.getIfAvailable() != null && fiksProtocolRepository.existsByIdentifier(protocol)) {
             return fiksIoService.getIfAvailable().lookup(entityInfo, protocol, securityLevel == null ? 4 : securityLevel)
                 .map(k -> serviceRecordFactory.createDpfioServiceRecord(entityInfo.getIdentifier(), protocol, k));
         }

@@ -22,7 +22,6 @@ import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import org.slf4j.MDC;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -158,7 +157,7 @@ public class ServiceRecordController {
         if (shouldCreateServiceRecordForCitizen().test(entityInfo)) {
             entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientOrgnr));
         } else {
-            // TODO add search for known fiks io processes
+            entity.getServiceRecords().addAll(serviceRecordService.createFiksIoServiceRecords(entityInfo, securityLevel));
             entity.getServiceRecords().addAll(serviceRecordService.createArkivmeldingServiceRecords(entityInfo, securityLevel));
             entity.getServiceRecords().addAll(serviceRecordService.createEinnsynServiceRecords(entityInfo, securityLevel));
             entity.getServiceRecords().addAll(serviceRecordService.createAvtaltServiceRecords(identifier));
