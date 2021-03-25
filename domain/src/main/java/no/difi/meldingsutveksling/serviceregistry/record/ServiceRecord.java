@@ -6,6 +6,7 @@ import no.difi.meldingsutveksling.serviceregistry.domain.DocumentType;
 import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +29,16 @@ public class ServiceRecord {
         this.organisationNumber = organisationNumber;
         this.process = process.getIdentifier();
         this.documentTypes = process.getDocumentTypes().stream().map(DocumentType::getIdentifier).collect(Collectors.toList());
+        this.service = new SRService(serviceIdentifier, endpointUrl);
+    }
+
+    public ServiceRecord(ServiceIdentifier serviceIdentifier,
+                         String organisationNumber,
+                         String process,
+                         String endpointUrl) {
+        this.organisationNumber = organisationNumber;
+        this.process = process;
+        this.documentTypes = Collections.singletonList(process);
         this.service = new SRService(serviceIdentifier, endpointUrl);
     }
 

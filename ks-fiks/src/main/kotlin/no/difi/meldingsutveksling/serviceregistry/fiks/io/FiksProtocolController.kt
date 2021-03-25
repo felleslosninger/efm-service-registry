@@ -8,29 +8,19 @@ import javax.transaction.Transactional
 
 @RestController
 @RequestMapping("/api/v1/fiks")
-open class FiksProtocolController(val processService: ProcessService,
-                                  private val fiksProtocolRepository: FiksProtocolRepository) {
+open class FiksProtocolController(
+    val processService: ProcessService,
+    private val fiksProtocolRepository: FiksProtocolRepository
+) {
 
-    data class FiksProtocolRequestBody(var protocol: String?, var efmProcesses: Set<String>?)
-
-    @PostMapping
+    @PostMapping("/{identifier}")
     @Transactional
     @Throws(ProcessNotFoundException::class)
-    open fun addProtocol(@RequestBody request: FiksProtocolRequestBody): ResponseEntity<*> {
-        val protocol: String = request.protocol ?: return ResponseEntity.badRequest().body("protocol cannot be empty")
-        val efmProcesses: Set<String> = request.efmProcesses?.toSet()
-                ?: return ResponseEntity.badRequest().body("efmProcesses cannot be empty")
+    open fun addProtocol(@PathVariable identifier: String): ResponseEntity<*> {
+        val p = fiksProtocolRepository.findByIdentifier(identifier)
+            ?: fiksProtocolRepository.save(FiksProtocol(identifier = identifier))
 
-        val proto = efmProcesses.map {
-            processService.findByIdentifier(it).orElseThrow { throw ProcessNotFoundException(it) }
-        }.toMutableSet().let { proc ->
-            fiksProtocolRepository.findByIdentifier(protocol)?.let { p ->
-                p.processes = proc
-                fiksProtocolRepository.save(p)
-            } ?: fiksProtocolRepository.save(FiksProtocol(identifier = protocol, processes = proc))
-        }
-
-        return ResponseEntity.ok(proto)
+        return ResponseEntity.ok(p)
     }
 
     @DeleteMapping("/{identifier}")

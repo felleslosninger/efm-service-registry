@@ -15,7 +15,7 @@ class FiksProtocol(
         var identifier: String,
 
         @OneToMany
-        var processes: MutableSet<Process>
+        var processes: MutableSet<Process> = mutableSetOf()
 )
 
 @Repository
@@ -23,4 +23,5 @@ interface FiksProtocolRepository : CrudRepository<FiksProtocol, Long> {
         fun findByProcessesIdentifier(identifier: String): FiksProtocol?
         fun findByIdentifier(identifier: String): FiksProtocol?
         fun deleteByIdentifier(identifier: String)
+        fun existsByIdentifier(identifier: String): Boolean
 }

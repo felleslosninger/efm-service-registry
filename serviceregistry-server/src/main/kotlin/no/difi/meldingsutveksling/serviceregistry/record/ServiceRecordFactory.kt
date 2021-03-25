@@ -119,6 +119,12 @@ class ServiceRecordFactory(private val fiksProtocolRepository: FiksProtocolRepos
         return record
     }
 
+    fun createDpfioServiceRecord(orgnr: String, protocol: String, konto: Konto): ServiceRecord {
+        val record = ServiceRecord(ServiceIdentifier.DPFIO, orgnr, protocol, konto.kontoId.toString())
+        record.service.serviceCode = protocol
+        return record
+    }
+
     fun createDpvServiceRecord(orgnr: String, process: Process): ServiceRecord {
         val dpvServiceRecord = ServiceRecord(ServiceIdentifier.DPV, orgnr, process, properties.dpv.endpointURL.toString())
         dpvServiceRecord.service.serviceCode = process.serviceCode
