@@ -8,7 +8,7 @@ import lombok.Data;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DsfMpResource {
 
-    @JsonProperty(value = "personidentifikator", required = true)
+    @JsonProperty(value = "personIdentifikator", required = true)
     private String personIdentifier;
 
     @JsonProperty(value = "navn", required = true)
