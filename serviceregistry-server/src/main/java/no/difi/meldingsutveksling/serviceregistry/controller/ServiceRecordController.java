@@ -2,6 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
@@ -26,6 +27,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,6 +38,7 @@ import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRe
 import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 
 @RestController
+@RequiredArgsConstructor
 @Slf4j
 public class ServiceRecordController {
 
@@ -45,20 +48,7 @@ public class ServiceRecordController {
     private final EntityService entityService;
     private final PayloadSigner payloadSigner;
     private final SRRequestScope requestScope;
-
-    public ServiceRecordController(ServiceRecordService serviceRecordService,
-                                   EntityService entityService,
-                                   PayloadSigner payloadSigner,
-                                   ProcessService processService,
-                                   AuthenticationService authenticationService,
-                                   SRRequestScope requestScope) {
-        this.entityService = entityService;
-        this.serviceRecordService = serviceRecordService;
-        this.payloadSigner = payloadSigner;
-        this.processService = processService;
-        this.authenticationService = authenticationService;
-        this.requestScope = requestScope;
-    }
+    private final ObjectMapper objectMapper;
 
     @InitBinder
     protected void initBinders(WebDataBinder binder) {
@@ -165,7 +155,7 @@ public class ServiceRecordController {
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
-    private void fillRequestScope(String identifier, String conversationId, String clientId, String token) {
+    private void fillRequestScope(String identifier, String conversationId, String clientId, Jwt token) {
         requestScope.setConversationId(conversationId);
         requestScope.setIdentifier(identifier);
         requestScope.setClientId(clientId);
@@ -227,7 +217,7 @@ public class ServiceRecordController {
         }
         String json;
         try {
-            json = new ObjectMapper().writeValueAsString(entity.getBody());
+            json = objectMapper.writeValueAsString(entity.getBody());
         } catch (JsonProcessingException e) {
             log.error(markerFrom(requestScope), "Failed to convert entity to json", e);
             throw new ServiceRegistryException(e);

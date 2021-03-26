@@ -1,6 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.service.krr;
 
-import lombok.SneakyThrows;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.CacheConfig;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class KontaktInfoService {
 
@@ -22,21 +23,20 @@ public class KontaktInfoService {
     private final KRRClient krrClient;
     private final DSFClient dsfClient;
 
-    @SneakyThrows
-    public KontaktInfoService(ServiceregistryProperties srProps) {
-        this.properties = srProps;
-        this.krrClient = new KRRClient(srProps.getKrr().getEndpointURL());
-        this.dsfClient = new DSFClient(srProps.getKrr().getDsfEndpointURL());
-    }
-
     @Cacheable(CacheConfig.KRR_CACHE)
     public PersonResource getCitizenInfo(LookupParameters params) throws KontaktInfoException {
-        return krrClient.getPersonResource(params.getIdentifier(), params.getToken());
+        if (params.getToken().getIssuer().toString().equals(properties.getAuth().getMaskinportenIssuer())) {
+            return krrClient.getPersonResource(params, properties.getKrr().getMpEndpointUri());
+        }
+        return krrClient.getPersonResource(params, properties.getKrr().getOidcEndpointUri());
     }
 
     @Cacheable(CacheConfig.DSF_CACHE)
-    public Optional<DSFResource> getDSFInfo(LookupParameters params) throws KontaktInfoException {
-        return dsfClient.getDSFResource(params.getIdentifier(), params.getToken());
+    public Optional<DsfResource> getDsfInfo(LookupParameters params) throws KontaktInfoException {
+        if (params.getToken().getIssuer().toString().equals(properties.getAuth().getMaskinportenIssuer())) {
+            return dsfClient.getDSFResource(params, properties.getKrr().getMpDsfEndpointUri(), properties.getAuth().getOidcIssuer());
+        }
+        return dsfClient.getDSFResource(params, properties.getKrr().getOidcDsfEndpointUri(), properties.getAuth(). getOidcIssuer());
     }
 
     public void setPrintDetails(PersonResource personResource) {
