@@ -19,39 +19,34 @@ public class DSFClient extends KontaktInfoClient {
         String response = fetchKontaktInfo(params.getIdentifier(), params.getToken().getTokenValue(), endpointUri);
 
         if (params.getToken().getIssuer().toString().equals(oidcTokenIssuer)) {
-            DsfOidcResponse dsfOidcResponse;
-            try {
-                dsfOidcResponse = objectMapper.readValue(response, DsfOidcResponse.class);
-            } catch (IOException e) {
-                throw new KontaktInfoException("Error mapping payload to " + DsfOidcResponse.class.getName(), e);
-            }
-
-            if (dsfOidcResponse.getPersonList() == null || dsfOidcResponse.getPersonList().isEmpty()) {
-                return Optional.empty();
-            }
-
-            return Optional.of(dsfOidcResponse.getPersonList().get(0));
+            return mapResponse(response, DsfResource.class);
         } else {
-            DsfMpResponse dsfMpResponse;
-            try {
-                dsfMpResponse = objectMapper.readValue(response, DsfMpResponse.class);
-            } catch (IOException e) {
-                throw new KontaktInfoException("Error mapping payload to " + DsfMpResponse.class.getName(), e);
-            }
-
-            if (dsfMpResponse.getPersonList() == null || dsfMpResponse.getPersonList().isEmpty()) {
-                return Optional.empty();
-            }
-
-            DsfMpResource resource = dsfMpResponse.getPersonList().get(0);
-            return Optional.of(DsfResource.builder()
-                .personIdentifier(resource.getPersonIdentifier())
-                .name(resource.getNavn().getForkortetNavn())
-                .street(String.join(",", resource.getPostadresse().getAdresselinje()))
-                .postAddress(resource.getPostadresse().getPostnummer()+" "+resource.getPostadresse().getPoststed())
-                .country(resource.getPostadresse().getLandkode())
+            Optional<DsfMpResource> mpResource = mapResponse(response, DsfMpResource.class);
+            return mpResource.map(r -> DsfResource.builder()
+                .personIdentifier(r.getPersonIdentifier())
+                .name(r.getNavn().getForkortetNavn())
+                .street(String.join(",", r.getPostadresse().getAdresselinje()))
+                .postAddress(r.getPostadresse().getPostnummer() + " " + r.getPostadresse().getPoststed())
+                .country(r.getPostadresse().getLandkode())
                 .build());
         }
+    }
+
+    private <T> Optional<T> mapResponse(String response, Class<T> clazz) throws KontaktInfoException {
+        DsfResponse<T> mappedResponse;
+        try {
+            mappedResponse = objectMapper.readValue(response,
+                objectMapper.getTypeFactory().constructParametricType(DsfResponse.class, clazz));
+
+        } catch (IOException e) {
+            throw new KontaktInfoException("Error mapping payload to " + DsfResponse.class.getName(), e);
+        }
+
+        if (mappedResponse.getPersonList() == null || mappedResponse.getPersonList().isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(mappedResponse.getPersonList().get(0));
     }
 
 }

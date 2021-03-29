@@ -9,9 +9,9 @@ import java.util.List;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class DsfMpResponse {
+public class DsfResponse<T> {
 
     @JsonProperty(value = "personer")
-    private List<DsfMpResource> personList = new ArrayList<>();
+    private List<T> personList = new ArrayList<>();
 
 }
