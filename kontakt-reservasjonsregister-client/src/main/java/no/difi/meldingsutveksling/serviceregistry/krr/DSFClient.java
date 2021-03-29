@@ -25,7 +25,7 @@ public class DSFClient extends KontaktInfoClient {
             return mpResource.map(r -> DsfResource.builder()
                 .personIdentifier(r.getPersonIdentifier())
                 .name(r.getNavn().getForkortetNavn())
-                .street(String.join(",", r.getPostadresse().getAdresselinje()))
+                .street(String.join(";", r.getPostadresse().getAdresselinje()))
                 .postAddress(r.getPostadresse().getPostnummer() + " " + r.getPostadresse().getPoststed())
                 .country(r.getPostadresse().getLandkode())
                 .build());
