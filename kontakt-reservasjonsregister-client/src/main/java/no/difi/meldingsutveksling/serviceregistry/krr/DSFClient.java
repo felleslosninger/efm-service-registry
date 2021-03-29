@@ -2,33 +2,51 @@ package no.difi.meldingsutveksling.serviceregistry.krr;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.Optional;
 
+@Component
 @RequiredArgsConstructor
 public class DSFClient extends KontaktInfoClient {
 
-    private final URI endpointUri;
+    private final ObjectMapper objectMapper;
 
-    public Optional<DSFResource> getDSFResource(String identifier, String token) throws KontaktInfoException {
+    public Optional<DsfResource> getDSFResource(LookupParameters params, URI endpointUri, String oidcTokenIssuer) throws KontaktInfoException {
 
-        String response = fetchKontaktInfo(identifier, token, endpointUri);
+        String response = fetchKontaktInfo(params.getIdentifier(), params.getToken().getTokenValue(), endpointUri);
 
-        ObjectMapper om = new ObjectMapper();
-        DSFResponse dsfResponse;
+        if (params.getToken().getIssuer().toString().equals(oidcTokenIssuer)) {
+            return mapResponse(response, DsfResource.class);
+        } else {
+            Optional<DsfMpResource> mpResource = mapResponse(response, DsfMpResource.class);
+            return mpResource.map(r -> DsfResource.builder()
+                .personIdentifier(r.getPersonIdentifier())
+                .name(r.getNavn().getForkortetNavn())
+                .street(String.join(",", r.getPostadresse().getAdresselinje()))
+                .postAddress(r.getPostadresse().getPostnummer() + " " + r.getPostadresse().getPoststed())
+                .country(r.getPostadresse().getLandkode())
+                .build());
+        }
+    }
+
+    private <T> Optional<T> mapResponse(String response, Class<T> clazz) throws KontaktInfoException {
+        DsfResponse<T> mappedResponse;
         try {
-            dsfResponse = om.readValue(response, DSFResponse.class);
+            mappedResponse = objectMapper.readValue(response,
+                objectMapper.getTypeFactory().constructParametricType(DsfResponse.class, clazz));
+
         } catch (IOException e) {
-            throw new KontaktInfoException("Error mapping payload to " + DSFResponse.class.getName(), e);
+            throw new KontaktInfoException("Error mapping payload to " + DsfResponse.class.getName(), e);
         }
 
-        if (dsfResponse.getPersons() == null || dsfResponse.getPersons().isEmpty()) {
+        if (mappedResponse.getPersonList() == null || mappedResponse.getPersonList().isEmpty()) {
             return Optional.empty();
         }
 
-        return Optional.of(dsfResponse.getPersons().get(0));
+        return Optional.of(mappedResponse.getPersonList().get(0));
     }
 
 }
