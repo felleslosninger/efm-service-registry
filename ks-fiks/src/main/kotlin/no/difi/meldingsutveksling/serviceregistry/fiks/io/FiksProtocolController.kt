@@ -1,7 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.fiks.io
 
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException
-import no.difi.meldingsutveksling.serviceregistry.service.ProcessService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import javax.transaction.Transactional
@@ -9,7 +8,6 @@ import javax.transaction.Transactional
 @RestController
 @RequestMapping("/api/v1/fiks")
 open class FiksProtocolController(
-    val processService: ProcessService,
     private val fiksProtocolRepository: FiksProtocolRepository
 ) {
 
