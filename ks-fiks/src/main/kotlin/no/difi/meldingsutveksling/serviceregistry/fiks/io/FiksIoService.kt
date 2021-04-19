@@ -55,7 +55,7 @@ open class FiksIoService(private val props: ServiceregistryProperties,
         }
         return wc.get()
                 .uri(uriBuilder)
-                .header("Authorization", "Bearer ${requestScope.token}")
+                .header("Authorization", "Bearer ${requestScope.token.tokenValue}")
                 .exchange()
                 .flatMap { r ->
                     when {
