@@ -1,5 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -49,5 +50,10 @@ public class SRConfig implements WebMvcConfigurer {
                 .algorithm(JWSAlgorithm.RS256)
                 .keyIDFromThumbprint()
                 .build();
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
     }
 }

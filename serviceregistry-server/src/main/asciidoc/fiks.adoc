@@ -1,22 +1,22 @@
 [#fiks-api]
-= Manage FIKS protocol mappings
+= Manage FIKS protocols
 
 |===
 |HTTP Method |URL |Description |Media type(s)
 
 |POST
 |<<fiks-post,/api/v1/fiks>>
-|Add/update mapping
+|Add/update protocol
 |application/json
 
 |DELETE
 |<<fiks-delete,/api/v1/fiks/{identifier}>>
-|Delete mapping
+|Delete protocol
 |application/json
 
 |GET
 |<<fiks-get,/api/v1/fiks>>
-|List mappings
+|List protocols
 |application/json
 
 |GET
@@ -27,7 +27,7 @@
 |===
 
 [#fiks-post]
-== Add/update mapping
+== Add/update protocol
 
 [source,http,role="primary"]
 .Curl
@@ -42,7 +42,7 @@ include::{snippets}/fiks/post/http-request.adoc[]
 include::{snippets}/fiks/post/http-response.adoc[]
 
 [#fiks-delete]
-== Delete mapping
+== Delete protocol
 
 [caption=""]
 .Path parameters
@@ -61,7 +61,7 @@ include::{snippets}/fiks/delete/http-request.adoc[]
 include::{snippets}/fiks/delete/http-response.adoc[]
 
 [#fiks-get]
-== List mappings
+== List protocols
 
 [source,http,role="primary"]
 .Curl

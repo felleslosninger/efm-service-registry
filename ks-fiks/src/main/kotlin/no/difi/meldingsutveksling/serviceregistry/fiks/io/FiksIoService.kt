@@ -6,7 +6,6 @@ import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperti
 import no.difi.meldingsutveksling.serviceregistry.domain.EntityInfo
 import no.difi.meldingsutveksling.serviceregistry.domain.Process
 import no.difi.meldingsutveksling.serviceregistry.logger
-import no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom
 import no.ks.fiks.fiksio.client.api.katalog.model.KatalogKonto
 import no.ks.fiks.io.client.model.Konto
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -40,18 +39,23 @@ open class FiksIoService(private val props: ServiceregistryProperties,
         if (!props.fiks.io.orgformFilter.contains(entity.entityType.name)) return Optional.empty()
 
         val fiksProtocol = fiksProtocolRepository.findByProcessesIdentifier(process.identifier)
-                ?: return Optional.empty()
+            ?: return Optional.empty()
 
+        return lookup(entity, fiksProtocol.identifier, securityLevel)
+    }
+
+    @Cacheable(CacheConfig.FIKSIO_CACHE)
+    open fun lookup(entity: EntityInfo, protocol: String, securityLevel: Int): Optional<Konto> {
         val uriBuilder: (UriBuilder) -> URI = {
             it.path("/fiks-io/katalog/api/v1/lookup")
                     .queryParam("identifikator", "ORG_NO.${entity.identifier}")
-                    .queryParam("meldingProtokoll", fiksProtocol.identifier)
+                    .queryParam("meldingProtokoll", protocol)
                     .queryParam("sikkerhetsniva", securityLevel)
                     .build()
         }
         return wc.get()
                 .uri(uriBuilder)
-                .header("Authorization", "Bearer ${requestScope.token}")
+                .header("Authorization", "Bearer ${requestScope.token.tokenValue}")
                 .exchange()
                 .flatMap { r ->
                     when {

@@ -5,6 +5,7 @@ import no.difi.meldingsutveksling.serviceregistry.ErrorResponse
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ReceiverProcessNotFoundException
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException
 import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException
 import no.difi.meldingsutveksling.serviceregistry.logger
@@ -45,6 +46,12 @@ class GlobalControllerExceptionHandler(val requestScope: SRRequestScope) {
     @ExceptionHandler(ProcessNotFoundException::class)
     fun processNotFound(request: HttpServletRequest, e: Exception): ResponseEntity<ErrorResponse> {
         log.error(markerFrom(requestScope), "Exception occured on ${request.requestURL}", e)
+        return errorResponse(HttpStatus.NOT_FOUND, e.message)
+    }
+
+    @ExceptionHandler(ReceiverProcessNotFoundException::class)
+    fun receiverProcessNotFound(request: HttpServletRequest, e: Exception): ResponseEntity<ErrorResponse> {
+        log.warn(markerFrom(requestScope), "Exception occured on ${request.requestURL} - ${e.message}")
         return errorResponse(HttpStatus.NOT_FOUND, e.message)
     }
 

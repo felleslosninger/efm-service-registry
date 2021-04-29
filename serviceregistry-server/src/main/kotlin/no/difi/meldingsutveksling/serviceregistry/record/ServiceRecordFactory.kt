@@ -16,6 +16,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertServi
 import no.difi.virksert.client.lang.VirksertClientException
 import no.ks.fiks.io.client.model.Konto
 import org.apache.commons.io.IOUtils
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Component
 import java.io.IOException
 import java.nio.charset.StandardCharsets
@@ -76,11 +77,11 @@ class ServiceRecordFactory(private val fiksProtocolRepository: FiksProtocolRepos
     @Throws(KontaktInfoException::class, BrregNotFoundException::class)
     fun createPrintServiceRecord(identifier: String,
                                  onBehalfOrgnr: String,
-                                 token: String,
+                                 token: Jwt,
                                  personResource: PersonResource,
                                  p: Process): Optional<ServiceRecord> {
         kontaktInfoService.setPrintDetails(personResource)
-        val dsfResource = kontaktInfoService.getDSFInfo(LookupParameters.lookup(identifier).token(token))
+        val dsfResource = kontaktInfoService.getDsfInfo(LookupParameters.lookup(identifier).token(token))
                 .orElseThrow { KontaktInfoException("Receiver found in KRR on behalf of '$onBehalfOrgnr', but not in DSF.") }
         if (Strings.isNullOrEmpty(dsfResource.postAddress)) {
             // Some receivers have secret address - skip
@@ -116,6 +117,12 @@ class ServiceRecordFactory(private val fiksProtocolRepository: FiksProtocolRepos
                 ?: throw FiksProtocolNotFoundException(process.identifier)
         val record = ServiceRecord(ServiceIdentifier.DPFIO, orgnr, process, konto.kontoId.toString())
         record.service.serviceCode = protocol.identifier
+        return record
+    }
+
+    fun createDpfioServiceRecord(orgnr: String, protocol: String, konto: Konto): ServiceRecord {
+        val record = ServiceRecord(ServiceIdentifier.DPFIO, orgnr, protocol, konto.kontoId.toString())
+        record.service.serviceCode = protocol
         return record
     }
 

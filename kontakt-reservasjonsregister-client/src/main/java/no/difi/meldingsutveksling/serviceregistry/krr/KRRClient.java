@@ -2,23 +2,24 @@ package no.difi.meldingsutveksling.serviceregistry.krr;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URI;
 
+@Component
 @RequiredArgsConstructor
 public class KRRClient extends KontaktInfoClient {
 
-    private final URI endpointUri;
+    private final ObjectMapper objectMapper;
 
-    public PersonResource getPersonResource(String identifier, String token) throws KontaktInfoException {
+    public PersonResource getPersonResource(LookupParameters params, URI endpointUri) throws KontaktInfoException {
 
-        String response = fetchKontaktInfo(identifier, token, endpointUri);
+        String response = fetchKontaktInfo(params.getIdentifier(), params.getToken().getTokenValue(), endpointUri);
 
-        ObjectMapper om = new ObjectMapper();
         PersonerResponse personerResponse;
         try {
-            personerResponse = om.readValue(response, PersonerResponse.class);
+            personerResponse = objectMapper.readValue(response, PersonerResponse.class);
         } catch (IOException e) {
             throw new KontaktInfoException("Error mapping payload to " + PersonerResponse.class.getName(), e);
         }
