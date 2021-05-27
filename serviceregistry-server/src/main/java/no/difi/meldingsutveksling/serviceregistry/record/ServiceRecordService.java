@@ -169,7 +169,7 @@ public class ServiceRecordService {
 
     @PreAuthorize("hasAuthority('SCOPE_move/dpi.read')")
     public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
-                                                               String onBehalfOrgnr) throws KontaktInfoException, BrregNotFoundException {
+                                                               String onBehalfOrgnr, boolean print) throws KontaktInfoException, BrregNotFoundException {
 
         PersonResource personResource = kontaktInfoService.getCitizenInfo(lookup(identifier).token(requestScope.getToken()));
         Set<Process> digitalpostProcesses = processService.findAll(ProcessCategory.DIGITALPOST);
@@ -189,12 +189,12 @@ public class ServiceRecordService {
                     serviceRecords.add(serviceRecordFactory.createDigitalServiceRecord(personResource, identifier, p));
                     break;
                 case PRINT:
-                    serviceRecordFactory.createPrintServiceRecord(identifier, onBehalfOrgnr, requestScope.getToken(), personResource, p)
+                    serviceRecordFactory.createPrintServiceRecord(identifier, onBehalfOrgnr, requestScope.getToken(), personResource, p, print)
                             .ifPresent(serviceRecords::add);
                     break;
                 case DPV:
                 default:
-                    serviceRecordFactory.createPrintServiceRecord(identifier, onBehalfOrgnr, requestScope.getToken(), personResource, p)
+                    serviceRecordFactory.createPrintServiceRecord(identifier, onBehalfOrgnr, requestScope.getToken(), personResource, p, print)
                             .ifPresent(serviceRecords::add);
                     serviceRecords.add(serviceRecordFactory.createDigitalDpvServiceRecord(identifier, p));
             }

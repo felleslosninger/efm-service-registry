@@ -71,6 +71,7 @@ public class ServiceRecordController {
                                     @PathVariable("processIdentifier") String processIdentifier,
                                     @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
                                     @RequestParam(name = "conversationId", required = false) String conversationId,
+                                    @RequestParam(name = "print", defaultValue = "true") boolean print,
                                     Authentication auth,
                                     HttpServletRequest request)
         throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException,
@@ -94,7 +95,7 @@ public class ServiceRecordController {
 
         Process process = processFind.get();
         if (ProcessCategory.DIGITALPOST == process.getCategory() && shouldCreateServiceRecordForCitizen().test(entityInfo)) {
-            entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientId));
+            entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientId, print));
         }
         if (ProcessCategory.ARKIVMELDING == process.getCategory()) {
             ServiceRecord record = serviceRecordService.createArkivmeldingServiceRecord(entityInfo, process, securityLevel)
@@ -132,6 +133,7 @@ public class ServiceRecordController {
         @PathVariable("identifier") String identifier,
         @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
         @RequestParam(name = "conversationId", required = false) String conversationId,
+        @RequestParam(name = "print", defaultValue = "true") boolean print,
         Authentication auth,
         HttpServletRequest request)
         throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException, BrregNotFoundException, SvarUtClientException {
@@ -145,7 +147,7 @@ public class ServiceRecordController {
         entity.setInfoRecord(entityInfo);
 
         if (shouldCreateServiceRecordForCitizen().test(entityInfo)) {
-            entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientOrgnr));
+            entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientOrgnr, print));
         } else {
             entity.getServiceRecords().addAll(serviceRecordService.createFiksIoServiceRecords(entityInfo, securityLevel));
             entity.getServiceRecords().addAll(serviceRecordService.createArkivmeldingServiceRecords(entityInfo, securityLevel));
@@ -173,11 +175,12 @@ public class ServiceRecordController {
         @PathVariable("identifier") String identifier,
         @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
         @RequestParam(name = "conversationId", required = false) String conversationId,
+        @RequestParam(name = "print", defaultValue = "true") boolean print,
         Authentication auth,
         HttpServletRequest request)
         throws EntitySignerException, SecurityLevelNotFoundException, KontaktInfoException,
         CertificateNotFoundException, BrregNotFoundException, SvarUtClientException {
-        return signEntity(entity(identifier, securityLevel, conversationId, auth, request));
+        return signEntity(entity(identifier, securityLevel, conversationId, print, auth, request));
     }
 
     @GetMapping(value = "/identifier/{identifier}/process/{processIdentifier}", produces = "application/jose")
@@ -186,11 +189,12 @@ public class ServiceRecordController {
                                     @PathVariable("processIdentifier") String processIdentifier,
                                     @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
                                     @RequestParam(name = "conversationId", required = false) String conversationId,
+                                    @RequestParam(name = "print", defaultValue = "true") boolean print,
                                     Authentication auth,
                                     HttpServletRequest request)
         throws SecurityLevelNotFoundException, KontaktInfoException, CertificateNotFoundException,
         BrregNotFoundException, SvarUtClientException, EntitySignerException, ReceiverProcessNotFoundException {
-        return signEntity(entity(identifier, processIdentifier, securityLevel, conversationId, auth, request));
+        return signEntity(entity(identifier, processIdentifier, securityLevel, conversationId, print, auth, request));
     }
 
     @GetMapping(value = "/info/{identifier}", produces = MediaType.APPLICATION_JSON_VALUE)

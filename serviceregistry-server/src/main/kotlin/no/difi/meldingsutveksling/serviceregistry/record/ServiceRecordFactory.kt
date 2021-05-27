@@ -79,7 +79,12 @@ class ServiceRecordFactory(private val fiksProtocolRepository: FiksProtocolRepos
                                  onBehalfOrgnr: String,
                                  token: Jwt,
                                  personResource: PersonResource,
-                                 p: Process): Optional<ServiceRecord> {
+                                 p: Process,
+                                 print: Boolean): Optional<ServiceRecord> {
+        if(!print) {
+            //To allow SR to avoid DSF-lookup sending print=false as a @RequestParam to improve performance.
+           return Optional.empty()
+        }
         kontaktInfoService.setPrintDetails(personResource)
         val dsfResource = kontaktInfoService.getDsfInfo(LookupParameters.lookup(identifier).token(token))
                 .orElseThrow { KontaktInfoException("Receiver found in KRR on behalf of '$onBehalfOrgnr', but not in DSF.") }
