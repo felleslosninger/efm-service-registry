@@ -82,6 +82,7 @@ class ServiceRecordFactory(private val fiksProtocolRepository: FiksProtocolRepos
                                  p: Process,
                                  print: Boolean): Optional<ServiceRecord> {
         if(!print) {
+            //To allow SR to avoid DSF-lookup sending print=false as a @RequestParam to improve performance.
            return Optional.empty()
         }
         kontaktInfoService.setPrintDetails(personResource)
