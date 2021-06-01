@@ -34,7 +34,7 @@
         </repository>
 		<repository>
 		    <id>DIFI Move releases - TODO delete</id>
-            <ur>>https://beta-meldingsutveksling.difi.no/content/repositories/releases/</url>
+            <url>>https://beta-meldingsutveksling.difi.no/content/repositories/releases/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
