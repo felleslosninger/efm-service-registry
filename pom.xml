@@ -23,37 +23,14 @@
 
     <repositories>
         <repository>
-            <id>DIFI MOVE 3rd party</id>
-            <name>DIFI MOVE 3rd party on Nexus</name>
-            <url>https://beta-meldingsutveksling.difi.no/content/repositories/thirdparty/</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </repository>
-        <repository>
-            <id>DIFI MOVE Snapshots party</id>
-            <name>DIFI MOVE Snapshots party on Nexus</name>
-            <url>https://beta-meldingsutveksling.difi.no/content/repositories/snapshots/</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </repository>
-        <repository>
-            <id>DIFI Move releases</id>
-            <name>DIFI MOVE releases on Nexus</name>
-            <url>https://beta-meldingsutveksling.difi.no/content/repositories/releases/</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
+            <id>MavenArtifactFeed</id>
+            <url>https://pkgs.dev.azure.com/dificloud/_packaging/MavenArtifactFeed/maven/v1</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
         <repository>
             <id>jitpack.io</id>
