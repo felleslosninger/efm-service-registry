@@ -32,16 +32,6 @@
                 <enabled>true</enabled>
             </snapshots>
         </repository>
-		<repository>
-		    <id>DIFI Move releases - TODO delete</id>
-            <url>https://beta-meldingsutveksling.difi.no/content/repositories/releases/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
