@@ -24,18 +24,15 @@ public class EvictCacheBeforeCreateDigitalpostServiceRecords {
 
     @Before("execution(* no.difi.meldingsutveksling.serviceregistry.record.ServiceRecordService.createDigitalpostServiceRecords(..)) && args(identifier, ..)")
     public void evictCacheBeforeCreateDigitalpostServiceRecords(String identifier) {
-        LookupParameters lookupParameters = LookupParameters
-                .lookup(identifier)
-                .token(requestScope.getToken());
-
+        System.out.println("Evicting cache");
         Cache krrCache = cacheManager.getCache(CacheConfig.KRR_CACHE);
         if (krrCache != null) {
-            krrCache.evictIfPresent(lookupParameters);
+            krrCache.invalidate();
         }
 
         Cache dsfCache = cacheManager.getCache(CacheConfig.DSF_CACHE);
         if (dsfCache != null) {
-            dsfCache.evictIfPresent(lookupParameters);
+            dsfCache.invalidate();
         }
     }
 
