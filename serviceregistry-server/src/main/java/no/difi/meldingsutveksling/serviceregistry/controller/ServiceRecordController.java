@@ -95,7 +95,7 @@ public class ServiceRecordController {
 
         Process process = processFind.get();
         if (ProcessCategory.DIGITALPOST == process.getCategory() && shouldCreateServiceRecordForCitizen().test(entityInfo)) {
-            entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientId, print));
+            entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientId, print, process));
         }
         if (ProcessCategory.ARKIVMELDING == process.getCategory()) {
             ServiceRecord record = serviceRecordService.createArkivmeldingServiceRecord(entityInfo, process, securityLevel)

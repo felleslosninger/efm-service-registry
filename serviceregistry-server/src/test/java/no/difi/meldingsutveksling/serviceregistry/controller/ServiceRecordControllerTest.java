@@ -179,6 +179,8 @@ public class ServiceRecordControllerTest {
         dpiServiceRecord.setDocumentTypes(Arrays.asList(DOC_DIGITAL, DOC_PRINT));
         when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString(), anyBoolean()))
                 .thenReturn(Lists.newArrayList(dpiServiceRecord));
+        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString(), anyBoolean(), any(Process.class)))
+            .thenReturn(Lists.newArrayList(dpiServiceRecord));
         when(serviceRecordService.createArkivmeldingServiceRecord(any(), any(), anyInt())).thenReturn(Optional.empty());
         when(serviceRecordService.createEinnsynServiceRecords(any(), any())).thenReturn(Lists.newArrayList());
     }
@@ -377,7 +379,7 @@ public class ServiceRecordControllerTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         final String message = "Error looking up identifier in KRR";
         when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
-        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString(), anyBoolean()))
+        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString(), anyBoolean(), any(Process.class)))
                 .thenThrow(new KontaktInfoException(message));
 
         mvc.perform(get("/identifier/12345678901/process/some:process")

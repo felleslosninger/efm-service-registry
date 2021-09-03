@@ -27,10 +27,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static no.difi.meldingsutveksling.serviceregistry.domain.ProcessCategory.AVTALT;
@@ -169,12 +166,27 @@ public class ServiceRecordService {
 
     @PreAuthorize("hasAuthority('SCOPE_move/dpi.read')")
     public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
-                                                               String onBehalfOrgnr, boolean print) throws KontaktInfoException, BrregNotFoundException {
+                                                               String onBehalfOrgnr,
+                                                               boolean print) throws KontaktInfoException, BrregNotFoundException {
+        return createDigitalpostServiceRecords(identifier, onBehalfOrgnr, print, processService.findAll(ProcessCategory.DIGITALPOST));
+    }
+
+    @PreAuthorize("hasAuthority('SCOPE_move/dpi.read')")
+    public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
+                                                               String onBehalfOrgnr,
+                                                               boolean print,
+                                                               Process process) throws KontaktInfoException, BrregNotFoundException {
+        return createDigitalpostServiceRecords(identifier, onBehalfOrgnr, print, Collections.singleton(process));
+    }
+
+    private List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
+                                                               String onBehalfOrgnr,
+                                                               boolean print,
+                                                               Set<Process> processes) throws KontaktInfoException, BrregNotFoundException {
 
         PersonResource personResource = kontaktInfoService.getCitizenInfo(lookup(identifier).token(requestScope.getToken()));
-        Set<Process> digitalpostProcesses = processService.findAll(ProcessCategory.DIGITALPOST);
         List<ServiceRecord> serviceRecords = Lists.newArrayList();
-        for (Process p : digitalpostProcesses) {
+        for (Process p : processes) {
             DpiMessageRouter.TargetRecord target;
             if (p.getIdentifier().equals(properties.getDpi().getInfoProcess())) {
                 target = DpiMessageRouter.route(personResource, Notification.NOT_OBLIGATED);
