@@ -1,4 +1,4 @@
-package no.difi.meldingsutveksling.serviceregistry;
+package no.difi.meldingsutveksling.serviceregistry.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

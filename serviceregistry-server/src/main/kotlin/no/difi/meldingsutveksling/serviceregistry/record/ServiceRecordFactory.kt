@@ -4,6 +4,7 @@ import com.google.common.base.Strings
 import no.difi.meldingsutveksling.serviceregistry.*
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties
 import no.difi.meldingsutveksling.serviceregistry.domain.*
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException
 import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksProtocolRepository
 import no.difi.meldingsutveksling.serviceregistry.krr.*
 import no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory
@@ -125,11 +126,18 @@ class ServiceRecordFactory(private val fiksProtocolRepository: FiksProtocolRepos
         return record
     }
 
-    fun createDpfioServiceRecord(orgnr: String, protocol: String, konto: Konto): ServiceRecord {
-        val record = ServiceRecord(ServiceIdentifier.DPFIO, orgnr, protocol, konto.kontoId.toString())
+    fun createDpfioServiceRecord(identifier: String, protocol: String, konto: Konto): ServiceRecord {
+        val record = ServiceRecord(ServiceIdentifier.DPFIO, identifier, protocol, konto.kontoId.toString())
         record.service.serviceCode = protocol
         return record
     }
+
+    fun createDpfioServiceRecord(kontoId: String, protocol: String): ServiceRecord {
+        val record = ServiceRecord(ServiceIdentifier.DPFIO, kontoId, protocol, kontoId)
+        record.service.serviceCode = protocol
+        return record
+    }
+
 
     fun createDpvServiceRecord(orgnr: String, process: Process): ServiceRecord {
         val dpvServiceRecord = ServiceRecord(ServiceIdentifier.DPV, orgnr, process, properties.dpv.endpointURL.toString())

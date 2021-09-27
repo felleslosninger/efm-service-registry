@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
-import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.*;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException;
@@ -85,15 +85,14 @@ public class ServiceRecordController {
         Entity entity = new Entity();
         entity.setInfoRecord(entityInfo);
 
-        Optional<Process> processFind = processService.findByIdentifier(processIdentifier);
-        if (processFind.isEmpty()) {
-            ServiceRecord fiksIoRecord = serviceRecordService.createFiksIoServiceRecord(entityInfo, processIdentifier, securityLevel)
+        if (entityInfo instanceof FiksIoInfo) {
+            ServiceRecord fiksIoRecord = serviceRecordService.createFiksIoServiceRecord(entityInfo, processIdentifier)
                 .orElseThrow(() -> new ReceiverProcessNotFoundException(identifier, processIdentifier));
             entity.getServiceRecords().add(fiksIoRecord);
             return ResponseEntity.ok(entity);
         }
 
-        Process process = processFind.get();
+        Process process = processService.findByIdentifier(processIdentifier).orElseThrow(() -> new ReceiverProcessNotFoundException(identifier, processIdentifier));
         if (ProcessCategory.DIGITALPOST == process.getCategory() && shouldCreateServiceRecordForCitizen().test(entityInfo)) {
             entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientId, print, process));
         }
@@ -146,10 +145,13 @@ public class ServiceRecordController {
             .orElseThrow(() -> new EntityNotFoundException(identifier));
         entity.setInfoRecord(entityInfo);
 
+        if (entityInfo instanceof FiksIoInfo) {
+            return new ResponseEntity<>(entity, HttpStatus.OK);
+        }
+
         if (shouldCreateServiceRecordForCitizen().test(entityInfo)) {
             entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientOrgnr, print));
         } else {
-            entity.getServiceRecords().addAll(serviceRecordService.createFiksIoServiceRecords(entityInfo, securityLevel));
             entity.getServiceRecords().addAll(serviceRecordService.createArkivmeldingServiceRecords(entityInfo, securityLevel));
             entity.getServiceRecords().addAll(serviceRecordService.createEinnsynServiceRecords(entityInfo, securityLevel));
             entity.getServiceRecords().addAll(serviceRecordService.createAvtaltServiceRecords(identifier));

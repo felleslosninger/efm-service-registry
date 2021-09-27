@@ -27,7 +27,7 @@ class GlobalControllerExceptionHandler(val requestScope: SRRequestScope) {
 
     @ExceptionHandler(EntityNotFoundException::class)
     fun entityNotFound(request: HttpServletRequest, e: Exception): ResponseEntity<ErrorResponse> {
-        log.warn(markerFrom(requestScope), "Entity not found for {}", request.requestURL, e)
+        log.debug(markerFrom(requestScope), "Entity not found for {}", request.requestURL, e)
         return errorResponse(HttpStatus.NOT_FOUND, e.message)
     }
 

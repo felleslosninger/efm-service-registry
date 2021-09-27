@@ -1,7 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.service.brreg;
 
 import lombok.extern.slf4j.Slf4j;
-import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.domain.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.domain.OrganizationInfo;
