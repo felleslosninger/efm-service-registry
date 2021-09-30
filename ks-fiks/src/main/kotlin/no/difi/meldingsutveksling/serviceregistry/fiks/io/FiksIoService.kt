@@ -4,7 +4,6 @@ import no.difi.meldingsutveksling.serviceregistry.CacheConfig
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties
 import no.difi.meldingsutveksling.serviceregistry.domain.EntityInfo
-import no.difi.meldingsutveksling.serviceregistry.domain.Process
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException
 import no.difi.meldingsutveksling.serviceregistry.logger
@@ -26,7 +25,6 @@ import java.util.*
 @ConditionalOnProperty(name = ["difi.move.fiks.io.enable"], havingValue = "true")
 open class FiksIoService(
     private val props: ServiceregistryProperties,
-    private val fiksProtocolRepository: FiksProtocolRepository,
     private val requestScope: SRRequestScope
 ) {
     val log = logger()
@@ -38,16 +36,6 @@ open class FiksIoService(
             it.set("IntegrasjonPassord", props.fiks.io.integrasjonPassord)
         }
         .build()
-
-    @Cacheable(CacheConfig.FIKSIO_CACHE)
-    open fun lookup(entity: EntityInfo, process: Process, securityLevel: Int): Optional<Konto> {
-        if (!props.fiks.io.orgformFilter.contains(entity.entityType.name)) return Optional.empty()
-
-        val fiksProtocol = fiksProtocolRepository.findByProcessesIdentifier(process.identifier)
-            ?: return Optional.empty()
-
-        return lookup(entity, fiksProtocol.identifier, securityLevel)
-    }
 
     @Cacheable(CacheConfig.FIKSIO_CACHE)
     open fun lookup(identifier: String): Optional<Konto> {

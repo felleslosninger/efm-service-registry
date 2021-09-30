@@ -9,7 +9,6 @@ import no.difi.meldingsutveksling.serviceregistry.domain.*;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksIoService;
-import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksProtocolRepository;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
@@ -95,9 +94,6 @@ public class ServiceRecordServiceTest {
 
     @MockBean
     private FiksIoService fiksIoService;
-
-    @MockBean
-    private FiksProtocolRepository fiksProtocolRepository;
 
     private static String ORGNR = "123456789";
     private static String ORGNR_FIKS = "987654321";
