@@ -2,6 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.krr;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -10,15 +11,17 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class DSFClient extends KontaktInfoClient {
+public class DefaultDsfClient extends KontaktInfoClient implements DsfClient {
 
     private final ObjectMapper objectMapper;
+    private final ServiceregistryProperties properties;
 
-    public Optional<DsfResource> getDSFResource(LookupParameters params, URI endpointUri, String oidcTokenIssuer) throws KontaktInfoException {
+    @Override
+    public Optional<DsfResource> getDSFResource(LookupParameters params, URI endpointUri) throws KontaktInfoException {
 
         String response = fetchKontaktInfo(params.getIdentifier(), params.getToken().getTokenValue(), endpointUri);
 
-        if (params.getToken().getIssuer().toString().equals(oidcTokenIssuer)) {
+        if (params.getToken().getIssuer().toString().equals(properties.getAuth().getOidcIssuer())) {
             return mapResponse(response, DsfResource.class);
         } else {
             Optional<DsfMpResource> mpResource = mapResponse(response, DsfMpResource.class);
