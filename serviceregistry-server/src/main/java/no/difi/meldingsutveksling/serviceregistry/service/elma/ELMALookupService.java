@@ -2,7 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.service.elma;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import no.difi.vefa.peppol.common.model.*;
 import no.difi.vefa.peppol.lookup.LookupClient;
 import no.difi.vefa.peppol.lookup.api.LookupException;

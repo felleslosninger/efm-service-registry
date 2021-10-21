@@ -1,11 +1,16 @@
 package no.difi.meldingsutveksling.serviceregistry.record
 
 import com.google.common.base.Strings
-import no.difi.meldingsutveksling.serviceregistry.*
+import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException
+import no.difi.meldingsutveksling.serviceregistry.SRRequestScope
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties
 import no.difi.meldingsutveksling.serviceregistry.domain.*
-import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksProtocolRepository
-import no.difi.meldingsutveksling.serviceregistry.krr.*
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException
+import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException
+import no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters
+import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource
+import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress
+import no.difi.meldingsutveksling.serviceregistry.logger
 import no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory
 import no.difi.meldingsutveksling.serviceregistry.service.DocumentTypeService
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService
@@ -14,7 +19,6 @@ import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundExc
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService
 import no.difi.virksert.client.lang.VirksertClientException
-import no.ks.fiks.io.client.model.Konto
 import org.apache.commons.io.IOUtils
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Component
@@ -23,8 +27,7 @@ import java.nio.charset.StandardCharsets
 import java.util.*
 
 @Component
-class ServiceRecordFactory(private val fiksProtocolRepository: FiksProtocolRepository,
-                           private val properties: ServiceregistryProperties,
+class ServiceRecordFactory(private val properties: ServiceregistryProperties,
                            private val virkSertService: VirkSertService,
                            private val processService: ProcessService,
                            private val documentTypeService: DocumentTypeService,
@@ -55,7 +58,7 @@ class ServiceRecordFactory(private val fiksProtocolRepository: FiksProtocolRepos
         return serviceRecord
     }
 
-    fun createDigitalServiceRecord(personResource: PersonResource, identifier: String, process: Process): ServiceRecord? {
+    fun createDigitalServiceRecord(personResource: PersonResource, identifier: String, process: Process): ServiceRecord {
         val serviceRecord = SikkerDigitalPostServiceRecord(identifier, process, personResource, properties.dpi.endpointURL.toString(), false, null, null)
         documentTypeService.findByBusinessMessageType(BusinessMessageTypes.DIGITAL)
                 .orElseThrow { missingDocTypeException(BusinessMessageTypes.DIGITAL) }
@@ -117,19 +120,12 @@ class ServiceRecordFactory(private val fiksProtocolRepository: FiksProtocolRepos
         return Optional.of(printRecord)
     }
 
-    fun createDpfioServiceRecord(orgnr: String, process: Process, konto: Konto): ServiceRecord {
-        val protocol = fiksProtocolRepository.findByProcessesIdentifier(process.identifier)
-                ?: throw FiksProtocolNotFoundException(process.identifier)
-        val record = ServiceRecord(ServiceIdentifier.DPFIO, orgnr, process, konto.kontoId.toString())
-        record.service.serviceCode = protocol.identifier
-        return record
-    }
-
-    fun createDpfioServiceRecord(orgnr: String, protocol: String, konto: Konto): ServiceRecord {
-        val record = ServiceRecord(ServiceIdentifier.DPFIO, orgnr, protocol, konto.kontoId.toString())
+    fun createDpfioServiceRecord(kontoId: String, protocol: String): ServiceRecord {
+        val record = ServiceRecord(ServiceIdentifier.DPFIO, kontoId, protocol, kontoId)
         record.service.serviceCode = protocol
         return record
     }
+
 
     fun createDpvServiceRecord(orgnr: String, process: Process): ServiceRecord {
         val dpvServiceRecord = ServiceRecord(ServiceIdentifier.DPV, orgnr, process, properties.dpv.endpointURL.toString())

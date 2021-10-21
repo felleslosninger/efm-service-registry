@@ -1,7 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.service.virksert;
 
 import lombok.experimental.UtilityClass;
-import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 
 import java.io.IOException;
