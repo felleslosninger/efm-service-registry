@@ -1,13 +1,12 @@
 package no.difi.meldingsutveksling.serviceregistry.service.krr;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.CacheConfig;
 import no.difi.meldingsutveksling.serviceregistry.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import org.apache.commons.io.IOUtils;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -16,19 +15,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class KontaktInfoService {
 
     private final ServiceregistryProperties properties;
     private final KRRClient krrClient;
     private final DsfClient dsfClient;
-
-    public KontaktInfoService(ServiceregistryProperties properties, KRRClient krrClient, ObjectProvider<DsfClient> dsfClient) {
-        this.properties = properties;
-        this.krrClient = krrClient;
-        this.dsfClient = dsfClient.orderedStream().findFirst()
-            .orElseThrow(() -> new NoSuchBeanDefinitionException(DsfClient.class));
-    }
 
     @Cacheable(CacheConfig.KRR_CACHE)
     public PersonResource getCitizenInfo(LookupParameters params) throws KontaktInfoException {

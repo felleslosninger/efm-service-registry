@@ -3,6 +3,7 @@ package no.difi.meldingsutveksling.serviceregistry.krr;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
+@Profile("production")
 public class DefaultDsfClient extends KontaktInfoClient implements DsfClient {
 
     private final ObjectMapper objectMapper;
