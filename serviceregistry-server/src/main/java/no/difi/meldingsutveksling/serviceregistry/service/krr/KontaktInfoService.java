@@ -21,7 +21,7 @@ public class KontaktInfoService {
 
     private final ServiceregistryProperties properties;
     private final KRRClient krrClient;
-    private final DSFClient dsfClient;
+    private final DsfClient dsfClient;
 
     @Cacheable(CacheConfig.KRR_CACHE)
     public PersonResource getCitizenInfo(LookupParameters params) throws KontaktInfoException {
@@ -34,9 +34,9 @@ public class KontaktInfoService {
     @Cacheable(CacheConfig.DSF_CACHE)
     public Optional<DsfResource> getDsfInfo(LookupParameters params) throws KontaktInfoException {
         if (params.getToken().getIssuer().toString().equals(properties.getAuth().getMaskinportenIssuer())) {
-            return dsfClient.getDSFResource(params, properties.getKrr().getMpDsfEndpointUri(), properties.getAuth().getOidcIssuer());
+            return dsfClient.getDSFResource(params, properties.getKrr().getMpDsfEndpointUri());
         }
-        return dsfClient.getDSFResource(params, properties.getKrr().getOidcDsfEndpointUri(), properties.getAuth(). getOidcIssuer());
+        return dsfClient.getDSFResource(params, properties.getKrr().getOidcDsfEndpointUri());
     }
 
     public void setPrintDetails(PersonResource personResource) {
