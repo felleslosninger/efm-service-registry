@@ -10,7 +10,8 @@ import java.util.regex.Pattern;
  */
 public class ServiceRecordPredicates {
 
-    private static final Predicate<String> exactly_11_numbers = Pattern.compile(String.format("\\d{%d}", 11)).asPredicate();
+    private static final Predicate<String> exactly_11_numbers = Pattern.compile("^\\d{11}$").asPredicate();
+    private static final Predicate<String> orgnrPredicate = Pattern.compile("^\\d{9}$").asPredicate();
     private static final Predicate<String> uuidPredicate = Pattern.compile("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}").asPredicate();
 
     private ServiceRecordPredicates() {
@@ -22,6 +23,10 @@ public class ServiceRecordPredicates {
      */
     public static Predicate<EntityInfo> shouldCreateServiceRecordForCitizen() {
         return o -> isCitizen().test(o.getIdentifier());
+    }
+
+    public static Predicate<String> isOrgnr() {
+        return orgnrPredicate;
     }
 
     /**

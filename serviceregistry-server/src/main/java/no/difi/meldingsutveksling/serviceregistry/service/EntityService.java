@@ -17,8 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.isCitizen;
-import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.isUuid;
+import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.*;
 import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 
 /**
@@ -49,13 +48,15 @@ public class EntityService {
                     .map(k -> new FiksIoInfo(identifier));
             }
             return Optional.empty();
-        } else {
+        } else if (isOrgnr().test(identifier)) {
             try {
                 return brregService.getOrganizationInfo(identifier);
             } catch (BrregNotFoundException e) {
                 log.error(markerFrom(requestScope), "Could not find entity for the requested identifier={}: {}", identifier, e.getMessage());
                 return Optional.empty();
             }
+        } else {
+            return Optional.empty();
         }
     }
 
