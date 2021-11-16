@@ -5,10 +5,8 @@ import no.difi.move.common.config.SpringCloudProtocolResolver;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cloud.client.circuitbreaker.EnableCircuitBreaker;
 
 @SpringBootApplication
-@EnableCircuitBreaker
 @EnableConfigurationProperties({ServiceregistryProperties.class})
 public class MoveServiceRegistryApplication {
 
