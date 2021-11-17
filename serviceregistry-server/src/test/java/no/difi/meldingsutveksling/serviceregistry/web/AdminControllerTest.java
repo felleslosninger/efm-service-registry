@@ -8,9 +8,9 @@ import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.ProcessCategory;
 import no.difi.meldingsutveksling.serviceregistry.service.DocumentTypeService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -25,7 +25,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.restdocs.request.ParameterDescriptor;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*;
@@ -45,7 +45,7 @@ import static org.springframework.restdocs.request.RequestDocumentation.pathPara
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @WebMvcTest(value = AdminController.class)
 @ContextConfiguration(classes = AdminController.class)
 @TestPropertySource("classpath:application-test.properties")
@@ -69,7 +69,7 @@ public class AdminControllerTest {
 
     private HttpMessageConverter<Object> messageConverter;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         ObjectMapper objectMapper = new ObjectMapper().disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         messageConverter = new MappingJackson2HttpMessageConverter(objectMapper);
@@ -370,6 +370,7 @@ public class AdminControllerTest {
 
 
     private String getJson(Object o) throws IOException {
+        if (o == null) return "";
         MockHttpOutputMessage mockHttpOutputMessage = new MockHttpOutputMessage();
         messageConverter.write(o, MediaType.APPLICATION_JSON, mockHttpOutputMessage);
         return mockHttpOutputMessage.getBodyAsString();

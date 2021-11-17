@@ -1,15 +1,13 @@
 package no.difi.meldingsutveksling.serviceregistry.record;
 
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static no.difi.meldingsutveksling.serviceregistry.domain.Notification.NOT_OBLIGATED;
 import static no.difi.meldingsutveksling.serviceregistry.domain.Notification.OBLIGATED;
-import static no.difi.meldingsutveksling.serviceregistry.record.DpiMessageRouter.TargetRecord.DPI;
-import static no.difi.meldingsutveksling.serviceregistry.record.DpiMessageRouter.TargetRecord.DPV;
-import static no.difi.meldingsutveksling.serviceregistry.record.DpiMessageRouter.TargetRecord.PRINT;
+import static no.difi.meldingsutveksling.serviceregistry.record.DpiMessageRouter.TargetRecord.*;
 import static no.difi.meldingsutveksling.serviceregistry.record.DpiMessageRouter.route;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
