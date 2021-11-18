@@ -11,20 +11,22 @@ import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.vefa.peppol.common.model.TransportProfile;
 import no.difi.vefa.peppol.lookup.LookupClient;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = MoveServiceRegistryApplication.class)
+@TestPropertySource("classpath:application-test.properties")
 public class ProcessAdministrationIT {
 
     @Autowired
@@ -54,7 +56,7 @@ public class ProcessAdministrationIT {
     @Autowired
     private DocumentTypeRepository documentTypeRepository;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         processRepository.deleteAll();
         documentTypeRepository.deleteAll();

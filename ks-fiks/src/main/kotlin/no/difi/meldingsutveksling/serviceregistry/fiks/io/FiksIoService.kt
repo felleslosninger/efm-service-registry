@@ -57,43 +57,4 @@ open class FiksIoService(
             ?.let { Optional.of(Konto.fromKatalogModel(it)) } ?: Optional.empty()
     }
 
-    @Cacheable(CacheConfig.FIKSIO_CACHE)
-    open fun lookup(entity: EntityInfo, protocol: String, securityLevel: Int): Optional<Konto> {
-        val uriBuilder: (UriBuilder) -> URI = {
-            it.path("/fiks-io/katalog/api/v1/lookup")
-                .queryParam("identifikator", "ORG_NO.${entity.identifier}")
-                .queryParam("meldingProtokoll", protocol)
-                .queryParam("sikkerhetsniva", securityLevel)
-                .build()
-        }
-        return wc.get()
-            .uri(uriBuilder)
-            .header("Authorization", "Bearer ${requestScope.token.tokenValue}")
-            .exchange()
-            .flatMap { r ->
-                when {
-                    r.statusCode() == HttpStatus.NOT_FOUND -> {
-                        Mono.empty<KatalogKonto>()
-                    }
-                    r.statusCode().is4xxClientError -> {
-                        r.createException().flatMap {
-                            log.warn("Client error ${it.statusCode} when looking up ${it.request?.uri} - ${it.responseBodyAsString}")
-                            Mono.empty<KatalogKonto>()
-                        }
-                    }
-                    r.statusCode().isError -> {
-                        r.createException().flatMap {
-                            log.error("Server error when looking up ${it.request?.uri}")
-                            Mono.error<KatalogKonto>(it)
-                        }
-                    }
-                    else -> {
-                        r.bodyToMono(KatalogKonto::class.java)
-                    }
-                }
-            }
-            .block(Duration.ofSeconds(5))
-            ?.let { Optional.of(Konto.fromKatalogModel(it)) } ?: Optional.empty()
-    }
-
 }

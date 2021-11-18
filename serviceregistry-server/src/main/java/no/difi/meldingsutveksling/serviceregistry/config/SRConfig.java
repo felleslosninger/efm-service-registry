@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.security.cert.CertificateEncodingException;
@@ -20,16 +19,6 @@ import java.security.interfaces.RSAPublicKey;
 
 @Configuration
 public class SRConfig implements WebMvcConfigurer {
-
-    @Bean
-    HystrixContextInterceptor hystrixContextInterceptor() {
-        return new HystrixContextInterceptor();
-    }
-
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(hystrixContextInterceptor());
-    }
 
     @Override
     public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {

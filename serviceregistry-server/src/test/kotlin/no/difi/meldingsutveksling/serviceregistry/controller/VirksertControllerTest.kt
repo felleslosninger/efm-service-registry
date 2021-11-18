@@ -7,9 +7,9 @@ import no.difi.meldingsutveksling.serviceregistry.SRRequestScope
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService
 import no.difi.virksert.client.lang.VirksertClientException
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -20,13 +20,13 @@ import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get
 import org.springframework.restdocs.operation.preprocess.Preprocessors.*
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.SpringRunner
+import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-@RunWith(SpringRunner::class)
+@ExtendWith(SpringExtension::class)
 @WebMvcTest(VirksertController::class)
 @ContextConfiguration(classes = [VirksertController::class, GlobalControllerExceptionHandler::class])
 @TestPropertySource("classpath:application-test.properties")
@@ -46,7 +46,7 @@ class VirksertControllerTest {
     @MockkBean
     lateinit var virksertService: VirkSertService
 
-    @Before
+    @BeforeEach
     fun before() {
         MockKAnnotations.init(this)
 

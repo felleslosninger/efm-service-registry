@@ -2,21 +2,21 @@ package no.difi.meldingsutveksling.serviceregistry.service.brreg;
 
 import no.difi.meldingsutveksling.serviceregistry.client.brreg.BrregClientImpl;
 import no.difi.meldingsutveksling.serviceregistry.domain.*;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.Collections;
 import java.util.Optional;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 public class BrregServiceTest {
     private BrregService brregService;
     BrregClientImpl brregClientMock;
 
-    @Before
+    @BeforeEach
     public void setup() {
         brregClientMock = mock(BrregClientImpl.class);
     }

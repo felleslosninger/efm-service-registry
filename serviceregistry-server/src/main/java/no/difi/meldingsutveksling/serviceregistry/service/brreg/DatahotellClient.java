@@ -33,10 +33,10 @@ public class DatahotellClient {
 
     public Optional<EntityInfo> getOrganizationInfo(String orgnr) throws BrregNotFoundException {
         Optional<DatahotellEntry> enhet = getHovedenhet(orgnr);
-        if (!enhet.isPresent()) {
+        if (enhet.isEmpty()) {
             enhet = getUnderenhet(orgnr);
         }
-        if (!enhet.isPresent()) {
+        if (enhet.isEmpty()) {
             throw new BrregNotFoundException(String.format("Identifier %s not found in datahotell", orgnr));
         }
 

@@ -25,9 +25,9 @@ import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import no.difi.virksert.client.lang.VirksertClientException;
 import org.assertj.core.util.Lists;
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -42,7 +42,7 @@ import org.springframework.restdocs.request.ParameterDescriptor;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -57,8 +57,8 @@ import java.util.Optional;
 
 import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
@@ -71,7 +71,7 @@ import static org.springframework.restdocs.request.RequestDocumentation.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @WebMvcTest(value = ServiceRecordController.class)
 @TestPropertySource("classpath:application-test.properties")
 @Import({PayloadSigner.class, SRConfig.class})
@@ -127,7 +127,7 @@ public class ServiceRecordControllerTest {
     @MockBean
     private JwtDecoder jwtDecoder;
 
-    @Before
+    @BeforeEach
     public void setup() {
         Process adminProcess = new Process()
                 .setIdentifier(PROC_ARKIVMELDING_ADMINISTRASJON)
