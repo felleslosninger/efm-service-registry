@@ -24,7 +24,7 @@ import static java.lang.String.format;
 @Slf4j
 public class DatahotellClient {
 
-    private ServiceregistryProperties props;
+    private final ServiceregistryProperties props;
 
     @Autowired
     public DatahotellClient(ServiceregistryProperties props) {
@@ -32,22 +32,27 @@ public class DatahotellClient {
     }
 
     public Optional<EntityInfo> getOrganizationInfo(String orgnr) throws BrregNotFoundException {
-        Optional<DatahotellEntry> enhet = getHovedenhet(orgnr);
+        String trimmedOrgnr = trim(orgnr);
+        Optional<DatahotellEntry> enhet = getHovedenhet(trimmedOrgnr);
         if (enhet.isEmpty()) {
-            enhet = getUnderenhet(orgnr);
+            enhet = getUnderenhet(trimmedOrgnr);
         }
         if (enhet.isEmpty()) {
-            throw new BrregNotFoundException(String.format("Identifier %s not found in datahotell", orgnr));
+            throw new BrregNotFoundException(String.format("Identifier %s not found in datahotell", trimmedOrgnr));
         }
 
         return enhet.map(OrganizationInfo::of);
     }
 
-    private Optional<DatahotellEntry> getHovedenhet(String orgnr) {
+    protected String trim(String in) {
+        return in.replaceAll("\\s+", "");
+    }
+
+    protected Optional<DatahotellEntry> getHovedenhet(String orgnr) {
         return getEnhet("api/json/brreg/enhetsregisteret?orgnr=", orgnr);
     }
 
-    private Optional<DatahotellEntry> getUnderenhet(String orgnr) {
+    protected Optional<DatahotellEntry> getUnderenhet(String orgnr) {
         return getEnhet("api/json/brreg/underenheter?orgnr=", orgnr);
     }
 
