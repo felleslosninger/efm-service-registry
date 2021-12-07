@@ -1,8 +1,9 @@
 package no.difi.meldingsutveksling.serviceregistry.svarut;
 
+import io.micrometer.core.annotation.Timed;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.CacheConfig;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
@@ -13,21 +14,17 @@ import java.util.stream.Stream;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class SvarUtService {
 
-    private SvarUtClient svarUtClient;
-
-    @Autowired
-    SvarUtService(SvarUtClient svarUtClient) {
-        this.svarUtClient = svarUtClient;
-    }
+    private final SvarUtClient svarUtClient;
 
     @Cacheable(CacheConfig.SVARUT_CACHE)
+    @Timed(value = "svarut.client.timer", description = "Timer for Svarut RetrieveMottakerSystemForOrgnr")
     public Optional<Integer> hasSvarUtAdressering(String orgnr, Integer securityLevel) throws SvarUtClientException {
         RetrieveMottakerSystemForOrgnr request = RetrieveMottakerSystemForOrgnr.builder().withOrganisasjonsnr(orgnr).build();
-        RetrieveMottakerSystemForOrgnrResponse response;
-        response = svarUtClient.retrieveMottakerSystemForOrgnr(request);
+        RetrieveMottakerSystemForOrgnrResponse response = svarUtClient.retrieveMottakerSystemForOrgnr(request);
         Stream<MottakerForsendelseTyper> validFiksRequests = response.getReturn().stream()
                 .filter(m -> isNullOrEmpty(m.forsendelseType));
         if (null != securityLevel) {

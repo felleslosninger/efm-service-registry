@@ -1,5 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.service.krr;
 
+import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.CacheConfig;
@@ -24,6 +25,7 @@ public class KontaktInfoService {
     private final DsfClient dsfClient;
 
     @Cacheable(CacheConfig.KRR_CACHE)
+    @Timed(value = "krr.client.timer", description = "Timer for KRR client")
     public PersonResource getCitizenInfo(LookupParameters params) throws KontaktInfoException {
         if (params.getToken().getIssuer().toString().equals(properties.getAuth().getMaskinportenIssuer())) {
             return krrClient.getPersonResource(params, properties.getKrr().getMpEndpointUri());
@@ -32,6 +34,7 @@ public class KontaktInfoService {
     }
 
     @Cacheable(CacheConfig.DSF_CACHE)
+    @Timed(value = "dsf.client.timer", description = "Timer for DSF client")
     public Optional<DsfResource> getDsfInfo(LookupParameters params) throws KontaktInfoException {
         if (params.getToken().getIssuer().toString().equals(properties.getAuth().getMaskinportenIssuer())) {
             return dsfClient.getDSFResource(params, properties.getKrr().getMpDsfEndpointUri());
