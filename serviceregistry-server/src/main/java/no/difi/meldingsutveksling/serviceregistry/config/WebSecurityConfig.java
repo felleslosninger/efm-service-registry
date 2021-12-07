@@ -23,26 +23,14 @@ public class WebSecurityConfig {
     @RequiredArgsConstructor
     @Order(0)
     public static class BasicAuthFilter extends WebSecurityConfigurerAdapter {
-
-        private final SecurityProperties props;
-
         @Override
         protected void configure(HttpSecurity http) throws Exception {
             http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                    .and().csrf().disable();
+                .and().csrf().disable();
             http.antMatcher("/manage/**")
-                    .authorizeRequests()
-                    .antMatchers("/manage/health").permitAll()
-                    .antMatchers("/manage/**").authenticated()
-                    .and().httpBasic();
+                .authorizeRequests()
+                .anyRequest().permitAll();
         }
-
-        @Override
-        protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-            auth.inMemoryAuthentication().withUser(props.getUser().getName())
-                    .password("{noop}" + props.getUser().getPassword()).roles();
-        }
-
     }
 
     @Configuration
