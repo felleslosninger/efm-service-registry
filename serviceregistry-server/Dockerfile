@@ -13,7 +13,7 @@ RUN mkdir /logs && chown -R java:java /logs
 # Open ports for incoming connections
 #
 
-EXPOSE 9099
+EXPOSE 9099 9199
 
 #
 # Install application
