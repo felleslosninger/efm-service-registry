@@ -4,7 +4,9 @@ import no.difi.meldingsutveksling.serviceregistry.domain.BrregEnhet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
@@ -55,7 +57,10 @@ public class BrregClientImpl implements BrregClient {
 
     private Optional<BrregEnhet> getEnhet(String registerUriPart, String apiVersjon, String orgnr) {
         URI currentURI = uri.resolve(String.format("%s/%s", registerUriPart, orgnr));
-        RestTemplate rt = new RestTemplate();
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(5000);
+        requestFactory.setReadTimeout(5000);
+        RestTemplate rt = new RestTemplate(requestFactory);
 
         HttpHeaders header = new HttpHeaders();
         header.set("Accept", apiVersjon);
@@ -74,6 +79,8 @@ public class BrregClientImpl implements BrregClient {
             if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
                 log.error(String.format("Error looking up entity with identifier=%s in brreg", orgnr), e);
             }
+        } catch (ResourceAccessException e) {
+            log.error(String.format("Error looking up entity with identifier=%s in brreg", orgnr), e);
         }
         return Optional.empty();
 
