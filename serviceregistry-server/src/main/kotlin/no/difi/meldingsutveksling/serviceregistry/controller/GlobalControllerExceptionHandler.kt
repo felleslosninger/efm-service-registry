@@ -76,7 +76,7 @@ class GlobalControllerExceptionHandler(val requestScope: SRRequestScope) {
     @ExceptionHandler(VirksertClientException::class)
     fun virksertError(request: HttpServletRequest, e: Exception): ResponseEntity<ErrorResponse> {
         log.warn(markerFrom(requestScope), "Virksert lookup failed for ${request.requestURL} -> ${e.message}")
-        return errorResponse(HttpStatus.NOT_FOUND, "Lookup failed for ${e.message}", "certificate_not_found")
+        return errorResponse(HttpStatus.NOT_FOUND, "Virksert lookup failed - ${e.message}", "certificate_not_found")
     }
 
     @ExceptionHandler(BrregNotFoundException::class)
