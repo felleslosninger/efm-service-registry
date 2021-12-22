@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class JwkController(rsaKey: RSAKey) {
-    private val jwkJson: String = JWKSet(rsaKey).toString(true)
+    private val jwkJson: String = JWKSet(rsaKey).toString()
 
     @GetMapping(value = ["/jwk"], produces = [MediaType.APPLICATION_JSON_VALUE])
     fun jwkEndpoint(): String {
