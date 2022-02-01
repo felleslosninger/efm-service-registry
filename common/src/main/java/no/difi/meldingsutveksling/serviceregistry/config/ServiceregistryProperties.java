@@ -6,6 +6,7 @@
 package no.difi.meldingsutveksling.serviceregistry.config;
 
 import lombok.Data;
+import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier;
 import no.difi.move.common.config.KeystoreProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.io.Resource;
@@ -15,6 +16,7 @@ import javax.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -30,7 +32,7 @@ public class ServiceregistryProperties {
     private Datahotell datahotell;
     private PostVirksomhet dpv;
     private Altinn dpo;
-    private Adresseregister ar;
+    private Virksert virksert;
     private Auth auth;
     private FeatureToggle feature;
     private ELMA elma;
@@ -106,10 +108,10 @@ public class ServiceregistryProperties {
     }
 
     @Data
-    public static class Adresseregister {
+    public static class Virksert {
         private URL endpointURL;
-        private String processIdentifier;
-        private String schema;
+        private Map<ServiceIdentifier, String> processes;
+        private String icd;
     }
 
     @Data

@@ -4,6 +4,7 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope
+import no.difi.meldingsutveksling.serviceregistry.config.SRConfig
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService
 import no.difi.virksert.client.lang.VirksertClientException
@@ -28,7 +29,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @ExtendWith(SpringExtension::class)
 @WebMvcTest(VirksertController::class)
-@ContextConfiguration(classes = [VirksertController::class, GlobalControllerExceptionHandler::class])
+@ContextConfiguration(classes = [VirksertController::class, GlobalControllerExceptionHandler::class, SRConfig::class])
 @TestPropertySource("classpath:application-test.properties")
 @AutoConfigureRestDocs
 @AutoConfigureMockMvc(addFilters = false)
@@ -57,14 +58,15 @@ class VirksertControllerTest {
         }
 
         with(virksertService) {
-            every { getCertificate(any()) } throws VirksertClientException("not found")
-            every { getCertificate("910076787") } returns "pem123"
+            every { getCertificate(any(), any()) } throws VirksertClientException("not found")
+            every { getCertificate("910076787", any()) } returns "pem123"
         }
     }
 
     @Test
     fun `test controller should return certificate`() {
-        mvc.perform(get("/virksert/{identifier}", "910076787").accept(MediaType.TEXT_PLAIN_VALUE))
+        mvc.perform(get("/virksert/{identifier}/service/dpo", "910076787")
+                        .accept(MediaType.TEXT_PLAIN_VALUE))
             .andExpect(status().isOk)
             .andDo(print())
             .andExpect(content().string("pem123"))
@@ -79,7 +81,8 @@ class VirksertControllerTest {
 
     @Test
     fun `test controller should return error`() {
-        mvc.perform(get("/virksert/{identifier}", "123123123"))
+        mvc.perform(get("/virksert/{identifier}", "123123123")
+                        .accept(MediaType.TEXT_PLAIN_VALUE))
             .andExpect(status().isNotFound)
             .andDo(print())
             .andDo(

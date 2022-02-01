@@ -5,6 +5,8 @@ import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties
 import no.difi.meldingsutveksling.serviceregistry.domain.*
+import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier.DPE
+import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier.DPO
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException
 import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException
 import no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters
@@ -39,8 +41,8 @@ class ServiceRecordFactory(private val properties: ServiceregistryProperties,
 
     @Throws(CertificateNotFoundException::class)
     fun createDpoServiceRecord(orgnr: String, process: Process): ServiceRecord {
-        val serviceRecord = ServiceRecord(ServiceIdentifier.DPO, orgnr, process, properties.dpo.endpointURL.toString())
-        serviceRecord.pemCertificate = lookupPemCertificate(orgnr)
+        val serviceRecord = ServiceRecord(DPO, orgnr, process, properties.dpo.endpointURL.toString())
+        serviceRecord.pemCertificate = lookupPemCertificate(orgnr, DPO)
         serviceRecord.service.serviceCode = properties.dpo.serviceCode
         serviceRecord.service.serviceEditionCode = properties.dpo.serviceEditionCode
         return serviceRecord
@@ -136,14 +138,14 @@ class ServiceRecordFactory(private val properties: ServiceregistryProperties,
 
     @Throws(CertificateNotFoundException::class)
     fun createDpeServiceRecord(orgnr: String, process: Process): ServiceRecord {
-        val serviceRecord = ServiceRecord(ServiceIdentifier.DPE, orgnr, process, process.serviceCode)
-        serviceRecord.pemCertificate = lookupPemCertificate(orgnr)
+        val serviceRecord = ServiceRecord(DPE, orgnr, process, process.serviceCode)
+        serviceRecord.pemCertificate = lookupPemCertificate(orgnr, DPE)
         return serviceRecord
     }
 
-    private fun lookupPemCertificate(orgnr: String): String {
+    private fun lookupPemCertificate(orgnr: String, si: ServiceIdentifier): String {
         try {
-            return virkSertService.getCertificate(orgnr)
+            return virkSertService.getCertificate(orgnr, si)
         } catch (e: VirksertClientException) {
             throw CertificateNotFoundException("Unable to find certificate for: $orgnr", e)
         }
