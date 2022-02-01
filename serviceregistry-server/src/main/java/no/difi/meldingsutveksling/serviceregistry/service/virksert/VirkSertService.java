@@ -61,7 +61,7 @@ public class VirkSertService {
             throw new IllegalArgumentException(e);
         }
 
-        X509Certificate cert = virksertClient.fetchCertificate(ParticipantIdentifier.of("9908:"+orgnr), dpoProcess);
+        X509Certificate cert = virksertClient.fetchCertificate(ParticipantIdentifier.of(properties.getVirksert().getIcd()+":"+orgnr), dpoProcess);
         return CertificateToString.toString(cert);
     }
 
