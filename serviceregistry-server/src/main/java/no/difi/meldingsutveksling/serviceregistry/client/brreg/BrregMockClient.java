@@ -4,9 +4,11 @@ import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperti
 import no.difi.meldingsutveksling.serviceregistry.domain.BrregEnhet;
 import no.difi.meldingsutveksling.serviceregistry.domain.BrregMockEnhet;
 import no.difi.meldingsutveksling.serviceregistry.domain.BrregOrganisasjonsform;
+import no.difi.meldingsutveksling.serviceregistry.domain.BrregPostadresse;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.dev.TestEnvironmentEnheter;
 
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Optional;
 
 public class BrregMockClient implements BrregClient {
@@ -45,8 +47,13 @@ public class BrregMockClient implements BrregClient {
 
     private BrregEnhet mapToBrregEnhet(BrregMockEnhet mockEnhet) {
         return new BrregEnhet()
-                .setOrganisasjonsnummer(mockEnhet.getOrgnr())
-                .setNavn(mockEnhet.getName())
-                .setOrganisasjonsform(new BrregOrganisasjonsform(mockEnhet.getOrgform()));
+            .setOrganisasjonsnummer(mockEnhet.getOrgnr())
+            .setNavn(mockEnhet.getName())
+            .setOrganisasjonsform(new BrregOrganisasjonsform(mockEnhet.getOrgform()))
+            .setPostadresse(new BrregPostadresse()
+                .setAdresse(List.of("Portveien 2"))
+                .setPostnummer("0468")
+                .setPoststed("Oslo")
+                .setLand("Norge"));
     }
 }
