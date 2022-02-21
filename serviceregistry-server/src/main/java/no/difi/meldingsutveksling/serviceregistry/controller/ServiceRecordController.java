@@ -2,6 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
@@ -22,6 +23,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
+import no.difi.move.common.IdentifierHasher;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -76,7 +78,7 @@ public class ServiceRecordController {
                                     HttpServletRequest request)
         throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException,
         BrregNotFoundException, SvarUtClientException, ReceiverProcessNotFoundException {
-        MDC.put("identifier", identifier);
+        MDC.put("identifier", Strings.isNullOrEmpty(identifier) ? identifier : IdentifierHasher.hashIfPersonnr(identifier));
         String clientId = authenticationService.getAuthorizedClientIdentifier(auth, request);
         fillRequestScope(identifier, conversationId, clientId, authenticationService.getToken(auth));
 
@@ -136,7 +138,7 @@ public class ServiceRecordController {
         Authentication auth,
         HttpServletRequest request)
         throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException, BrregNotFoundException, SvarUtClientException {
-        MDC.put("identifier", identifier);
+        MDC.put("identifier", Strings.isNullOrEmpty(identifier) ? identifier : IdentifierHasher.hashIfPersonnr(identifier));
         String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
         fillRequestScope(identifier, conversationId, clientOrgnr, authenticationService.getToken(auth));
 
