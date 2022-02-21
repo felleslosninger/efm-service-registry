@@ -4,10 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException
 import no.difi.meldingsutveksling.serviceregistry.ErrorResponse
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope
-import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException
-import no.difi.meldingsutveksling.serviceregistry.exceptions.ProcessNotFoundException
-import no.difi.meldingsutveksling.serviceregistry.exceptions.ReceiverProcessNotFoundException
-import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException
+import no.difi.meldingsutveksling.serviceregistry.exceptions.*
 import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException
 import no.difi.meldingsutveksling.serviceregistry.logger
 import no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom
@@ -70,10 +67,16 @@ class GlobalControllerExceptionHandler(private val requestScope: SRRequestScope)
         return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, e.message)
     }
 
+    @ExceptionHandler(NonMatchingCertificatesException::class)
+    fun nonMatchingCertificate(request: HttpServletRequest, e: Exception): ResponseEntity<*> {
+        log.warn(markerFrom(requestScope), "Certificate request error on ${request.requestURL} - ${e.message}")
+        return errorResponse(HttpStatus.BAD_REQUEST, e.message)
+    }
+
     @ExceptionHandler(CertificateNotFoundException::class)
     fun certificateNotFound(request: HttpServletRequest, e: Exception): ResponseEntity<*> {
-        log.warn(markerFrom(requestScope), "Certificate not found for ${request.requestURL}", e)
-        return errorResponse(HttpStatus.BAD_REQUEST, e.message)
+        log.warn(markerFrom(requestScope), "Certificate not found for ${request.requestURL}")
+        return errorResponse(HttpStatus.NOT_FOUND, e.message)
     }
 
     @ExceptionHandler(VirksertClientException::class)

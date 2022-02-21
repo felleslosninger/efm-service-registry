@@ -20,7 +20,6 @@ import no.difi.meldingsutveksling.serviceregistry.service.ProcessService
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService
-import no.difi.virksert.client.lang.VirksertClientException
 import org.apache.commons.io.IOUtils
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Component
@@ -144,11 +143,7 @@ class ServiceRecordFactory(private val properties: ServiceregistryProperties,
     }
 
     private fun lookupPemCertificate(orgnr: String, si: ServiceIdentifier): String {
-        try {
-            return virkSertService.getCertificate(orgnr, si)
-        } catch (e: VirksertClientException) {
-            throw CertificateNotFoundException("Unable to find certificate for: $orgnr", e)
-        }
+        return virkSertService.getCertificate(orgnr, si)
     }
 
     private fun missingDocTypeException(messageType: BusinessMessageTypes): RuntimeException {

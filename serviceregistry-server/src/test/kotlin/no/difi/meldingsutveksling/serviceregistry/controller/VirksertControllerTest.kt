@@ -3,9 +3,11 @@ package no.difi.meldingsutveksling.serviceregistry.controller
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.MockKAnnotations
 import io.mockk.every
+import io.mockk.mockk
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope
 import no.difi.meldingsutveksling.serviceregistry.config.SRConfig
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner
+import no.difi.meldingsutveksling.serviceregistry.service.AuthenticationService
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService
 import no.difi.virksert.client.lang.VirksertClientException
 import org.junit.jupiter.api.BeforeEach
@@ -19,6 +21,8 @@ import org.springframework.http.MediaType
 import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get
 import org.springframework.restdocs.operation.preprocess.Preprocessors.*
+import org.springframework.security.core.Authentication
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit.jupiter.SpringExtension
@@ -32,7 +36,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @ContextConfiguration(classes = [VirksertController::class, GlobalControllerExceptionHandler::class, SRConfig::class])
 @TestPropertySource("classpath:application-test.properties")
 @AutoConfigureRestDocs
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc(addFilters = true)
 class VirksertControllerTest {
 
     @Autowired
@@ -46,6 +50,15 @@ class VirksertControllerTest {
 
     @MockkBean
     lateinit var virksertService: VirkSertService
+
+    @MockkBean
+    lateinit var authenticationService: AuthenticationService
+
+    val authMock = mockk<Authentication> {
+        every { isAuthenticated } returns true
+        every { principal } returns true
+        every { name } returns null
+    }
 
     @BeforeEach
     fun before() {
@@ -61,12 +74,17 @@ class VirksertControllerTest {
             every { getCertificate(any(), any()) } throws VirksertClientException("not found")
             every { getCertificate("910076787", any()) } returns "pem123"
         }
+
+        every { authenticationService.getToken(any()) } returns mockk {
+            every { claims } returns mapOf("scope" to "move/dpo.read move/dpe.read")
+        }
     }
 
     @Test
     fun `test controller should return certificate`() {
-        mvc.perform(get("/virksert/{identifier}/service/dpo", "910076787")
-                        .accept(MediaType.TEXT_PLAIN_VALUE))
+        mvc.perform(get("/virksert/{identifier}", "910076787")
+                        .accept(MediaType.TEXT_PLAIN_VALUE)
+                        .with(authentication(authMock)))
             .andExpect(status().isOk)
             .andDo(print())
             .andExpect(content().string("pem123"))
@@ -82,7 +100,8 @@ class VirksertControllerTest {
     @Test
     fun `test controller should return error`() {
         mvc.perform(get("/virksert/{identifier}", "123123123")
-                        .accept(MediaType.TEXT_PLAIN_VALUE))
+                        .accept(MediaType.TEXT_PLAIN_VALUE)
+                        .with(authentication(authMock)))
             .andExpect(status().isNotFound)
             .andDo(print())
             .andDo(
