@@ -1,6 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.service.virksert;
 
 import lombok.RequiredArgsConstructor;
+import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
@@ -49,9 +50,9 @@ public class VirkSertService {
         }
     }
 
-    public String getCertificate(String orgnr, ServiceIdentifier si) throws VirksertClientException {
+    public String getCertificate(String orgnr, ServiceIdentifier si) throws CertificateNotFoundException {
         if (!properties.getVirksert().getProcesses().containsKey(si)) {
-            throw new VirksertClientException("Process not registered for service identifier: "+si);
+            throw new IllegalArgumentException("Virksert process not registered for service identifier: "+si);
         }
 
         ProcessIdentifier dpoProcess;
@@ -61,8 +62,12 @@ public class VirkSertService {
             throw new IllegalArgumentException(e);
         }
 
-        X509Certificate cert = virksertClient.fetchCertificate(ParticipantIdentifier.of(properties.getVirksert().getIcd()+":"+orgnr), dpoProcess);
-        return CertificateToString.toString(cert);
+        try {
+            X509Certificate cert = virksertClient.fetchCertificate(ParticipantIdentifier.of(properties.getVirksert().getIcd() + ":" + orgnr), dpoProcess);
+            return CertificateToString.toString(cert);
+        } catch (VirksertClientException e) {
+            throw new CertificateNotFoundException(String.format("Unable to find %s certificate for: %s", si.name(), orgnr), e);
+        }
     }
 
 }

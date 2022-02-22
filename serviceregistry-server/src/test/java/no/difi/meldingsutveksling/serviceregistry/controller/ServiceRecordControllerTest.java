@@ -267,7 +267,7 @@ public class ServiceRecordControllerTest {
                 .thenThrow(new CertificateNotFoundException(message, new VirksertClientException("")));
 
         mvc.perform(get("/identifier/123123123").accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error_description", is(message)));
     }
 
@@ -528,7 +528,7 @@ public class ServiceRecordControllerTest {
                 .thenThrow(new CertificateNotFoundException(message, new VirksertClientException("")));
 
         mvc.perform(get("/identifier/123123123/process/ProcessID").accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error_description", is(message)));
     }
 
@@ -541,7 +541,7 @@ public class ServiceRecordControllerTest {
                 .thenThrow(new CertificateNotFoundException(message, new VirksertClientException("")));
 
         mvc.perform(get("/identifier/123123123/process/ProcessID").accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error_description", is(message)));
     }
 
