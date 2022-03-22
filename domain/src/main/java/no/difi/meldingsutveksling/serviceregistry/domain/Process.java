@@ -27,7 +27,7 @@ public class Process {
     @Enumerated(EnumType.STRING)
     private ProcessCategory category;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "process_document_type",
             joinColumns = @JoinColumn(name = "proc_id", referencedColumnName = "id"),
