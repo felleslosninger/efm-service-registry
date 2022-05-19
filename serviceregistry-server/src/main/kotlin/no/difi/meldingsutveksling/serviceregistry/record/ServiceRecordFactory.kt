@@ -1,6 +1,8 @@
 package no.difi.meldingsutveksling.serviceregistry.record
 
 import com.google.common.base.Strings
+import no.difi.meldingsutveksling.domain.Iso6523
+import no.difi.meldingsutveksling.domain.PersonIdentifier
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties
@@ -39,16 +41,16 @@ class ServiceRecordFactory(private val properties: ServiceregistryProperties,
     val log = logger()
 
     @Throws(CertificateNotFoundException::class)
-    fun createDpoServiceRecord(orgnr: String, process: Process): ServiceRecord {
-        val serviceRecord = ServiceRecord(DPO, orgnr, process, properties.dpo.endpointURL.toString())
-        serviceRecord.pemCertificate = lookupPemCertificate(orgnr, DPO)
+    fun createDpoServiceRecord(identifier: Iso6523, process: Process): ServiceRecord {
+        val serviceRecord = ServiceRecord(DPO, identifier.orgIdentifier(), process, properties.dpo.endpointURL.toString())
+        serviceRecord.pemCertificate = lookupPemCertificate(identifier, DPO)
         serviceRecord.service.serviceCode = properties.dpo.serviceCode
         serviceRecord.service.serviceEditionCode = properties.dpo.serviceEditionCode
         return serviceRecord
     }
 
-    fun createDpfServiceRecord(orgnr: String, process: Process, securityLevel: Int): ServiceRecord {
-        val serviceRecord = ServiceRecord(ServiceIdentifier.DPF, orgnr, process, properties.fiks.svarut.serviceRecordUrl.toString())
+    fun createDpfServiceRecord(identifier: Iso6523, process: Process, securityLevel: Int): ServiceRecord {
+        val serviceRecord = ServiceRecord(ServiceIdentifier.DPF, identifier.orgIdentifier(), process, properties.fiks.svarut.serviceRecordUrl.toString())
         serviceRecord.pemCertificate = try {
             IOUtils.toString(properties.fiks.svarut.certificate.inputStream, StandardCharsets.UTF_8)
         } catch (e: IOException) {
@@ -59,7 +61,7 @@ class ServiceRecordFactory(private val properties: ServiceregistryProperties,
         return serviceRecord
     }
 
-    fun createDigitalServiceRecord(personResource: PersonResource, identifier: String, process: Process): ServiceRecord {
+    fun createDigitalServiceRecord(personResource: PersonResource, identifier: PersonIdentifier, process: Process): ServiceRecord {
         val serviceRecord = SikkerDigitalPostServiceRecord(identifier, process, personResource, properties.dpi.endpointURL.toString(), false, null, null)
         documentTypeService.findByBusinessMessageType(BusinessMessageTypes.DIGITAL)
                 .orElseThrow { missingDocTypeException(BusinessMessageTypes.DIGITAL) }
@@ -67,8 +69,8 @@ class ServiceRecordFactory(private val properties: ServiceregistryProperties,
         return serviceRecord
     }
 
-    fun createDigitalDpvServiceRecord(identifier: String, process: Process): ServiceRecord {
-        val dpvServiceRecord = ServiceRecord(ServiceIdentifier.DPV, identifier, process, properties.dpv.endpointURL.toString())
+    fun createDigitalDpvServiceRecord(identifier: PersonIdentifier, process: Process): ServiceRecord {
+        val dpvServiceRecord = ServiceRecord(ServiceIdentifier.DPV, identifier.identifier, process, properties.dpv.endpointURL.toString())
         val defaultArkivmeldingProcess = processService.defaultArkivmeldingProcess
         dpvServiceRecord.service.serviceCode = defaultArkivmeldingProcess.serviceCode
         dpvServiceRecord.service.serviceEditionCode = defaultArkivmeldingProcess.serviceEditionCode
@@ -79,8 +81,8 @@ class ServiceRecordFactory(private val properties: ServiceregistryProperties,
     }
 
     @Throws(KontaktInfoException::class, BrregNotFoundException::class)
-    fun createPrintServiceRecord(identifier: String,
-                                 onBehalfOrgnr: String,
+    fun createPrintServiceRecord(identifier: PersonIdentifier,
+                                 clientIdentifier: Iso6523,
                                  token: Jwt,
                                  personResource: PersonResource,
                                  p: Process,
@@ -91,7 +93,7 @@ class ServiceRecordFactory(private val properties: ServiceregistryProperties,
         }
         kontaktInfoService.setPrintDetails(personResource)
         val dsfResource = kontaktInfoService.getDsfInfo(LookupParameters.lookup(identifier).token(token))
-                .orElseThrow { KontaktInfoException("Receiver found in KRR on behalf of '$onBehalfOrgnr', but not in DSF.") }
+                .orElseThrow { KontaktInfoException("Receiver found in KRR on behalf of '$clientIdentifier', but not in DSF.") }
         if (Strings.isNullOrEmpty(dsfResource.postAddress)) {
             // Some receivers have secret address - skip
             return Optional.empty()
@@ -102,7 +104,7 @@ class ServiceRecordFactory(private val properties: ServiceregistryProperties,
                 codeArea[0],
                 if (codeArea.size > 1) codeArea[1] else codeArea[0],
                 dsfResource.country)
-        val senderEntity: Optional<EntityInfo> = entityService.getEntityInfo(onBehalfOrgnr)
+        val senderEntity: Optional<EntityInfo> = entityService.getEntityInfo(clientIdentifier)
         val returnAddress = if (senderEntity.isPresent && senderEntity.get() is OrganizationInfo) {
             val orginfo = senderEntity.get() as OrganizationInfo
             PostAddress(orginfo.organizationName,
@@ -111,7 +113,7 @@ class ServiceRecordFactory(private val properties: ServiceregistryProperties,
                     orginfo.postadresse.poststed,
                     orginfo.postadresse.land)
         } else {
-            throw BrregNotFoundException(String.format("Sender with identifier=%s not found in BRREG", onBehalfOrgnr))
+            throw BrregNotFoundException(String.format("Sender with identifier=%s not found in BRREG", clientIdentifier))
         }
         val printRecord = SikkerDigitalPostServiceRecord(identifier, p, personResource,
                 properties.dpi.endpointURL.toString(), true, postAddress, returnAddress)
@@ -128,26 +130,30 @@ class ServiceRecordFactory(private val properties: ServiceregistryProperties,
     }
 
 
-    fun createDpvServiceRecord(orgnr: String, process: Process): ServiceRecord {
-        val dpvServiceRecord = ServiceRecord(ServiceIdentifier.DPV, orgnr, process, properties.dpv.endpointURL.toString())
+    fun createDpvServiceRecord(identifier: Iso6523, process: Process): ServiceRecord {
+        val dpvServiceRecord = ServiceRecord(ServiceIdentifier.DPV, identifier.orgIdentifier(), process, properties.dpv.endpointURL.toString())
         dpvServiceRecord.service.serviceCode = process.serviceCode
         dpvServiceRecord.service.serviceEditionCode = process.serviceEditionCode
         return dpvServiceRecord
     }
 
     @Throws(CertificateNotFoundException::class)
-    fun createDpeServiceRecord(orgnr: String, process: Process): ServiceRecord {
-        val serviceRecord = ServiceRecord(DPE, orgnr, process, process.serviceCode)
-        serviceRecord.pemCertificate = lookupPemCertificate(orgnr, DPE)
+    fun createDpeServiceRecord(identifier: Iso6523, process: Process): ServiceRecord {
+        val serviceRecord = ServiceRecord(DPE, identifier.orgIdentifier(), process, process.serviceCode)
+        serviceRecord.pemCertificate = lookupPemCertificate(identifier, DPE)
         return serviceRecord
     }
 
-    private fun lookupPemCertificate(orgnr: String, si: ServiceIdentifier): String {
+    private fun lookupPemCertificate(orgnr: Iso6523, si: ServiceIdentifier): String {
         return virkSertService.getCertificate(orgnr, si)
     }
 
     private fun missingDocTypeException(messageType: BusinessMessageTypes): RuntimeException {
         return RuntimeException("Missing DocumentType for business message type '$messageType'")
+    }
+
+    private fun Iso6523.orgIdentifier(): String {
+        return if (requestScope.isUsePlainFormat) this.primaryIdentifier else this.identifier
     }
 
 }

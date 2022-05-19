@@ -46,7 +46,6 @@ public class ServiceregistryProperties {
     public static class ELMA {
         private String locatorUrl;
         private String defaultProcessIdentifier;
-        private String lookupIcd;
     }
 
     @Data

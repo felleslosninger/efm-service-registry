@@ -1,5 +1,8 @@
 package no.difi.meldingsutveksling.serviceregistry.service.brreg;
 
+import no.difi.meldingsutveksling.domain.ICD;
+import no.difi.meldingsutveksling.domain.Iso6523;
+import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.meldingsutveksling.serviceregistry.client.brreg.BrregClientImpl;
 import no.difi.meldingsutveksling.serviceregistry.domain.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +14,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class BrregServiceTest {
     private BrregService brregService;
@@ -43,12 +47,14 @@ public class BrregServiceTest {
         enhet.setOrganisasjonsform(organisasjonsform);
         enhet.setPostadresse(brregPostAddr);
 
-        Mockito.when(brregClientMock.getBrregEnhetByOrgnr(Mockito.anyString())).thenReturn(Optional.empty());
-        Mockito.when(brregClientMock.getBrregEnhetByOrgnr(orgNr)).thenReturn(Optional.of(enhet));
+        when(brregClientMock.getBrregEnhetByOrgnr(Mockito.anyString())).thenReturn(Optional.empty());
+        when(brregClientMock.getBrregEnhetByOrgnr(orgNr)).thenReturn(Optional.of(enhet));
+        SRRequestScope requestScopeMock = mock(SRRequestScope.class);
+        when(requestScopeMock.isUsePlainFormat()).thenReturn(true);
         DatahotellClient datahotellMock = mock(DatahotellClient.class);
-        brregService = new BrregService(brregClientMock, datahotellMock);
+        brregService = new BrregService(brregClientMock, datahotellMock, requestScopeMock);
 
-        OrganizationInfo actual = (OrganizationInfo) brregService.getOrganizationInfo(difi.getIdentifier()).get();
+        OrganizationInfo actual = (OrganizationInfo) brregService.getOrganizationInfo(Iso6523.of(ICD.NO_ORG, orgNr)).get();
         assertEquals(difi, actual);
     }
 
@@ -74,12 +80,12 @@ public class BrregServiceTest {
         enhet2.setOrganisasjonsform(organisasjonsform2);
         enhet2.setForretningsadresse(brregForretningsAddr2);
 
-        Mockito.when(brregClientMock.getBrregEnhetByOrgnr(Mockito.anyString())).thenReturn(Optional.empty());
-        Mockito.when(brregClientMock.getBrregEnhetByOrgnr(orgNr2)).thenReturn(Optional.of(enhet2));
+        when(brregClientMock.getBrregEnhetByOrgnr(Mockito.anyString())).thenReturn(Optional.empty());
+        when(brregClientMock.getBrregEnhetByOrgnr(orgNr2)).thenReturn(Optional.of(enhet2));
         DatahotellClient datahotellMock = mock(DatahotellClient.class);
-        brregService = new BrregService(brregClientMock, datahotellMock);
+        brregService = new BrregService(brregClientMock, datahotellMock, mock(SRRequestScope.class));
 
-        OrganizationInfo actual = (OrganizationInfo) brregService.getOrganizationInfo(donna.getIdentifier()).get();
+        OrganizationInfo actual = (OrganizationInfo) brregService.getOrganizationInfo(Iso6523.of(ICD.NO_ORG, orgNr2)).get();
         assertEquals(donna.getPostadresse(), actual.getPostadresse());
     }
 

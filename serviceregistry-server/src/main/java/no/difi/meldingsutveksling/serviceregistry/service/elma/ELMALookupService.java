@@ -2,6 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.service.elma;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import no.difi.meldingsutveksling.domain.Iso6523;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import no.difi.vefa.peppol.common.model.*;
 import no.difi.vefa.peppol.lookup.LookupClient;
@@ -24,19 +25,19 @@ public class ELMALookupService {
 
     private final LookupClient lookupClient;
 
-    public Set<ProcessIdentifier> lookupRegisteredProcesses(String orgnr, Set<String> documentIdentifiers) {
-        List<ServiceMetadata> smdList = lookup(orgnr, documentIdentifiers);
+    public Set<ProcessIdentifier> lookupRegisteredProcesses(Iso6523 identifier, Set<String> documentIdentifiers) {
+        List<ServiceMetadata> smdList = lookup(identifier, documentIdentifiers);
         return smdList.stream()
                 .flatMap(smd -> smd.getProcesses().stream())
                 .map(ProcessMetadata::getProcessIdentifier)
                 .collect(Collectors.toSet());
     }
 
-    public List<ServiceMetadata> lookup(String organizationNumber, Set<String> documentIdentifiers) {
+    public List<ServiceMetadata> lookup(Iso6523 identifier, Set<String> documentIdentifiers) {
         List<ServiceMetadata> metadataList = new ArrayList<>();
         for (String id : documentIdentifiers) {
             try {
-                ServiceMetadata serviceMetadata = lookupClient.getServiceMetadata(ParticipantIdentifier.of(organizationNumber), DocumentTypeIdentifier.of(id));
+                ServiceMetadata serviceMetadata = lookupClient.getServiceMetadata(ParticipantIdentifier.of(identifier.toString()), DocumentTypeIdentifier.of(id));
                 if (serviceMetadata != null) {
                     metadataList.add(serviceMetadata);
                 }
@@ -45,7 +46,7 @@ public class ELMALookupService {
                 throw new ServiceRegistryException(e);
             } catch (LookupException e) {
                 // Just log, need to check the remaining documents
-                log.debug("Failed ELMA lookup for identifier={}, documentTypeIdentifier={}", organizationNumber, id, e);
+                log.debug("Failed ELMA lookup for identifier={}, documentTypeIdentifier={}", identifier, id, e);
             }
         }
         return metadataList;

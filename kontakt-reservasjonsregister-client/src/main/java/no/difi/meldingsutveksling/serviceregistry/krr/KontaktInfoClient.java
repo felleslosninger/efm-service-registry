@@ -1,6 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.krr;
 
 import com.nimbusds.jose.proc.BadJWSException;
+import no.difi.meldingsutveksling.domain.PersonIdentifier;
 import no.difi.move.common.oauth.JWTDecoder;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
@@ -11,7 +12,7 @@ import java.util.Objects;
 
 abstract class KontaktInfoClient {
 
-    String fetchKontaktInfo(String identifier, String token, URI uri) throws KontaktInfoException {
+    String fetchKontaktInfo(PersonIdentifier identifier, String token, URI uri) throws KontaktInfoException {
         PersonRequest request = PersonRequest.of(identifier);
 
         HttpHeaders headers = new HttpHeaders();

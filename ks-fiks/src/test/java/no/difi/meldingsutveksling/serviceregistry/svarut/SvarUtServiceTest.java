@@ -1,6 +1,8 @@
 package no.difi.meldingsutveksling.serviceregistry.svarut;
 
 import com.google.common.collect.Lists;
+import no.difi.meldingsutveksling.domain.ICD;
+import no.difi.meldingsutveksling.domain.Iso6523;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,6 +25,8 @@ public class SvarUtServiceTest {
     @Mock
     private SvarUtClient svarUtClientMock;
 
+    private final Iso6523 FIKS_ORGNR = Iso6523.of(ICD.NO_ORG, "123456789");
+
     @Test
     public void hasSvarUtAddressering_OrganizationNotFound_FiksReceiverResponseShouldBeEmpty() throws SvarUtClientException {
         RetrieveMottakerSystemForOrgnrResponse emptyResponse = RetrieveMottakerSystemForOrgnrResponse.builder()
@@ -30,7 +34,7 @@ public class SvarUtServiceTest {
         when(svarUtClientMock.retrieveMottakerSystemForOrgnr(any(RetrieveMottakerSystemForOrgnr.class)))
                 .thenReturn(emptyResponse);
 
-        Optional<Integer> result = target.hasSvarUtAdressering("123456789", null);
+        Optional<Integer> result = target.hasSvarUtAdressering(FIKS_ORGNR, null);
 
         assertFalse(result.isPresent());
     }
@@ -44,7 +48,7 @@ public class SvarUtServiceTest {
         when(svarUtClientMock.retrieveMottakerSystemForOrgnr(any(RetrieveMottakerSystemForOrgnr.class)))
                 .thenReturn(response);
 
-        Optional<Integer> result = target.hasSvarUtAdressering("123456789", null);
+        Optional<Integer> result = target.hasSvarUtAdressering(FIKS_ORGNR, null);
 
         assertTrue(result.isPresent());
     }
@@ -58,7 +62,7 @@ public class SvarUtServiceTest {
         when(svarUtClientMock.retrieveMottakerSystemForOrgnr(any(RetrieveMottakerSystemForOrgnr.class)))
                 .thenReturn(response);
 
-        Optional<Integer> result = target.hasSvarUtAdressering("123456789", null);
+        Optional<Integer> result = target.hasSvarUtAdressering(FIKS_ORGNR, null);
 
         assertFalse(result.isPresent());
     }
@@ -70,7 +74,7 @@ public class SvarUtServiceTest {
         when(svarUtClientMock.retrieveMottakerSystemForOrgnr(any(RetrieveMottakerSystemForOrgnr.class)))
                 .thenReturn(emptyResponse);
 
-        Optional<Integer> result = target.hasSvarUtAdressering("123456789", 0);
+        Optional<Integer> result = target.hasSvarUtAdressering(FIKS_ORGNR, 0);
 
         assertFalse(result.isPresent());
     }
@@ -86,7 +90,7 @@ public class SvarUtServiceTest {
         when(svarUtClientMock.retrieveMottakerSystemForOrgnr(any(RetrieveMottakerSystemForOrgnr.class)))
                 .thenReturn(response);
 
-        Optional<Integer> result = target.hasSvarUtAdressering("123456789", 0);
+        Optional<Integer> result = target.hasSvarUtAdressering(FIKS_ORGNR, 0);
 
         assertFalse(result.isPresent());
     }
@@ -102,7 +106,7 @@ public class SvarUtServiceTest {
         when(svarUtClientMock.retrieveMottakerSystemForOrgnr(any(RetrieveMottakerSystemForOrgnr.class)))
                 .thenReturn(response);
 
-        Optional<Integer> result = target.hasSvarUtAdressering("123456789", targetLevel);
+        Optional<Integer> result = target.hasSvarUtAdressering(FIKS_ORGNR, targetLevel);
 
         assertFalse(result.isPresent());
     }
@@ -118,7 +122,7 @@ public class SvarUtServiceTest {
         when(svarUtClientMock.retrieveMottakerSystemForOrgnr(any(RetrieveMottakerSystemForOrgnr.class)))
                 .thenReturn(response);
 
-        Optional<Integer> result = target.hasSvarUtAdressering("123456789", targetLevel);
+        Optional<Integer> result = target.hasSvarUtAdressering(FIKS_ORGNR, targetLevel);
 
         assertTrue(result.isPresent());
     }

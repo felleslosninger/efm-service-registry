@@ -28,6 +28,7 @@ public class SRConfig implements WebMvcConfigurer {
     @Override
     public void addFormatters(FormatterRegistry registry) {
         registry.addConverter(new ServiceIdentifierConverter());
+//        registry.addConverter(new PartnerIdentifierConverter());
     }
 
     @Override

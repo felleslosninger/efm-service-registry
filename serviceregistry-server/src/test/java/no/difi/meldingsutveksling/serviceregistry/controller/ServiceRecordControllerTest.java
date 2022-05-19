@@ -4,6 +4,9 @@ import com.jayway.jsonpath.JsonPath;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
+import no.difi.meldingsutveksling.domain.ICD;
+import no.difi.meldingsutveksling.domain.Iso6523;
+import no.difi.meldingsutveksling.domain.PersonIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
@@ -74,7 +77,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(value = ServiceRecordController.class)
 @TestPropertySource("classpath:application-test.properties")
-@Import({PayloadSigner.class, SRConfig.class})
+@Import({PayloadSigner.class, SRConfig.class, SRRequestScope.class})
 @WithMockUser
 @AutoConfigureRestDocs
 public class ServiceRecordControllerTest {
@@ -118,7 +121,7 @@ public class ServiceRecordControllerTest {
     @MockBean
     private AuthenticationService authenticationService;
 
-    @MockBean
+    @Autowired
     private SRRequestScope requestScope;
 
     @Autowired
@@ -156,33 +159,33 @@ public class ServiceRecordControllerTest {
         Postadresse testAdr = new Postadresse("Skrivarvegen 42", "1337", "teststed", "testland");
         OrganizationInfo info123123123 = new OrganizationInfo("123123123", "foo",
                 testAdr, new OrganizationType("ORGL"));
-        when(entityService.getEntityInfo("123123123")).thenReturn(Optional.of(info123123123));
+        when(entityService.getEntityInfo(Iso6523.of(ICD.NO_ORG, "123123123"))).thenReturn(Optional.of(info123123123));
         OrganizationInfo info321321312 = new OrganizationInfo("321321321", "bar",
                 testAdr, new OrganizationType("ORGL"));
-        when(entityService.getEntityInfo("321321321")).thenReturn(Optional.of(info321321312));
+        when(entityService.getEntityInfo(Iso6523.of(ICD.NO_ORG, "321321321"))).thenReturn(Optional.of(info321321312));
 
-        CitizenInfo citizenInfo = new CitizenInfo("12345678901");
-        when(entityService.getEntityInfo("12345678901")).thenReturn(Optional.of(citizenInfo));
-        when(entityService.getEntityInfo("404040404")).thenReturn(Optional.empty());
+        CitizenInfo citizenInfo = new CitizenInfo("08089409382");
+        when(entityService.getEntityInfo(new PersonIdentifier("08089409382"))).thenReturn(Optional.of(citizenInfo));
+        when(entityService.getEntityInfo(Iso6523.of(ICD.NO_ORG, "404040404"))).thenReturn(Optional.empty());
     }
 
     private void setupMocksForSuccessfulDpi() throws MalformedURLException, KontaktInfoException, SecurityLevelNotFoundException, CertificateNotFoundException, BrregNotFoundException, SvarUtClientException {
         ServiceregistryProperties props = fakePropertiesForDpi();
-        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
+        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn(Iso6523.of(ICD.NO_ORG, "123123123"));
         PersonResource personResource = fakePersonResourceForDpi();
         PostAddress postAddress = new PostAddress("Address name", "Street x", "Postal code", "Area", "Country");
         Process digitalpostProcess = new Process().setIdentifier(PROC_DIGITALPOST)
                 .setDocumentTypes(Arrays.asList(new DocumentType().setIdentifier(DOC_DIGITAL), new DocumentType().setIdentifier(DOC_PRINT)));
-        SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord("12345678901", digitalpostProcess, personResource,
+        SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord(new PersonIdentifier("08089409382"), digitalpostProcess, personResource,
                 props.getDpi().getEndpointURL().toString(), false, postAddress, postAddress);
         dpiServiceRecord.setProcess(PROC_DIGITALPOST);
         dpiServiceRecord.setDocumentTypes(Arrays.asList(DOC_DIGITAL, DOC_PRINT));
-        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString(), anyBoolean()))
+        when(serviceRecordService.createDigitalpostServiceRecords(any(), any(), anyBoolean()))
                 .thenReturn(Lists.newArrayList(dpiServiceRecord));
-        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString(), anyBoolean(), any(Process.class)))
+        when(serviceRecordService.createDigitalpostServiceRecords(any(), any(), anyBoolean(), any(Process.class)))
             .thenReturn(Lists.newArrayList(dpiServiceRecord));
         when(serviceRecordService.createArkivmeldingServiceRecord(any(), any(), anyInt())).thenReturn(Optional.empty());
-        when(serviceRecordService.createEinnsynServiceRecords(any(), any())).thenReturn(Lists.newArrayList());
+        when(serviceRecordService.createEinnsynServiceRecords(any())).thenReturn(Lists.newArrayList());
     }
 
     private ParameterDescriptor getIdentifierParam() {
@@ -223,10 +226,10 @@ public class ServiceRecordControllerTest {
     @Test
     public void testPersonInfoRecordShouldMatchExpectedValues() throws Exception {
         setupMocksForSuccessfulDpi();
-        mvc.perform(get("/info/{identifier}", "12345678901")
+        mvc.perform(get("/info/{identifier}", "08089409382")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.infoRecord.identifier", is("12345678901")))
+                .andExpect(jsonPath("$.infoRecord.identifier", is("08089409382")))
                 .andExpect(jsonPath("$.infoRecord.entityType.name", is("citizen")))
                 .andDo(document("info/person",
                         preprocessRequest(prettyPrint()),
@@ -252,6 +255,24 @@ public class ServiceRecordControllerTest {
                 .andExpect(jsonPath("$.infoRecord.identifier", is("123123123")))
                 .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")))
                 .andDo(document("identifier/org",
+                        preprocessRequest(prettyPrint()),
+                        preprocessResponse(prettyPrint()),
+                        requestHeaders(getAuthHeader()),
+                        pathParameters(getIdentifierParam()),
+                        requestParameters(getSecurityLevelParam(), getConversationIdParam())
+                ));
+    }
+
+    @Test
+    public void getDpoForIso6523ReturnsCorrectFormatInServiceRecord() throws Exception {
+        when(serviceRecordService.createArkivmeldingServiceRecords(any(), any()))
+                .thenReturn(Lists.newArrayList(DPO_SERVICE_RECORD, DPV_SERVICE_RECORD, DPE_SERVICE_RECORD));
+        mvc.perform(get("/identifier/{identifier}", "0192:123123123")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("123123123")))
+                .andExpect(jsonPath("$.infoRecord.identifier", is("123123123")))
+                .andDo(document("identifier/org-iso6523",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         requestHeaders(getAuthHeader()),
@@ -298,10 +319,10 @@ public class ServiceRecordControllerTest {
     @Test
     public void get_CredentialsResolveToDpi_ServiceRecordShouldMatchExpectedValues() throws Exception {
         setupMocksForSuccessfulDpi();
-        mvc.perform(get("/identifier/{identifier}", "12345678901")
+        mvc.perform(get("/identifier/{identifier}", "08089409382")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("12345678901")))
+                .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("08089409382")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPI")))
                 .andDo(document("identifier/person",
                         preprocessRequest(prettyPrint()),
@@ -316,10 +337,10 @@ public class ServiceRecordControllerTest {
     public void get_CredentialsResolveToDpiAndDsfLookupFails_ShouldReturnErrorResponseBody() throws Exception {
         setupMocksForSuccessfulDpi();
         final String message = "identifier not found in DSF";
-        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString(), anyBoolean()))
+        when(serviceRecordService.createDigitalpostServiceRecords(any(), any(), anyBoolean()))
                 .thenThrow(new KontaktInfoException(message));
 
-        mvc.perform(get("/identifier/12345678901")
+        mvc.perform(get("/identifier/08089409382")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_description", containsString(message)));
@@ -331,10 +352,10 @@ public class ServiceRecordControllerTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         setupMocksForSuccessfulDpi();
 
-        mvc.perform(get("/identifier/{identifier}/process/{processIdentifier}", "12345678901", PROC_DIGITALPOST)
+        mvc.perform(get("/identifier/{identifier}/process/{processIdentifier}", "08089409382", PROC_DIGITALPOST)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("12345678901")))
+                .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("08089409382")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPI")))
                 .andDo(document("identifier/digital",
                         preprocessRequest(prettyPrint()),
@@ -351,10 +372,10 @@ public class ServiceRecordControllerTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         setupMocksForSuccessfulDpi();
         final String message = "identifier not found in DSF";
-        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString(), anyBoolean()))
+        when(serviceRecordService.createDigitalpostServiceRecords(any(), any(), anyBoolean()))
                 .thenThrow(new KontaktInfoException(message));
 
-        mvc.perform(get("/identifier/12345678901")
+        mvc.perform(get("/identifier/08089409382")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_description", containsString(message)));
@@ -363,11 +384,11 @@ public class ServiceRecordControllerTest {
     @Test
     public void get_CredentialsResolveToDpiAndLookupGivesError_ShouldReturnErrorResponseBody() throws Exception {
         final String message = "Error looking up identifier in KRR";
-        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
-        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString(), anyBoolean()))
+        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn(Iso6523.of(ICD.NO_ORG, "123123123"));
+        when(serviceRecordService.createDigitalpostServiceRecords(any(), any(), anyBoolean()))
                 .thenThrow(new KontaktInfoException(message));
 
-        mvc.perform(get("/identifier/12345678901")
+        mvc.perform(get("/identifier/08089409382")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_description", containsString(message)));
@@ -378,11 +399,11 @@ public class ServiceRecordControllerTest {
         Process processMock = mockProcess(ProcessCategory.DIGITALPOST);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         final String message = "Error looking up identifier in KRR";
-        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
-        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString(), anyBoolean(), any(Process.class)))
+        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn(Iso6523.of(ICD.NO_ORG, "123123123"));
+        when(serviceRecordService.createDigitalpostServiceRecords(any(), any(), anyBoolean(), any(Process.class)))
                 .thenThrow(new KontaktInfoException(message));
 
-        mvc.perform(get("/identifier/12345678901/process/some:process")
+        mvc.perform(get("/identifier/08089409382/process/some:process")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_description", containsString(message)));
@@ -441,7 +462,7 @@ public class ServiceRecordControllerTest {
 
     @Test
     public void getWithProcessIdentifier_MissingEntity_ShouldReturn404() throws Exception {
-        mvc.perform(get("/identifier/1337/process/ProcessIdHere")).andExpect(status().isNotFound());
+        mvc.perform(get("/identifier/111222333/process/ProcessIdHere")).andExpect(status().isNotFound());
     }
 
     @Test
@@ -505,7 +526,7 @@ public class ServiceRecordControllerTest {
     public void getWithProcessIdentifier_AvtaltResolvesToDpo_ServiceRecordShouldMatchExpectedValues() throws Exception {
         Process processMock = mockProcess(ProcessCategory.AVTALT);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
-        when(serviceRecordService.createServiceRecord(any(), any(), any())).thenReturn(Optional.of(DPO_SERVICE_RECORD));
+        when(serviceRecordService.createServiceRecord(any(), any())).thenReturn(Optional.of(DPO_SERVICE_RECORD));
 
         mvc.perform(get("/identifier/123123123/process/ProcessID").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -537,7 +558,7 @@ public class ServiceRecordControllerTest {
         Process processMock = mockProcess(ProcessCategory.AVTALT);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         final String message = "Certificate not found.";
-        when(serviceRecordService.createServiceRecord(any(), any(), any()))
+        when(serviceRecordService.createServiceRecord(any(), any()))
                 .thenThrow(new CertificateNotFoundException(message, new VirksertClientException("")));
 
         mvc.perform(get("/identifier/123123123/process/ProcessID").accept(MediaType.APPLICATION_JSON))
@@ -623,7 +644,7 @@ public class ServiceRecordControllerTest {
     public void getWithProcessIdentifier_EinnsynServiceRecordShouldMatchExpectedValues() throws Exception {
         Process processMock = mockProcess(ProcessCategory.EINNSYN);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
-        when(serviceRecordService.createServiceRecord(any(), any(), any())).thenReturn(Optional.of(DPE_SERVICE_RECORD));
+        when(serviceRecordService.createServiceRecord(any(), any())).thenReturn(Optional.of(DPE_SERVICE_RECORD));
 
         mvc.perform(get("/identifier/{identifier}/process/{processIdentifier}", "123123123", PROC_EINNSYN_INNSYNSKRAV)
                 .accept(MediaType.APPLICATION_JSON))

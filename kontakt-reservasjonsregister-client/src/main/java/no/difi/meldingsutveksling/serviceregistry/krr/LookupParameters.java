@@ -1,18 +1,19 @@
 package no.difi.meldingsutveksling.serviceregistry.krr;
 
 import lombok.Data;
+import no.difi.meldingsutveksling.domain.PersonIdentifier;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 @Data
 public class LookupParameters {
-    private final String identifier;
+    private final PersonIdentifier identifier;
     private Jwt token;
 
-    private LookupParameters(String identifier) {
+    private LookupParameters(PersonIdentifier identifier) {
         this.identifier = identifier;
     }
 
-    public static LookupParameters lookup(String identifier) {
+    public static LookupParameters lookup(PersonIdentifier identifier) {
         return new LookupParameters(identifier);
     }
 

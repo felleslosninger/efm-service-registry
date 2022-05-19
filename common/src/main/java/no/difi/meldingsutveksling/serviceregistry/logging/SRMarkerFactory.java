@@ -2,6 +2,8 @@ package no.difi.meldingsutveksling.serviceregistry.logging;
 
 import net.logstash.logback.marker.LogstashMarker;
 import net.logstash.logback.marker.Markers;
+import no.difi.meldingsutveksling.domain.Iso6523;
+import no.difi.meldingsutveksling.domain.PartnerIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 
 public class SRMarkerFactory {
@@ -22,11 +24,11 @@ public class SRMarkerFactory {
         return Markers.append(REMOTE_HOST, remoteHost);
     }
 
-    private static LogstashMarker clientIdMarker(String clientId) {
+    private static LogstashMarker clientIdMarker(Iso6523 clientId) {
         return Markers.append(CLIENT_ID, clientId);
     }
 
-    private static LogstashMarker identifierMarker(String identifier) {
+    private static LogstashMarker identifierMarker(PartnerIdentifier identifier) {
         return Markers.append(IDENTIFIER, identifier);
     }
 
@@ -40,7 +42,7 @@ public class SRMarkerFactory {
                 .and(clientIdMarker(requestScope.getClientId()));
     }
 
-    public static LogstashMarker markerFrom(String remoteIp, String remoteHost, String clientId) {
+    public static LogstashMarker markerFrom(String remoteIp, String remoteHost, Iso6523 clientId) {
         return remoteIpMarker(remoteIp).and(remoteHostMarker(remoteHost)).and(clientIdMarker(clientId));
     }
 

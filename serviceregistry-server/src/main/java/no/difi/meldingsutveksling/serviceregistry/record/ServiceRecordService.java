@@ -4,6 +4,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import no.difi.meldingsutveksling.domain.Iso6523;
+import no.difi.meldingsutveksling.domain.PersonIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
@@ -51,30 +53,30 @@ public class ServiceRecordService {
     }
 
     @SuppressWarnings("squid:S1166")
-    public List<ServiceRecord> createArkivmeldingServiceRecords(EntityInfo entityInfo, Integer securityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
+    public List<ServiceRecord> createArkivmeldingServiceRecords(Iso6523 identifier, Integer securityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
         Set<Process> arkivmeldingProcesses = processService.findAll(ProcessCategory.ARKIVMELDING);
         for (Process process : arkivmeldingProcesses) {
-            createArkivmeldingServiceRecord(entityInfo, process, securityLevel)
+            createArkivmeldingServiceRecord(identifier, process, securityLevel)
                 .ifPresent(serviceRecords::add);
         }
         return serviceRecords;
     }
 
-    public Optional<ServiceRecord> createArkivmeldingServiceRecord(EntityInfo entityInfo, Process process, Integer securityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
-        Set<String> processIdentifiers = getSmpRegistrations(entityInfo.getIdentifier(), Sets.newHashSet(process)).stream()
+    public Optional<ServiceRecord> createArkivmeldingServiceRecord(Iso6523 identifier, Process process, Integer securityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
+        Set<String> processIdentifiers = getSmpRegistrations(identifier, Sets.newHashSet(process)).stream()
             .map(ProcessIdentifier::getIdentifier)
             .collect(Collectors.toSet());
         if (processIdentifiers.isEmpty()) {
             if (properties.getFeature().isEnableDpfDpv()) {
-                Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(entityInfo.getIdentifier(), securityLevel);
+                Optional<Integer> hasSvarUt = svarUtService.hasSvarUtAdressering(identifier, securityLevel);
                 if (hasSvarUt.isPresent()) {
-                    return Optional.of(serviceRecordFactory.createDpfServiceRecord(entityInfo.getIdentifier(), process, hasSvarUt.get()));
+                    return Optional.of(serviceRecordFactory.createDpfServiceRecord(identifier, process, hasSvarUt.get()));
                 } else {
                     if (securityLevel != null && securityLevel == 4) {
-                        throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", entityInfo, securityLevel));
+                        throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", identifier, securityLevel));
                     } else {
-                        return Optional.of(serviceRecordFactory.createDpvServiceRecord(entityInfo.getIdentifier(), process));
+                        return Optional.of(serviceRecordFactory.createDpvServiceRecord(identifier, process));
                     }
                 }
             } else {
@@ -83,42 +85,42 @@ public class ServiceRecordService {
         }
 
         if (processIdentifiers.contains(process.getIdentifier())) {
-            return Optional.of(serviceRecordFactory.createDpoServiceRecord(entityInfo.getIdentifier(), process));
+            return Optional.of(serviceRecordFactory.createDpoServiceRecord(identifier, process));
         } else {
             if (securityLevel != null && securityLevel == 4) {
                 return Optional.empty();
             }
-            return Optional.of(serviceRecordFactory.createDpvServiceRecord(entityInfo.getIdentifier(), process));
+            return Optional.of(serviceRecordFactory.createDpvServiceRecord(identifier, process));
         }
     }
 
-    public Optional<ServiceRecord> createServiceRecord(EntityInfo entityInfo, Process process, Integer securityLevel) throws CertificateNotFoundException {
-        if (getSmpRegistrations(entityInfo.getIdentifier(), Sets.newHashSet(process))
+    public Optional<ServiceRecord> createServiceRecord(Iso6523 identifier, Process process) throws CertificateNotFoundException {
+        if (getSmpRegistrations(identifier, Sets.newHashSet(process))
             .stream()
             .map(ProcessIdentifier::getIdentifier)
-            .anyMatch(identifier -> identifier.equals(process.getIdentifier()))) {
+            .anyMatch(i -> i.equals(process.getIdentifier()))) {
             if (process.getCategory() == EINNSYN) {
-                return Optional.of(serviceRecordFactory.createDpeServiceRecord(entityInfo.getIdentifier(), process));
+                return Optional.of(serviceRecordFactory.createDpeServiceRecord(identifier, process));
             } else if (process.getCategory() == AVTALT) {
-                return Optional.of(serviceRecordFactory.createDpoServiceRecord(entityInfo.getIdentifier(), process));
+                return Optional.of(serviceRecordFactory.createDpoServiceRecord(identifier, process));
             }
         }
 
         return Optional.empty();
     }
 
-    public List<ServiceRecord> createEinnsynServiceRecords(EntityInfo entityInfo, Integer securityLevel) throws CertificateNotFoundException {
+    public List<ServiceRecord> createEinnsynServiceRecords(Iso6523 identifier) throws CertificateNotFoundException {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
         Set<Process> einnsynProcesses = processService.findAll(EINNSYN);
 
-        Set<String> processIdentifiers = getSmpRegistrations(entityInfo.getIdentifier(), einnsynProcesses).stream()
+        Set<String> processIdentifiers = getSmpRegistrations(identifier, einnsynProcesses).stream()
             .map(ProcessIdentifier::getIdentifier)
             .collect(Collectors.toSet());
 
         if (!processIdentifiers.isEmpty()) {
             for (Process p : einnsynProcesses) {
                 if (processIdentifiers.contains(p.getIdentifier())) {
-                    serviceRecords.add(serviceRecordFactory.createDpeServiceRecord(entityInfo.getIdentifier(), p));
+                    serviceRecords.add(serviceRecordFactory.createDpeServiceRecord(identifier, p));
                 }
             }
             return serviceRecords;
@@ -127,17 +129,17 @@ public class ServiceRecordService {
         return serviceRecords;
     }
 
-    public List<ServiceRecord> createAvtaltServiceRecords(String orgnr) throws CertificateNotFoundException {
+    public List<ServiceRecord> createAvtaltServiceRecords(Iso6523 identifier) throws CertificateNotFoundException {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();
         Set<Process> avtaltProcesses = processService.findAll(AVTALT);
 
-        Set<String> processIdentifiers = getSmpRegistrations(orgnr, avtaltProcesses).stream()
+        Set<String> processIdentifiers = getSmpRegistrations(identifier, avtaltProcesses).stream()
             .map(ProcessIdentifier::getIdentifier)
             .collect(Collectors.toSet());
 
         for (Process p : avtaltProcesses) {
             if (processIdentifiers.contains(p.getIdentifier())) {
-                serviceRecords.add(serviceRecordFactory.createDpoServiceRecord(orgnr, p));
+                serviceRecords.add(serviceRecordFactory.createDpoServiceRecord(identifier, p));
             }
         }
 
@@ -145,22 +147,22 @@ public class ServiceRecordService {
     }
 
     @PreAuthorize("hasAuthority('SCOPE_move/dpi.read')")
-    public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
-                                                               String onBehalfOrgnr,
+    public List<ServiceRecord> createDigitalpostServiceRecords(PersonIdentifier identifier,
+                                                               Iso6523 clientIdentifier,
                                                                boolean print) throws KontaktInfoException, BrregNotFoundException {
-        return createDigitalpostServiceRecords(identifier, onBehalfOrgnr, print, processService.findAll(ProcessCategory.DIGITALPOST));
+        return createDigitalpostServiceRecords(identifier, clientIdentifier, print, processService.findAll(ProcessCategory.DIGITALPOST));
     }
 
     @PreAuthorize("hasAuthority('SCOPE_move/dpi.read')")
-    public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
-                                                               String onBehalfOrgnr,
+    public List<ServiceRecord> createDigitalpostServiceRecords(PersonIdentifier identifier,
+                                                               Iso6523 clientIdentifier,
                                                                boolean print,
                                                                Process process) throws KontaktInfoException, BrregNotFoundException {
-        return createDigitalpostServiceRecords(identifier, onBehalfOrgnr, print, Collections.singleton(process));
+        return createDigitalpostServiceRecords(identifier, clientIdentifier, print, Collections.singleton(process));
     }
 
-    private List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
-                                                                String onBehalfOrgnr,
+    private List<ServiceRecord> createDigitalpostServiceRecords(PersonIdentifier identifier,
+                                                                Iso6523 clientIdentifier,
                                                                 boolean print,
                                                                 Set<Process> processes) throws KontaktInfoException, BrregNotFoundException {
 
@@ -181,12 +183,12 @@ public class ServiceRecordService {
                     serviceRecords.add(serviceRecordFactory.createDigitalServiceRecord(personResource, identifier, p));
                     break;
                 case PRINT:
-                    serviceRecordFactory.createPrintServiceRecord(identifier, onBehalfOrgnr, requestScope.getToken(), personResource, p, print)
+                    serviceRecordFactory.createPrintServiceRecord(identifier, clientIdentifier, requestScope.getToken(), personResource, p, print)
                         .ifPresent(serviceRecords::add);
                     break;
                 case DPV:
                 default:
-                    serviceRecordFactory.createPrintServiceRecord(identifier, onBehalfOrgnr, requestScope.getToken(), personResource, p, print)
+                    serviceRecordFactory.createPrintServiceRecord(identifier, clientIdentifier, requestScope.getToken(), personResource, p, print)
                         .ifPresent(serviceRecords::add);
                     serviceRecords.add(serviceRecordFactory.createDigitalDpvServiceRecord(identifier, p));
             }
@@ -195,12 +197,11 @@ public class ServiceRecordService {
         return serviceRecords;
     }
 
-    private Set<ProcessIdentifier> getSmpRegistrations(String organizationIdentifier, Set<Process> processes) {
+    private Set<ProcessIdentifier> getSmpRegistrations(Iso6523 identifier, Set<Process> processes) {
         Set<String> documentTypeIdentifiers = processes.stream()
             .flatMap(p -> p.getDocumentTypes().stream())
             .map(DocumentType::getIdentifier)
             .collect(Collectors.toSet());
-        String norwegianIcd = properties.getElma().getLookupIcd();
-        return elmaLookupService.lookupRegisteredProcesses(String.format("%s:%s", norwegianIcd, organizationIdentifier), documentTypeIdentifiers);
+        return elmaLookupService.lookupRegisteredProcesses(identifier, documentTypeIdentifiers);
     }
 }

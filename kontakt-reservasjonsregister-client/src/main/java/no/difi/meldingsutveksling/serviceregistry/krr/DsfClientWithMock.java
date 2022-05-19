@@ -22,7 +22,7 @@ public class DsfClientWithMock extends DefaultDsfClient {
     public Optional<DsfResource> getDSFResource(LookupParameters params, URI endpointUri) throws KontaktInfoException {
         return super.getDSFResource(params, endpointUri)
             .or(() -> Optional.of(DsfResource.builder()
-                .personIdentifier(params.getIdentifier())
+                .personIdentifier(params.getIdentifier().getIdentifier())
                 .name("Raffen")
                 .street("Portveien 2")
                 .postAddress("0468 Oslo")

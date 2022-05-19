@@ -336,6 +336,10 @@
             <groupId>no.difi.move-common</groupId>
             <artifactId>cloud</artifactId>
         </dependency>
+        <dependency>
+            <groupId>no.difi.move-common</groupId>
+            <artifactId>domain</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>commons-io</groupId>

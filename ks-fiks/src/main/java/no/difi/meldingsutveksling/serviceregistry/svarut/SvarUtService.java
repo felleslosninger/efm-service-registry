@@ -3,6 +3,7 @@ package no.difi.meldingsutveksling.serviceregistry.svarut;
 import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import no.difi.meldingsutveksling.domain.Iso6523;
 import no.difi.meldingsutveksling.serviceregistry.CacheConfig;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
@@ -22,8 +23,8 @@ public class SvarUtService {
 
     @Cacheable(CacheConfig.SVARUT_CACHE)
     @Timed(value = "svarut.client.timer", description = "Timer for Svarut RetrieveMottakerSystemForOrgnr")
-    public Optional<Integer> hasSvarUtAdressering(String orgnr, Integer securityLevel) throws SvarUtClientException {
-        RetrieveMottakerSystemForOrgnr request = RetrieveMottakerSystemForOrgnr.builder().withOrganisasjonsnr(orgnr).build();
+    public Optional<Integer> hasSvarUtAdressering(Iso6523 identifier, Integer securityLevel) throws SvarUtClientException {
+        RetrieveMottakerSystemForOrgnr request = RetrieveMottakerSystemForOrgnr.builder().withOrganisasjonsnr(identifier.getOrganizationIdentifier()).build();
         RetrieveMottakerSystemForOrgnrResponse response = svarUtClient.retrieveMottakerSystemForOrgnr(request);
         Stream<MottakerForsendelseTyper> validFiksRequests = response.getReturn().stream()
                 .filter(m -> isNullOrEmpty(m.forsendelseType));

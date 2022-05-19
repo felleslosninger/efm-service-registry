@@ -1,9 +1,12 @@
 package no.difi.meldingsutveksling.serviceregistry.controller
 
 import com.ninjasquad.springmockk.MockkBean
+import com.ninjasquad.springmockk.SpykBean
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.mockk
+import no.difi.meldingsutveksling.domain.ICD
+import no.difi.meldingsutveksling.domain.Iso6523
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope
 import no.difi.meldingsutveksling.serviceregistry.config.SRConfig
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner
@@ -15,15 +18,15 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document
 import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get
 import org.springframework.restdocs.operation.preprocess.Preprocessors.*
 import org.springframework.security.core.Authentication
+import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication
-import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
@@ -33,10 +36,10 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @ExtendWith(SpringExtension::class)
 @WebMvcTest(VirksertController::class)
-@ContextConfiguration(classes = [VirksertController::class, GlobalControllerExceptionHandler::class, SRConfig::class])
+@Import(value = [SRConfig::class, GlobalControllerExceptionHandler::class])
 @TestPropertySource("classpath:application-test.properties")
+@WithMockUser
 @AutoConfigureRestDocs
-@AutoConfigureMockMvc(addFilters = true)
 class VirksertControllerTest {
 
     @Autowired
@@ -45,7 +48,7 @@ class VirksertControllerTest {
     @MockkBean
     lateinit var payloadSigner: PayloadSigner
 
-    @MockkBean
+    @SpykBean
     lateinit var requestScope: SRRequestScope
 
     @MockkBean
@@ -54,7 +57,7 @@ class VirksertControllerTest {
     @MockkBean
     lateinit var authenticationService: AuthenticationService
 
-    val authMock = mockk<Authentication> {
+    private val authMock = mockk<Authentication> {
         every { isAuthenticated } returns true
         every { principal } returns true
         every { name } returns null
@@ -65,14 +68,15 @@ class VirksertControllerTest {
         MockKAnnotations.init(this)
 
         with(requestScope) {
-            every { identifier } returns "910076787"
+            every { identifier } returns Iso6523.of(ICD.NO_ORG, "910076787")
             every { conversationId } returns "90c0d1a0-889b-4cee-b885-14839c81b411"
-            every { clientId } returns "36320099-610a-443c-ad0d-555829ff013c"
+            every { clientId } returns Iso6523.of(ICD.NO_ORG, "123123123")
+            every { isUsePlainFormat } returns false
         }
 
         with(virksertService) {
             every { getCertificate(any(), any()) } throws VirksertClientException("not found")
-            every { getCertificate("910076787", any()) } returns "pem123"
+            every { getCertificate(Iso6523.of(ICD.NO_ORG, "910076787"), any()) } returns "pem123"
         }
 
         every { authenticationService.getToken(any()) } returns mockk {

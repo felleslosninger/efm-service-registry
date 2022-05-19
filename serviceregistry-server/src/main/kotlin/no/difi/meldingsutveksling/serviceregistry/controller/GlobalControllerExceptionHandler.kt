@@ -8,6 +8,7 @@ import no.difi.meldingsutveksling.serviceregistry.exceptions.*
 import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException
 import no.difi.meldingsutveksling.serviceregistry.logger
 import no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom
+import no.difi.meldingsutveksling.serviceregistry.mvc.UnknownIdentifierException
 import no.difi.meldingsutveksling.serviceregistry.mvc.UnknownServiceIdentifierException
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException
@@ -94,6 +95,12 @@ class GlobalControllerExceptionHandler(private val requestScope: SRRequestScope)
     @ExceptionHandler(UnknownServiceIdentifierException::class)
     fun unknownServiceIdentifie(request: HttpServletRequest, e: Exception): ResponseEntity<*> {
         log.debug(markerFrom(requestScope), "Converting service identifier failed for ${request.requestURL}", e)
+        return errorResponse(HttpStatus.BAD_REQUEST, e.message)
+    }
+
+    @ExceptionHandler(UnknownIdentifierException::class)
+    fun unknownIdentifier(request: HttpServletRequest, e: Exception): ResponseEntity<*> {
+        log.debug(markerFrom(requestScope), "Converting identifier failed for ${request.requestURL}", e)
         return errorResponse(HttpStatus.BAD_REQUEST, e.message)
     }
 

@@ -1,5 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.controller
 
+import no.difi.meldingsutveksling.domain.Iso6523
+import no.difi.meldingsutveksling.domain.PartnerIdentifier
 import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier.DPE
 import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier.DPO
 import no.difi.meldingsutveksling.serviceregistry.exceptions.NonMatchingCertificatesException
@@ -22,7 +24,10 @@ class VirksertController(
 ) {
 
     @GetMapping("/{identifier}", produces = [MediaType.TEXT_PLAIN_VALUE])
-    fun getCertificate(@PathVariable identifier: String, auth: Authentication): String {
+    fun getCertificate(@PathVariable identifier: PartnerIdentifier, auth: Authentication): String {
+        if (identifier !is Iso6523) {
+            throw IllegalArgumentException()
+        }
         return with(authenticationService.getToken(auth).claims["scope"] as String) {
             when {
                 contains("move/dpo.read") && contains("move/dpe.read") -> {
@@ -41,7 +46,7 @@ class VirksertController(
     }
 
     @GetMapping("/{identifier}", produces = ["application/jose"])
-    fun getCertificateJose(@PathVariable identifier: String, auth: Authentication): String {
+    fun getCertificateJose(@PathVariable identifier: PartnerIdentifier, auth: Authentication): String {
         return payloadSigner.sign(getCertificate(identifier, auth))
     }
 

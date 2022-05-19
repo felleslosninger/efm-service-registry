@@ -1,13 +1,14 @@
 package no.difi.meldingsutveksling.serviceregistry.service.brreg;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
+import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import no.difi.meldingsutveksling.serviceregistry.domain.DatahotellEntry;
 import no.difi.meldingsutveksling.serviceregistry.domain.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.domain.OrganizationInfo;
-import no.difi.meldingsutveksling.serviceregistry.domain.DatahotellEntry;
 import no.difi.meldingsutveksling.serviceregistry.domain.datahotell.DatahotellRespons;
-import org.springframework.beans.factory.annotation.Autowired;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -21,15 +22,12 @@ import java.util.Optional;
 import static java.lang.String.format;
 
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class DatahotellClient {
 
-    private ServiceregistryProperties props;
-
-    @Autowired
-    public DatahotellClient(ServiceregistryProperties props) {
-        this.props = props;
-    }
+    private final ServiceregistryProperties props;
+    private final SRRequestScope requestScope;
 
     public Optional<EntityInfo> getOrganizationInfo(String orgnr) throws BrregNotFoundException {
         Optional<DatahotellEntry> enhet = getHovedenhet(orgnr);
@@ -40,7 +38,7 @@ public class DatahotellClient {
             throw new BrregNotFoundException(String.format("Identifier %s not found in datahotell", orgnr));
         }
 
-        return enhet.map(OrganizationInfo::of);
+        return enhet.map(e -> OrganizationInfo.of(e, requestScope.isUsePlainFormat()));
     }
 
     private Optional<DatahotellEntry> getHovedenhet(String orgnr) {

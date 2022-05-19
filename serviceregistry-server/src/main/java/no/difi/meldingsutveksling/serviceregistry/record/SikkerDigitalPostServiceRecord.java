@@ -4,6 +4,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import no.difi.meldingsutveksling.domain.PersonIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
@@ -26,14 +27,14 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
     private final PostAddress postAddress;
     private final PostAddress returnAddress;
 
-    public SikkerDigitalPostServiceRecord(String identifier,
+    public SikkerDigitalPostServiceRecord(PersonIdentifier identifier,
                                           Process process,
                                           PersonResource personResource,
                                           String endpointUrl,
                                           boolean isFysiskPost,
                                           PostAddress postAddress,
                                           PostAddress returnAddress) {
-        super(ServiceIdentifier.DPI, identifier, process, endpointUrl);
+        super(ServiceIdentifier.DPI, identifier.getIdentifier(), process, endpointUrl);
         setPemCertificate(personResource.getCertificate());
 
         fysiskPost = isFysiskPost;

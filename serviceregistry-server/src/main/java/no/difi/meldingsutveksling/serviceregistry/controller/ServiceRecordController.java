@@ -2,17 +2,20 @@ package no.difi.meldingsutveksling.serviceregistry.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import no.difi.meldingsutveksling.domain.FiksIoIdentifier;
+import no.difi.meldingsutveksling.domain.Iso6523;
+import no.difi.meldingsutveksling.domain.PartnerIdentifier;
+import no.difi.meldingsutveksling.domain.PersonIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
-import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.*;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ReceiverProcessNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
 import no.difi.meldingsutveksling.serviceregistry.record.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.record.ServiceRecordService;
@@ -23,7 +26,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
-import no.difi.move.common.IdentifierHasher;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -36,7 +39,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
 
-import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.shouldCreateServiceRecordForCitizen;
 import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 
 @RestController
@@ -69,21 +71,22 @@ public class ServiceRecordController {
      */
     @GetMapping(value = "/identifier/{identifier}/process/{processIdentifier}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity<?> entity(@PathVariable("identifier") String identifier,
+    public ResponseEntity<?> entity(@PathVariable("identifier") PartnerIdentifier identifier,
                                     @PathVariable("processIdentifier") String processIdentifier,
                                     @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
                                     @RequestParam(name = "conversationId", required = false) String conversationId,
                                     @RequestParam(name = "print", defaultValue = "true") boolean print,
                                     Authentication auth,
                                     HttpServletRequest request)
-        throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException,
-        BrregNotFoundException, SvarUtClientException, ReceiverProcessNotFoundException {
-        MDC.put("identifier", Strings.isNullOrEmpty(identifier) ? identifier : IdentifierHasher.hashIfPersonnr(identifier));
-        String clientId = authenticationService.getAuthorizedClientIdentifier(auth, request);
+            throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException,
+            BrregNotFoundException, SvarUtClientException, ReceiverProcessNotFoundException {
+
+        MDC.put("identifier", identifier instanceof PersonIdentifier ? DigestUtils.sha256Hex(identifier.toString()) : identifier.toString());
+        Iso6523 clientId = authenticationService.getAuthorizedClientIdentifier(auth, request);
         fillRequestScope(identifier, conversationId, clientId, authenticationService.getToken(auth));
 
         EntityInfo entityInfo = entityService.getEntityInfo(identifier)
-            .orElseThrow(() -> new EntityNotFoundException(identifier));
+            .orElseThrow(() -> new EntityNotFoundException(identifier.getIdentifier()));
         Entity entity = new Entity();
         entity.setInfoRecord(entityInfo);
 
@@ -95,21 +98,21 @@ public class ServiceRecordController {
         }
 
         Process process = processService.findByIdentifier(processIdentifier).orElseThrow(() -> new ReceiverProcessNotFoundException(identifier, processIdentifier));
-        if (ProcessCategory.DIGITALPOST == process.getCategory() && shouldCreateServiceRecordForCitizen().test(entityInfo)) {
-            entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientId, print, process));
+        if (ProcessCategory.DIGITALPOST == process.getCategory() && identifier instanceof PersonIdentifier) {
+            entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier.cast(PersonIdentifier.class), clientId, print, process));
         }
         if (ProcessCategory.ARKIVMELDING == process.getCategory()) {
-            ServiceRecord record = serviceRecordService.createArkivmeldingServiceRecord(entityInfo, process, securityLevel)
+            ServiceRecord record = serviceRecordService.createArkivmeldingServiceRecord(identifier.cast(Iso6523.class), process, securityLevel)
                 .orElseThrow(() -> new ReceiverProcessNotFoundException(identifier, processIdentifier));
             entity.getServiceRecords().add(record);
         }
         if (ProcessCategory.EINNSYN == process.getCategory()) {
-            ServiceRecord record = serviceRecordService.createServiceRecord(entityInfo, process, securityLevel)
+            ServiceRecord record = serviceRecordService.createServiceRecord(identifier.cast(Iso6523.class), process)
                 .orElseThrow(() -> new ReceiverProcessNotFoundException(identifier, processIdentifier));
             entity.getServiceRecords().add(record);
         }
         if (ProcessCategory.AVTALT == process.getCategory()) {
-            ServiceRecord record = serviceRecordService.createServiceRecord(entityInfo, process, securityLevel)
+            ServiceRecord record = serviceRecordService.createServiceRecord(identifier.cast(Iso6523.class), process)
                 .orElseThrow(() -> new ReceiverProcessNotFoundException(identifier, processIdentifier));
             entity.getServiceRecords().add(record);
         }
@@ -131,37 +134,37 @@ public class ServiceRecordController {
     @ResponseBody
     @SuppressWarnings("squid:S2583")
     public ResponseEntity<?> entity(
-        @PathVariable("identifier") String identifier,
+        @PathVariable("identifier") PartnerIdentifier identifier,
         @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
         @RequestParam(name = "conversationId", required = false) String conversationId,
         @RequestParam(name = "print", defaultValue = "true") boolean print,
         Authentication auth,
         HttpServletRequest request)
         throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException, BrregNotFoundException, SvarUtClientException {
-        MDC.put("identifier", Strings.isNullOrEmpty(identifier) ? identifier : IdentifierHasher.hashIfPersonnr(identifier));
-        String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
-        fillRequestScope(identifier, conversationId, clientOrgnr, authenticationService.getToken(auth));
+        MDC.put("identifier", identifier instanceof PersonIdentifier ? DigestUtils.sha256Hex(identifier.toString()) : identifier.toString());
+        Iso6523 clientIdentifier = authenticationService.getAuthorizedClientIdentifier(auth, request);
+        fillRequestScope(identifier, conversationId, clientIdentifier, authenticationService.getToken(auth));
 
         Entity entity = new Entity();
         EntityInfo entityInfo = entityService.getEntityInfo(identifier)
-            .orElseThrow(() -> new EntityNotFoundException(identifier));
+            .orElseThrow(() -> new EntityNotFoundException(identifier.toString()));
         entity.setInfoRecord(entityInfo);
 
-        if (entityInfo instanceof FiksIoInfo) {
+        if (identifier instanceof FiksIoIdentifier) {
             return new ResponseEntity<>(entity, HttpStatus.OK);
         }
 
-        if (shouldCreateServiceRecordForCitizen().test(entityInfo)) {
-            entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientOrgnr, print));
-        } else {
-            entity.getServiceRecords().addAll(serviceRecordService.createArkivmeldingServiceRecords(entityInfo, securityLevel));
-            entity.getServiceRecords().addAll(serviceRecordService.createEinnsynServiceRecords(entityInfo, securityLevel));
-            entity.getServiceRecords().addAll(serviceRecordService.createAvtaltServiceRecords(identifier));
+        if (identifier instanceof PersonIdentifier) {
+            entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier.cast(PersonIdentifier.class), clientIdentifier, print));
+        } else if (identifier instanceof Iso6523){
+            entity.getServiceRecords().addAll(serviceRecordService.createArkivmeldingServiceRecords(identifier.cast(Iso6523.class), securityLevel));
+            entity.getServiceRecords().addAll(serviceRecordService.createEinnsynServiceRecords(identifier.cast(Iso6523.class)));
+            entity.getServiceRecords().addAll(serviceRecordService.createAvtaltServiceRecords(identifier.cast(Iso6523.class)));
         }
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
-    private void fillRequestScope(String identifier, String conversationId, String clientId, Jwt token) {
+    private void fillRequestScope(PartnerIdentifier identifier, String conversationId, Iso6523 clientId, Jwt token) {
         requestScope.setConversationId(conversationId);
         requestScope.setIdentifier(identifier);
         requestScope.setClientId(clientId);
@@ -176,7 +179,7 @@ public class ServiceRecordController {
     @GetMapping(value = "/identifier/{identifier}", produces = "application/jose")
     @ResponseBody
     public ResponseEntity<?> signed(
-        @PathVariable("identifier") String identifier,
+        @PathVariable("identifier") PartnerIdentifier identifier,
         @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
         @RequestParam(name = "conversationId", required = false) String conversationId,
         @RequestParam(name = "print", defaultValue = "true") boolean print,
@@ -189,7 +192,7 @@ public class ServiceRecordController {
 
     @GetMapping(value = "/identifier/{identifier}/process/{processIdentifier}", produces = "application/jose")
     @ResponseBody
-    public ResponseEntity<?> signed(@PathVariable("identifier") String identifier,
+    public ResponseEntity<?> signed(@PathVariable("identifier") Iso6523 identifier,
                                     @PathVariable("processIdentifier") String processIdentifier,
                                     @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
                                     @RequestParam(name = "conversationId", required = false) String conversationId,
@@ -203,7 +206,7 @@ public class ServiceRecordController {
 
     @GetMapping(value = "/info/{identifier}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity<?> info(@PathVariable("identifier") String identifier) {
+    public ResponseEntity<?> info(@PathVariable("identifier") PartnerIdentifier identifier) {
         Entity entity = new Entity();
         Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
         if (entityInfo.isEmpty()) {
@@ -215,7 +218,7 @@ public class ServiceRecordController {
 
     @GetMapping(value = "/info/{identifier}", produces = "application/jose")
     @ResponseBody
-    public ResponseEntity<?> signed(@PathVariable("identifier") String identifier) throws EntitySignerException {
+    public ResponseEntity<?> signed(@PathVariable("identifier") PartnerIdentifier identifier) throws EntitySignerException {
         return signEntity(info(identifier));
     }
 

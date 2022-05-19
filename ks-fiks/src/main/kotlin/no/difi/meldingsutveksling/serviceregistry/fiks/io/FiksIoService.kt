@@ -1,9 +1,9 @@
 package no.difi.meldingsutveksling.serviceregistry.fiks.io
 
+import no.difi.meldingsutveksling.domain.FiksIoIdentifier
 import no.difi.meldingsutveksling.serviceregistry.CacheConfig
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties
-import no.difi.meldingsutveksling.serviceregistry.domain.EntityInfo
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException
 import no.difi.meldingsutveksling.serviceregistry.logger
@@ -15,9 +15,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.util.UriBuilder
 import reactor.core.publisher.Mono
-import java.net.URI
 import java.time.Duration
 import java.util.*
 
@@ -38,14 +36,14 @@ open class FiksIoService(
         .build()
 
     @Cacheable(CacheConfig.FIKSIO_CACHE)
-    open fun lookup(identifier: String): Optional<Konto> {
+    open fun lookup(identifier: FiksIoIdentifier): Optional<Konto> {
         return wc.get()
-            .uri("/fiks-io/katalog/api/v1/kontoer/${identifier}")
+            .uri("/fiks-io/katalog/api/v1/kontoer/${identifier.identifier}")
             .header("Authorization", "Bearer ${requestScope.token.tokenValue}")
             .retrieve()
             .onStatus(HttpStatus::isError) { r ->
                 when (r.statusCode()) {
-                    HttpStatus.NOT_FOUND -> Mono.error(EntityNotFoundException(identifier))
+                    HttpStatus.NOT_FOUND -> Mono.error(EntityNotFoundException(identifier.identifier))
                     HttpStatus.UNAUTHORIZED -> r.createException()
                         .flatMap { Mono.error(AccessDeniedException(it.message, it)) }
                     else -> r.createException()

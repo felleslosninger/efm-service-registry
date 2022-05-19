@@ -2,6 +2,8 @@ package no.difi.meldingsutveksling.serviceregistry.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+import no.difi.meldingsutveksling.domain.ICD;
+import no.difi.meldingsutveksling.domain.Iso6523;
 
 import java.util.Collections;
 
@@ -29,8 +31,8 @@ public class OrganizationInfo implements EntityInfo {
 
     /**
      * @param organisationNumber of the recipient organization
-     * @param organizationName as name implies
-     * @param organizationType or organization form as defined in BRREG
+     * @param organizationName   as name implies
+     * @param organizationType   or organization form as defined in BRREG
      */
     public OrganizationInfo(String organisationNumber, String organizationName, Postadresse postadresse,
                             OrganizationType organizationType) {
@@ -40,20 +42,15 @@ public class OrganizationInfo implements EntityInfo {
         this.postadresse = postadresse;
     }
 
-    public static OrganizationInfo of(BrregEnhet brregEnhet) {
-        if (brregEnhet.getPostadresse() == null) {
-            return new OrganizationInfo(brregEnhet.getOrganisasjonsnummer(),
-                    brregEnhet.getNavn(),
-                    Postadresse.of(brregEnhet.getForretningsadresse()),
-                    new OrganizationType(brregEnhet.getOrganisasjonsform().getKode()));
-        }
-        return new OrganizationInfo(brregEnhet.getOrganisasjonsnummer(),
+    public static OrganizationInfo of(BrregEnhet brregEnhet, boolean usePlainFormat) {
+        return new OrganizationInfo(usePlainFormat ? brregEnhet.getOrganisasjonsnummer() : Iso6523.of(ICD.NO_ORG, brregEnhet.getOrganisasjonsnummer()).getIdentifier(),
                 brregEnhet.getNavn(),
-                Postadresse.of(brregEnhet.getPostadresse()),
+                Postadresse.of(brregEnhet.getPostadresse() != null ?
+                        brregEnhet.getPostadresse() : brregEnhet.getForretningsadresse()),
                 new OrganizationType(brregEnhet.getOrganisasjonsform().getKode()));
     }
 
-    public static OrganizationInfo of(DatahotellEntry enhet) {
+    public static OrganizationInfo of(DatahotellEntry enhet, boolean usePlainFormat) {
         BrregPostadresse postadresse;
         if (isNullOrEmpty(enhet.getPostadresse())
                 || isNullOrEmpty(enhet.getPpostnr())
@@ -69,7 +66,7 @@ public class OrganizationInfo implements EntityInfo {
                     enhet.getPpoststed(),
                     enhet.getPpostland());
         }
-        return new OrganizationInfo(enhet.getOrgnr(),
+        return new OrganizationInfo(usePlainFormat ? enhet.getOrgnr() : Iso6523.of(ICD.NO_ORG, enhet.getOrgnr()).getIdentifier(),
                 enhet.getNavn(),
                 Postadresse.of(postadresse),
                 new OrganizationType(enhet.getOrganisasjonsform()));
@@ -88,7 +85,8 @@ public class OrganizationInfo implements EntityInfo {
     public static class Builder {
         private OrganizationInfo organizationInfo = new OrganizationInfo();
 
-        public Builder() {}
+        public Builder() {
+        }
 
         /**
          * @return a new instance of OrganizationInfo
