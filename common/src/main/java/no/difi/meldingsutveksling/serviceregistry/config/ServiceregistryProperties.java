@@ -108,7 +108,7 @@ public class ServiceregistryProperties {
 
     @Data
     public static class Virksert {
-        private URL endpointURL;
+        private String endpointURL;
         private Map<ServiceIdentifier, String> processes;
         private String icd;
     }

@@ -25,11 +25,11 @@ public class SRMarkerFactory {
     }
 
     private static LogstashMarker clientIdMarker(Iso6523 clientId) {
-        return Markers.append(CLIENT_ID, clientId);
+        return Markers.append(CLIENT_ID, clientId.getIdentifier());
     }
 
     private static LogstashMarker identifierMarker(PartnerIdentifier identifier) {
-        return Markers.append(IDENTIFIER, identifier);
+        return Markers.append(IDENTIFIER, identifier.getIdentifier());
     }
 
     private static LogstashMarker conversationIdMarker(String conversationId) {
