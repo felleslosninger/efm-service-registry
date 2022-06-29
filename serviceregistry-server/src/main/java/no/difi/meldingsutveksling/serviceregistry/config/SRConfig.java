@@ -10,6 +10,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.util.Base64;
 import io.micrometer.core.aop.TimedAspect;
 import io.micrometer.core.instrument.MeterRegistry;
+import no.difi.meldingsutveksling.jackson.PartnerIdentifierModule;
 import no.difi.meldingsutveksling.serviceregistry.mvc.ServiceIdentifierConverter;
 import no.difi.move.common.cert.KeystoreHelper;
 import org.springframework.context.annotation.Bean;
@@ -55,7 +56,7 @@ public class SRConfig implements WebMvcConfigurer {
     @Bean
     public ObjectMapper objectMapper() {
         ObjectMapper om = new ObjectMapper();
-        om.registerModule(new JavaTimeModule());
+        om.registerModules(new JavaTimeModule(), new PartnerIdentifierModule());
         return om;
     }
 

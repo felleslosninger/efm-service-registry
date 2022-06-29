@@ -179,28 +179,28 @@ public class ServiceRecordController {
     @GetMapping(value = "/identifier/{identifier}", produces = "application/jose")
     @ResponseBody
     public ResponseEntity<?> signed(
-        @PathVariable("identifier") PartnerIdentifier identifier,
-        @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
-        @RequestParam(name = "conversationId", required = false) String conversationId,
-        @RequestParam(name = "print", defaultValue = "true") boolean print,
-        Authentication auth,
-        HttpServletRequest request)
-        throws EntitySignerException, SecurityLevelNotFoundException, KontaktInfoException,
-        CertificateNotFoundException, BrregNotFoundException, SvarUtClientException {
+            @PathVariable("identifier") PartnerIdentifier identifier,
+            @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
+            @RequestParam(name = "conversationId", required = false) String conversationId,
+            @RequestParam(name = "print", defaultValue = "true") boolean print,
+            Authentication auth,
+            HttpServletRequest request)
+            throws EntitySignerException, SecurityLevelNotFoundException, KontaktInfoException,
+            CertificateNotFoundException, BrregNotFoundException, SvarUtClientException {
         return signEntity(entity(identifier, securityLevel, conversationId, print, auth, request));
     }
 
     @GetMapping(value = "/identifier/{identifier}/process/{processIdentifier}", produces = "application/jose")
     @ResponseBody
-    public ResponseEntity<?> signed(@PathVariable("identifier") Iso6523 identifier,
+    public ResponseEntity<?> signed(@PathVariable("identifier") PartnerIdentifier identifier,
                                     @PathVariable("processIdentifier") String processIdentifier,
                                     @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
                                     @RequestParam(name = "conversationId", required = false) String conversationId,
                                     @RequestParam(name = "print", defaultValue = "true") boolean print,
                                     Authentication auth,
                                     HttpServletRequest request)
-        throws SecurityLevelNotFoundException, KontaktInfoException, CertificateNotFoundException,
-        BrregNotFoundException, SvarUtClientException, EntitySignerException, ReceiverProcessNotFoundException {
+            throws SecurityLevelNotFoundException, KontaktInfoException, CertificateNotFoundException,
+            BrregNotFoundException, SvarUtClientException, EntitySignerException, ReceiverProcessNotFoundException {
         return signEntity(entity(identifier, processIdentifier, securityLevel, conversationId, print, auth, request));
     }
 
