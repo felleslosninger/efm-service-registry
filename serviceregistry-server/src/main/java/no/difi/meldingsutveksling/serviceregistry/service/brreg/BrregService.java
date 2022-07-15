@@ -19,11 +19,14 @@ public class BrregService {
     private final DatahotellClient datahotellClient;
 
     public Optional<EntityInfo> getOrganizationInfo(String orgnr) throws BrregNotFoundException {
+        log.trace("getOrganizationInfo from brreg, orgnr={}", orgnr);
         Optional<BrregEnhet> entity = brregClient.getBrregEnhetByOrgnr(orgnr);
         if (entity.isEmpty()) {
+            log.debug("Looking for sub entity information");
             entity = brregClient.getBrregUnderenhetByOrgnr(orgnr);
         }
         if (entity.isEmpty()) {
+            log.debug("No information from Brreg, fallback to datahotell");
             return datahotellClient.getOrganizationInfo(orgnr);
         }
 
