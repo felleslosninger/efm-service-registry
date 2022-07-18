@@ -150,8 +150,6 @@ public class ServiceRecordController {
             .orElseThrow(() -> new EntityNotFoundException(identifier));
         entity.setInfoRecord(entityInfo);
 
-
-
         if (entityInfo instanceof FiksIoInfo) {
             return new ResponseEntity<>(entity, HttpStatus.OK);
         }
