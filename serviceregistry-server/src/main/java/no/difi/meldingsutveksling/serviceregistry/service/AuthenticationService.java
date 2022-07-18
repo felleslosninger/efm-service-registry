@@ -26,6 +26,7 @@ public class AuthenticationService {
     }
 
     public String getAuthorizedClientIdentifier(Authentication auth, HttpServletRequest request) {
+        log.info("getAuthorizedClientIdentifier");
         JwtAuthenticationToken token = (JwtAuthenticationToken) auth;
         Map<String, Object> consumer = token.getToken().getClaimAsMap("consumer");
         Matcher matcher = ISO6523_PATTERN.matcher((String) consumer.get("ID"));
