@@ -52,7 +52,12 @@ public class EntityService {
         } else if (identifier instanceof Iso6523) {
             try {
                 if (identifier.hasOrganizationPartIdentifier()) {
-                    return Optional.of(new OrganizationInfo(identifier.getIdentifier(), new OrganizationType("")));
+//                    TODO: Valider utvidet adresse mot maskinporten når API for det er tilgjengelig
+                    if(brregService.getOrganizationInfo(identifier.cast(Iso6523.class)).isPresent()) {
+                        return Optional.of(new OrganizationInfo(identifier.getIdentifier(), new OrganizationType("")));
+                    } else{
+                        return Optional.empty();
+                    }
                 } else {
                     return brregService.getOrganizationInfo(identifier.cast(Iso6523.class));
                 }
