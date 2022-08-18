@@ -76,7 +76,11 @@ public class ServiceRecordService {
                     if (securityLevel != null && securityLevel == 4) {
                         throw new SecurityLevelNotFoundException(String.format("Organization '%s' can not receive messages with security level '%s'", identifier, securityLevel));
                     } else {
-                        return Optional.of(serviceRecordFactory.createDpvServiceRecord(identifier, process));
+                        if(!identifier.hasOrganizationPartIdentifier()) {
+                            return Optional.of(serviceRecordFactory.createDpvServiceRecord(identifier, process));
+                        } else {
+                            return Optional.empty();
+                        }
                     }
                 }
             } else {
@@ -90,7 +94,11 @@ public class ServiceRecordService {
             if (securityLevel != null && securityLevel == 4) {
                 return Optional.empty();
             }
-            return Optional.of(serviceRecordFactory.createDpvServiceRecord(identifier, process));
+            if(!identifier.hasOrganizationPartIdentifier()) {
+                return Optional.of(serviceRecordFactory.createDpvServiceRecord(identifier, process));
+            } else {
+                return Optional.empty();
+            }
         }
     }
 
