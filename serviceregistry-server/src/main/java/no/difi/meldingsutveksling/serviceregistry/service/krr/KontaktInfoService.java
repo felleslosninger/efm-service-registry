@@ -9,6 +9,7 @@ import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperti
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import org.apache.commons.io.IOUtils;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -26,6 +27,7 @@ public class KontaktInfoService {
 
     @Cacheable(CacheConfig.KRR_CACHE)
     @Timed(value = "krr.client.timer", description = "Timer for KRR client")
+    @Retryable
     public PersonResource getCitizenInfo(LookupParameters params) throws KontaktInfoException {
         if (params.getToken().getIssuer().toString().equals(properties.getAuth().getMaskinportenIssuer())) {
             return krrClient.getPersonResource(params, properties.getKrr().getMpEndpointUri());
@@ -35,6 +37,7 @@ public class KontaktInfoService {
 
     @Cacheable(CacheConfig.DSF_CACHE)
     @Timed(value = "dsf.client.timer", description = "Timer for DSF client")
+    @Retryable
     public Optional<DsfResource> getDsfInfo(LookupParameters params) throws KontaktInfoException {
         if (params.getToken().getIssuer().toString().equals(properties.getAuth().getMaskinportenIssuer())) {
             return dsfClient.getDSFResource(params, properties.getKrr().getMpDsfEndpointUri());
