@@ -18,7 +18,6 @@ import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.net.URI;
 import java.security.cert.X509Certificate;
 
 @Component
@@ -34,7 +33,7 @@ public class VirkSertService {
 
         try {
             Mode mode = env.acceptsProfiles(Profiles.of("production")) ? Mode.PRODUCTION : Mode.MOVE;
-            virksertClient = BusinessCertificateClient.of(URI.create(properties.getVirksert().getEndpointURL()), mode);
+            virksertClient = BusinessCertificateClient.of(properties.getVirksert().getEndpointURL(), mode);
         } catch (BusinessCertificateException e) {
             throw new ServiceRegistryException(e);
         }
@@ -53,7 +52,7 @@ public class VirkSertService {
         }
 
         try {
-            X509Certificate cert = virksertClient.fetchCertificate(ParticipantIdentifier.of(identifier.getIdentifier()), dpoProcess);
+            X509Certificate cert = virksertClient.getCertificate(ParticipantIdentifier.of(identifier.getIdentifier()), dpoProcess);
             return CertificateToString.toString(cert);
         } catch (VirksertClientException e) {
             throw new CertificateNotFoundException(String.format("Unable to find %s certificate for: %s", si.name(), identifier.getIdentifier()), e);
