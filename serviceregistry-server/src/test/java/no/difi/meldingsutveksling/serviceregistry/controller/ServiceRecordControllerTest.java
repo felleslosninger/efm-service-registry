@@ -132,6 +132,8 @@ public class ServiceRecordControllerTest {
 
     @BeforeEach
     public void setup() {
+        when(authenticationService.getAuthorizedClientIdentifier(any(), any()))
+                .thenReturn(Iso6523.of(ICD.NO_ORG, "123123123"));
         Process adminProcess = new Process()
                 .setIdentifier(PROC_ARKIVMELDING_ADMINISTRASJON)
                 .setDocumentTypes(singletonList(new DocumentType().setIdentifier(DOC_ARKIVMELDING)));
@@ -430,7 +432,7 @@ public class ServiceRecordControllerTest {
 
     @Test
     public void get_EntityNotFound_ShouldReturnNotFound() throws Exception {
-        mvc.perform(get("/identifier/{identifier}", "404040404")
+        mvc.perform(get("/identifier/{identifier}", "0192:404040404")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andDo(document("identifier/notfound",
