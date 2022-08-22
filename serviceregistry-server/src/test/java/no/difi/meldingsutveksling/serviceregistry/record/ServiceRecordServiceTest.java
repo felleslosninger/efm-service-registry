@@ -72,6 +72,8 @@ public class ServiceRecordServiceTest {
 
     private static String ARKIVMELDING_PROCESS_ADMIN = "urn:no:difi:profile:arkivmelding:administrasjon:ver1.0";
     private static String ARKIVMELDING_PROCESS_SKATT = "urn:no:difi:profile:arkivmelding:skatterOgAvgifter:ver1.0";
+
+    private static String ARKIVMELDING_TAUSHETSBELAGT = "urn:no:difi:profile:arkivmelding:taushetsbelagt:ver1.0";
     private static String ARKIVMELDING_DOCTYPE = "urn:no:difi:arkivmelding:xsd::arkivmelding";
 
     private static String AVTALT_PROCESS = "urn:no:difi:profile:avtalt:avtalt:ver1.0";
@@ -90,6 +92,7 @@ public class ServiceRecordServiceTest {
 
     private static Process processAdmin;
     private static Process processAvtalt;
+    private static Process processTaushetsbelagt;
     private static Process processSkatt;
     private static Process processJournalpost;
     private static Process processInnsynskrav;
@@ -104,59 +107,65 @@ public class ServiceRecordServiceTest {
 
         // Arkivmelding
         DocumentType documentType = new DocumentType()
-            .setIdentifier(ARKIVMELDING_DOCTYPE);
+                .setIdentifier(ARKIVMELDING_DOCTYPE);
         processAdmin = new Process()
-            .setIdentifier(ARKIVMELDING_PROCESS_ADMIN)
-            .setCategory(ProcessCategory.ARKIVMELDING)
-            .setServiceCode("4192")
-            .setServiceEditionCode("270815");
+                .setIdentifier(ARKIVMELDING_PROCESS_ADMIN)
+                .setCategory(ProcessCategory.ARKIVMELDING)
+                .setServiceCode("4192")
+                .setServiceEditionCode("270815");
         processSkatt = new Process()
-            .setIdentifier(ARKIVMELDING_PROCESS_SKATT)
-            .setCategory(ProcessCategory.ARKIVMELDING)
-            .setServiceCode("4192")
-            .setServiceEditionCode("270815");
+                .setIdentifier(ARKIVMELDING_PROCESS_SKATT)
+                .setCategory(ProcessCategory.ARKIVMELDING)
+                .setServiceCode("4192")
+                .setServiceEditionCode("270815");
+        processTaushetsbelagt = new Process()
+                .setIdentifier(ARKIVMELDING_TAUSHETSBELAGT)
+                .setCategory(ProcessCategory.ARKIVMELDING)
+                .setServiceCode("4192")
+                .setServiceEditionCode("270815");
         processSkatt.setDocumentTypes(Lists.newArrayList(documentType));
+        processTaushetsbelagt.setDocumentTypes(Lists.newArrayList(documentType));
         processAdmin.setDocumentTypes(Lists.newArrayList(documentType));
-        documentType.setProcesses(Lists.newArrayList(processAdmin, processSkatt));
+        documentType.setProcesses(Lists.newArrayList(processAdmin, processSkatt, processTaushetsbelagt));
 
         // Avtalt
         DocumentType documentTypeAvtalt = new DocumentType()
-            .setIdentifier(AVTALT_DOCTYPE);
+                .setIdentifier(AVTALT_DOCTYPE);
         processAvtalt = new Process().setIdentifier(AVTALT_PROCESS)
-            .setCategory(ProcessCategory.AVTALT)
-            .setServiceCode("4192")
-            .setServiceEditionCode("270815");
+                .setCategory(ProcessCategory.AVTALT)
+                .setServiceCode("4192")
+                .setServiceEditionCode("270815");
         processAvtalt.setDocumentTypes(Lists.newArrayList(documentTypeAvtalt));
         documentTypeAvtalt.setProcesses(Lists.newArrayList(processAvtalt));
 
         // Digital
         processVedtak = new Process()
-            .setIdentifier(DIGITALPOST_PROCESS_VEDTAK)
-            .setCategory(ProcessCategory.DIGITALPOST)
-            .setDocumentTypes(Lists.newArrayList(new DocumentType().setIdentifier(DIGITALPOST_DOCTYPE_PRINT),
-                new DocumentType().setIdentifier(DIGITALPOST_DOCTYPE_DIGITALDPV)));
+                .setIdentifier(DIGITALPOST_PROCESS_VEDTAK)
+                .setCategory(ProcessCategory.DIGITALPOST)
+                .setDocumentTypes(Lists.newArrayList(new DocumentType().setIdentifier(DIGITALPOST_DOCTYPE_PRINT),
+                        new DocumentType().setIdentifier(DIGITALPOST_DOCTYPE_DIGITALDPV)));
         processInfo = new Process()
-            .setIdentifier(DIGITALPOST_PROCESS_INFO)
-            .setCategory(ProcessCategory.DIGITALPOST)
-            .setDocumentTypes(Lists.newArrayList(new DocumentType().setIdentifier(DIGITALPOST_DOCTYPE_DIGITAL)));
+                .setIdentifier(DIGITALPOST_PROCESS_INFO)
+                .setCategory(ProcessCategory.DIGITALPOST)
+                .setDocumentTypes(Lists.newArrayList(new DocumentType().setIdentifier(DIGITALPOST_DOCTYPE_DIGITAL)));
 
         // Einnsyn
         DocumentType einnsynJournalpostDocumentType = new DocumentType()
-            .setIdentifier(EINNSYN_DOCTYPE_JOURNALPOST);
+                .setIdentifier(EINNSYN_DOCTYPE_JOURNALPOST);
         processJournalpost = new Process()
-            .setIdentifier(EINNSYN_PROCESS_JOURNALPOST)
-            .setCategory(ProcessCategory.EINNSYN)
-            .setServiceCode("data")
-            .setDocumentTypes(Lists.newArrayList(einnsynJournalpostDocumentType));
+                .setIdentifier(EINNSYN_PROCESS_JOURNALPOST)
+                .setCategory(ProcessCategory.EINNSYN)
+                .setServiceCode("data")
+                .setDocumentTypes(Lists.newArrayList(einnsynJournalpostDocumentType));
         einnsynJournalpostDocumentType.setProcesses(Lists.newArrayList(processJournalpost));
 
         DocumentType einnsynInnsynskravDocumentType = new DocumentType()
-            .setIdentifier(EINNSYN_DOCTYPE_INNSYNSKRAV);
+                .setIdentifier(EINNSYN_DOCTYPE_INNSYNSKRAV);
         processInnsynskrav = new Process()
-            .setIdentifier(EINNSYN_PROCESS_INNSYNSKRAV)
-            .setCategory(ProcessCategory.EINNSYN)
-            .setServiceCode("innsyn")
-            .setDocumentTypes(Lists.newArrayList(einnsynInnsynskravDocumentType));
+                .setIdentifier(EINNSYN_PROCESS_INNSYNSKRAV)
+                .setCategory(ProcessCategory.EINNSYN)
+                .setServiceCode("innsyn")
+                .setDocumentTypes(Lists.newArrayList(einnsynInnsynskravDocumentType));
         einnsynInnsynskravDocumentType.setProcesses(Lists.newArrayList(processInnsynskrav));
     }
 
@@ -176,17 +185,17 @@ public class ServiceRecordServiceTest {
 
     private void lookupServiceReturnsArkivmeldingAdminProcess() {
         when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR)), anySet()))
-            .thenReturn(Sets.newHashSet(ProcessIdentifier.of(ARKIVMELDING_PROCESS_ADMIN)));
+                .thenReturn(Sets.newHashSet(ProcessIdentifier.of(ARKIVMELDING_PROCESS_ADMIN)));
     }
 
     private void lookupServiceReturnsAvtaltProcess() {
         when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR)), anySet()))
-            .thenReturn(Sets.newHashSet(ProcessIdentifier.of(AVTALT_PROCESS)));
+                .thenReturn(Sets.newHashSet(ProcessIdentifier.of(AVTALT_PROCESS)));
     }
 
     private void lookupServiceReturnsEinnsynJournalpostProcesses() {
         when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR)), anySet()))
-            .thenReturn(Sets.newHashSet(ProcessIdentifier.of(EINNSYN_PROCESS_JOURNALPOST), ProcessIdentifier.of(EINNSYN_PROCESS_INNSYNSKRAV)));
+                .thenReturn(Sets.newHashSet(ProcessIdentifier.of(EINNSYN_PROCESS_JOURNALPOST), ProcessIdentifier.of(EINNSYN_PROCESS_INNSYNSKRAV)));
     }
 
     @SneakyThrows
@@ -194,7 +203,7 @@ public class ServiceRecordServiceTest {
     public void createArkivmeldingServiceRecord_IdentifierHasSvarUtRegistrationOnDifferentSecurityLevel_ShouldThrowDedicatedException() {
         enablePropertyEnableDpvDpf();
         when(svarUtService.hasSvarUtAdressering(anyString(), any())).thenReturn(Optional.empty());
-        assertThrows(SecurityLevelNotFoundException.class, () -> service.createArkivmeldingServiceRecord(ORGNR_ORG, mock(Process.class), 4));
+        assertThrows(SecurityLevelNotFoundException.class, () -> service.createArkivmeldingServiceRecord(ORGNR_ORG, processAdmin, 4));
     }
 
     @SneakyThrows
@@ -296,7 +305,7 @@ public class ServiceRecordServiceTest {
         enablePropertyEnableDpvDpf();
         when(processService.findAll(ProcessCategory.ARKIVMELDING)).thenReturn(Sets.newHashSet(processAdmin, processSkatt));
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any()))
-            .thenThrow(new SvarUtClientException(new RuntimeException("service unavailable")));
+                .thenThrow(new SvarUtClientException(new RuntimeException("service unavailable")));
         assertThrows(SvarUtClientException.class, () -> service.createArkivmeldingServiceRecords(ORGNR_FIKS_KOMM, 3));
     }
 
@@ -358,11 +367,22 @@ public class ServiceRecordServiceTest {
 
         when(kontaktInfoService.getCitizenInfo(any(LookupParameters.class))).thenReturn(personResource);
         when(serviceRecordFactory.createPrintServiceRecord(eq(PERSONNUMMER), eq(ORGNR), any(), eq(personResource), eq(processVedtak), eq(true)))
-            .thenReturn(Optional.of(mock(ServiceRecord.class)));
+                .thenReturn(Optional.of(mock(ServiceRecord.class)));
         when(serviceRecordFactory.createDigitalDpvServiceRecord(PERSONNUMMER, processVedtak))
-            .thenReturn(mock(ServiceRecord.class));
+                .thenReturn(mock(ServiceRecord.class));
 
         assertEquals(2, service.createDigitalpostServiceRecords(PERSONNUMMER, ORGNR, true, processVedtak).size());
     }
 
+    @Test
+    void createArkivmeldingServiceRecord_MessageIsConfidential_ShouldNotBeSentToSvarut() throws SvarUtClientException, CertificateNotFoundException, SecurityLevelNotFoundException {
+        enablePropertyEnableDpvDpf();
+        when(svarUtService.hasSvarUtAdressering(anyString(), eq(3))).thenReturn(Optional.of(3));
+        when(serviceRecordFactory.createDpvServiceRecord(anyString(), any(Process.class))).thenReturn(mock(ServiceRecord.class));
+
+        var record = service.createArkivmeldingServiceRecord(ORGNR_ORG, processTaushetsbelagt, 3);
+
+        assertTrue(record.isPresent());
+        verify(serviceRecordFactory).createDpvServiceRecord(ORGNR, processTaushetsbelagt);
+    }
 }
