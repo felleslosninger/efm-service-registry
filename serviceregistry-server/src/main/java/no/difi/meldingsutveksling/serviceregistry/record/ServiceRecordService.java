@@ -48,7 +48,6 @@ public class ServiceRecordService {
     private final ServiceRecordFactory serviceRecordFactory;
 
     public Optional<ServiceRecord> createFiksIoServiceRecord(EntityInfo entityInfo, String protocol) {
-        log.trace("createFiksIoServiceRecord entityInfo={}", entityInfo);
         return Optional.of(serviceRecordFactory.createDpfioServiceRecord(entityInfo.getIdentifier(), protocol));
     }
 

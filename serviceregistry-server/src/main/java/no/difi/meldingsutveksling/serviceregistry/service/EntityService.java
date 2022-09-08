@@ -39,7 +39,6 @@ public class EntityService {
      */
     @Cacheable(CacheConfig.BRREG_CACHE)
     public Optional<EntityInfo> getEntityInfo(String identifier) {
-        log.info("getEntityInfo for identifier={}", identifier);
         if (isCitizen().test(identifier)) {
             return Optional.of(new CitizenInfo(identifier));
         } else if (isUuid().test(identifier)) {
@@ -57,7 +56,6 @@ public class EntityService {
                 return Optional.empty();
             }
         } else {
-            log.info("Unable to find information for the provided identifier, {}", identifier);
             return Optional.empty();
         }
     }

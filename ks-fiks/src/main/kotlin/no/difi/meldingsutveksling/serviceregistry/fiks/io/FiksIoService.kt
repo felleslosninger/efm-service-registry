@@ -39,7 +39,6 @@ open class FiksIoService(
 
     @Cacheable(CacheConfig.FIKSIO_CACHE)
     open fun lookup(identifier: String): Optional<Konto> {
-        log.trace("FIKSIO lookup identifier={}",identifier)
         return wc.get()
             .uri("/fiks-io/katalog/api/v1/kontoer/${identifier}")
             .header("Authorization", "Bearer ${requestScope.token.tokenValue}")
