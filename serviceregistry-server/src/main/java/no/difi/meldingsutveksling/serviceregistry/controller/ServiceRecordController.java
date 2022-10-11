@@ -78,10 +78,8 @@ public class ServiceRecordController {
                                     HttpServletRequest request)
         throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException,
         BrregNotFoundException, SvarUtClientException, ReceiverProcessNotFoundException {
-        log.trace("Getting SR Entity for, identifier={}, processIdentifier={}, securityLevel={}, conversationId={}", identifier, processIdentifier, securityLevel, conversationId);
         MDC.put("identifier", Strings.isNullOrEmpty(identifier) ? identifier : IdentifierHasher.hashIfPersonnr(identifier));
         String clientId = authenticationService.getAuthorizedClientIdentifier(auth, request);
-        log.debug("AuthorizedClientIdentifier={}", clientId);
         fillRequestScope(identifier, conversationId, clientId, authenticationService.getToken(auth));
 
         EntityInfo entityInfo = entityService.getEntityInfo(identifier)
@@ -140,7 +138,6 @@ public class ServiceRecordController {
         Authentication auth,
         HttpServletRequest request)
         throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException, BrregNotFoundException, SvarUtClientException {
-        log.trace("Getting SR Entity for, identifier={}, securityLevel={}, conversationId={}", identifier, securityLevel, conversationId);
         MDC.put("identifier", Strings.isNullOrEmpty(identifier) ? identifier : IdentifierHasher.hashIfPersonnr(identifier));
         String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
         fillRequestScope(identifier, conversationId, clientOrgnr, authenticationService.getToken(auth));
@@ -149,8 +146,6 @@ public class ServiceRecordController {
         EntityInfo entityInfo = entityService.getEntityInfo(identifier)
             .orElseThrow(() -> new EntityNotFoundException(identifier));
         entity.setInfoRecord(entityInfo);
-
-
 
         if (entityInfo instanceof FiksIoInfo) {
             return new ResponseEntity<>(entity, HttpStatus.OK);
@@ -189,10 +184,7 @@ public class ServiceRecordController {
         HttpServletRequest request)
         throws EntitySignerException, SecurityLevelNotFoundException, KontaktInfoException,
         CertificateNotFoundException, BrregNotFoundException, SvarUtClientException {
-        log.trace("SR's signed JOSE endpoint entered, identifier={}, securityLevel={}, conversationId={}", identifier, securityLevel, conversationId);
-        ResponseEntity<?> entity = entity(identifier, securityLevel, conversationId, print, auth, request);
-        log.debug("Entity response: {} ", entity);
-        return signEntity(entity);
+        return signEntity(entity(identifier, securityLevel, conversationId, print, auth, request));
     }
 
     @GetMapping(value = "/identifier/{identifier}/process/{processIdentifier}", produces = "application/jose")
@@ -206,10 +198,7 @@ public class ServiceRecordController {
                                     HttpServletRequest request)
         throws SecurityLevelNotFoundException, KontaktInfoException, CertificateNotFoundException,
         BrregNotFoundException, SvarUtClientException, EntitySignerException, ReceiverProcessNotFoundException {
-        log.trace("SR's signed JOSE process endpoint entered, identifier={}, processIdentifier={}, securityLevel={}, conversationId={}", identifier, processIdentifier, securityLevel, conversationId);
-        ResponseEntity<?> entity = entity(identifier, processIdentifier, securityLevel, conversationId, print, auth, request);
-        log.debug("Entity response: {} ", entity);
-        return signEntity(entity);
+        return signEntity(entity(identifier, processIdentifier, securityLevel, conversationId, print, auth, request));
     }
 
     @GetMapping(value = "/info/{identifier}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -220,9 +209,7 @@ public class ServiceRecordController {
         if (entityInfo.isEmpty()) {
             return notFoundResponse(String.format("Entity with identifier '%s' not found.", identifier));
         }
-        EntityInfo infoRecord = entityInfo.get();
-        entity.setInfoRecord(infoRecord);
-        log.debug("SR entity info for identifier={} : {}", identifier, infoRecord);
+        entity.setInfoRecord(entityInfo.get());
         return ResponseEntity.ok(entity);
     }
 
@@ -233,7 +220,6 @@ public class ServiceRecordController {
     }
 
     private ResponseEntity<?> signEntity(ResponseEntity<?> entity) throws EntitySignerException {
-        log.info("Signing entity response");
         if (entity.getStatusCode() != HttpStatus.OK) {
             log.warn("Entity status code is {}, skipping signing", entity.getStatusCode());
             return entity;
