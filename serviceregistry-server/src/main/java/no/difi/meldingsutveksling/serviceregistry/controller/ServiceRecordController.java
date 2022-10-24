@@ -221,6 +221,7 @@ public class ServiceRecordController {
 
     private ResponseEntity<?> signEntity(ResponseEntity<?> entity) throws EntitySignerException {
         if (entity.getStatusCode() != HttpStatus.OK) {
+            log.warn("Entity status code is {}, skipping signing", entity.getStatusCode());
             return entity;
         }
         String json;
@@ -233,5 +234,4 @@ public class ServiceRecordController {
 
         return ResponseEntity.ok(payloadSigner.sign(json));
     }
-
 }
