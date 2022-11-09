@@ -31,6 +31,7 @@ public class ELMALookupService {
                 .flatMap(smd -> smd.getServiceInformation().getProcesses().stream())
                 .map(ProcessMetadata::getProcessIdentifier)
                 .collect(Collectors.toSet());
+
     }
 
     public List<ServiceMetadata> lookup(String organizationNumber, Set<String> documentIdentifiers) {
