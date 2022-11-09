@@ -3,10 +3,10 @@ package no.difi.meldingsutveksling.serviceregistry.service.elma;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
-import no.difi.vefa.peppol.common.model.*;
-import no.difi.vefa.peppol.lookup.LookupClient;
-import no.difi.vefa.peppol.lookup.api.LookupException;
-import no.difi.vefa.peppol.security.lang.PeppolSecurityException;
+import network.oxalis.vefa.peppol.common.model.*;
+import network.oxalis.vefa.peppol.lookup.LookupClient;
+import network.oxalis.vefa.peppol.lookup.api.LookupException;
+import network.oxalis.vefa.peppol.security.lang.PeppolSecurityException;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

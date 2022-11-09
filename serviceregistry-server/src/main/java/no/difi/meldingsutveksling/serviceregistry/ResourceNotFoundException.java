@@ -1,7 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry;
 
 
-import no.difi.vefa.peppol.common.lang.PeppolException;
+import network.oxalis.vefa.peppol.common.lang.PeppolException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
