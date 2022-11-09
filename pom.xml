@@ -138,12 +138,12 @@
             <dependency>
                 <groupId>network.oxalis.vefa</groupId>
                 <artifactId>commons-busdox</artifactId>
-                <version>0.9.0</version>
+                <version>2.4.0</version>
             </dependency>
             <dependency>
                 <groupId>network.oxalis.vefa</groupId>
                 <artifactId>commons-bdxr</artifactId>
-                <version>0.9.1</version>
+                <version>2.4.0</version>
             </dependency>
 
             <dependency>
