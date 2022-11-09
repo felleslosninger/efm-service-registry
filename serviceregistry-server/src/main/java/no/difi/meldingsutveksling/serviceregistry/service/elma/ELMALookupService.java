@@ -27,7 +27,8 @@ public class ELMALookupService {
     public Set<ProcessIdentifier> lookupRegisteredProcesses(String orgnr, Set<String> documentIdentifiers) {
         List<ServiceMetadata> smdList = lookup(orgnr, documentIdentifiers);
         return smdList.stream()
-                .flatMap(smd -> smd.getProcesses().stream())
+//                .flatMap(smd -> smd.getProcesses().stream())
+                .flatMap(smd -> smd.getServiceInformation().getProcesses().stream())
                 .map(ProcessMetadata::getProcessIdentifier)
                 .collect(Collectors.toSet());
     }
