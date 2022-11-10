@@ -10,6 +10,7 @@ import network.oxalis.vefa.peppol.security.lang.PeppolSecurityException;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,11 +27,11 @@ public class ELMALookupService {
 
     public Set<ProcessIdentifier> lookupRegisteredProcesses(String orgnr, Set<String> documentIdentifiers) {
         List<ServiceMetadata> smdList = lookup(orgnr, documentIdentifiers);
-        return smdList.stream()
+            return new HashSet<>((smdList.stream()
 //                .flatMap(smd -> smd.getProcesses().stream())
-                .flatMap(smd -> smd.getServiceInformation().getProcesses().stream())
-                .map(ProcessMetadata::getProcessIdentifier)
-                .collect(Collectors.toSet());
+                    .flatMap(smd -> smd.getServiceInformation().getProcesses().stream())
+                    .map(ProcessMetadata::getProcessIdentifier).collect(Collectors.toList())).get(0));
+
 
     }
 
