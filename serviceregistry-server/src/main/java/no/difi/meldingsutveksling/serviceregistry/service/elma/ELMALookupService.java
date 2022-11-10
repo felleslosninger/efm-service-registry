@@ -27,12 +27,11 @@ public class ELMALookupService {
 
     public Set<ProcessIdentifier> lookupRegisteredProcesses(String orgnr, Set<String> documentIdentifiers) {
         List<ServiceMetadata> smdList = lookup(orgnr, documentIdentifiers);
-            return new HashSet<>((smdList.stream()
-//                .flatMap(smd -> smd.getProcesses().stream())
+            return smdList.stream()
                     .flatMap(smd -> smd.getServiceInformation().getProcesses().stream())
-                    .map(ProcessMetadata::getProcessIdentifier).collect(Collectors.toList())).get(0));
-
-
+//                    TODO: verify that the list of process identifier only has one object. No documentation on this behavior has been found in Peppol docs. Potential bug alert!
+                    .map(pmd -> pmd.getProcessIdentifier().get(0))
+                    .collect(Collectors.toSet());
     }
 
     public List<ServiceMetadata> lookup(String organizationNumber, Set<String> documentIdentifiers) {
