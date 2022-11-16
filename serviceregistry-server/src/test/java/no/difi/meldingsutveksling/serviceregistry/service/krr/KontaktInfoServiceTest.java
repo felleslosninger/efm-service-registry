@@ -8,7 +8,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClient;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
-import no.difi.vefa.peppol.lookup.LookupClient;
+import network.oxalis.vefa.peppol.lookup.LookupClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -9,8 +9,8 @@ import no.difi.meldingsutveksling.serviceregistry.persistence.DocumentTypeReposi
 import no.difi.meldingsutveksling.serviceregistry.persistence.ProcessRepository;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
-import no.difi.vefa.peppol.common.model.TransportProfile;
-import no.difi.vefa.peppol.lookup.LookupClient;
+import network.oxalis.vefa.peppol.common.model.TransportProfile;
+import network.oxalis.vefa.peppol.lookup.LookupClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -3,13 +3,14 @@ package no.difi.meldingsutveksling.serviceregistry.service.elma;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
-import no.difi.vefa.peppol.common.model.*;
-import no.difi.vefa.peppol.lookup.LookupClient;
-import no.difi.vefa.peppol.lookup.api.LookupException;
-import no.difi.vefa.peppol.security.lang.PeppolSecurityException;
+import network.oxalis.vefa.peppol.common.model.*;
+import network.oxalis.vefa.peppol.lookup.LookupClient;
+import network.oxalis.vefa.peppol.lookup.api.LookupException;
+import network.oxalis.vefa.peppol.security.lang.PeppolSecurityException;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,10 +27,11 @@ public class ELMALookupService {
 
     public Set<ProcessIdentifier> lookupRegisteredProcesses(String orgnr, Set<String> documentIdentifiers) {
         List<ServiceMetadata> smdList = lookup(orgnr, documentIdentifiers);
-        return smdList.stream()
-                .flatMap(smd -> smd.getProcesses().stream())
-                .map(ProcessMetadata::getProcessIdentifier)
-                .collect(Collectors.toSet());
+            return smdList.stream()
+                    .flatMap(smd -> smd.getServiceInformation().getProcesses().stream())
+//                    TODO: verify that the list of process identifier only has one object. No documentation on this behavior has been found in Peppol docs. Potential bug alert!
+                    .map(pmd -> pmd.getProcessIdentifier().get(0))
+                    .collect(Collectors.toSet());
     }
 
     public List<ServiceMetadata> lookup(String organizationNumber, Set<String> documentIdentifiers) {
