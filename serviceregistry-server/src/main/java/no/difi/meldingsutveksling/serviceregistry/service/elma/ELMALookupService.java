@@ -39,7 +39,7 @@ public class ELMALookupService {
         String logId = "getDocumentIdentifiers";
         try {
             Set<String> registeredIdentifiers = lookupClient.getDocumentIdentifiers(ParticipantIdentifier.of(organizationNumber))
-                    .stream().map(DocumentTypeIdentifier::toString)
+                    .stream().map(DocumentTypeIdentifier::getIdentifier)
                     .collect(Collectors.toSet());
             for (String id : documentIdentifiers) {
                 logId = id;
