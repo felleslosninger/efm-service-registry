@@ -27,28 +27,36 @@ public class ELMALookupService {
 
     public Set<ProcessIdentifier> lookupRegisteredProcesses(String orgnr, Set<String> documentIdentifiers) {
         List<ServiceMetadata> smdList = lookup(orgnr, documentIdentifiers);
-            return smdList.stream()
-                    .flatMap(smd -> smd.getServiceInformation().getProcesses().stream())
+        return smdList.stream()
+                .flatMap(smd -> smd.getServiceInformation().getProcesses().stream())
 //                    TODO: verify that the list of process identifier only has one object. No documentation on this behavior has been found in Peppol docs. Potential bug alert!
-                    .map(pmd -> pmd.getProcessIdentifier().get(0))
-                    .collect(Collectors.toSet());
+                .map(pmd -> pmd.getProcessIdentifier().get(0))
+                .collect(Collectors.toSet());
     }
 
     public List<ServiceMetadata> lookup(String organizationNumber, Set<String> documentIdentifiers) {
         List<ServiceMetadata> metadataList = new ArrayList<>();
-        for (String id : documentIdentifiers) {
-            try {
-                ServiceMetadata serviceMetadata = lookupClient.getServiceMetadata(ParticipantIdentifier.of(organizationNumber), DocumentTypeIdentifier.of(id));
-                if (serviceMetadata != null) {
-                    metadataList.add(serviceMetadata);
+        String logId = "getDocumentIdentifiers";
+        try {
+            Set<String> registeredIdentifiers = lookupClient.getDocumentIdentifiers(ParticipantIdentifier.of(organizationNumber))
+                    .stream().map(DocumentTypeIdentifier::toString)
+                    .collect(Collectors.toSet());
+            for (String id : documentIdentifiers) {
+                logId = id;
+                if (registeredIdentifiers.contains(id)) {
+                    ServiceMetadata serviceMetadata = lookupClient.getServiceMetadata(ParticipantIdentifier.of(organizationNumber), DocumentTypeIdentifier.of(id));
+                    if (serviceMetadata != null) {
+                        metadataList.add(serviceMetadata);
+                    }
+                } else {
+                    log.debug("Skipping ELMA lookup for non-registered document type: identifier={}, documentTypeIdentifier={}", organizationNumber, id);
                 }
-
-            } catch (PeppolSecurityException e) {
-                throw new ServiceRegistryException(e);
-            } catch (LookupException e) {
-                // Just log, need to check the remaining documents
-                log.debug("Failed ELMA lookup for identifier={}, documentTypeIdentifier={}", organizationNumber, id, e);
             }
+        } catch (PeppolSecurityException e) {
+            throw new ServiceRegistryException(e);
+        } catch (LookupException e) {
+            // Just log, need to check the remaining documents
+            log.debug("Failed ELMA lookup for identifier={}, documentTypeIdentifier={}", organizationNumber, logId, e);
         }
         return metadataList;
     }
