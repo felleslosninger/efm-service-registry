@@ -58,6 +58,9 @@ public class ELMALookupService {
             // Just log, need to check the remaining documents
             log.debug("Failed ELMA lookup for identifier={}, documentTypeIdentifier={}", organizationNumber, logId, e);
         }
+        catch (NullPointerException e) {
+            log.debug("Organization {} is not in ELMA", organizationNumber, e);
+        }
         return metadataList;
     }
 
