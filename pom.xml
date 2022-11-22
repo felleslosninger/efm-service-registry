@@ -11,7 +11,7 @@
 
     <groupId>no.difi.meldingsutveksling</groupId>
     <artifactId>serviceregistry-parent</artifactId>
-    <version>2.6.1</version>
+    <version>2.7.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <scm>
@@ -46,7 +46,7 @@
         <move-common.version>1.6.1</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <kotlin.version>1.6.0</kotlin.version>
-        <virksert.version>1.7.1</virksert.version>
+        <virksert.version>1.8.0</virksert.version>
         <bouncycastle.version>1.62</bouncycastle.version>
     </properties>
 
@@ -131,19 +131,19 @@
             </dependency>
 
             <dependency>
-                <groupId>no.difi.vefa</groupId>
+                <groupId>network.oxalis.vefa</groupId>
                 <artifactId>peppol-lookup</artifactId>
-                <version>0.9.9</version>
+                <version>2.4.0</version>
             </dependency>
             <dependency>
-                <groupId>no.difi.vefa</groupId>
+                <groupId>network.oxalis.vefa</groupId>
                 <artifactId>commons-busdox</artifactId>
-                <version>0.9.0</version>
+                <version>2.4.0</version>
             </dependency>
             <dependency>
-                <groupId>no.difi.vefa</groupId>
+                <groupId>network.oxalis.vefa</groupId>
                 <artifactId>commons-bdxr</artifactId>
-                <version>0.9.1</version>
+                <version>2.4.0</version>
             </dependency>
 
             <dependency>
