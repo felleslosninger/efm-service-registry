@@ -4,6 +4,7 @@ import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.CacheConfig;
+import no.difi.meldingsutveksling.serviceregistry.client.freg.FregClient;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
@@ -24,6 +25,7 @@ public class KontaktInfoService {
     private final ServiceregistryProperties properties;
     private final KRRClient krrClient;
     private final DsfClient dsfClient;
+    private final FregClient fregClient;
 
     @Cacheable(CacheConfig.KRR_CACHE)
     @Timed(value = "krr.client.timer", description = "Timer for KRR client")
@@ -38,11 +40,14 @@ public class KontaktInfoService {
     @Cacheable(CacheConfig.DSF_CACHE)
     @Timed(value = "dsf.client.timer", description = "Timer for DSF client")
     @Retryable
-    public Optional<DsfResource> getDsfInfo(LookupParameters params) throws KontaktInfoException {
+    public Optional<FregGatewayResource> getDsfInfo(LookupParameters params) throws KontaktInfoException {
+//    public Optional<DsfResource> getDsfInfo(LookupParameters params) throws KontaktInfoException {
         if (params.getToken().getIssuer().toString().equals(properties.getAuth().getMaskinportenIssuer())) {
-            return dsfClient.getDSFResource(params, properties.getKrr().getMpDsfEndpointUri());
+            return fregClient.getFregPersonByPid(params);
+//            return dsfClient.getDSFResource(params, properties.getKrr().getMpDsfEndpointUri());
         }
-        return dsfClient.getDSFResource(params, properties.getKrr().getOidcDsfEndpointUri());
+        return fregClient.getFregPersonByPid(params);
+//        return dsfClient.getDSFResource(params, properties.getKrr().getOidcDsfEndpointUri());
     }
 
     public void setPrintDetails(PersonResource personResource) {

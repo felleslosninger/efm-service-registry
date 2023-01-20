@@ -29,6 +29,7 @@ public class ServiceregistryProperties {
     private DigitalPostInnbygger dpi;
     private KontaktOgReservasjonsRegister krr;
     private Brønnøysundregistrene brreg;
+    private Folkeregisteret freg;
     private Datahotell datahotell;
     private PostVirksomhet dpv;
     private Altinn dpo;
@@ -88,6 +89,13 @@ public class ServiceregistryProperties {
     @Data
     public static class Brønnøysundregistrene {
         private URL endpointURL;
+    }
+
+    @Data
+    public static class Folkeregisteret {
+        private URI endpointURL;
+        private String mpClientId;
+        private List<String> scopes;
     }
 
     @Data
