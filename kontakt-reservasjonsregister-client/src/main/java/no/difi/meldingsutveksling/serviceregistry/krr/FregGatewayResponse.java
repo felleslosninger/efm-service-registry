@@ -15,6 +15,6 @@ import java.util.List;
 @JsonIgnoreProperties(value = {"foedselsdato", "falskIdentitet"})
 public class FregGatewayResponse<T> {
 
-    private  person = new ArrayList<>();
+    private List<T> personList = new ArrayList<>();
 
 }

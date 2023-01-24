@@ -4,7 +4,7 @@ import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.CacheConfig;
-import no.difi.meldingsutveksling.serviceregistry.client.freg.FregClient;
+import no.difi.meldingsutveklsing.serviceregistry.freg.client.FregClient;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
