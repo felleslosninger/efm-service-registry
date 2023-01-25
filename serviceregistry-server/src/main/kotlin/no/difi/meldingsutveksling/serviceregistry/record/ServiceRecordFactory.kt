@@ -7,6 +7,7 @@ import no.difi.meldingsutveksling.serviceregistry.domain.*
 import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier.DPE
 import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier.DPO
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException
+import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity
 import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException
 import no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource
@@ -77,6 +78,14 @@ class ServiceRecordFactory(private val properties: ServiceregistryProperties,
         return dpvServiceRecord
     }
 
+    fun createFullname(fregGatewayEntity: FregGatewayEntity.Address.Response): String {
+        val firstname = fregGatewayEntity.navn.fornavn.plus(" ")
+        val middle = if (!fregGatewayEntity.navn.mellomnavn.isNullOrEmpty()) fregGatewayEntity.navn.mellomnavn.plus(" ") else ""
+        val surname = fregGatewayEntity.navn.etternavn
+
+        return firstname.plus(middle).plus(surname);
+    }
+
     @Throws(KontaktInfoException::class, BrregNotFoundException::class)
     fun createPrintServiceRecord(identifier: String,
                                  onBehalfOrgnr: String,
@@ -97,8 +106,7 @@ class ServiceRecordFactory(private val properties: ServiceregistryProperties,
             return Optional.empty();
         }
 
-        //TODO: Make build name function
-        val name = fregGatewayEntity.navn.fornavn+" "+fregGatewayEntity.navn.mellomnavn+fregGatewayEntity.navn.etternavn
+        val name = createFullname(fregGatewayEntity)
         val addressline = fregGatewayEntity.postadresse.adresselinje.joinToString(separator = " ")
         val postAddress = PostAddress(name,
             addressline,
