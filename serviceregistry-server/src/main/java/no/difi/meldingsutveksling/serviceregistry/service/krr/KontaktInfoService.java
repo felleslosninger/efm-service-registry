@@ -14,6 +14,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.no.difi.meldingsutveklsing.serviceregistry.freg.client.FregGatewayClient;
+import java.no.difi.meldingsutveklsing.serviceregistry.freg.domain.FregGatewayEntity;
+import java.no.difi.meldingsutveklsing.serviceregistry.freg.exception.FregGatewayException;
 import java.util.Optional;
 
 @Service
@@ -24,6 +27,7 @@ public class KontaktInfoService {
     private final ServiceregistryProperties properties;
     private final KRRClient krrClient;
     private final DsfClient dsfClient;
+    private final FregGatewayClient fregGatewayClient;
 
     @Cacheable(CacheConfig.KRR_CACHE)
     @Timed(value = "krr.client.timer", description = "Timer for KRR client")
@@ -35,14 +39,24 @@ public class KontaktInfoService {
         return krrClient.getPersonResource(params, properties.getKrr().getOidcEndpointUri());
     }
 
+//    @Cacheable(CacheConfig.DSF_CACHE)
+//    @Timed(value = "dsf.client.timer", description = "Timer for DSF client")
+//    @Retryable
+//    public Optional<DsfResource> getDsfInfo(LookupParameters params) throws KontaktInfoException {
+//        if (params.getToken().getIssuer().toString().equals(properties.getAuth().getMaskinportenIssuer())) {
+//            return dsfClient.getDSFResource(params, properties.getKrr().getMpDsfEndpointUri());
+//        }
+//        return dsfClient.getDSFResource(params, properties.getKrr().getOidcDsfEndpointUri());
+//    }
+
     @Cacheable(CacheConfig.DSF_CACHE)
     @Timed(value = "dsf.client.timer", description = "Timer for DSF client")
     @Retryable
-    public Optional<DsfResource> getDsfInfo(LookupParameters params) throws KontaktInfoException {
-        if (params.getToken().getIssuer().toString().equals(properties.getAuth().getMaskinportenIssuer())) {
-            return dsfClient.getDSFResource(params, properties.getKrr().getMpDsfEndpointUri());
-        }
-        return dsfClient.getDSFResource(params, properties.getKrr().getOidcDsfEndpointUri());
+    public Optional<FregGatewayEntity.Address.Response> getFregAdress(LookupParameters params){
+//        if (params.getToken().getIssuer().toString().equals(properties.getAuth().getMaskinportenIssuer())) {
+//            return dsfClient.getDSFResource(params, properties.getKrr().getMpDsfEndpointUri());
+//        }
+        return fregGatewayClient.getPersonAdress(params.getIdentifier());
     }
 
     public void setPrintDetails(PersonResource personResource) {

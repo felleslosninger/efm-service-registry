@@ -1,4 +1,4 @@
-package no.difi.meldingsutveklsing.serviceregistry.freg.exception;
+package java.no.difi.meldingsutveklsing.serviceregistry.freg.exception;
 
 public class FregGatewayException extends Exception {
 

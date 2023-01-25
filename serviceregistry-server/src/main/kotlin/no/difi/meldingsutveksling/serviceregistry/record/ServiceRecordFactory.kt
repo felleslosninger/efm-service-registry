@@ -25,6 +25,7 @@ import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Component
 import java.io.IOException
 import java.nio.charset.StandardCharsets
+import java.no.difi.meldingsutveklsing.serviceregistry.freg.exception.FregGatewayException
 import java.util.*
 
 @Component
@@ -90,19 +91,24 @@ class ServiceRecordFactory(private val properties: ServiceregistryProperties,
            return Optional.empty()
         }
         kontaktInfoService.setPrintDetails(personResource)
-        val dsfResource = kontaktInfoService.getDsfInfo(LookupParameters.lookup(identifier).token(token))
-                .orElseThrow { KontaktInfoException("Receiver found in KRR on behalf of '$onBehalfOrgnr', but not in DSF.") }
-        if (Strings.isNullOrEmpty(dsfResource.postAddress)) {
+
+       val fregGatewayEntity = kontaktInfoService.getFregAdress(LookupParameters.lookup(identifier))
+           .orElseThrow { KontaktInfoException("Receiver found in KRR on behalf of '$onBehalfOrgnr', but not in FREG.") }
+        if(Objects.isNull(fregGatewayEntity.postadresse)){
             // Some receivers have secret address - skip
-            return Optional.empty()
+            return Optional.empty();
         }
-        val codeArea = dsfResource.postAddress.split(" ")
-        val postAddress = PostAddress(dsfResource.name,
-                dsfResource.street,
-                codeArea[0],
-                if (codeArea.size > 1) codeArea[1] else codeArea[0],
-                dsfResource.country)
+
+        val name = fregGatewayEntity.navn.fornavn+fregGatewayEntity.navn.mellomnavn+fregGatewayEntity.navn.etternavn
+        val addressline = fregGatewayEntity.postadresse.adresselinje.joinToString(separator = " ")
+        val postAddress = PostAddress(name,
+            addressline,
+            fregGatewayEntity.postadresse.postnummer,
+            fregGatewayEntity.postadresse.poststed,
+            fregGatewayEntity.postadresse.landkode
+            )
         val senderEntity: Optional<EntityInfo> = entityService.getEntityInfo(onBehalfOrgnr)
+
         val returnAddress = if (senderEntity.isPresent && senderEntity.get() is OrganizationInfo) {
             val orginfo = senderEntity.get() as OrganizationInfo
             PostAddress(orginfo.organizationName,
@@ -110,9 +116,9 @@ class ServiceRecordFactory(private val properties: ServiceregistryProperties,
                     orginfo.postadresse.postnummer,
                     orginfo.postadresse.poststed,
                     orginfo.postadresse.land)
-        } else {
-            throw BrregNotFoundException(String.format("Sender with identifier=%s not found in BRREG", onBehalfOrgnr))
-        }
+            } else {
+                throw BrregNotFoundException(String.format("Sender with identifier=%s not found in BRREG", onBehalfOrgnr))
+            }
         val printRecord = SikkerDigitalPostServiceRecord(identifier, p, personResource,
                 properties.dpi.endpointURL.toString(), true, postAddress, returnAddress)
         documentTypeService.findByBusinessMessageType(BusinessMessageTypes.PRINT)
