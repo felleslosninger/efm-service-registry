@@ -11,6 +11,7 @@ import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperti
 import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.*;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.freg.exception.FregGatewayException;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import no.difi.meldingsutveksling.serviceregistry.record.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.record.ServiceRecordService;
@@ -166,7 +167,7 @@ public class ServiceRecordControllerTest {
         when(entityService.getEntityInfo("404040404")).thenReturn(Optional.empty());
     }
 
-    private void setupMocksForSuccessfulDpi() throws MalformedURLException, KontaktInfoException, SecurityLevelNotFoundException, CertificateNotFoundException, BrregNotFoundException, SvarUtClientException {
+    private void setupMocksForSuccessfulDpi() throws MalformedURLException, KontaktInfoException, SecurityLevelNotFoundException, CertificateNotFoundException, BrregNotFoundException, SvarUtClientException, FregGatewayException {
         ServiceregistryProperties props = fakePropertiesForDpi();
         when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
         PersonResource personResource = fakePersonResourceForDpi();

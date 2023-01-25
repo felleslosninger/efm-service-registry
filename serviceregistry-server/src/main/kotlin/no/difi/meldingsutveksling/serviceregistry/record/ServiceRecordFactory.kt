@@ -8,7 +8,7 @@ import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier.DPE
 import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier.DPO
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException
 import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity
-import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException
+import no.difi.meldingsutveksling.serviceregistry.freg.exception.FregGatewayException
 import no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource
 import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress
@@ -86,7 +86,7 @@ class ServiceRecordFactory(private val properties: ServiceregistryProperties,
         return firstname.plus(middle).plus(surname);
     }
 
-    @Throws(KontaktInfoException::class, BrregNotFoundException::class)
+    @Throws(FregGatewayException::class, BrregNotFoundException::class)
     fun createPrintServiceRecord(identifier: String,
                                  onBehalfOrgnr: String,
                                  token: Jwt,
@@ -100,7 +100,7 @@ class ServiceRecordFactory(private val properties: ServiceregistryProperties,
         kontaktInfoService.setPrintDetails(personResource)
 
        val fregGatewayEntity = kontaktInfoService.getFregAdress(LookupParameters.lookup(identifier))
-           .orElseThrow { KontaktInfoException("Receiver found in KRR on behalf of '$onBehalfOrgnr', but not in FREG.") }
+           .orElseThrow { FregGatewayException("Receiver found in KRR on behalf of '$onBehalfOrgnr', but not in FREG.") }
         if(Objects.isNull(fregGatewayEntity.postadresse)){
             // Some receivers have secret address - skip
             return Optional.empty();

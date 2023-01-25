@@ -36,9 +36,6 @@ class KontaktInfoServiceTest {
     private KRRClient krrClient;
 
     @MockBean
-    private DsfClient dsfClient;
-
-    @MockBean
     private RSAKey rsaKey;
 
     @MockBean

@@ -11,6 +11,7 @@ import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.*;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
+import no.difi.meldingsutveksling.serviceregistry.freg.exception.FregGatewayException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
@@ -149,7 +150,7 @@ public class ServiceRecordService {
     @PreAuthorize("hasAuthority('SCOPE_move/dpi.read')")
     public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
                                                                String onBehalfOrgnr,
-                                                               boolean print) throws KontaktInfoException, BrregNotFoundException {
+                                                               boolean print) throws KontaktInfoException, BrregNotFoundException, FregGatewayException {
         return createDigitalpostServiceRecords(identifier, onBehalfOrgnr, print, processService.findAll(ProcessCategory.DIGITALPOST));
     }
 
@@ -157,14 +158,14 @@ public class ServiceRecordService {
     public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
                                                                String onBehalfOrgnr,
                                                                boolean print,
-                                                               Process process) throws KontaktInfoException, BrregNotFoundException {
+                                                               Process process) throws KontaktInfoException, BrregNotFoundException, FregGatewayException {
         return createDigitalpostServiceRecords(identifier, onBehalfOrgnr, print, Collections.singleton(process));
     }
 
     private List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
                                                                 String onBehalfOrgnr,
                                                                 boolean print,
-                                                                Set<Process> processes) throws KontaktInfoException, BrregNotFoundException {
+                                                                Set<Process> processes) throws KontaktInfoException, BrregNotFoundException, FregGatewayException {
 
         PersonResource personResource = kontaktInfoService.getCitizenInfo(lookup(identifier).token(requestScope.getToken()));
         List<ServiceRecord> serviceRecords = Lists.newArrayList();

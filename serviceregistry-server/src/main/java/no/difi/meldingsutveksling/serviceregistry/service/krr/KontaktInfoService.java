@@ -26,7 +26,6 @@ public class KontaktInfoService {
 
     private final ServiceregistryProperties properties;
     private final KRRClient krrClient;
-    private final DsfClient dsfClient;
     private final FregGatewayClient fregGatewayClient;
 
     @Cacheable(CacheConfig.KRR_CACHE)
@@ -39,24 +38,12 @@ public class KontaktInfoService {
         return krrClient.getPersonResource(params, properties.getKrr().getOidcEndpointUri());
     }
 
-//    @Cacheable(CacheConfig.DSF_CACHE)
-//    @Timed(value = "dsf.client.timer", description = "Timer for DSF client")
-//    @Retryable
-//    public Optional<DsfResource> getDsfInfo(LookupParameters params) throws KontaktInfoException {
-//        if (params.getToken().getIssuer().toString().equals(properties.getAuth().getMaskinportenIssuer())) {
-//            return dsfClient.getDSFResource(params, properties.getKrr().getMpDsfEndpointUri());
-//        }
-//        return dsfClient.getDSFResource(params, properties.getKrr().getOidcDsfEndpointUri());
-//    }
-
     @Cacheable(CacheConfig.DSF_CACHE)
     @Timed(value = "dsf.client.timer", description = "Timer for DSF client")
     @Retryable
     public Optional<FregGatewayEntity.Address.Response> getFregAdress(LookupParameters params){
-//        if (params.getToken().getIssuer().toString().equals(properties.getAuth().getMaskinportenIssuer())) {
-//            return dsfClient.getDSFResource(params, properties.getKrr().getMpDsfEndpointUri());
-//        }
-        return fregGatewayClient.getPersonAdress(params.getIdentifier());
+//        return fregGatewayClient.getPersonAdress(params.getIdentifier());
+        return fregGatewayClient.getPersonAdress("1234");
     }
 
     public void setPrintDetails(PersonResource personResource) {
