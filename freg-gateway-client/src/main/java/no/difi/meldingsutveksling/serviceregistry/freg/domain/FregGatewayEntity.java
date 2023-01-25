@@ -1,4 +1,4 @@
-package java.no.difi.meldingsutveklsing.serviceregistry.freg.domain;
+package no.difi.meldingsutveksling.serviceregistry.freg.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;

@@ -14,9 +14,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.no.difi.meldingsutveklsing.serviceregistry.freg.client.FregGatewayClient;
-import java.no.difi.meldingsutveklsing.serviceregistry.freg.domain.FregGatewayEntity;
-import java.no.difi.meldingsutveklsing.serviceregistry.freg.exception.FregGatewayException;
+import no.difi.meldingsutveksling.serviceregistry.freg.client.FregGatewayClient;
+import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity;
+
 import java.util.Optional;
 
 @Service

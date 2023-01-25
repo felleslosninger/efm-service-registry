@@ -1,4 +1,4 @@
-package java.no.difi.meldingsutveklsing.serviceregistry.freg.client;
+package no.difi.meldingsutveksling.serviceregistry.freg.client;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
-import java.no.difi.meldingsutveklsing.serviceregistry.freg.domain.FregGatewayEntity;
+import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity;
 import java.util.Optional;
 
 
@@ -23,7 +23,7 @@ public class FregGatewayClient {
 
     @PostConstruct
     public void init(){
-        this.fregGatewayUrl = "localhost:8099/person/personadresse/{pid}";
+        this.fregGatewayUrl = "http://localhost:8099/person/personadresse/{pid}";
     }
 
     public Optional<FregGatewayEntity.Address.Response> getPersonAdress(String pid){

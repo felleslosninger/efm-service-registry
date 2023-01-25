@@ -1,6 +1,5 @@
 package no.difi.meldingsutveksling.serviceregistry.record
 
-import com.google.common.base.Strings
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties
@@ -25,7 +24,6 @@ import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.stereotype.Component
 import java.io.IOException
 import java.nio.charset.StandardCharsets
-import java.no.difi.meldingsutveklsing.serviceregistry.freg.exception.FregGatewayException
 import java.util.*
 
 @Component
@@ -99,7 +97,8 @@ class ServiceRecordFactory(private val properties: ServiceregistryProperties,
             return Optional.empty();
         }
 
-        val name = fregGatewayEntity.navn.fornavn+fregGatewayEntity.navn.mellomnavn+fregGatewayEntity.navn.etternavn
+        //TODO: Make build name function
+        val name = fregGatewayEntity.navn.fornavn+" "+fregGatewayEntity.navn.mellomnavn+fregGatewayEntity.navn.etternavn
         val addressline = fregGatewayEntity.postadresse.adresselinje.joinToString(separator = " ")
         val postAddress = PostAddress(name,
             addressline,
