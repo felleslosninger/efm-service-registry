@@ -42,8 +42,7 @@ public class KontaktInfoService {
     @Timed(value = "dsf.client.timer", description = "Timer for DSF client")
     @Retryable
     public Optional<FregGatewayEntity.Address.Response> getFregAdress(LookupParameters params){
-//        return fregGatewayClient.getPersonAdress(params.getIdentifier());
-        return fregGatewayClient.getPersonAdress("1234");
+        return fregGatewayClient.getPersonAdress(params.getIdentifier());
     }
 
     public void setPrintDetails(PersonResource personResource) {

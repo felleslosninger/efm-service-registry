@@ -29,7 +29,7 @@ public class ServiceregistryProperties {
     private DigitalPostInnbygger dpi;
     private KontaktOgReservasjonsRegister krr;
     private Brønnøysundregistrene brreg;
-    private FregGateway fregGateway;
+    private FregGateway freg;
     private Datahotell datahotell;
     private PostVirksomhet dpv;
     private Altinn dpo;
