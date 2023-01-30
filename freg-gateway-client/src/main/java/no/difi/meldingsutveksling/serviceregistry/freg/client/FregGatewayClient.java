@@ -1,5 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.freg.client;
 
+import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
@@ -9,13 +10,17 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity;
+
+import java.net.URI;
+import java.net.URL;
 import java.util.Optional;
 
 
 @Component
 @RequiredArgsConstructor
 public class FregGatewayClient {
-    private String fregGatewayUrl;
+    private String fregGatewayUri;
+    private ServiceregistryProperties properties;
 
     @Autowired
     @Qualifier("fregGatewayRestTemplate")
@@ -23,12 +28,13 @@ public class FregGatewayClient {
 
     @PostConstruct
     public void init(){
-        this.fregGatewayUrl = "http://localhost:8099/person/personadresse/{pid}";
+        this.fregGatewayUri = properties.getFregGateway().getEndpointURL();
     }
 
     public Optional<FregGatewayEntity.Address.Response> getPersonAdress(String pid){
         ResponseEntity<FregGatewayEntity.Address.Response> response = restTemplate.getForEntity(
-                fregGatewayUrl, FregGatewayEntity.Address.Response.class, pid);
+                fregGatewayUri + "person/personadresse/{pid}",
+                FregGatewayEntity.Address.Response.class, pid);
         return Optional.of(response.getBody());
     }
 

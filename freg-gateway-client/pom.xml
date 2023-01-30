@@ -32,6 +32,10 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
         </dependency>
+        <dependency>
+            <groupId>no.difi.meldingsutveksling</groupId>
+            <artifactId>service-registry-common</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
