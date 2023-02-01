@@ -13,6 +13,7 @@ import no.difi.meldingsutveksling.serviceregistry.domain.*;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ReceiverProcessNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.freg.exception.FregGatewayException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
 import no.difi.meldingsutveksling.serviceregistry.record.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.record.ServiceRecordService;
@@ -76,8 +77,8 @@ public class ServiceRecordController {
                                     @RequestParam(name = "print", defaultValue = "true") boolean print,
                                     Authentication auth,
                                     HttpServletRequest request)
-        throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException,
-        BrregNotFoundException, SvarUtClientException, ReceiverProcessNotFoundException {
+            throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException,
+            BrregNotFoundException, SvarUtClientException, ReceiverProcessNotFoundException, FregGatewayException {
         MDC.put("identifier", Strings.isNullOrEmpty(identifier) ? identifier : IdentifierHasher.hashIfPersonnr(identifier));
         String clientId = authenticationService.getAuthorizedClientIdentifier(auth, request);
         fillRequestScope(identifier, conversationId, clientId, authenticationService.getToken(auth));
@@ -137,7 +138,7 @@ public class ServiceRecordController {
         @RequestParam(name = "print", defaultValue = "true") boolean print,
         Authentication auth,
         HttpServletRequest request)
-        throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException, BrregNotFoundException, SvarUtClientException {
+            throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException, BrregNotFoundException, SvarUtClientException, FregGatewayException {
         MDC.put("identifier", Strings.isNullOrEmpty(identifier) ? identifier : IdentifierHasher.hashIfPersonnr(identifier));
         String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
         fillRequestScope(identifier, conversationId, clientOrgnr, authenticationService.getToken(auth));
@@ -182,8 +183,8 @@ public class ServiceRecordController {
         @RequestParam(name = "print", defaultValue = "true") boolean print,
         Authentication auth,
         HttpServletRequest request)
-        throws EntitySignerException, SecurityLevelNotFoundException, KontaktInfoException,
-        CertificateNotFoundException, BrregNotFoundException, SvarUtClientException {
+            throws EntitySignerException, SecurityLevelNotFoundException, KontaktInfoException,
+            CertificateNotFoundException, BrregNotFoundException, SvarUtClientException, FregGatewayException {
         return signEntity(entity(identifier, securityLevel, conversationId, print, auth, request));
     }
 
@@ -196,8 +197,8 @@ public class ServiceRecordController {
                                     @RequestParam(name = "print", defaultValue = "true") boolean print,
                                     Authentication auth,
                                     HttpServletRequest request)
-        throws SecurityLevelNotFoundException, KontaktInfoException, CertificateNotFoundException,
-        BrregNotFoundException, SvarUtClientException, EntitySignerException, ReceiverProcessNotFoundException {
+            throws SecurityLevelNotFoundException, KontaktInfoException, CertificateNotFoundException,
+            BrregNotFoundException, SvarUtClientException, EntitySignerException, ReceiverProcessNotFoundException, FregGatewayException {
         return signEntity(entity(identifier, processIdentifier, securityLevel, conversationId, print, auth, request));
     }
 

@@ -1,0 +1,33 @@
+package no.difi.meldingsutveksling.serviceregistry.freg.client;
+
+import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.client.RestTemplate;
+
+import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity;
+
+import java.util.Optional;
+
+
+@Component
+@RequiredArgsConstructor
+public class FregGatewayClient {
+    private final ServiceregistryProperties properties;
+
+    @Autowired
+    @Qualifier("fregGatewayRestTemplate")
+    private RestTemplate restTemplate;
+
+
+    public Optional<FregGatewayEntity.Address.Response> getPersonAdress(String pid){
+        ResponseEntity<FregGatewayEntity.Address.Response> response = restTemplate.getForEntity(
+                properties.getFreg().getEndpointURL() + "person/personadresse/{pid}",
+                FregGatewayEntity.Address.Response.class, pid);
+        return Optional.of(response.getBody());
+    }
+
+}

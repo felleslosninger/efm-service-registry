@@ -56,6 +56,7 @@
         <module>ks-fiks</module>
         <module>domain</module>
         <module>common</module>
+        <module>freg-gateway-client</module>
     </modules>
 
 
