@@ -94,6 +94,11 @@
                 <artifactId>kontakt-reservasjonsregister-client</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>no.difi.meldingsutveksling</groupId>
+                <artifactId>freg-gateway-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>no.difi.move-common</groupId>
