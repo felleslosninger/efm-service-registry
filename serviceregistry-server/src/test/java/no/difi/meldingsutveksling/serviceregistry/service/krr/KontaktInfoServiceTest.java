@@ -2,6 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.service.krr;
 
 import com.nimbusds.jose.jwk.RSAKey;
 import no.difi.meldingsutveksling.serviceregistry.MoveServiceRegistryApplication;
+import no.difi.meldingsutveksling.serviceregistry.freg.client.DefaultFregGatewayClient;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
@@ -31,6 +32,9 @@ import static org.mockito.Mockito.*;
 class KontaktInfoServiceTest {
     @Autowired
     private KontaktInfoService kontaktInfoService;
+
+    @MockBean
+    private DefaultFregGatewayClient defaultFregGatewayClient;
 
     @MockBean
     private KRRClient krrClient;
