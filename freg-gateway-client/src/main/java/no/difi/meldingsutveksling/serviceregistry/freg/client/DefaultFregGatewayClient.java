@@ -28,18 +28,10 @@ public class DefaultFregGatewayClient implements FregGatewayClient {
     private RestTemplate restTemplate;
 
     @Override
-    public Optional<FregGatewayEntity.Address.Response> getPersonAdress(String pid) throws NotFoundInMfGatewayException {
-        try {
+    public Optional<FregGatewayEntity.Address.Response> getPersonAdress(String pid) {
             ResponseEntity<FregGatewayEntity.Address.Response> response = restTemplate.getForEntity(
                     properties.getFreg().getEndpointURL() + "person/personadresse/{pid}",
                     FregGatewayEntity.Address.Response.class, pid);
             return Optional.of(response.getBody());
-        } catch (HttpClientErrorException httpException) {
-            if (httpException.getStatusCode() == HttpStatus.NOT_FOUND) {
-                throw new NotFoundInMfGatewayException(httpException);
-            }
-
-        }
-        return null;
     }
 }

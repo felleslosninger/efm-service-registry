@@ -21,7 +21,7 @@ public class DefaultFregClientWithMock extends DefaultFregGatewayClient {
     }
 
     @Override
-    public Optional<FregGatewayEntity.Address.Response> getPersonAdress(String pid) throws NotFoundInMfGatewayException {
+    public Optional<FregGatewayEntity.Address.Response> getPersonAdress(String pid) {
         ArrayList<String> adresselinje = new ArrayList<>();
         adresselinje.add("Portveien 2");
         return super.getPersonAdress(pid)
