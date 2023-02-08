@@ -25,6 +25,7 @@ public class DefaultFregClientWithMock extends DefaultFregGatewayClient {
         try {
             return super.getPersonAdress(pid);
         } catch (Exception e) {
+            log.info("User not found in Tenor testdatasøk. Returning Raffen", e);
             return Optional.of(FregGatewayEntity.Address.Response.builder()
                     .personIdentifikator(pid)
                     .navn(FregGatewayEntity.Address.Navn.builder()
