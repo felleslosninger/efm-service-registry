@@ -6,6 +6,7 @@ import no.difi.meldingsutveksling.serviceregistry.freg.client.DefaultFregGateway
 import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,8 +25,8 @@ public class DefaultFregClientWithMock extends DefaultFregGatewayClient {
     public Optional<FregGatewayEntity.Address.Response> getPersonAdress(String pid) {
         try {
             return super.getPersonAdress(pid);
-        } catch (Exception e) {
-            log.info("User not found in Tenor testdatasøk. Returning Raffen", e);
+        } catch (HttpClientErrorException.NotFound e) {
+            log.info("User not found in Tenor testdatasøk. Returning mock user", e);
             return Optional.of(FregGatewayEntity.Address.Response.builder()
                     .personIdentifikator(pid)
                     .navn(FregGatewayEntity.Address.Navn.builder()
