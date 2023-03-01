@@ -45,9 +45,10 @@
         <maven.compiler.target>11</maven.compiler.target>
         <move-common.version>1.17.0</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
-        <kotlin.version>1.6.0</kotlin.version>
+        <kotlin.version>1.8.0</kotlin.version>
         <virksert.version>1.9.0</virksert.version>
         <bouncycastle.version>1.70</bouncycastle.version>
+        <micrometer-registry-prometheus.version>1.9.8</micrometer-registry-prometheus.version>
     </properties>
 
     <modules>
@@ -72,7 +73,7 @@
             <dependency>
                 <groupId>io.micrometer</groupId>
                 <artifactId>micrometer-registry-prometheus</artifactId>
-                <version>1.7.5</version>
+                <version>${micrometer-registry-prometheus.version}</version>
             </dependency>
             <dependency>
                 <groupId>no.difi.meldingsutveksling</groupId>
@@ -171,7 +172,7 @@
             <dependency>
                 <groupId>io.mockk</groupId>
                 <artifactId>mockk</artifactId>
-                <version>1.10.2</version>
+                <version>1.12.0</version>
                 <scope>test</scope>
             </dependency>
 
