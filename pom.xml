@@ -47,7 +47,7 @@
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <kotlin.version>1.6.0</kotlin.version>
         <virksert.version>1.9.0</virksert.version>
-        <bouncycastle.version>1.62</bouncycastle.version>
+        <bouncycastle.version>1.70</bouncycastle.version>
     </properties>
 
     <modules>
