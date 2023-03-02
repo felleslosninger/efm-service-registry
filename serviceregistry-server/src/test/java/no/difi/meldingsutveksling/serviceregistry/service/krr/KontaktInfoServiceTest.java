@@ -2,6 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.service.krr;
 
 import com.nimbusds.jose.jwk.RSAKey;
 import no.difi.meldingsutveksling.serviceregistry.MoveServiceRegistryApplication;
+import no.difi.meldingsutveksling.serviceregistry.freg.client.DefaultFregGatewayClient;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
@@ -33,10 +34,10 @@ class KontaktInfoServiceTest {
     private KontaktInfoService kontaktInfoService;
 
     @MockBean
-    private KRRClient krrClient;
+    private DefaultFregGatewayClient defaultFregGatewayClient;
 
     @MockBean
-    private DsfClient dsfClient;
+    private KRRClient krrClient;
 
     @MockBean
     private RSAKey rsaKey;
