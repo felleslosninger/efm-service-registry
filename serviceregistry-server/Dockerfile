@@ -5,6 +5,10 @@ LABEL package="no.digdir" artifact="serviceregistry" version="1.0" description="
 RUN groupadd -o -g 1000 java \
     && useradd -o -r -m -u 1000 -g 1000 java
 
+RUN apt-get update
+RUN apt-get install -y gcc
+RUN apt-get install -y curl
+
 RUN chown -R java:java /opt
 
 RUN mkdir /logs && chown -R java:java /logs
