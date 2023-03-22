@@ -7,10 +7,6 @@ RUN groupadd -o -g 1000 java \
 
 RUN chown -R java:java /opt
 
-RUN apt-get update
-RUN apt-get install -y gcc
-RUN apt-get install -y curl
-
 RUN mkdir /logs && chown -R java:java /logs
 
 #
