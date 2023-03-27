@@ -13,6 +13,7 @@ import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.*;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
+import no.difi.meldingsutveksling.serviceregistry.freg.exception.FregGatewayException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
@@ -21,7 +22,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
-import no.difi.vefa.peppol.common.model.ProcessIdentifier;
+import network.oxalis.vefa.peppol.common.model.ProcessIdentifier;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
@@ -157,7 +158,7 @@ public class ServiceRecordService {
     @PreAuthorize("hasAuthority('SCOPE_move/dpi.read')")
     public List<ServiceRecord> createDigitalpostServiceRecords(PersonIdentifier identifier,
                                                                Iso6523 clientIdentifier,
-                                                               boolean print) throws KontaktInfoException, BrregNotFoundException {
+                                                               boolean print) throws KontaktInfoException, BrregNotFoundException, FregGatewayException {
         return createDigitalpostServiceRecords(identifier, clientIdentifier, print, processService.findAll(ProcessCategory.DIGITALPOST));
     }
 
@@ -165,14 +166,14 @@ public class ServiceRecordService {
     public List<ServiceRecord> createDigitalpostServiceRecords(PersonIdentifier identifier,
                                                                Iso6523 clientIdentifier,
                                                                boolean print,
-                                                               Process process) throws KontaktInfoException, BrregNotFoundException {
+                                                               Process process) throws KontaktInfoException, BrregNotFoundException, FregGatewayException {
         return createDigitalpostServiceRecords(identifier, clientIdentifier, print, Collections.singleton(process));
     }
 
     private List<ServiceRecord> createDigitalpostServiceRecords(PersonIdentifier identifier,
                                                                 Iso6523 clientIdentifier,
                                                                 boolean print,
-                                                                Set<Process> processes) throws KontaktInfoException, BrregNotFoundException {
+                                                                Set<Process> processes) throws KontaktInfoException, BrregNotFoundException, FregGatewayException {
 
         PersonResource personResource = kontaktInfoService.getCitizenInfo(lookup(identifier).token(requestScope.getToken()));
         List<ServiceRecord> serviceRecords = Lists.newArrayList();

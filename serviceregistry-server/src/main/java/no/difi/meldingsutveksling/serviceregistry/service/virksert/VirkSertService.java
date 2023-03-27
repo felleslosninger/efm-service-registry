@@ -2,13 +2,13 @@ package no.difi.meldingsutveksling.serviceregistry.service.virksert;
 
 import lombok.RequiredArgsConstructor;
 import no.difi.meldingsutveksling.domain.Iso6523;
+import network.oxalis.vefa.peppol.common.lang.PeppolParsingException;
+import network.oxalis.vefa.peppol.common.model.ParticipantIdentifier;
+import network.oxalis.vefa.peppol.common.model.ProcessIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
-import no.difi.vefa.peppol.common.lang.PeppolParsingException;
-import no.difi.vefa.peppol.common.model.ParticipantIdentifier;
-import no.difi.vefa.peppol.common.model.ProcessIdentifier;
 import no.difi.virksert.api.Mode;
 import no.difi.virksert.client.BusinessCertificateClient;
 import no.difi.virksert.client.lang.VirksertClientException;
@@ -41,7 +41,7 @@ public class VirkSertService {
 
     public String getCertificate(Iso6523 identifier, ServiceIdentifier si) throws CertificateNotFoundException {
         if (!properties.getVirksert().getProcesses().containsKey(si)) {
-            throw new IllegalArgumentException("Virksert process not registered for service identifier: "+si);
+            throw new IllegalArgumentException("Virksert process not registered for service identifier: " + si);
         }
 
         ProcessIdentifier dpoProcess;

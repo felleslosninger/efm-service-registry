@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.http.MediaType;
+import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -24,6 +25,7 @@ import java.security.cert.CertificateEncodingException;
 import java.security.interfaces.RSAPublicKey;
 
 @Configuration
+@EnableRetry
 public class SRConfig implements WebMvcConfigurer {
 
     @Override

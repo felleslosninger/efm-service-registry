@@ -13,6 +13,24 @@
 = Service Registry API Specification
 Version {project-version}
 
+== Authorization
+
+The service registry API uses OAuth2 for authorization and expects self-contained JWTs from Maskinporten. The JWT token
+requests to Maskinporten are expected to contain x5c for the Norwegian business certificate (SEIDv1 or SEIDv2) the token
+request was signed with.
+
+* https://docs.digdir.no/docs/Maskinporten/maskinporten_overordnet[Maskinporten] (external link)
+
+eFormidling creates OAuth clients in Maskinporten as part of the onboarding process:
+
+* The Client ID is `MOVE_IP_<orgnumber>`
+* One or more of the following scopes are granted to the client:
+** `move/dpo.read` (eFormidlings meldingstjeneste)
+** `move/dpe.read` (eInnsyns meldingstjeneste)
+** `move/dpi.read` (Digital Post til Innbyggere)
+** `move/dpf.read` (KS SvarUt og SvarInn)
+** `move/dpv.read` (Altinn Digital Post)
+
 == The services
 
 |===

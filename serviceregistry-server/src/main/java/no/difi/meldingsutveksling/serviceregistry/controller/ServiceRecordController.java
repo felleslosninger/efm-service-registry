@@ -16,6 +16,7 @@ import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundExcep
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ReceiverProcessNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
+import no.difi.meldingsutveksling.serviceregistry.freg.exception.FregGatewayException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
 import no.difi.meldingsutveksling.serviceregistry.record.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.record.ServiceRecordService;
@@ -79,8 +80,8 @@ public class ServiceRecordController {
                                     Authentication auth,
                                     HttpServletRequest request)
             throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException,
-            BrregNotFoundException, SvarUtClientException, ReceiverProcessNotFoundException {
 
+            BrregNotFoundException, SvarUtClientException, ReceiverProcessNotFoundException, FregGatewayException {
         MDC.put("identifier", identifier instanceof PersonIdentifier ? DigestUtils.sha256Hex(identifier.toString()) : identifier.toString());
         Iso6523 clientId = authenticationService.getAuthorizedClientIdentifier(auth, request);
         fillRequestScope(identifier, conversationId, clientId, authenticationService.getToken(auth));
@@ -96,6 +97,7 @@ public class ServiceRecordController {
             entity.getServiceRecords().add(fiksIoRecord);
             return ResponseEntity.ok(entity);
         }
+
 
         Process process = processService.findByIdentifier(processIdentifier).orElseThrow(() -> new ReceiverProcessNotFoundException(identifier, processIdentifier));
         if (ProcessCategory.DIGITALPOST == process.getCategory() && identifier instanceof PersonIdentifier) {
@@ -140,7 +142,8 @@ public class ServiceRecordController {
         @RequestParam(name = "print", defaultValue = "true") boolean print,
         Authentication auth,
         HttpServletRequest request)
-        throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException, BrregNotFoundException, SvarUtClientException {
+
+            throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException, BrregNotFoundException, SvarUtClientException, FregGatewayException {
         MDC.put("identifier", identifier instanceof PersonIdentifier ? DigestUtils.sha256Hex(identifier.toString()) : identifier.toString());
         Iso6523 clientIdentifier = authenticationService.getAuthorizedClientIdentifier(auth, request);
         fillRequestScope(identifier, conversationId, clientIdentifier, authenticationService.getToken(auth));
@@ -186,7 +189,7 @@ public class ServiceRecordController {
             Authentication auth,
             HttpServletRequest request)
             throws EntitySignerException, SecurityLevelNotFoundException, KontaktInfoException,
-            CertificateNotFoundException, BrregNotFoundException, SvarUtClientException {
+            CertificateNotFoundException, BrregNotFoundException, SvarUtClientException, FregGatewayException {
         return signEntity(entity(identifier, securityLevel, conversationId, print, auth, request));
     }
 
@@ -200,7 +203,7 @@ public class ServiceRecordController {
                                     Authentication auth,
                                     HttpServletRequest request)
             throws SecurityLevelNotFoundException, KontaktInfoException, CertificateNotFoundException,
-            BrregNotFoundException, SvarUtClientException, EntitySignerException, ReceiverProcessNotFoundException {
+            BrregNotFoundException, SvarUtClientException, EntitySignerException, ReceiverProcessNotFoundException, FregGatewayException {
         return signEntity(entity(identifier, processIdentifier, securityLevel, conversationId, print, auth, request));
     }
 
@@ -224,6 +227,7 @@ public class ServiceRecordController {
 
     private ResponseEntity<?> signEntity(ResponseEntity<?> entity) throws EntitySignerException {
         if (entity.getStatusCode() != HttpStatus.OK) {
+            log.warn("Entity status code is {}, skipping signing", entity.getStatusCode());
             return entity;
         }
         String json;
@@ -236,5 +240,4 @@ public class ServiceRecordController {
 
         return ResponseEntity.ok(payloadSigner.sign(json));
     }
-
 }
