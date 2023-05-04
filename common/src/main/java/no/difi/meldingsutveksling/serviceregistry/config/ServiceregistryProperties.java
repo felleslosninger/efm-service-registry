@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *
  * @author Nikolai Luthman <nikolai dot luthman at inmeta dot no>
  */
 @ConfigurationProperties("difi.move")
@@ -77,8 +76,7 @@ public class ServiceregistryProperties {
         private URI mpDsfEndpointUri;
         private URI oidcEndpointUri;
         private URI oidcDsfEndpointUri;
-        private String printAdress;
-        private Resource printCertificate;
+        private String printUrl;
     }
 
     @Data

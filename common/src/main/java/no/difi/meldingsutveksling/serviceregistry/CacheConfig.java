@@ -21,6 +21,7 @@ public class CacheConfig extends CachingConfigurerSupport {
     public static final String KRR_CACHE = "krrCache";
     public static final String DSF_CACHE = "dsfCache";
     public static final String FIKSIO_CACHE = "fiksIoCache";
+    public static final String CACHE_KRR_PRINT = "krrPrintCache";
 
     @Override
     @Bean
@@ -44,6 +45,10 @@ public class CacheConfig extends CachingConfigurerSupport {
                                 .expireAfterWrite(5, TimeUnit.MINUTES)
                                 .build()),
                 new CaffeineCache(DSF_CACHE,
+                        Caffeine.newBuilder()
+                                .expireAfterWrite(5, TimeUnit.MINUTES)
+                                .build()),
+                new CaffeineCache(CACHE_KRR_PRINT,
                         Caffeine.newBuilder()
                                 .expireAfterWrite(5, TimeUnit.MINUTES)
                                 .build())
