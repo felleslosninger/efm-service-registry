@@ -4,19 +4,17 @@ import io.micrometer.core.annotation.Timed;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.CacheConfig;
-import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
+import no.difi.meldingsutveksling.serviceregistry.freg.client.DefaultFregGatewayClient;
+import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity;
 import no.difi.meldingsutveksling.serviceregistry.freg.exception.NotFoundInMfGatewayException;
-import no.difi.meldingsutveksling.serviceregistry.krr.*;
-import org.apache.commons.io.IOUtils;
+import no.difi.meldingsutveksling.serviceregistry.krr.KRRClient;
+import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
+import no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters;
+import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import no.difi.meldingsutveksling.serviceregistry.freg.client.DefaultFregGatewayClient;
-import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity;
 
 import java.util.Optional;
 
@@ -28,6 +26,7 @@ public class KontaktInfoService {
     private final ServiceregistryProperties properties;
     private final KRRClient krrClient;
     private final DefaultFregGatewayClient defaultFregGatewayClient;
+    private final PrintService printService;
 
     @Cacheable(CacheConfig.KRR_CACHE)
     @Timed(value = "krr.client.timer", description = "Timer for KRR client")
@@ -47,12 +46,8 @@ public class KontaktInfoService {
     }
 
     public void setPrintDetails(PersonResource personResource) {
-        try {
-            personResource.setCertificate(IOUtils.toString(properties.getKrr().getPrintCertificate().getInputStream(), StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            log.error(String.format("Could not read certificate from %s", properties.getKrr().getPrintCertificate().toString()), e);
-            throw new ServiceRegistryException(e);
-        }
-        personResource.setPrintPostkasseLeverandorAdr(properties.getKrr().getPrintAdress());
+        PrintResponse printDetails = printService.getPrintDetails();
+        personResource.setCertificate(printDetails.getX509Sertifikat());
+        personResource.setPrintPostkasseLeverandorAdr(printDetails.getPostkasseleverandoerAdresse());
     }
 }
