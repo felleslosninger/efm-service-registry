@@ -92,7 +92,7 @@ public class WebSecurityConfig {
         @Override
         protected void configure(HttpSecurity http) throws Exception {
             var jwtIssuerAuthenticationManagerResolver =
-                    new JwtIssuerAuthenticationManagerResolver(props.getAuth().getMaskinportenIssuer(), props.getAuth().getOidcIssuer());
+                    new JwtIssuerAuthenticationManagerResolver(props.getAuth().getMaskinportenIssuer());
 
             http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and().csrf().disable();
