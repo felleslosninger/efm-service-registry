@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *
  * @author Nikolai Luthman <nikolai dot luthman at inmeta dot no>
  */
 @ConfigurationProperties("difi.move")
@@ -58,7 +57,6 @@ public class ServiceregistryProperties {
     @Data
     public static class Auth {
         private String sasToken;
-        private String oidcIssuer;
         private String maskinportenIssuer;
     }
 
@@ -74,10 +72,7 @@ public class ServiceregistryProperties {
     public static class KontaktOgReservasjonsRegister {
         private URI mpEndpointUri;
         private URI mpDsfEndpointUri;
-        private URI oidcEndpointUri;
-        private URI oidcDsfEndpointUri;
-        private String printAdress;
-        private Resource printCertificate;
+        private String printUrl;
     }
 
     @Data
