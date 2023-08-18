@@ -32,10 +32,7 @@ public class KontaktInfoService {
     @Timed(value = "krr.client.timer", description = "Timer for KRR client")
     @Retryable
     public PersonResource getCitizenInfo(LookupParameters params) throws KontaktInfoException {
-        if (params.getToken().getIssuer().toString().equals(properties.getAuth().getMaskinportenIssuer())) {
-            return krrClient.getPersonResource(params, properties.getKrr().getMpEndpointUri());
-        }
-        return krrClient.getPersonResource(params, properties.getKrr().getOidcEndpointUri());
+        return krrClient.getPersonResource(params, properties.getKrr().getMpEndpointUri());
     }
 
     @Cacheable(CacheConfig.DSF_CACHE)

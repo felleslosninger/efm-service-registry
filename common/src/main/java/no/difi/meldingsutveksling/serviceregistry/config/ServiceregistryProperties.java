@@ -58,7 +58,6 @@ public class ServiceregistryProperties {
     @Data
     public static class Auth {
         private String sasToken;
-        private String oidcIssuer;
         private String maskinportenIssuer;
     }
 
@@ -74,8 +73,6 @@ public class ServiceregistryProperties {
     public static class KontaktOgReservasjonsRegister {
         private URI mpEndpointUri;
         private URI mpDsfEndpointUri;
-        private URI oidcEndpointUri;
-        private URI oidcDsfEndpointUri;
         private String printUrl;
     }
 

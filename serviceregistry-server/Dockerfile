@@ -9,6 +9,8 @@ RUN chown -R java:java /opt
 
 RUN mkdir /logs && chown -R java:java /logs
 
+RUN apt-get update && apt-get upgrade -y && apt-get install -y
+
 #
 # Open ports for incoming connections
 #
