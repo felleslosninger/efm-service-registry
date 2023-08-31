@@ -1,5 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.krr;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
@@ -8,6 +9,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PersonResource {
 
     @JsonProperty(value = "personidentifikator", required = true)
