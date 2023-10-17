@@ -44,13 +44,13 @@ jobs:
       image-digest: ${{ needs.call-workflow-image-build-publish.outputs.image-digest }}
     secrets: inherit
 
-  update-release-documentation:
-    needs: [ call-update-image-version ]
-    uses: ./.github/workflows/reusable-update-release-documentation.yaml
-    with:
-      jiraVersionPrefix: Virksert-TEST-PIPELINE
-    secrets:
-      jiraHook: ${{ secrets.JIRA_WEBHOOK_URL_FOR_QA }}
-      confluenceUsername: ${{ secrets.CONFLUENCE_USERNAME }}
-      confluencePassword: ${{ secrets.CONFLUENCE_PASSWORD }}
+#  update-release-documentation:
+#    needs: [ call-update-image-version ]
+#    uses: ./.github/workflows/reusable-update-release-documentation.yaml
+#    with:
+#      jiraVersionPrefix: Virksert-TEST-PIPELINE
+#    secrets:
+#      jiraHook: ${{ secrets.JIRA_WEBHOOK_URL_FOR_QA }}
+#      confluenceUsername: ${{ secrets.CONFLUENCE_USERNAME }}
+#      confluencePassword: ${{ secrets.CONFLUENCE_PASSWORD }}
       
