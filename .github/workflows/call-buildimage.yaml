@@ -3,7 +3,7 @@ name: CI Workflow
 on:
   workflow_dispatch:
     branches:
-      - feature/MOVE-3649-*
+      - feature/MOVE-3649-oppgradere-service-registry-pipeline
   push:
     branches:
       - '*'
