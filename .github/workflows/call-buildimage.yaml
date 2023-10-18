@@ -10,8 +10,6 @@ on:
   pull_request:
     types: []  # Empty list ensures PRs are not triggered. Trigger nytt bygg..
 
-env :
-
 jobs:
 
   perform-build-of-code-before-release-to-github-packages:
