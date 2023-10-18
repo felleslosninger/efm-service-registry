@@ -15,20 +15,20 @@ env :
 jobs:
 
   perform-build-of-code-before-release-to-github-packages:
-    uses: felleslosninger/github-workflows-internal/.github/workflows/maven-build-lib.yml@efm-tilpasninger
+    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-build-lib.yml@efm-tilpasninger
     with:
       java-version: 11
     secrets: inherit
 
   release-to-github-packages:
     needs: [ perform-build-of-code-before-release-to-github-packages ]
-    uses: felleslosninger/github-workflows-internal/.github/workflows/maven-release-lib.yml@efm-tilpasninger
+    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-release-lib.yml@efm-tilpasninger
     with:
       java-version: 11
 
   call-workflow-image-build-publish:
     needs: [ perform-build-of-code-before-release-to-github-packages ]
-    uses: felleslosninger/github-workflows-internal/.github/workflows/spring-boot-build-publish-image.yml@efm-tilpasninger
+    uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-build-publish-image.yml@efm-tilpasninger
     with:
       multi-module-project-path: virksert-server/
       module-to-build: virksert-server
@@ -37,7 +37,7 @@ jobs:
       
   call-update-image-version:
     needs: [call-workflow-image-build-publish]
-    uses: felleslosninger/github-workflows-internal/.github/workflows/update-image-version.yml@main
+    uses: felleslosninger/github-workflows/.github/workflows/ci-update-image-version.yml@main
     with:
       kubernetes-repo: eformidling-cd
       image-version: ${{ needs.call-workflow-image-build-publish.outputs.image-version }}
