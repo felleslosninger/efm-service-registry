@@ -24,7 +24,7 @@
     <repositories>
         <repository>
             <id>github</id>
-            <url>https://maven.pkg.github.com/felleslosninger/.github</url>
+            <url>https://maven.pkg.github.com/felleslosninger</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
