@@ -24,7 +24,7 @@
     <repositories>
         <repository>
             <id>github</id>
-            <url>https://maven.pkg.github.com/felleslosninger/efm-virksert</url>
+            <url>https://maven.pkg.github.com/felleslosninger</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
@@ -43,7 +43,7 @@
         <move-common.version>1.18.0</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <kotlin.version>1.8.0</kotlin.version>
-        <virksert.version>1.100.0-SNAPSHOT</virksert.version>
+        <virksert.version>1.100.0-20231024.070045-48</virksert.version>
         <bouncycastle.version>1.70</bouncycastle.version>
         <micrometer-registry-prometheus.version>1.9.8</micrometer-registry-prometheus.version>
     </properties>
