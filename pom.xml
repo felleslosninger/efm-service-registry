@@ -29,6 +29,10 @@
                 <enabled>true</enabled>
             </snapshots>
         </repository>
+        <snapshotRepository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/felleslosninger/.github</url>
+        </snapshotRepository>
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
