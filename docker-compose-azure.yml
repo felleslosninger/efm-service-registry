@@ -1,8 +1,0 @@
-version: '3.3'
-
-services:
-  serviceregistry:
-    build: serviceregistry-server
-    image: eformidling/serviceregistry-server
-    labels:
-      kubernetesManifestFile: serviceregistry/sr.yaml
