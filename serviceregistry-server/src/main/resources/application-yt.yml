@@ -1,0 +1,30 @@
+spring:
+    cloud:
+        config:
+            uri: https://test-meldingsutveksling.dificloud.net/discovery/config
+eureka:
+    client:
+        enabled: false
+
+difi:
+    move:
+        virksert:
+            endpointURL: https://test-meldingsutveksling.dificloud.net/virksomhetssertifikat/
+        dpv:
+            endpointURL: https://tt02.altinn.no/ServiceEngineExternal/CorrespondenceAgencyExternal.svc
+        dpi:
+            endpointURL: https://qaoffentlig.meldingsformidler.digipost.no/api/ebms
+        krr:
+            mp-endpoint-uri: https://krr-yt2.digdir.eon.no/rest/v1/personer
+            mp-dsf-endpoint-uri: https://krr-yt2.digdir.eon.no/rest/v1/mf/personer
+        auth:
+            maskinporten-issuer: https://yt2.maskinporten.no/
+
+app:
+    logger:
+        destination: test-stream-meldingsutveksling.dificloud.net:443
+logging:
+    level:
+        "*": WARNING
+        no.difi: INFO
+        no.digdir: INFO
