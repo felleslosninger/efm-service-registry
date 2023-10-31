@@ -1,0 +1,29 @@
+spring:
+    cloud:
+        config:
+            uri: https://test-meldingsutveksling.dificloud.net/discovery/config
+    eureka:
+        client:
+            serviceUrl:
+                defaultZone: https://test-meldingsutveksling.dificloud.net/discovery/eureka
+
+difi:
+    move:
+        virksert:
+            endpointURL: https://test-meldingsutveksling.dificloud.net/virksomhetssertifikat/
+        dpv:
+            endpointURL: https://tt02.altinn.no/ServiceEngineExternal/CorrespondenceAgencyExternal.svc
+        dpi:
+            endpointURL: https://qaoffentlig.meldingsformidler.digipost.no/api/ebms
+        krr:
+            mp-endpoint-uri: https://test.kontaktregisteret.no/rest/v1/personer
+            mp-dsf-endpoint-uri: https://test.kontaktregisteret.no/rest/v1/mf/personer
+
+app:
+    logger:
+        destination: test-stream-meldingsutveksling.dificloud.net:443
+
+logging:
+    level:
+        org.springframework.ws.client.MessageTracing: TRACE
+        org.springframework.ws.server.MessageTracing: TRACE
