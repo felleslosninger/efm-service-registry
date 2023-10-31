@@ -23,6 +23,7 @@ jobs:
     uses: felleslosninger/github-workflows/.github/workflows/ci-maven-release-lib.yml@efm-tilpasninger
     with:
       java-version: 11
+    secrets: inherit
 
   call-workflow-image-build-publish:
     needs: [ perform-build-of-code-before-release-to-github-packages ]
