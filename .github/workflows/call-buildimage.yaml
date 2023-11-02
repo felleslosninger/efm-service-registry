@@ -12,36 +12,60 @@ on:
 
 jobs:
 
-  perform-build-of-code-before-release-to-github-packages:
-    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-build-lib.yml@efm-tilpasninger
-    with:
-      java-version: 11
-    secrets: inherit
+  build2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK ${{ inputs.java-version }}
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'liberica'
+          java-version: ${{ inputs.java-version }}
+      - uses: s4u/maven-settings-action@v2.8.0
+        with:
+          servers: |
+            [{
+            "id": "github",
+            "username": "${{ secrets.MAVEN_TEMP_WORKAROUND_USER }}",
+            "password": "${{ secrets.MAVEN_TEMP_WORKAROUND_PASSWORD }}"
+            }]
+      - name: Build with Maven
+        run: |
+          mvn -B clean install --update-snapshots       
+      - uses: anchore/sbom-action@v0
+        with:
+          path: ${{ inputs.sbom-path }}
 
-  release-to-github-packages:
-    needs: [ perform-build-of-code-before-release-to-github-packages ]
-    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-release-lib.yml@efm-tilpasninger
-    with:
-      java-version: 11
-    secrets: inherit
-
-  call-workflow-image-build-publish:
-    # needs: [ perform-build-of-code-before-release-to-github-packages ]
-    uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-build-publish-image.yml@efm-tilpasninger
-    with:
-      multi-module-project-path: serviceregistry-server/
-      module-to-build: serviceregistry-server
-      java-version: 11
-    secrets: inherit
-      
-  call-update-image-version:
-    needs: [call-workflow-image-build-publish]
-    uses: felleslosninger/github-workflows/.github/workflows/ci-update-image-version.yml@main
-    with:
-      kubernetes-repo: eformidling-cd
-      image-version: ${{ needs.call-workflow-image-build-publish.outputs.image-version }}
-      image-digest: ${{ needs.call-workflow-image-build-publish.outputs.image-digest }}
-    secrets: inherit
+#  perform-build-of-code-before-release-to-github-packages:
+#    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-build-lib.yml@efm-tilpasninger
+#    with:
+#      java-version: 11
+#    secrets: inherit
+#
+#  release-to-github-packages:
+#    needs: [ perform-build-of-code-before-release-to-github-packages ]
+#    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-release-lib.yml@efm-tilpasninger
+#    with:
+#      java-version: 11
+#    secrets: inherit
+#
+#  call-workflow-image-build-publish:
+#    # needs: [ perform-build-of-code-before-release-to-github-packages ]
+#    uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-build-publish-image.yml@efm-tilpasninger
+#    with:
+#      multi-module-project-path: serviceregistry-server/
+#      module-to-build: serviceregistry-server
+#      java-version: 11
+#    secrets: inherit
+#      
+#  call-update-image-version:
+#    needs: [call-workflow-image-build-publish]
+#    uses: felleslosninger/github-workflows/.github/workflows/ci-update-image-version.yml@main
+#    with:
+#      kubernetes-repo: eformidling-cd
+#      image-version: ${{ needs.call-workflow-image-build-publish.outputs.image-version }}
+#      image-digest: ${{ needs.call-workflow-image-build-publish.outputs.image-digest }}
+#    secrets: inherit
 
 #  update-release-documentation:
 #    needs: [ call-update-image-version ]
