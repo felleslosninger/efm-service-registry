@@ -48,7 +48,7 @@
         <move-common.version>1.18.0</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <kotlin.version>1.8.0</kotlin.version>
-        <virksert.version>1.100.0</virksert.version>
+        <virksert.version>1.100.0-SNAPSHOT</virksert.version>
         <bouncycastle.version>1.70</bouncycastle.version>
         <micrometer-registry-prometheus.version>1.9.8</micrometer-registry-prometheus.version>
     </properties>
