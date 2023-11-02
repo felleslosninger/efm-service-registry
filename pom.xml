@@ -27,6 +27,9 @@
             <name>GitHub felleslosninger Apache Maven Packages</name>
             <!--<url>https://maven.pkg.github.com/felleslosninger/*</url>-->
             <url>https://maven.pkg.github.com/felleslosninger/virksert</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
