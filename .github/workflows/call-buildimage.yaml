@@ -52,3 +52,4 @@ jobs:
 #      jiraHook: ${{ secrets.JIRA_WEBHOOK_URL_FOR_QA }}
 #      confluenceUsername: ${{ secrets.CONFLUENCE_USERNAME }}
 #      confluencePassword: ${{ secrets.CONFLUENCE_PASSWORD }}
+
