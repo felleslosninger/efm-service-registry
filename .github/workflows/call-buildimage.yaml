@@ -25,7 +25,7 @@ jobs:
         with:
           servers: |
             [{
-            "id": "github2",
+            "id": "github",
             "username": "${{ secrets.MAVEN_TEMP_WORKAROUND_USER }}",
             "password": "${{ secrets.MAVEN_TEMP_WORKAROUND_PASSWORD }}"
             }]
