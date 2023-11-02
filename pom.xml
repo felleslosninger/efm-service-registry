@@ -25,8 +25,8 @@
         <repository>
             <id>github</id>
             <name>GitHub felleslosninger Apache Maven Packages</name>
-            <!--<url>https://maven.pkg.github.com/felleslosninger/*</url>-->
-            <url>https://maven.pkg.github.com/felleslosninger/efm-virksert</url>
+            <url>https://maven.pkg.github.com/felleslosninger/*</url>
+            <!--<url>https://maven.pkg.github.com/felleslosninger/efm-virksert</url>-->
             <releases>
                 <enabled>true</enabled>
             </releases>
