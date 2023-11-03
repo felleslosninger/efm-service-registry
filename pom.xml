@@ -39,6 +39,18 @@
         </repository>
     </repositories>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub felleslosninger Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/felleslosninger/.github</url>
+        </repository>
+        <snapshotRepository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/felleslosninger/.github</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <properties>
         <spring.cloud.version>2021.0.5</spring.cloud.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
