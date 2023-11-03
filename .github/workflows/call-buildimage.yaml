@@ -8,48 +8,28 @@ on:
     branches:
       - '*'
   pull_request:
-    types: []  # Empty list ensures PRs are not triggered. Trigger nytt bygg..........
+    types: [ ]  # Empty list ensures PRs are not triggered. Trigger nytt bygg..........
 
 jobs:
 
-  perform-build-of-code-before-release-to-github-packages:
-    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-build-lib.yml@efm-tilpasninger
-    with:
-      java-version: 11
-    secrets: inherit
+  build:
+    runs-on: ubuntu-latest
+    steps:
 
-  release-to-github-packages:
-    needs: [ perform-build-of-code-before-release-to-github-packages ]
-    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-release-lib.yml@efm-tilpasninger
-    with:
-      java-version: 11
-    secrets: inherit
-
-  call-workflow-image-build-publish:
-    needs: [ perform-build-of-code-before-release-to-github-packages ]
-    uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-build-publish-image.yml@efm-tilpasninger
-    with:
-      multi-module-project-path: serviceregistry-server/
-      module-to-build: serviceregistry-server
-      java-version: 11
-    secrets: inherit
-
-  call-update-image-version:
-    needs: [call-workflow-image-build-publish]
-    uses: felleslosninger/github-workflows/.github/workflows/ci-update-image-version.yml@main
-    with:
-      kubernetes-repo: eformidling-cd
-      image-version: ${{ needs.call-workflow-image-build-publish.outputs.image-version }}
-      image-digest: ${{ needs.call-workflow-image-build-publish.outputs.image-digest }}
-    secrets: inherit
-
-#  update-release-documentation:
-#    needs: [ call-update-image-version ]
-#    uses: ./.github/workflows/reusable-update-release-documentation.yaml
-#    with:
-#      jiraVersionPrefix: Virksert-TEST-PIPELINE
-#    secrets:
-#      jiraHook: ${{ secrets.JIRA_WEBHOOK_URL_FOR_QA }}
-#      confluenceUsername: ${{ secrets.CONFLUENCE_USERNAME }}
-#      confluencePassword: ${{ secrets.CONFLUENCE_PASSWORD }}
-
+      - uses: actions/checkout@v3
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'liberica'
+          java-version: 11
+      - uses: s4u/maven-settings-action@v2.8.0
+        with:
+          servers: |
+            [{
+            "id": "github",            
+            "username": "${{ secrets.EFORMIDLING_MAVEN_USER }}",
+            "password": "${{ secrets.EFORMIDLING_MAVEN_PASSWORD }}"
+            }]
+      - name: Build with Maven
+        run: |
+          mvn -B clean install --update-snapshots
