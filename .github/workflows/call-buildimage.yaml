@@ -16,6 +16,7 @@ jobs:
     uses: felleslosninger/github-workflows/.github/workflows/ci-maven-build-lib.yml@efm-tilpasninger
     with:
       java-version: 11
+      sbom-path: serviceregistry-server/target/
     secrets: inherit
 
   release-to-github-packages:
