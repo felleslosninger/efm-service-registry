@@ -21,7 +21,7 @@ jobs:
 
   release-to-github-packages:
     needs: [ perform-build-of-code-before-release-to-github-packages ]
-    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-release-lib.yml@efm-tilpasninger-2
+    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-release-lib.yml@efm-tilpasninger
     with:
       java-version: 11
       sbom-path: serviceregistry-server/target/
