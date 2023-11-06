@@ -25,18 +25,7 @@
         <repository>
             <id>github</id>
             <name>GitHub felleslosninger Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/felleslosninger/efm-service-registry</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-                <repository>
-            <id>github</id>
-            <name>GitHub felleslosninger Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/felleslosninger/efm-virksert</url>
+            <url>https://maven.pkg.github.com/felleslosninger/*</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
