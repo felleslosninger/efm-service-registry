@@ -13,7 +13,7 @@ on:
 jobs:
 
   perform-build-of-code-before-release-to-github-packages:
-    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-build-lib.yml@efm-tilpasninger
+    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-build-lib.yml@efm-tilpasninger-2
     with:
       java-version: 11
       sbom-path: serviceregistry-server/target/
@@ -21,7 +21,7 @@ jobs:
 
   release-to-github-packages:
     needs: [ perform-build-of-code-before-release-to-github-packages ]
-    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-release-lib.yml@efm-tilpasninger
+    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-release-lib.yml@efm-tilpasninger-2
     with:
       java-version: 11
       sbom-path: serviceregistry-server/target/
@@ -29,7 +29,7 @@ jobs:
 
   call-workflow-image-build-publish:
     needs: [ perform-build-of-code-before-release-to-github-packages ]
-    uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-build-publish-image.yml@efm-tilpasninger
+    uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-build-publish-image.yml@efm-tilpasninger-2
     with:
       multi-module-project-path: serviceregistry-server/
       module-to-build: serviceregistry-server
@@ -38,7 +38,7 @@ jobs:
 
   call-update-image-version:
     needs: [ call-workflow-image-build-publish ]
-    uses: felleslosninger/github-workflows/.github/workflows/ci-update-image-version.yml@main
+    uses: felleslosninger/github-workflows/.github/workflows/ci-update-image-version.yml@efm-tilpasninger-2
     with:
       kubernetes-repo: eformidling-cd
       image-version: ${{ needs.call-workflow-image-build-publish.outputs.image-version }}
