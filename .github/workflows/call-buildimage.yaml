@@ -12,23 +12,14 @@ on:
 
 jobs:
 
-  perform-build-of-code-before-release-to-github-packages:
-    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-build-lib.yml@efm-tilpasninger-2
-    with:
-      java-version: 11
-      sbom-path: serviceregistry-server/target/
-    secrets: inherit
-
   release-to-github-packages:
-    needs: [ perform-build-of-code-before-release-to-github-packages ]
-    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-release-lib.yml@efm-tilpasninger
+    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-install-deploy-lib.yml@efm-tilpasninger-2
     with:
       java-version: 11
       sbom-path: serviceregistry-server/target/
     secrets: inherit
 
   call-workflow-image-build-publish:
-    needs: [ perform-build-of-code-before-release-to-github-packages ]
     uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-build-publish-image.yml@efm-tilpasninger-2
     with:
       multi-module-project-path: serviceregistry-server/
