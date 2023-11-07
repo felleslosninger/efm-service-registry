@@ -21,6 +21,7 @@ jobs:
 
   call-workflow-image-build-publish:
     uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-build-publish-image.yml@efm-tilpasninger-2
+    needs: [ release-to-github-packages ]
     with:
       multi-module-project-path: serviceregistry-server/
       module-to-build: serviceregistry-server
