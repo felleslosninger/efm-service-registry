@@ -14,7 +14,7 @@ import java.util.Optional;
 
 @Component
 @Slf4j
-@Profile({"dev", "staging", "yt"})
+@Profile({"dev", "pipelinetest", "staging", "yt"})
 public class DefaultFregClientWithMock extends DefaultFregGatewayClient {
 
     public DefaultFregClientWithMock(ServiceregistryProperties properties) {
