@@ -38,11 +38,6 @@ spring:
     password: ${DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-eureka:
-  client:
-    registerWithEureka: false
-    fetchRegistry: false
-
 difi:
   move:
     virksert:
