@@ -2,15 +2,15 @@ spring:
   cloud:
     config:
       uri: https://test-meldingsutveksling.dificloud.net/discovery/config
-  eureka:
-    client:
-      serviceUrl:
-        defaultZone: https://test-meldingsutveksling.dificloud.net/discovery/eureka
   datasource:
     url: jdbc:mysql://mysql:3306/move_sr_nextmove
     username: move_sr
     password: ${DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+eureka:
+  client:
+    enabled: false
 
 difi:
   move:
