@@ -12,7 +12,7 @@ on:
 
 jobs:
 
-  release-to-github-packages:
+  build-install-and-deploy-libs:
     uses: felleslosninger/github-workflows/.github/workflows/ci-maven-install-deploy-lib.yml@efm-tilpasninger-2
     with:
       java-version: 11
@@ -21,7 +21,7 @@ jobs:
 
   call-workflow-image-build-publish:
     uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-build-publish-image.yml@efm-tilpasninger-2
-    needs: [ release-to-github-packages ]
+    needs: [ build-install-and-deploy-libs ]
     with:
       multi-module-project-path: serviceregistry-server/
       module-to-build: serviceregistry-server
