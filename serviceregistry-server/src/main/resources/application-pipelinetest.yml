@@ -10,7 +10,8 @@ spring:
 
 eureka:
   client:
-    enabled: false
+    registerWithEureka: false
+    fetchRegistry: false
 
 difi:
   move:
