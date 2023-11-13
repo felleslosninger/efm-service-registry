@@ -1,41 +1,41 @@
 spring:
-    application:
-        name: serviceregistry
-    cloud:
-        config:
-            enabled: false
-    datasource:
-        url: jdbc:h2:file:./sr-db
-    jpa:
-        open-in-view: false
-        hibernate:
-            ddl-auto: update
-    profiles:
-        active: default
+  application:
+    name: serviceregistry
+  cloud:
+    config:
+      enabled: false
+  datasource:
+    url: jdbc:h2:file:./sr-db
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+  profiles:
+    active: default
 management:
-    server:
-        port: 9199
-    endpoints:
-        web:
-            base-path: /manage
-            exposure:
-                include: "*"
-                exclude: shutdown
-    endpoint:
-        health:
-            probes:
-                enabled: true
-        info:
-            git:
-                mode: full
-        metrics:
-            tags:
-                application: ${spring.application.name}
-eureka:
-    client:
+  server:
+    port: 9199
+  endpoints:
+    web:
+      base-path: /manage
+      exposure:
+        include: "*"
+        exclude: shutdown
+  endpoint:
+    health:
+      probes:
         enabled: true
-        healthcheck:
-            enabled: false
+    info:
+      git:
+        mode: full
+    metrics:
+      tags:
+        application: ${spring.application.name}
+eureka:
+  client:
+    enabled: true
+    healthcheck:
+      enabled: false
 #    instance:
 #        metadata-map:
 #            instanceId: ${vcap.application.instance_id:${spring.application.name}:${spring.application.instance_id:${server.port}}}
@@ -44,51 +44,51 @@ eureka:
 #            branch: ${scmBranch}
 #            pr: ${pullrequest}
 difi:
-    move:
-        elma:
-            locatorUrl: http://test-smp.difi.no.publisher.acc.edelivery.tech.ec.europa.eu
-            defaultProcessIdentifier: urn:no:difi:profile:arkivmelding:administrasjon:ver1.0
-            lookupIcd: 0192
-        brreg:
-            endpointURL: https://data.brreg.no/
-        virksert:
-            icd: 0192
-            processes:
-                dpo: cenbii-procid-ubl::urn:no:difi:profile:dpo:ver1.0
-                dpe: cenbii-procid-ubl::urn:no:difi:profile:dpe:ver1.0
-        sign:
-            keystore:
-                path: classpath:kontaktinfo-client-test.jks
-                alias: 991825827
-                password: changeit
-                type: JKS
-        datahotell:
-            endpointURL: https://hotell.difi.no/
-        dpo:
-            endpointURL: https://tt02.altinn.no
-            serviceCode: 4192
-            serviceEditionCode: 270815
-        dpi:
-            infoProcess: urn:no:difi:profile:digitalpost:info:ver1.0
-            vedtakProcess: urn:no:difi:profile:digitalpost:vedtak:ver1.0
-        fiks:
-            io:
-                enable: false
-                endpoint-url: https://api.fiks.test.ks.no
-                orgform-filter: KOMM
-            svarut:
-                user: <user>
-                password: <pass>
-                forsendelsesserviceUrl: https://test.svarut.ks.no/tjenester/forsendelseservice/ForsendelsesServiceV9
-                serviceRecordUrl: https://test.svarut.ks.no/tjenester/forsendelseservice/ForsendelsesServiceV6
-                certificate: classpath:svarut_test_public.pem
-        auth:
-            maskinporten-issuer: https://test.maskinporten.no/
-        feature:
-            enableDpfDpv: true
+  move:
+    elma:
+      locatorUrl: http://test-smp.difi.no.publisher.acc.edelivery.tech.ec.europa.eu
+      defaultProcessIdentifier: urn:no:difi:profile:arkivmelding:administrasjon:ver1.0
+      lookupIcd: 0192
+    brreg:
+      endpointURL: https://data.brreg.no/
+    virksert:
+      icd: 0192
+      processes:
+        dpo: cenbii-procid-ubl::urn:no:difi:profile:dpo:ver1.0
+        dpe: cenbii-procid-ubl::urn:no:difi:profile:dpe:ver1.0
+    sign:
+      keystore:
+        path: classpath:kontaktinfo-client-test.jks
+        alias: 991825827
+        password: changeit
+        type: JKS
+    datahotell:
+      endpointURL: https://hotell.difi.no/
+    dpo:
+      endpointURL: https://tt02.altinn.no
+      serviceCode: 4192
+      serviceEditionCode: 270815
+    dpi:
+      infoProcess: urn:no:difi:profile:digitalpost:info:ver1.0
+      vedtakProcess: urn:no:difi:profile:digitalpost:vedtak:ver1.0
+    fiks:
+      io:
+        enable: false
+        endpoint-url: https://api.fiks.test.ks.no
+        orgform-filter: KOMM
+      svarut:
+        user: <user>
+        password: <pass>
+        forsendelsesserviceUrl: https://test.svarut.ks.no/tjenester/forsendelseservice/ForsendelsesServiceV9
+        serviceRecordUrl: https://test.svarut.ks.no/tjenester/forsendelseservice/ForsendelsesServiceV6
+        certificate: classpath:svarut_test_public.pem
+    auth:
+      maskinporten-issuer: https://test.maskinporten.no/
+    feature:
+      enableDpfDpv: true
 app:
-    logger:
-        enableLogstash: true
+  logger:
+    enableLogstash: true
 logging:
-    level:
-        org.springframework.web: INFO
+  level:
+    org.springframework.web: INFO
