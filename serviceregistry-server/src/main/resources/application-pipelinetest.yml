@@ -38,8 +38,6 @@ spring:
     username: move_sr
     password: ${DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
 
 difi:
   move:
