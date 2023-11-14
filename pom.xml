@@ -48,7 +48,7 @@
         <kotlin.version>1.9.20</kotlin.version>
         <virksert.version>1.13.0</virksert.version>
         <bouncycastle.version>1.70</bouncycastle.version>
-        <micrometer-registry-prometheus.version>1.9.8</micrometer-registry-prometheus.version>
+        <micrometer-registry-prometheus.version>1.12.0</micrometer-registry-prometheus.version>
     </properties>
 
     <modules>
