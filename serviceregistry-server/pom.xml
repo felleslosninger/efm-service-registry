@@ -215,10 +215,10 @@
             <artifactId>freg-gateway-client</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-config</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.cloud</groupId>-->
+<!--            <artifactId>spring-cloud-starter-config</artifactId>-->
+<!--        </dependency>-->
 <!--        <dependency>-->
 <!--            <groupId>org.springframework.cloud</groupId>-->
 <!--            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>-->
@@ -336,10 +336,10 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <dependency>
-            <groupId>no.difi.move-common</groupId>
-            <artifactId>cloud</artifactId>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>no.difi.move-common</groupId>-->
+<!--            <artifactId>cloud</artifactId>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>commons-io</groupId>

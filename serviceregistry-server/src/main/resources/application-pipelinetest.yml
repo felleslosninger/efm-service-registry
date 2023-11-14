@@ -32,7 +32,7 @@ eureka:
 spring:
   cloud:
     config:
-      uri: https://test-meldingsutveksling.dificloud.net/discovery/config
+      enabled: false
   datasource:
     url: jdbc:h2:mem:sr-db
     username: sa
