@@ -23,7 +23,7 @@ EXPOSE 9099 9199
 
 ENV APP_DIR=/var/lib/digdir \
     APP_JAVA_PARAMS="" \
-    APP_PROFILE=dev
+    APP_PROFILE=pipelinetest
 
 #
 # Start the application
