@@ -28,6 +28,8 @@ eureka:
   client:
     serviceUrl:
       defaultZone: https://test-meldingsutveksling.dificloud.net/discovery/eureka
+    register-with-eureka: true
+    fetch-registry: true
 
 spring:
   cloud:
