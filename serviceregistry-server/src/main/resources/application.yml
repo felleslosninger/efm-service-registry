@@ -33,7 +33,7 @@ management:
       application: ${spring.application.name}
 eureka:
   client:
-    enabled: false
+    enabled: true
     healthcheck:
       enabled: false
   instance:
