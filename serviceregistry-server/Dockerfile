@@ -15,7 +15,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y
 # Open ports for incoming connections
 #
 
-EXPOSE 9099 9199
+EXPOSE 9099 9199 8080 8090
 
 #
 # Install application

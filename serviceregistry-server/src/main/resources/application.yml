@@ -25,24 +25,24 @@ management:
     health:
       probes:
         enabled: true
-    info:
-      git:
-        mode: full
-    metrics:
-      tags:
-        application: ${spring.application.name}
+  info:
+    git:
+      mode: full
+  metrics:
+    tags:
+      application: ${spring.application.name}
 eureka:
   client:
     enabled: true
     healthcheck:
       enabled: false
-    instance:
-      metadata-map:
-        instanceId: ${vcap.application.instance_id:${spring.application.name}:${spring.application.instance_id:${server.port}}}
-        version: ${project.version}
-        commitId: ${buildNumber}
-        branch: ${scmBranch}
-        pr: ${pullrequest}
+  instance:
+    metadata-map:
+      instanceId: ${vcap.application.instance_id:${spring.application.name}:${spring.application.instance_id:${server.port}}}
+      version: ${project.version}
+      commitId: ${buildNumber}
+      branch: ${scmBranch}
+      pr: ${pullrequest}
 difi:
   move:
     elma:
