@@ -8,11 +8,17 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.netflix.eureka.EurekaClientAutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.env.ConfigurableEnvironment;
 
 @SpringBootApplication
 @EnableConfigurationProperties({ServiceregistryProperties.class})
-public class MoveServiceRegistryApplication {
+public class MoveServiceRegistryApplication extends EurekaClientAutoConfiguration {
+
+    public MoveServiceRegistryApplication(ConfigurableEnvironment env) {
+        super(env);
+    }
 
     public static void main(String[] args) {
         new SpringApplicationBuilder(MoveServiceRegistryApplication.class)
