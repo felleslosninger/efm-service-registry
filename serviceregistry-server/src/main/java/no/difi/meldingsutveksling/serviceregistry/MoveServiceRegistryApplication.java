@@ -14,11 +14,8 @@ import org.springframework.core.env.ConfigurableEnvironment;
 
 @SpringBootApplication
 @EnableConfigurationProperties({ServiceregistryProperties.class})
-public class MoveServiceRegistryApplication extends EurekaClientAutoConfiguration {
+public class MoveServiceRegistryApplication {
 
-    public MoveServiceRegistryApplication(ConfigurableEnvironment env) {
-        super(env);
-    }
 
     public static void main(String[] args) {
         new SpringApplicationBuilder(MoveServiceRegistryApplication.class)
@@ -26,13 +23,4 @@ public class MoveServiceRegistryApplication extends EurekaClientAutoConfiguratio
                 .run(args);
     }
 
-    @Bean
-    public HealthCheckHandler healthCheckHandler() {
-        return new HealthCheckHandler() {
-            @Override
-            public InstanceInfo.InstanceStatus getStatus(InstanceInfo.InstanceStatus currentStatus) {
-                return InstanceInfo.InstanceStatus.UP;
-            }
-        };
-    }
 }
