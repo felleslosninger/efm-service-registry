@@ -30,6 +30,8 @@ eureka:
       defaultZone: https://test-meldingsutveksling.dificloud.net/discovery/eureka
 
 spring:
+  profiles:
+    active: pipelinetest
   cloud:
     config:
       enabled: false
