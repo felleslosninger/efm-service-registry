@@ -203,12 +203,6 @@
         <dependency>
             <groupId>no.difi.meldingsutveksling</groupId>
             <artifactId>kontakt-reservasjonsregister-client</artifactId>
-            <exclusions>
-                <exclusion>
-                    <artifactId>stax2-api</artifactId>
-                    <groupId>org.codehaus.woodstox</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>no.difi.meldingsutveksling</groupId>

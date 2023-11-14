@@ -49,6 +49,7 @@
         <virksert.version>1.13.0</virksert.version>
         <bouncycastle.version>1.70</bouncycastle.version>
         <micrometer-registry-prometheus.version>1.12.0</micrometer-registry-prometheus.version>
+        <org.apache.ws.commons.axiom.version>1.4.0</org.apache.ws.commons.axiom.version>
     </properties>
 
     <modules>
@@ -205,12 +206,12 @@
             <dependency>
                 <groupId>org.apache.ws.commons.axiom</groupId>
                 <artifactId>axiom-api</artifactId>
-                <version>1.2.22</version>
+                <version>${org.apache.ws.commons.axiom.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.ws.commons.axiom</groupId>
                 <artifactId>axiom-impl</artifactId>
-                <version>1.4.0</version>
+                <version>${org.apache.ws.commons.axiom.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.sun.xml.messaging.saaj</groupId>
