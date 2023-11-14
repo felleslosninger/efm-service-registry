@@ -19,10 +19,10 @@
             <groupId>no.difi.move-common</groupId>
             <artifactId>webservice-tools</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>no.difi.move-common</groupId>-->
-<!--            <artifactId>config</artifactId>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>no.difi.move-common</groupId>
+            <artifactId>config</artifactId>
+        </dependency>
         <dependency>
             <groupId>no.difi.move-common</groupId>
             <artifactId>security</artifactId>

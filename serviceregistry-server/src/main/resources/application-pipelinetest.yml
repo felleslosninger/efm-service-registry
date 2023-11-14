@@ -32,12 +32,12 @@ eureka:
 spring:
   cloud:
     config:
-      enabled: false
+      uri: https://test-meldingsutveksling.dificloud.net/discovery/config
   datasource:
-    url: jdbc:h2:mem:sr-db
-    username: sa
-    password: password
-    driverClassName: org.h2.Driver
+    url: jdbc:mysql://mysql:3306/move_sr_nextmove
+    username: move_sr
+    password: ${DATASOURCE_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
 
