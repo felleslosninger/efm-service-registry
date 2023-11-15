@@ -26,10 +26,10 @@ public class WebSecurityConfig {
         @Override
         protected void configure(HttpSecurity http) throws Exception {
             http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and().csrf().disable();
-            http.antMatcher("/manage/**")
-                .authorizeRequests()
-                .anyRequest().permitAll();
+                    .and().csrf().disable();
+            http.antMatcher("/**")
+                    .authorizeRequests()
+                    .anyRequest().permitAll();
         }
     }
 
