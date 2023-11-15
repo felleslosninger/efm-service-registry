@@ -27,7 +27,7 @@ public class WebSecurityConfig {
         protected void configure(HttpSecurity http) throws Exception {
             http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and().csrf().disable();
-            http.antMatcher("/**")
+            http.antMatcher("/health/**")
                     .authorizeRequests()
                     .anyRequest().permitAll();
         }
