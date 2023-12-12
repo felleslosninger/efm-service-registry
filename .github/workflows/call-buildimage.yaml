@@ -23,6 +23,7 @@ jobs:
     uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-build-publish-image.yml@efm-tilpasninger-2
     needs: [ build-install-and-deploy-libs ]
     with:
+      slack-channel-id : efm-ci-pipeline-dev
       multi-module-project-path: serviceregistry-server/
       module-to-build: serviceregistry-server
       java-version: 11
@@ -32,6 +33,7 @@ jobs:
     needs: [ call-workflow-image-build-publish ]
     uses: felleslosninger/github-workflows/.github/workflows/ci-update-image-version.yml@efm-tilpasninger-2
     with:
+      slack-channel-id: efm-cd-pipeline-dev
       kubernetes-repo: eformidling-cd
       image-version: ${{ needs.call-workflow-image-build-publish.outputs.image-version }}
       image-digest: ${{ needs.call-workflow-image-build-publish.outputs.image-digest }}
