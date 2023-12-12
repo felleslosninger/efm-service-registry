@@ -23,7 +23,7 @@ jobs:
     uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-build-publish-image.yml@efm-tilpasninger-2
     needs: [ build-install-and-deploy-libs ]
     with:
-      slack-channel-id : efm-ci-pipeline-dev
+      slack-channel-id : C069NQ6U4DB
       multi-module-project-path: serviceregistry-server/
       module-to-build: serviceregistry-server
       java-version: 11
