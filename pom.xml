@@ -56,7 +56,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <move-common.version>1.18.0</move-common.version>
+        <move-common.version>1.20.0-SNAPSHOT</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <kotlin.version>1.8.0</kotlin.version>
         <virksert.version>1.100.0-SNAPSHOT</virksert.version>
