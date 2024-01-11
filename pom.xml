@@ -142,17 +142,17 @@
             <dependency>
                 <groupId>network.oxalis.vefa</groupId>
                 <artifactId>peppol-lookup</artifactId>
-                <version>2.4.0</version>
+                <version>3.4.0</version>
             </dependency>
             <dependency>
                 <groupId>network.oxalis.vefa</groupId>
                 <artifactId>commons-busdox</artifactId>
-                <version>2.4.0</version>
+                <version>3.4.0</version>
             </dependency>
             <dependency>
                 <groupId>network.oxalis.vefa</groupId>
                 <artifactId>commons-bdxr</artifactId>
-                <version>2.4.0</version>
+                <version>3.4.0</version>
             </dependency>
 
             <dependency>
