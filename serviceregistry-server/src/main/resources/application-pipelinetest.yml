@@ -52,6 +52,12 @@ difi:
     krr:
       mp-endpoint-uri: https://test.kontaktregisteret.no/rest/v1/personer
       mp-dsf-endpoint-uri: https://test.kontaktregisteret.no/rest/v1/mf/personer
+    sign:
+      keystore:
+        path: ${DIFI_MOVE_SIGN_KEYSTORE_PATH}
+        alias: ${DIFI_MOVE_SIGN_KEYSTORE_ALIAS}
+        password: ${DIFI_MOVE_SIGN_KEYSTORE_PASSWORD}
+        type: JKS
 
 app:
   logger:
