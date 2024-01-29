@@ -27,14 +27,14 @@ management:
 eureka:
   client:
     serviceUrl:
-      defaultZone: https://test-meldingsutveksling.dificloud.net/discovery/eureka
+      defaultZone: https://eformidling.dev/discovery/eureka
     register-with-eureka: true
     fetch-registry: true
 
 spring:
   cloud:
     config:
-      uri: https://test-meldingsutveksling.dificloud.net/discovery/config
+      uri: https://eformidling.dev/discovery/config
   datasource:
     url: jdbc:mysql://mysql:3306/move_sr_nextmove
     username: move_sr
@@ -44,7 +44,7 @@ spring:
 difi:
   move:
     virksert:
-      endpointURL: https://test-meldingsutveksling.dificloud.net/virksomhetssertifikat/
+      endpointURL: https://eformidling.dev/virksomhetssertifikat/
     dpv:
       endpointURL: https://tt02.altinn.no/ServiceEngineExternal/CorrespondenceAgencyExternal.svc
     dpi:
