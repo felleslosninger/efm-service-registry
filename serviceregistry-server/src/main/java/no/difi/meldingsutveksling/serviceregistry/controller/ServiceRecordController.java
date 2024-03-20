@@ -139,25 +139,37 @@ public class ServiceRecordController {
         Authentication auth,
         HttpServletRequest request)
             throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException, BrregNotFoundException, SvarUtClientException, FregGatewayException {
+
+        log.trace("Identifier: " + identifier);
         MDC.put("identifier", Strings.isNullOrEmpty(identifier) ? identifier : IdentifierHasher.hashIfPersonnr(identifier));
         String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
+        log.trace("Client orgnr: " + clientOrgnr);
         fillRequestScope(identifier, conversationId, clientOrgnr, authenticationService.getToken(auth));
 
         Entity entity = new Entity();
         EntityInfo entityInfo = entityService.getEntityInfo(identifier)
             .orElseThrow(() -> new EntityNotFoundException(identifier));
         entity.setInfoRecord(entityInfo);
-
+        try {
+            log.trace("Entity info: " + new ObjectMapper().writeValueAsString(entityInfo));
+        } catch (JsonProcessingException e) {
+        }
         if (entityInfo instanceof FiksIoInfo) {
             return new ResponseEntity<>(entity, HttpStatus.OK);
         }
 
         if (shouldCreateServiceRecordForCitizen().test(entityInfo)) {
+            log.trace("Citizen");
             entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientOrgnr, print));
         } else {
+            log.trace("Organization");
             entity.getServiceRecords().addAll(serviceRecordService.createArkivmeldingServiceRecords(entityInfo, securityLevel));
             entity.getServiceRecords().addAll(serviceRecordService.createEinnsynServiceRecords(entityInfo, securityLevel));
             entity.getServiceRecords().addAll(serviceRecordService.createAvtaltServiceRecords(identifier));
+        }
+        try {
+            log.trace("Service records: " + (new ObjectMapper()).writeValueAsString(entity.getServiceRecords()));
+        } catch (JsonProcessingException e) {
         }
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
