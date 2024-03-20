@@ -1,13 +1,6 @@
 spring:
-  cloud:
-    config:
-      uri: http://eureka:8761/discovery/config
   profiles:
     active: staging
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://eureka:8761/discovery/eureka
 app:
   logger:
     destination: qa-stream-meldingsutveksling.difi.no:443

@@ -24,17 +24,7 @@ management:
     readinessState:
       enabled: true
 
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
-    register-with-eureka: true
-    fetch-registry: true
-
 spring:
-  cloud:
-    config:
-      uri: ${SPRING_CLOUD_CONFIG_URI}
   datasource:
     url: jdbc:mysql://mysql:3306/move_sr_nextmove
     username: move_sr

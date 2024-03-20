@@ -1,9 +1,6 @@
 spring:
   application:
     name: serviceregistry
-  cloud:
-    config:
-      enabled: false
   datasource:
     url: jdbc:h2:file:./sr-db
   jpa:
@@ -31,18 +28,6 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
-eureka:
-  client:
-    enabled: true
-    healthcheck:
-      enabled: false
-  instance:
-    metadata-map:
-      instanceId: ${vcap.application.instance_id:${spring.application.name}:${spring.application.instance_id:${server.port}}}
-      version: ${project.version}
-      commitId: ${buildNumber}
-      branch: ${scmBranch}
-      pr: ${pullrequest}
 difi:
   move:
     elma:

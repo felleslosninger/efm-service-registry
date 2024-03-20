@@ -1,12 +1,3 @@
-spring:
-  cloud:
-    config:
-      uri: https://test-meldingsutveksling.dificloud.net/discovery/config
-  eureka:
-    client:
-      serviceUrl:
-        defaultZone: https://test-meldingsutveksling.dificloud.net/discovery/eureka
-
 difi:
   move:
     virksert:

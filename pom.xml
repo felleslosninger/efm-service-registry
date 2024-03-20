@@ -52,7 +52,6 @@
     </distributionManagement>
 
     <properties>
-        <spring.cloud.version>2021.0.5</spring.cloud.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
@@ -76,13 +75,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${spring.cloud.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
             <dependency>
                 <groupId>io.micrometer</groupId>
                 <artifactId>micrometer-registry-prometheus</artifactId>
@@ -132,11 +124,6 @@
             <dependency>
                 <groupId>no.difi.move-common</groupId>
                 <artifactId>audit</artifactId>
-                <version>${move-common.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>no.difi.move-common</groupId>
-                <artifactId>cloud</artifactId>
                 <version>${move-common.version}</version>
             </dependency>
             <dependency>
