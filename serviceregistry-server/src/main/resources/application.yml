@@ -71,10 +71,6 @@ difi:
       maskinporten-issuer: https://test.maskinporten.no/
     feature:
       enableDpfDpv: true
-app:
-  logger:
-    enableLogstash: true
 logging:
   level:
     org.springframework.web: INFO
-    no.difi.meldingsutveksling.serviceregistry.controller: TRACE

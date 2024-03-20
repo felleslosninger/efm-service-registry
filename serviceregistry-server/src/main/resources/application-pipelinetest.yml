@@ -49,11 +49,8 @@ difi:
         password: ${DIFI_MOVE_SIGN_KEYSTORE_PASSWORD}
         type: JKS
 
-app:
-  logger:
-    destination: test-stream-meldingsutveksling.dificloud.net:443
-
 logging:
   level:
     org.springframework.ws.client.MessageTracing: TRACE
     org.springframework.ws.server.MessageTracing: TRACE
+    no.difi.meldingsutveksling.serviceregistry.controller: TRACE
