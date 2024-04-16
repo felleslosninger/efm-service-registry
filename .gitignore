@@ -8,6 +8,7 @@ target
 # User-specific stuff:
 .idea
 .vscode
+serviceregistry-server/src/main/resources/application-dev-local.yml
 
 ## File-based project format:
 *.iws
@@ -17,7 +18,6 @@ target
 
 # IntelliJ
 /out/
-
 nb-configuration.xml
 nbactions.xml
 
