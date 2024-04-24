@@ -1,5 +1,7 @@
 server:
   port: 8080
+  servlet:
+    context-path: "/adressetjeneste/"
 management:
   server:
     port: 8090
@@ -12,8 +14,7 @@ management:
     web:
       base-path: /
       exposure:
-        include: "*"
-        exclude: shutdown
+        include: "info,env,prometheus,health"
     enabled-by-default: true
   metrics:
     tags:
@@ -30,9 +31,16 @@ spring:
     username: move_sr
     password: ${DATASOURCE_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
 
 difi:
   move:
+    fiks:
+      io:
+        enable: true
     virksert:
       endpointURL: https://eformidling.dev/virksomhetssertifikat/
     dpv:
