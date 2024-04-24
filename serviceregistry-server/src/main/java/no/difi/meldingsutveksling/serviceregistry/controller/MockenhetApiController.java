@@ -7,7 +7,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.brreg.dev.TestEnvironm
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
 
-@Profile({"dev", "staging"})
+@Profile({"dev-local", "staging"})
 @RequestMapping("/api/v1/mockenhet")
 @RestController
 @Slf4j

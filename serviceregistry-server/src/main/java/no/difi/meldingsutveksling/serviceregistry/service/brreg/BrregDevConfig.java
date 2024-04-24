@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Profile;
 import java.net.URISyntaxException;
 
 @Configuration
-@Profile({"dev", "pipelinetest", "test", "staging", "yt"})
+@Profile({"dev-local", "dev", "test", "staging", "yt"})
 public class BrregDevConfig {
 
     @Bean
