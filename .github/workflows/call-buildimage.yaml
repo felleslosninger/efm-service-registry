@@ -19,7 +19,7 @@ jobs:
     secrets: inherit
 
   call-workflow-image-build-publish:
-    uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-build-publish-image.yml@pf-1101-add-multi-module-support
+    uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-build-publish-image.yml@main
     needs: [build-install-and-deploy-libs]
     with:
       application-path: serviceregistry-server/
