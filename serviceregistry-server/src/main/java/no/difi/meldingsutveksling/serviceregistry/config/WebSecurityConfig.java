@@ -27,12 +27,9 @@ public class WebSecurityConfig {
         protected void configure(HttpSecurity http) throws Exception {
             http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and().csrf().disable();
-            http.authorizeRequests((autz)-> autz
-                    .antMatchers("/health/**").permitAll()
-                    .antMatchers("/manage/health/**").permitAll()
-                    .antMatchers("/prometheus").permitAll()
-                    .antMatchers("/manage/prometheus").permitAll()
-                    .anyRequest().authenticated());
+            http.antMatcher("/health/**")
+                    .authorizeRequests()
+                    .anyRequest().permitAll();
         }
     }
 
