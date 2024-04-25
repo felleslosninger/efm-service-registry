@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.server.resource.authentication.JwtIssuerAuthenticationManagerResolver;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -27,9 +28,11 @@ public class WebSecurityConfig {
         protected void configure(HttpSecurity http) throws Exception {
             http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and().csrf().disable();
-            http.antMatcher("/health/**")
-                    .authorizeRequests()
-                    .anyRequest().permitAll();
+            http.authorizeRequests(request -> request.requestMatchers(
+                            new AntPathRequestMatcher("/health/**"),
+                            new AntPathRequestMatcher("/prometheus")
+                    ).permitAll()
+                    .anyRequest().authenticated());
         }
     }
 
