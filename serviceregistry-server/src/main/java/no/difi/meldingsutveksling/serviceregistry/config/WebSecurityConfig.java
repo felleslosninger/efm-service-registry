@@ -22,72 +22,10 @@ public class WebSecurityConfig {
     @Configuration
     @RequiredArgsConstructor
     @Order(0)
-    public static class BasicAuthFilter extends WebSecurityConfigurerAdapter {
-        @Override
-        protected void configure(HttpSecurity http) throws Exception {
-            http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                    .and().csrf().disable();
-            http.antMatcher("/health/**")
-                    .authorizeRequests()
-                    .anyRequest().permitAll();
-        }
-    }
+    public static class SecurityFilter extends WebSecurityConfigurerAdapter {
 
-    @Configuration
-    @RequiredArgsConstructor
-    @Order(1)
-    public static class AdminApiSecurityConfiguration extends WebSecurityConfigurerAdapter {
-
-        private final SecurityProperties props;
-
-        @Override
-        protected void configure(HttpSecurity http) throws Exception {
-            http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                    .and().csrf().disable();
-            http.headers().frameOptions().sameOrigin().and()
-                    .antMatcher("/api/**")
-                    .authorizeRequests()
-                    .antMatchers("/api/**").authenticated().and()
-                    .httpBasic();
-        }
-
-        @Override
-        protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-            auth.inMemoryAuthentication().withUser(props.getUser().getName())
-                    .password("{noop}" + props.getUser().getPassword()).roles();
-        }
-    }
-
-    @Configuration
-    @Order(2)
-    public static class H2AdminFilter extends WebSecurityConfigurerAdapter {
-        @Override
-        protected void configure(HttpSecurity http) throws Exception {
-            http.headers().frameOptions().sameOrigin().and()
-                    .antMatcher("/h2-console/**")
-                    .authorizeRequests()
-                    .antMatchers("/h2-console/**").permitAll();
-        }
-    }
-
-    @Configuration
-    @Order(3)
-    public static class JwkFilter extends WebSecurityConfigurerAdapter {
-        @Override
-        protected void configure(HttpSecurity http) throws Exception {
-            http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                    .and().csrf().disable();
-            http.antMatcher("/jwk")
-                    .authorizeRequests()
-                    .antMatchers("/jwk").permitAll();
-        }
-    }
-
-    @Configuration
-    @RequiredArgsConstructor
-    @Order(4)
-    public static class OauthFilter extends WebSecurityConfigurerAdapter {
         private final ServiceregistryProperties props;
+        private final SecurityProperties securityProperties;
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
@@ -96,9 +34,24 @@ public class WebSecurityConfig {
 
             http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and().csrf().disable();
-            http.authorizeRequests().antMatchers("/**").authenticated()
+            http.authorizeRequests()
+                    .antMatchers("/health/**", "/prometheus", "/h2-console/**", "/jwk").permitAll()
+                    .and()
+                    .headers().frameOptions().sameOrigin().and()
+                    .authorizeRequests()
+                    .antMatchers("/api/**").authenticated()
+                    .and()
+                    .httpBasic()
+                    .and()
+                    .authorizeRequests()
+                    .anyRequest().authenticated()
                     .and().oauth2ResourceServer(o -> o.authenticationManagerResolver(jwtIssuerAuthenticationManagerResolver));
         }
-    }
 
+        @Override
+        protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+            auth.inMemoryAuthentication().withUser(securityProperties.getUser().getName())
+                    .password("{noop}" + securityProperties.getUser().getPassword()).roles();
+        }
+    }
 }
