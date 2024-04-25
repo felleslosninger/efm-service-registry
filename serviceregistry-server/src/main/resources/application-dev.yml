@@ -43,13 +43,6 @@ difi:
         enable: true
     virksert:
       endpointURL: https://eformidling.dev/virksomhetssertifikat/
-    dpv:
-      endpointURL: https://tt02.altinn.no/ServiceEngineExternal/CorrespondenceAgencyExternal.svc
-    dpi:
-      endpointURL: https://qaoffentlig.meldingsformidler.digipost.no/api/ebms
-    krr:
-      mp-endpoint-uri: https://test.kontaktregisteret.no/rest/v1/personer
-      mp-dsf-endpoint-uri: https://test.kontaktregisteret.no/rest/v1/mf/personer
     sign:
       keystore:
         path: ${DIFI_MOVE_SIGN_KEYSTORE_PATH}
