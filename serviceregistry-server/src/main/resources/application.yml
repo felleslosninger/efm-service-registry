@@ -7,8 +7,6 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: update
-  profiles:
-    active: default
 management:
   server:
     port: 9199
@@ -36,6 +34,11 @@ difi:
       lookupIcd: 0192
     brreg:
       endpointURL: https://data.brreg.no/
+    dpv:
+      endpointURL: https://tt02.altinn.no/ServiceEngineExternal/CorrespondenceAgencyExternal.svc
+    krr:
+      mp-endpoint-uri: https://test.kontaktregisteret.no/rest/v1/personer
+      mp-dsf-endpoint-uri: https://test.kontaktregisteret.no/rest/v1/mf/personer
     virksert:
       icd: 0192
       processes:
@@ -54,6 +57,7 @@ difi:
       serviceCode: 4192
       serviceEditionCode: 270815
     dpi:
+      endpointURL: https://qaoffentlig.meldingsformidler.digipost.no/api/ebms
       infoProcess: urn:no:difi:profile:digitalpost:info:ver1.0
       vedtakProcess: urn:no:difi:profile:digitalpost:vedtak:ver1.0
     fiks:
