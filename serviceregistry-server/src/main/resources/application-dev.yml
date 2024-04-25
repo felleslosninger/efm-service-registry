@@ -16,9 +16,6 @@ management:
       exposure:
         include: "info,env,prometheus,health"
     enabled-by-default: true
-  metrics:
-    tags:
-      application: ${spring.application.name}
   health:
     livenessState:
       enabled: true
