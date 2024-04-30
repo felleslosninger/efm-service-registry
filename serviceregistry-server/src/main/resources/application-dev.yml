@@ -48,7 +48,7 @@ difi:
         user: ${SVARUT_USER}
         password: ${SVARUT_PASSWORD}
     virksert:
-      endpointURL: https://eformidling.dev/virksomhetssertifikat/
+      endpointURL: http://efm-virksert-service:8080/virksomhetssertifikat/
     sign:
       keystore:
         path: ${KEYSTORE_PATH}
