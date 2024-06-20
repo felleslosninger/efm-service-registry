@@ -1,3 +1,20 @@
+spring:
+  application:
+    environment: dev
+  datasource:
+    url: ${DATASOURCE_URL}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+  security:
+    user:
+      name: ${ADMIN_API_USERNAME}
+      password: ${ADMIN_API_PASSWORD}
+
 server:
   port: 8080
   servlet:
@@ -21,21 +38,6 @@ management:
       enabled: true
     readinessState:
       enabled: true
-
-spring:
-  datasource:
-    url: ${DATASOURCE_URL}
-    username: ${DATASOURCE_USERNAME}
-    password: ${DATASOURCE_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  jpa:
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
-  security:
-    user:
-      name: ${ADMIN_API_USERNAME}
-      password: ${ADMIN_API_PASSWORD}
 
 difi:
   move:
