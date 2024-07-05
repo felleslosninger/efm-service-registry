@@ -1,0 +1,65 @@
+spring:
+  application:
+    environment: test
+  datasource:
+    url: ${DATASOURCE_URL}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+  security:
+    user:
+      name: ${ADMIN_API_USERNAME}
+      password: ${ADMIN_API_PASSWORD}
+
+server:
+  port: 8080
+  servlet:
+    context-path: /adressetjeneste
+management:
+  server:
+    port: 8090
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: "info,env,prometheus,health"
+    enabled-by-default: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+difi:
+  move:
+    fiks:
+      io:
+        enable: true
+        integrasjon-id: ${FIKSIO_ID}
+        integrasjon-passord: ${FIKSIO_PASSWORD}
+      svarut:
+        user: ${SVARUT_USER}
+        password: ${SVARUT_PASSWORD}
+    virksert:
+      endpointURL: http://efm-virksert-service:8080/virksomhetssertifikat/
+    sign:
+      keystore:
+        path: ${KEYSTORE_PATH}
+        alias: ${KEYSTORE_ALIAS}
+        password: ${KEYSTORE_PASSWORD}
+        type: JKS
+    auth:
+      sas-token: ${SAS_TOKEN}
+    dpo:
+      endpointURL: https://www.altinn.no
+      serviceCode: ${ALTINN_SRR_SERVICECODE}
+      serviceEditionCode: ${ALTINN_SRR_SERVICE_EDITION_CODE}
