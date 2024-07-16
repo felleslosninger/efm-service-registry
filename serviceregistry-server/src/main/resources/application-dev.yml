@@ -10,6 +10,8 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+    hibernate:
+      ddl-auto: validate
   security:
     user:
       name: ${ADMIN_API_USERNAME}
@@ -22,17 +24,9 @@ server:
 management:
   server:
     port: 8090
-  endpoint:
-    health:
-      show-details: always
-      probes:
-        enabled: true
   endpoints:
     web:
       base-path: /
-      exposure:
-        include: "info,env,prometheus,health"
-    enabled-by-default: true
   health:
     livenessState:
       enabled: true
