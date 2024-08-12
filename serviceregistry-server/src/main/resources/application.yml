@@ -30,7 +30,7 @@ management:
 difi:
   move:
     elma:
-      locatorUrl: http://test-smp.difi.no.publisher.acc.edelivery.tech.ec.europa.eu
+      locatorUrl: http://test-smp.elma-smp.no.publisher.acc.edelivery.tech.ec.europa.eu
       defaultProcessIdentifier: urn:no:difi:profile:arkivmelding:administrasjon:ver1.0
       lookupIcd: 0192
     brreg:
