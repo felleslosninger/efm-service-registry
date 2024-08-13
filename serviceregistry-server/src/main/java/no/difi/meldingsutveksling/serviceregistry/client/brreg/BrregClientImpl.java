@@ -39,7 +39,7 @@ public class BrregClientImpl implements BrregClient {
     @Override
     public Optional<BrregEnhet> getBrregEnhetByOrgnr(String orgnr) {
         return getEnhet("enhetsregisteret/api/enheter/",
-                "application/vnd.brreg.enhetsregisteret.enhet.v1+json",
+                "application/vnd.brreg.enhetsregisteret.enhet.v2+json",
                 orgnr);
     }
 
@@ -51,7 +51,7 @@ public class BrregClientImpl implements BrregClient {
     @Override
     public Optional<BrregEnhet> getBrregUnderenhetByOrgnr(String orgnr) {
         return getEnhet("enhetsregisteret/api/underenheter/",
-                "application/vnd.brreg.enhetsregisteret.underenhet.v1+json",
+                "application/vnd.brreg.enhetsregisteret.underenhet.v2+json",
                 orgnr);
     }
 
