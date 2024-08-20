@@ -25,11 +25,24 @@ public class PrintService {
 
     @Cacheable(CacheConfig.CACHE_KRR_PRINT)
     public PrintResponse getPrintDetails() {
-        return webClient.get()
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .bodyToMono(PrintResponse.class)
-                .retryWhen(Retry.fixedDelay(10, Duration.ofSeconds(3)))
-                .block(Duration.ofSeconds(30));
+        System.out.println("Entering getPrintDetails method.");
+
+        PrintResponse response = null;
+        try {
+            System.out.println("Initiating webClient request.");
+            response = webClient.get()
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .bodyToMono(PrintResponse.class)
+                    .retryWhen(Retry.fixedDelay(10, Duration.ofSeconds(3)))
+                    .block(Duration.ofSeconds(30));
+            System.out.println("WebClient request completed successfully.");
+        } catch (Exception e) {
+            System.out.println("Exception occurred during webClient request: " + e.getMessage());
+            throw e; // Re-throw the exception after logging it
+        }
+
+        System.out.println("Returning response from getPrintDetails method.");
+        return response;
     }
 }
