@@ -25,9 +25,21 @@ public class DefaultFregGatewayClient implements FregGatewayClient {
 
     @Override
     public Optional<FregGatewayEntity.Address.Response> getPersonAdress(String pid) {
-            ResponseEntity<FregGatewayEntity.Address.Response> response = restTemplate.getForEntity(
-                    properties.getFreg().getEndpointURL() + "person/personadresse/{pid}",
-                    FregGatewayEntity.Address.Response.class, pid);
-            return Optional.of(response.getBody());
+        System.out.println("getPersonAdress method called with pid: " + pid);
+        String url = properties.getFreg().getEndpointURL() + "person/personadresse/" + pid;
+        System.out.println("Constructed URL: " + url);
+        ResponseEntity<FregGatewayEntity.Address.Response> response = restTemplate.getForEntity(
+                url,
+                FregGatewayEntity.Address.Response.class,
+                pid);
+
+        System.out.println("Response received with status code: " + response.getStatusCode());
+
+        FregGatewayEntity.Address.Response responseBody = response.getBody();
+        System.out.println("Response body: " + responseBody);
+
+        return Optional.of(responseBody);
     }
 }
+
+
