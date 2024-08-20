@@ -20,7 +20,9 @@ public class PrintService {
 
     @PostConstruct
     public void init() {
-        webClient = WebClient.create(properties.getKrr().getPrintUrl());
+        String url = properties.getKrr().getPrintUrl();
+        System.out.println("Initializing WebClient with URL: " + url);
+        webClient = WebClient.create(url);
     }
 
     @Cacheable(CacheConfig.CACHE_KRR_PRINT)
