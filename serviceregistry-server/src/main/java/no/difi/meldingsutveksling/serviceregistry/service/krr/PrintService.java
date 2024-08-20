@@ -31,6 +31,7 @@ public class PrintService {
 
         PrintResponse response = null;
         try {
+            System.out.println("Fregurl: " + properties.getFreg().getEndpointURL());
             System.out.println("Initiating webClient request.");
             response = webClient.get()
                     .accept(MediaType.APPLICATION_JSON)
