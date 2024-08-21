@@ -21,32 +21,23 @@ public class PrintService {
     @PostConstruct
     public void init() {
         String url = properties.getKrr().getPrintUrl();
-        System.out.println("Initializing WebClient with URL: " + url);
         webClient = WebClient.create(url);
     }
 
     @Cacheable(CacheConfig.CACHE_KRR_PRINT)
     public PrintResponse getPrintDetails() {
-        System.out.println("Entering getPrintDetails method.");
 
         PrintResponse response = null;
         try {
-            System.out.println("Fregurl: " + properties.getFreg().getEndpointURL());
-            System.out.println("Initiating webClient request.");
-            System.out.println("WebClient url: " + properties.getKrr().getPrintUrl());
             response = webClient.get()
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .bodyToMono(PrintResponse.class)
                     .retryWhen(Retry.fixedDelay(10, Duration.ofSeconds(3)))
                     .block(Duration.ofSeconds(30));
-            System.out.println("WebClient request completed successfully.");
         } catch (Exception e) {
-            System.out.println("Exception occurred during webClient request: " + e.getMessage());
             throw e; // Re-throw the exception after logging it
         }
-
-        System.out.println("Returning response from getPrintDetails method.");
         return response;
     }
 }
