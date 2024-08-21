@@ -40,6 +40,7 @@ difi:
     krr:
       mp-endpoint-uri: https://test.kontaktregisteret.no/rest/v1/personer
       mp-dsf-endpoint-uri: https://test.kontaktregisteret.no/rest/v1/mf/personer
+      print-url: https://test.kontaktregisteret.no/rest/v2/printSertifikat
     virksert:
       icd: 0192
       processes:
