@@ -47,7 +47,7 @@
         <move-common.version>1.20.0</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <kotlin.version>1.9.20</kotlin.version>
-        <virksert.version>1.13.0</virksert.version>
+        <virksert.version>1.14.0</virksert.version>
         <bouncycastle.version>1.70</bouncycastle.version>
         <micrometer-registry-prometheus.version>1.12.0</micrometer-registry-prometheus.version>
         <org.apache.ws.commons.axiom.version>1.4.0</org.apache.ws.commons.axiom.version>
