@@ -52,8 +52,6 @@ difi:
         alias: 991825827
         password: changeit
         type: JKS
-    datahotell:
-      endpointURL: https://hotell.difi.no/
     dpo:
       endpointURL: https://tt02.altinn.no
       serviceCode: 4192
