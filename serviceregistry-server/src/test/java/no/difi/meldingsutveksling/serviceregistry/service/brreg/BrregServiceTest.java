@@ -45,8 +45,7 @@ public class BrregServiceTest {
 
         Mockito.when(brregClientMock.getBrregEnhetByOrgnr(Mockito.anyString())).thenReturn(Optional.empty());
         Mockito.when(brregClientMock.getBrregEnhetByOrgnr(orgNr)).thenReturn(Optional.of(enhet));
-        DatahotellClient datahotellMock = mock(DatahotellClient.class);
-        brregService = new BrregService(brregClientMock, datahotellMock);
+        brregService = new BrregService(brregClientMock);
 
         OrganizationInfo actual = (OrganizationInfo) brregService.getOrganizationInfo(difi.getIdentifier()).get();
         assertEquals(difi, actual);
@@ -76,8 +75,7 @@ public class BrregServiceTest {
 
         Mockito.when(brregClientMock.getBrregEnhetByOrgnr(Mockito.anyString())).thenReturn(Optional.empty());
         Mockito.when(brregClientMock.getBrregEnhetByOrgnr(orgNr2)).thenReturn(Optional.of(enhet2));
-        DatahotellClient datahotellMock = mock(DatahotellClient.class);
-        brregService = new BrregService(brregClientMock, datahotellMock);
+        brregService = new BrregService(brregClientMock);
 
         OrganizationInfo actual = (OrganizationInfo) brregService.getOrganizationInfo(donna.getIdentifier()).get();
         assertEquals(donna.getPostadresse(), actual.getPostadresse());
