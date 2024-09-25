@@ -16,15 +16,11 @@ import java.util.Optional;
 public class BrregService {
 
     private final BrregClient brregClient;
-    private final DatahotellClient datahotellClient;
 
     public Optional<EntityInfo> getOrganizationInfo(String orgnr) throws BrregNotFoundException {
         Optional<BrregEnhet> entity = brregClient.getBrregEnhetByOrgnr(orgnr);
         if (entity.isEmpty()) {
             entity = brregClient.getBrregUnderenhetByOrgnr(orgnr);
-        }
-        if (entity.isEmpty()) {
-            return datahotellClient.getOrganizationInfo(orgnr);
         }
 
         return entity.map(OrganizationInfo::of);

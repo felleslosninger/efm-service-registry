@@ -3,10 +3,6 @@ package no.difi.meldingsutveksling.serviceregistry.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
-import java.util.Collections;
-
-import static com.google.common.base.Strings.isNullOrEmpty;
-
 /**
  * Contains information relevant for an organization
  */
@@ -29,8 +25,8 @@ public class OrganizationInfo implements EntityInfo {
 
     /**
      * @param organisationNumber of the recipient organization
-     * @param organizationName as name implies
-     * @param organizationType or organization form as defined in BRREG
+     * @param organizationName   as name implies
+     * @param organizationType   or organization form as defined in BRREG
      */
     public OrganizationInfo(String organisationNumber, String organizationName, Postadresse postadresse,
                             OrganizationType organizationType) {
@@ -53,28 +49,6 @@ public class OrganizationInfo implements EntityInfo {
                 new OrganizationType(brregEnhet.getOrganisasjonsform().getKode()));
     }
 
-    public static OrganizationInfo of(DatahotellEntry enhet) {
-        BrregPostadresse postadresse;
-        if (isNullOrEmpty(enhet.getPostadresse())
-                || isNullOrEmpty(enhet.getPpostnr())
-                || isNullOrEmpty(enhet.getPpoststed())
-                || isNullOrEmpty(enhet.getPpostland())) {
-            postadresse = new BrregPostadresse(Collections.singletonList(enhet.getForretningsadr()),
-                    enhet.getForradrpostnr(),
-                    enhet.getForradrpoststed(),
-                    enhet.getForradrland());
-        } else {
-            postadresse = new BrregPostadresse(Collections.singletonList(enhet.getPostadresse()),
-                    enhet.getPpostnr(),
-                    enhet.getPpoststed(),
-                    enhet.getPpostland());
-        }
-        return new OrganizationInfo(enhet.getOrgnr(),
-                enhet.getNavn(),
-                Postadresse.of(postadresse),
-                new OrganizationType(enhet.getOrganisasjonsform()));
-    }
-
     @Override
     public EntityType getEntityType() {
         return organizationType;
@@ -88,7 +62,8 @@ public class OrganizationInfo implements EntityInfo {
     public static class Builder {
         private OrganizationInfo organizationInfo = new OrganizationInfo();
 
-        public Builder() {}
+        public Builder() {
+        }
 
         /**
          * @return a new instance of OrganizationInfo
