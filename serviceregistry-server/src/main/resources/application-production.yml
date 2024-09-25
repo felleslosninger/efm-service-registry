@@ -1,13 +1,46 @@
 spring:
   profiles:
     active: production
+  application:
+    environment: production
+  datasource:
+    url: ${DATASOURCE_URL}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+    hibernate:
+      ddl-auto: validate
+  security:
+    user:
+      name: ${ADMIN_API_USERNAME}
+      password: ${ADMIN_API_PASSWORD}
+server:
+  port: 8080
+  servlet:
+    context-path: /adressetjeneste
+management:
+  server:
+    port: 8090
+  endpoints:
+    web:
+      base-path: /
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
 app:
   logger:
     destination: stream-meldingsutveksling.difi.no:443
 difi:
   move:
     virksert:
-      endpointURL: https://meldingsutveksling.difi.no/virksomhetssertifikat/
+      endpointURL: http://efm-virksert-service:8080/virksomhetssertifikat/
     dpv:
       endpointURL: https://www.altinn.no/ServiceEngineExternal/CorrespondenceAgencyExternal.svc
     dpi:
@@ -18,15 +51,28 @@ difi:
       print-url: https://kontaktregisteret.no/rest/v2/printSertifikat
     auth:
       maskinporten-issuer: https://maskinporten.no/
+      sas-token: ${SAS_TOKEN}
     fiks:
       svarut:
         certificate: classpath:svarut_public.pem
         forsendelsesserviceUrl: https://svarut.ks.no/tjenester/forsendelseservice/ForsendelsesServiceV9
         serviceRecordUrl: https://svarut.ks.no/tjenester/forsendelseservice/ForsendelsesServiceV6
+        user: ${SVARUT_USER}
+        password: ${SVARUT_PASSWORD}
       io:
         endpoint-url: https://api.fiks.ks.no
+        enable: false
+        integrasjon-id: ${FIKSIO_ID}
+        integrasjon-passord: ${FIKSIO_PASSWORD}
     elma:
       locatorUrl: http://smp.difi.no.publisher.edelivery.tech.ec.europa.eu/
     dpo:
       endpointURL: https://www.altinn.no
-      serviceEditionCode: 170101
+      serviceCode: ${ALTINN_SRR_SERVICECODE}
+      serviceEditionCode: ${ALTINN_SRR_SERVICE_EDITION_CODE}
+    sign:
+      keystore:
+        path: ${KEYSTORE_PATH}
+        alias: ${KEYSTORE_ALIAS}
+        password: ${KEYSTORE_PASSWORD}
+        type: JKS
