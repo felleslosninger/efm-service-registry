@@ -6,9 +6,6 @@ import java.io.Serializable;
 
 /**
  * Represents an organization according to BRREG
- *
- * See http://hotell.difi.no/?dataset=brreg/organisasjonsform
- *
  */
 @Data
 public class OrganizationType implements Serializable, EntityType {
@@ -16,6 +13,7 @@ public class OrganizationType implements Serializable, EntityType {
 
     /**
      * Constructs new instance
+     *
      * @param name for instance Organisasjonsledd
      */
     public OrganizationType(String name) {

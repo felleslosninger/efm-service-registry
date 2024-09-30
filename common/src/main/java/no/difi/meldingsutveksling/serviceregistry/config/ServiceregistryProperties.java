@@ -29,7 +29,6 @@ public class ServiceregistryProperties {
     private KontaktOgReservasjonsRegister krr;
     private Brønnøysundregistrene brreg;
     private FregGateway freg;
-    private Datahotell datahotell;
     private PostVirksomhet dpv;
     private Altinn dpo;
     private Virksert virksert;
@@ -89,11 +88,6 @@ public class ServiceregistryProperties {
     @Data
     public static class FregGateway {
         private String endpointURL;
-    }
-
-    @Data
-    public static class Datahotell {
-        private URL endpointURL;
     }
 
     @Data
