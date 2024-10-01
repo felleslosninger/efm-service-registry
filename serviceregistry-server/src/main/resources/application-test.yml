@@ -57,3 +57,5 @@ difi:
       endpointURL: https://www.altinn.no
       serviceCode: ${ALTINN_SRR_SERVICECODE}
       serviceEditionCode: ${ALTINN_SRR_SERVICE_EDITION_CODE}
+    freg:
+      endpoint-u-rL: http://efm-freg-gateway-service:8080/
