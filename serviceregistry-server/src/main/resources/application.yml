@@ -75,6 +75,8 @@ difi:
       maskinporten-issuer: https://test.maskinporten.no/
     feature:
       enableDpfDpv: true
+    freg:
+      endpoint-u-rL: http://localhost:8082/
 logging:
   level:
     org.springframework.web: INFO
