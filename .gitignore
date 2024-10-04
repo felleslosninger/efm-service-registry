@@ -8,7 +8,7 @@ target
 # User-specific stuff:
 .idea
 .vscode
-serviceregistry-server/src/main/resources/application-dev-local.yml
+#serviceregistry-server/src/main/resources/application-dev-local.yml
 
 ## File-based project format:
 *.iws
