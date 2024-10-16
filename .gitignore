@@ -38,5 +38,3 @@ sr-db.trace.db
 .settings
 .springBeans
 .sts4-cache
-
-/serviceregistry-server/src/main/resources/application-dev-local.yaml
