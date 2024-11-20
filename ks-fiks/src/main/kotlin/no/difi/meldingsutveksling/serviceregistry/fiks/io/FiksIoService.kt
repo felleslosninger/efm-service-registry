@@ -12,6 +12,7 @@ import no.ks.fiks.io.client.model.Konto
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
@@ -43,7 +44,7 @@ open class FiksIoService(
             .uri("/fiks-io/katalog/api/v1/kontoer/${identifier}")
             .header("Authorization", "Bearer ${requestScope.token.tokenValue}")
             .retrieve()
-            .onStatus(HttpStatus::isError) { r ->
+            .onStatus(HttpStatusCode::isError) { r ->
                 when (r.statusCode()) {
                     HttpStatus.NOT_FOUND -> Mono.error(EntityNotFoundException(identifier))
                     HttpStatus.UNAUTHORIZED -> r.createException()

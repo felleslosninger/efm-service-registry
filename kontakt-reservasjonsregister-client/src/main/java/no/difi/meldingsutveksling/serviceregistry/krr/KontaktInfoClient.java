@@ -24,7 +24,7 @@ abstract class KontaktInfoClient {
 
         if (response.getStatusCode() != HttpStatus.OK) {
             throw new KontaktInfoException(String.format("%s endpoint returned %s (%s)", uri, response.getStatusCode().value(),
-                    response.getStatusCode().getReasonPhrase()));
+                    response.getStatusCode()));
         }
 
         String payload;
