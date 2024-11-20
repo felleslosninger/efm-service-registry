@@ -13,10 +13,10 @@
 
   <jaxb:bindings schemaLocation="ForsendelsesServiceV9.wsdl" node="/wsdl:definitions/wsdl:types/xs:schema">
     <jaxb:bindings node="xs:complexType[@name='retrieveMottakerSystemForOrgnr']">
-      <annox:annotateClass>@javax.xml.bind.annotation.XmlRootElement</annox:annotateClass>
+      <annox:annotateClass>@jakarta.xml.bind.annotation.XmlRootElement</annox:annotateClass>
     </jaxb:bindings>
     <jaxb:bindings node="xs:complexType[@name='retrieveMottakerSystemForOrgnrResponse']">
-      <annox:annotateClass>@javax.xml.bind.annotation.XmlRootElement</annox:annotateClass>
+      <annox:annotateClass>@jakarta.xml.bind.annotation.XmlRootElement</annox:annotateClass>
     </jaxb:bindings>
   </jaxb:bindings>
   <!--

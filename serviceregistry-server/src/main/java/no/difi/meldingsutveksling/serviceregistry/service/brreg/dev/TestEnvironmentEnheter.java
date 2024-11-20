@@ -5,7 +5,7 @@ import no.difi.meldingsutveksling.serviceregistry.domain.BrregMockEnhet;
 import no.difi.meldingsutveksling.serviceregistry.persistence.BrregMockEnhetRepository;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.util.Optional;
 
 @Component
