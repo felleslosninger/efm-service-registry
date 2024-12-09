@@ -35,7 +35,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @ExtendWith(SpringExtension::class)
 @WebMvcTest(VirksertController::class)
 @ContextConfiguration(classes = [VirksertController::class, GlobalControllerExceptionHandler::class, SRConfig::class])
-@ActiveProfiles("test")
+@ActiveProfiles("itest")
 @AutoConfigureRestDocs
 @AutoConfigureMockMvc(addFilters = true)
 class VirksertControllerTest {

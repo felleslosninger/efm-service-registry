@@ -27,7 +27,7 @@ import static org.junit.Assert.assertEquals;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = MoveServiceRegistryApplication.class)
-@ActiveProfiles("test")
+@ActiveProfiles("itest")
 public class ProcessAdministrationIT {
 
     @Autowired

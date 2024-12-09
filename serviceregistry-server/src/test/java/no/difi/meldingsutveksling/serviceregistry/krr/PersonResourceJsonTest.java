@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @JsonTest
 @ContextConfiguration(classes = SRConfig.class)
-@ActiveProfiles("test")
+@ActiveProfiles("itest")
 public class PersonResourceJsonTest {
 
     @Autowired
