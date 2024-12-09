@@ -257,7 +257,7 @@ public class ServiceRecordControllerTest {
                         preprocessResponse(prettyPrint()),
                         requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam()),
-                        requestParameters(getSecurityLevelParam(), getConversationIdParam())
+                        queryParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
     }
 
@@ -309,7 +309,7 @@ public class ServiceRecordControllerTest {
                         preprocessResponse(prettyPrint()),
                         requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam()),
-                        requestParameters(getSecurityLevelParam(), getConversationIdParam())
+                        queryParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
     }
 
@@ -342,7 +342,7 @@ public class ServiceRecordControllerTest {
                         preprocessResponse(prettyPrint()),
                         requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam(), getProcessParam()),
-                        requestParameters(getSecurityLevelParam(), getConversationIdParam())
+                        queryParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
     }
 
@@ -417,7 +417,7 @@ public class ServiceRecordControllerTest {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(getIdentifierParam()),
-                        requestParameters(getSecurityLevelParam(), getConversationIdParam())
+                        queryParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
     }
 
@@ -472,7 +472,7 @@ public class ServiceRecordControllerTest {
                         preprocessResponse(prettyPrint()),
                         requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam(), getProcessParam()),
-                        requestParameters(getSecurityLevelParam(), getConversationIdParam())
+                        queryParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
     }
 
@@ -498,7 +498,7 @@ public class ServiceRecordControllerTest {
                         preprocessResponse(prettyPrint()),
                         requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam(), getProcessParam()),
-                        requestParameters(getSecurityLevelParam(), getConversationIdParam())
+                        queryParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
     }
 
@@ -616,7 +616,7 @@ public class ServiceRecordControllerTest {
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(getIdentifierParam()),
-                        requestParameters(getSecurityLevelParam(), getConversationIdParam())
+                        queryParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
     }
 
@@ -640,7 +640,7 @@ public class ServiceRecordControllerTest {
                         preprocessResponse(prettyPrint()),
                         requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam(), getProcessParam()),
-                        requestParameters(getSecurityLevelParam(), getConversationIdParam())
+                        queryParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
     }
 
