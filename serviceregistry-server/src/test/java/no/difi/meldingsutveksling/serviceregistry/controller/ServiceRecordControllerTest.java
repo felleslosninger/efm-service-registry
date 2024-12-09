@@ -42,6 +42,7 @@ import org.springframework.restdocs.headers.HeaderDocumentation;
 import org.springframework.restdocs.request.ParameterDescriptor;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -74,7 +75,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(value = ServiceRecordController.class)
-@TestPropertySource("classpath:application-test.properties")
+@ActiveProfiles("test")
 @Import({PayloadSigner.class, SRConfig.class})
 @WithMockUser
 @AutoConfigureRestDocs
