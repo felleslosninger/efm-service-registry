@@ -14,7 +14,7 @@ jobs:
   build-install-and-deploy-libs:
     uses: felleslosninger/github-workflows/.github/workflows/ci-maven-install-deploy-lib.yml@efm-tilpasninger-2
     with:
-      java-version: 11
+      java-version: 21
       sbom-path: serviceregistry-server/target/
     secrets: inherit
 
@@ -24,7 +24,7 @@ jobs:
     with:
       application-path: serviceregistry-server/
       image-name: efm-service-registry
-      java-version: 11
+      java-version: 21
       slack-channel-id: C05NLQCFR41
       update-versions: "false"
     secrets: inherit
