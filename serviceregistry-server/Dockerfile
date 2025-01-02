@@ -1,4 +1,4 @@
-FROM openjdk:11-jre-slim
+FROM openjdk:21-jdk-slim
 
 LABEL package="no.digdir" artifact="serviceregistry" version="1.0" description="Digitaliseringsdirektoratet (Digdir)"
 
