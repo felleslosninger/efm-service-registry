@@ -56,10 +56,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <move-common.version>1.21.0-SNAPSHOT</move-common.version>
+        <move-common.version>1.200.21-SNAPSHOT</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <kotlin.version>1.9.20</kotlin.version>
-        <virksert.version>1.100.0-SNAPSHOT</virksert.version>
+        <virksert.version>1.100.21-SNAPSHOT</virksert.version>
 
         <bouncycastle.version>1.70</bouncycastle.version>
         <micrometer-registry-prometheus.version>1.12.0</micrometer-registry-prometheus.version>
