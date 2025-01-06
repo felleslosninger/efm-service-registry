@@ -1,5 +1,4 @@
 # ServiceRegistry
-Trigg bygg
 
 <img style="float:right" width="100" height="100" src="docs/EF.png" alt="ServiceRegistry - ein komponent i eFormidling">
 
