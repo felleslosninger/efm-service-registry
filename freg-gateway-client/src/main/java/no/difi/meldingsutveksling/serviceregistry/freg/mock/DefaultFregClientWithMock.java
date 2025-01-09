@@ -39,7 +39,7 @@ public class DefaultFregClientWithMock extends DefaultFregGatewayClient {
             FregGatewayEntity.Address.Response responseBody = response.getBody();
             return Optional.of(responseBody);
         } catch (HttpClientErrorException.NotFound e) {
-            log.info("User not found in Tenor testdatasøk. Returning mock user", e);
+            log.info("User {} not found in Tenor testdatasøk. Returning mock user", pid);
             return Optional.of(FregGatewayEntity.Address.Response.builder()
                     .personIdentifikator(pid)
                     .navn(FregGatewayEntity.Address.Navn.builder()
