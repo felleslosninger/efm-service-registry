@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Optional;
@@ -17,7 +18,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Profile("production")
 public class DefaultFregGatewayClient implements FregGatewayClient {
-    private final ServiceregistryProperties properties;
+    protected final ServiceregistryProperties properties;
 
     @Autowired
     @Qualifier("fregGatewayRestTemplate")
@@ -25,13 +26,18 @@ public class DefaultFregGatewayClient implements FregGatewayClient {
 
     @Override
     public Optional<FregGatewayEntity.Address.Response> getPersonAdress(String pid) {
-        String url = properties.getFreg().getEndpointURL() + "person/personadresse/" + pid;
-        ResponseEntity<FregGatewayEntity.Address.Response> response = restTemplate.getForEntity(
-                url,
-                FregGatewayEntity.Address.Response.class,
-                pid);
-        FregGatewayEntity.Address.Response responseBody = response.getBody();
-        return Optional.of(responseBody);
+        try {
+            String url = properties.getFreg().getEndpointURL() + "person/personadresse/" + pid;
+            ResponseEntity<FregGatewayEntity.Address.Response> response = restTemplate.getForEntity(
+                    url,
+                    FregGatewayEntity.Address.Response.class,
+                    pid);
+            FregGatewayEntity.Address.Response responseBody = response.getBody();
+            return Optional.of(responseBody);
+        } catch (HttpClientErrorException e) {
+            return Optional.empty();
+        }
+
     }
 }
 
