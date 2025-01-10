@@ -18,7 +18,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Profile("production")
 public class DefaultFregGatewayClient implements FregGatewayClient {
-    protected final ServiceregistryProperties properties;
+    private final ServiceregistryProperties properties;
 
     @Autowired
     @Qualifier("fregGatewayRestTemplate")
@@ -27,17 +27,21 @@ public class DefaultFregGatewayClient implements FregGatewayClient {
     @Override
     public Optional<FregGatewayEntity.Address.Response> getPersonAdress(String pid) {
         try {
-            String url = properties.getFreg().getEndpointURL() + "person/personadresse/" + pid;
-            ResponseEntity<FregGatewayEntity.Address.Response> response = restTemplate.getForEntity(
-                    url,
-                    FregGatewayEntity.Address.Response.class,
-                    pid);
-            FregGatewayEntity.Address.Response responseBody = response.getBody();
-            return Optional.of(responseBody);
+            return getAddressFromFreg(pid);
         } catch (HttpClientErrorException e) {
             return Optional.empty();
         }
 
+    }
+
+    protected Optional<FregGatewayEntity.Address.Response> getAddressFromFreg(String pid) throws HttpClientErrorException {
+        String url = properties.getFreg().getEndpointURL() + "person/personadresse/" + pid;
+        ResponseEntity<FregGatewayEntity.Address.Response> response = restTemplate.getForEntity(
+                url,
+                FregGatewayEntity.Address.Response.class,
+                pid);
+        FregGatewayEntity.Address.Response responseBody = response.getBody();
+        return Optional.of(responseBody);
     }
 }
 
