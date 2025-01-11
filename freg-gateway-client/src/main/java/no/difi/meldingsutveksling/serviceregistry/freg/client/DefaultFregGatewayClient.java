@@ -28,7 +28,7 @@ public class DefaultFregGatewayClient implements FregGatewayClient {
     public Optional<FregGatewayEntity.Address.Response> getPersonAdress(String pid) {
         try {
             return getAddressFromFreg(pid);
-        } catch (HttpClientErrorException e) {
+        } catch (HttpClientErrorException.NotFound e) {
             return Optional.empty();
         }
 
