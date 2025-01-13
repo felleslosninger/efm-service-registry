@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Optional;
@@ -25,6 +26,15 @@ public class DefaultFregGatewayClient implements FregGatewayClient {
 
     @Override
     public Optional<FregGatewayEntity.Address.Response> getPersonAdress(String pid) {
+        try {
+            return getAddressFromFreg(pid);
+        } catch (HttpClientErrorException.NotFound e) {
+            return Optional.empty();
+        }
+
+    }
+
+    protected Optional<FregGatewayEntity.Address.Response> getAddressFromFreg(String pid) throws HttpClientErrorException {
         String url = properties.getFreg().getEndpointURL() + "person/personadresse/" + pid;
         ResponseEntity<FregGatewayEntity.Address.Response> response = restTemplate.getForEntity(
                 url,
