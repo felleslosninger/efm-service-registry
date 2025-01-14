@@ -165,7 +165,7 @@ public class ServiceRecordController {
             try {
                 entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientOrgnr, print));
             } catch (FregGatewayException | HttpClientErrorException e) {
-                log.info("No service record found for citizen{}", identifier);
+                log.info("No service record found for citizen: {}", identifier);
                 return new ResponseEntity<>("{\"message\": \"No service record found for citizen: " + identifier + "\"}", HttpStatus.NOT_FOUND);
             }
 
