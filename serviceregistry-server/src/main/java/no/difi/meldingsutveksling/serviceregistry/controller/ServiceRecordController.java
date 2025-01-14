@@ -165,7 +165,7 @@ public class ServiceRecordController {
             try {
                 entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientOrgnr, print));
             } catch (FregGatewayException | HttpClientErrorException e) {
-                log.info("No service record found for citizen{}", identifier);
+                log.info("No service record found for citizen: {}", identifier);
                 return new ResponseEntity<>("{\"message\": \"No service record found for citizen: " + identifier + "\"}", HttpStatus.NOT_FOUND);
             }
 
@@ -242,7 +242,7 @@ public class ServiceRecordController {
 
     private ResponseEntity<?> signEntity(ResponseEntity<?> entity) throws EntitySignerException {
         if (entity.getStatusCode() != HttpStatus.OK) {
-            log.warn("Entity status code is {}, skipping signing", entity.getStatusCode());
+            log.info("Entity status code is {}, skipping signing", entity.getStatusCode());
             return entity;
         }
         String json;
