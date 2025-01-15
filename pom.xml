@@ -56,13 +56,13 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <move-common.version>1.200.21-SNAPSHOT</move-common.version>
+        <move-common.version>2.0.0-SNAPSHOT</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <kotlin.version>1.9.20</kotlin.version>
-        <virksert.version>1.100.21-SNAPSHOT</virksert.version>
+        <virksert.version>2.0.0-SNAPSHOT</virksert.version>
 
         <bouncycastle.version>1.70</bouncycastle.version>
-        <micrometer-registry-prometheus.version>1.12.0</micrometer-registry-prometheus.version>
+
         <org.apache.ws.commons.axiom.version>1.4.0</org.apache.ws.commons.axiom.version>
     </properties>
 
@@ -78,11 +78,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>io.micrometer</groupId>
-                <artifactId>micrometer-registry-prometheus</artifactId>
-                <version>${micrometer-registry-prometheus.version}</version>
-            </dependency>
             <dependency>
                 <groupId>no.difi.meldingsutveksling</groupId>
                 <artifactId>service-registry-common</artifactId>
