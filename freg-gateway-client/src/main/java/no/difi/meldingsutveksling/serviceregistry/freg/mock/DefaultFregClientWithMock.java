@@ -24,9 +24,9 @@ public class DefaultFregClientWithMock extends DefaultFregGatewayClient {
     @Override
     public Optional<FregGatewayEntity.Address.Response> getPersonAdress(String pid) {
         try {
-            return super.getPersonAdress(pid);
+            return super.getAddressFromFreg(pid);
         } catch (HttpClientErrorException.NotFound e) {
-            log.info("User not found in Tenor testdatasøk. Returning mock user", e);
+            log.info("User {} not found in Tenor testdatasøk. Returning mock user", pid);
             return Optional.of(FregGatewayEntity.Address.Response.builder()
                     .personIdentifikator(pid)
                     .navn(FregGatewayEntity.Address.Navn.builder()

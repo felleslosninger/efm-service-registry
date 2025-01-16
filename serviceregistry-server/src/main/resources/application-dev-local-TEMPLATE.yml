@@ -2,10 +2,6 @@ spring:
   cloud:
     config:
       uri: https://test-meldingsutveksling.dificloud.net/discovery/config
-  eureka:
-    client:
-      serviceUrl:
-        defaultZone: https://test-meldingsutveksling.dificloud.net/discovery/eureka
   datasource:
     url: jdbc:mysql://localhost:3306/sr?serverTimezone=Europe/Oslo
     username: root
