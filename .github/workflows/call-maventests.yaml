@@ -1,0 +1,20 @@
+name: Test
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [!main]
+
+jobs:
+  call-workflow-maven-build:
+    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-build.yml@main
+    with:
+      java-version: 21
+    secrets: inherit
+
+  call-container-scan:
+    uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-container-scan.yml@main
+    with:
+      java-version: 21
+    secrets: inherit

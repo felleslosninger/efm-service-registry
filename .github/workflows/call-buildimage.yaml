@@ -4,8 +4,7 @@ on:
   workflow_dispatch:
 
   push:
-    branches:
-      - "*"
+    branches: [main]
 
   pull_request:
     types: [] # Empty list ensures PRs are not triggered. Trigger nytt bygg...
