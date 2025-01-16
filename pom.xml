@@ -58,7 +58,7 @@
         <maven.compiler.target>21</maven.compiler.target>
         <move-common.version>2.0.0-SNAPSHOT</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
-        <kotlin.version>1.9.20</kotlin.version>
+
         <virksert.version>2.0.0-SNAPSHOT</virksert.version>
 
         <bouncycastle.version>1.70</bouncycastle.version>
@@ -74,7 +74,6 @@
         <module>common</module>
         <module>freg-gateway-client</module>
     </modules>
-
 
     <dependencyManagement>
         <dependencies>
@@ -153,16 +152,6 @@
 
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-stdlib-jdk8</artifactId>
-                <version>${kotlin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-reflect</artifactId>
-                <version>${kotlin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-test-junit</artifactId>
                 <version>${kotlin.version}</version>
                 <scope>test</scope>
@@ -236,14 +225,6 @@
     <dependencies>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib-jdk8</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-reflect</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test-junit</artifactId>
             <scope>test</scope>
         </dependency>
@@ -254,7 +235,6 @@
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
-                <version>${kotlin.version}</version>
                 <executions>
                     <execution>
                         <id>compile</id>
