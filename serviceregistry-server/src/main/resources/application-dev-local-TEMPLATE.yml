@@ -1,7 +1,4 @@
 spring:
-  cloud:
-    config:
-      uri: https://test-meldingsutveksling.dificloud.net/discovery/config
   datasource:
     driver-class-name: org.mariadb.jdbc.Driver
     url: jdbc:mariadb://localhost:3306/sr?serverTimezone=Europe/Oslo
