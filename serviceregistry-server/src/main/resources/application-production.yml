@@ -75,4 +75,4 @@ difi:
         password: ${KEYSTORE_PASSWORD}
         type: JKS
     freg:
-      endpoint-u-rL: http://efm-freg-gateway-service:8080/
+      endpoint-u-r-l: http://efm-freg-gateway-service:8080/
