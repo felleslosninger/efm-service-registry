@@ -10,7 +10,7 @@ import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.client.support.interceptor.ClientInterceptor;
 import org.springframework.ws.soap.SoapMessageFactory;
 import org.springframework.ws.soap.SoapVersion;
-import org.springframework.ws.soap.axiom.AxiomSoapMessageFactory;
+import org.springframework.ws.soap.saaj.SaajSoapMessageFactory;
 import org.springframework.ws.transport.http.AbstractHttpWebServiceMessageSender;
 
 @Configuration
@@ -25,7 +25,7 @@ public class SvarUtConfig {
 
     @Bean
     SoapMessageFactory messageFactory() {
-        AxiomSoapMessageFactory messageFactory = new AxiomSoapMessageFactory();
+        SaajSoapMessageFactory messageFactory = new SaajSoapMessageFactory();
         messageFactory.setSoapVersion(SoapVersion.SOAP_12);
         return messageFactory;
     }

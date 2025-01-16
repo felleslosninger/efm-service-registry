@@ -23,8 +23,8 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.mock.http.MockHttpOutputMessage;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.restdocs.request.ParameterDescriptor;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -48,7 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(value = AdminController.class)
 @ContextConfiguration(classes = AdminController.class)
-@TestPropertySource("classpath:application-test.properties")
+@ActiveProfiles("itest")
 @AutoConfigureRestDocs
 @AutoConfigureMockMvc(addFilters = false)
 public class AdminControllerTest {
@@ -100,8 +100,8 @@ public class AdminControllerTest {
         Process process = createProcess("ProcessIdentifier", ProcessCategory.ARKIVMELDING, "code", "editionCode", documentTypes);
 
         MockHttpServletResponse response = mockMvc.perform(post(PROCESSES_ENDPOINT_URI)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(getJson(process)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(getJson(process)))
                 .andDo(print())
                 .andDo(document("admin/processes/post",
                         preprocessRequest(prettyPrint()),
@@ -121,7 +121,7 @@ public class AdminControllerTest {
                 .pathSegment("ProcessIdentifier").build().toUri();
 
         mockMvc.perform(get(processUri)
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 
@@ -131,8 +131,8 @@ public class AdminControllerTest {
         Process process = createProcess(processIdentifier, ProcessCategory.ARKIVMELDING, "code", "editionCode", new ArrayList<>());
         when(processServiceMock.findByIdentifier(anyString())).thenReturn(Optional.of(process));
 
-        mockMvc.perform(get(PROCESSES_ENDPOINT_PATH+"/{identifier}", processIdentifier)
-                .accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get(PROCESSES_ENDPOINT_PATH + "/{identifier}", processIdentifier)
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andDo(document("admin/processes/get",
@@ -145,7 +145,7 @@ public class AdminControllerTest {
     @Test
     public void getProcesses_Success_ResponseShouldBeOk() throws Exception {
         mockMvc.perform(get(PROCESSES_ENDPOINT_URI)
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andDo(document("admin/processes/getall",
@@ -171,7 +171,7 @@ public class AdminControllerTest {
         Process processToDelete = mock(Process.class);
         when(processServiceMock.findByIdentifier(anyString())).thenReturn(Optional.of(processToDelete));
 
-        mockMvc.perform(delete(PROCESSES_ENDPOINT_PATH+"/{identifier}", "urn:no:difi:profile:foo:ver1.0"))
+        mockMvc.perform(delete(PROCESSES_ENDPOINT_PATH + "/{identifier}", "urn:no:difi:profile:foo:ver1.0"))
                 .andDo(print())
                 .andExpect(status().isNoContent())
                 .andDo(document("admin/processes/delete",
@@ -200,8 +200,8 @@ public class AdminControllerTest {
         when(processServiceMock.update(anyString(), any(Process.class))).thenReturn(true);
 
         mockMvc.perform(put(processUri)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(getJson(updatedValues)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(getJson(updatedValues)))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andDo(document("admin/processes/put",
@@ -243,8 +243,8 @@ public class AdminControllerTest {
         DocumentType documentType = createDocumentType("DocumentTypeID");
 
         mockMvc.perform(post(DOCUMENT_TYPES_ENDPOINT_URI)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(getJson(documentType)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(getJson(documentType)))
                 .andExpect(status().isCreated())
                 .andDo(print())
                 .andDo(document("admin/documenttypes/post",
@@ -272,8 +272,8 @@ public class AdminControllerTest {
         DocumentType documentType = createDocumentType(docIdentifier);
         when(documentTypeServiceMock.findByIdentifier(anyString())).thenReturn(Optional.of(documentType));
 
-        mockMvc.perform(get(DOCUMENT_TYPES_ENDPOINT_PATH+"/{identifier}", docIdentifier)
-                .accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get(DOCUMENT_TYPES_ENDPOINT_PATH + "/{identifier}", docIdentifier)
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andDo(document("admin/documenttypes/get",
@@ -286,7 +286,7 @@ public class AdminControllerTest {
     @Test
     public void getDocumentTypes_Success_ResponseShouldBeOk() throws Exception {
         mockMvc.perform(get(DOCUMENT_TYPES_ENDPOINT_URI)
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(print())
                 .andDo(document("admin/documenttypes/getall",
@@ -312,7 +312,7 @@ public class AdminControllerTest {
         DocumentType documentTypeToDelete = mock(DocumentType.class);
         when(documentTypeServiceMock.findByIdentifier(anyString())).thenReturn(Optional.of(documentTypeToDelete));
 
-        mockMvc.perform(delete(DOCUMENT_TYPES_ENDPOINT_PATH+"/{identifier}", "urn:no:difi:foo:xsd::foo"))
+        mockMvc.perform(delete(DOCUMENT_TYPES_ENDPOINT_PATH + "/{identifier}", "urn:no:difi:foo:xsd::foo"))
                 .andExpect(status().isNoContent())
                 .andDo(print())
                 .andDo(document("admin/documenttypes/delete",
@@ -346,21 +346,21 @@ public class AdminControllerTest {
 
     private MockHttpServletResponse doGet(URI uri) throws Exception {
         return mockMvc.perform(get(uri)
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
     }
 
     private MockHttpServletResponse doPut(URI uri, Object content) throws Exception {
         return mockMvc.perform(put(uri)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(getJson(content)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(getJson(content)))
                 .andReturn().getResponse();
     }
 
     private MockHttpServletResponse doPost(URI uri, Object content) throws Exception {
         return mockMvc.perform(post(uri)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(getJson(content)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(getJson(content)))
                 .andReturn().getResponse();
     }
 

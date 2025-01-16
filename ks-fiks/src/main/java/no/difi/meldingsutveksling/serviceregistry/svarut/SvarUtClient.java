@@ -6,7 +6,7 @@ import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperti
 import org.springframework.stereotype.Component;
 import org.springframework.ws.client.core.WebServiceTemplate;
 
-import javax.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBElement;
 
 @Slf4j
 @Component

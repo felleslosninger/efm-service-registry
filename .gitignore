@@ -10,6 +10,7 @@ target
 .vscode
 serviceregistry-server/src/main/resources/application-dev-local.yml
 /serviceregistry-server/src/main/resources/application-dev-local.yml
+serviceregistry-server/package-lock.json
 
 ## File-based project format:
 *.iws

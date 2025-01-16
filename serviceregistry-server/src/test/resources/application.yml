@@ -1,0 +1,24 @@
+spring:
+  jpa:
+    open-in-view: 'false'
+    hibernate:
+      ddl-auto: create-drop
+  datasource:
+    url: jdbc:h2:mem:test
+difi:
+  move:
+    sign:
+      keystore:
+        alias: test
+        path: classpath:keystore.jks
+        password: password
+        type: JKS
+    auth:
+      maskinporten-issuer: https://test.no
+    krr:
+      print-url: https://test.kontaktregisteret.no/rest/v2/printSertifikat
+logging:
+  level:
+    root: DEBUG
+    org:
+      springframework: DEBUG

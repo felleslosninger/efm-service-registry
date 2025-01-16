@@ -6,13 +6,13 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.18</version>
+        <version>3.4.1</version>
         <relativePath/>
     </parent>
 
     <groupId>no.difi.meldingsutveksling</groupId>
     <artifactId>serviceregistry-parent</artifactId>
-    <version>2.22.0-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <scm>
@@ -54,15 +54,15 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
-        <move-common.version>1.21.0-SNAPSHOT</move-common.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <move-common.version>2.0.0-SNAPSHOT</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
-        <kotlin.version>1.9.20</kotlin.version>
-        <virksert.version>1.100.0-SNAPSHOT</virksert.version>
+
+        <virksert.version>2.0.0-SNAPSHOT</virksert.version>
 
         <bouncycastle.version>1.70</bouncycastle.version>
-        <micrometer-registry-prometheus.version>1.12.0</micrometer-registry-prometheus.version>
+
         <org.apache.ws.commons.axiom.version>1.4.0</org.apache.ws.commons.axiom.version>
     </properties>
 
@@ -75,14 +75,8 @@
         <module>freg-gateway-client</module>
     </modules>
 
-
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>io.micrometer</groupId>
-                <artifactId>micrometer-registry-prometheus</artifactId>
-                <version>${micrometer-registry-prometheus.version}</version>
-            </dependency>
             <dependency>
                 <groupId>no.difi.meldingsutveksling</groupId>
                 <artifactId>service-registry-common</artifactId>
@@ -143,29 +137,19 @@
             <dependency>
                 <groupId>network.oxalis.vefa</groupId>
                 <artifactId>peppol-lookup</artifactId>
-                <version>3.7.0</version>
+                <version>3.8.0</version>
             </dependency>
             <dependency>
                 <groupId>network.oxalis.vefa</groupId>
                 <artifactId>commons-busdox</artifactId>
-                <version>3.4.0</version>
+                <version>3.8.0</version>
             </dependency>
             <dependency>
                 <groupId>network.oxalis.vefa</groupId>
                 <artifactId>commons-bdxr</artifactId>
-                <version>3.4.0</version>
+                <version>3.8.0</version>
             </dependency>
 
-            <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-stdlib-jdk8</artifactId>
-                <version>${kotlin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-reflect</artifactId>
-                <version>${kotlin.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-test-junit</artifactId>
@@ -203,7 +187,7 @@
             <dependency>
                 <groupId>org.apache.wss4j</groupId>
                 <artifactId>wss4j-ws-security-common</artifactId>
-                <version>2.2.4</version>
+                <version>3.0.4</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.ws.commons.axiom</groupId>
@@ -218,7 +202,7 @@
             <dependency>
                 <groupId>com.sun.xml.messaging.saaj</groupId>
                 <artifactId>saaj-impl</artifactId>
-                <version>1.5.1</version>
+                <version>3.0.4</version>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
@@ -228,7 +212,7 @@
             <dependency>
                 <groupId>com.sun.xml.bind</groupId>
                 <artifactId>jaxb-impl</artifactId>
-                <version>2.3.5</version>
+                <version>4.0.5</version>
             </dependency>
             <dependency>
                 <groupId>org.yaml</groupId>
@@ -241,14 +225,6 @@
     <dependencies>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib-jdk8</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-reflect</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-test-junit</artifactId>
             <scope>test</scope>
         </dependency>
@@ -259,7 +235,6 @@
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
-                <version>${kotlin.version}</version>
                 <executions>
                     <execution>
                         <id>compile</id>
@@ -295,9 +270,9 @@
                         <plugin>all-open</plugin>
                     </compilerPlugins>
                     <pluginOptions>
-                        <option>all-open:annotation=javax.persistence.Entity</option>
-                        <option>all-open:annotation=javax.persistence.Embeddable</option>
-                        <option>all-open:annotation=javax.persistence.MappedSuperclass</option>
+                        <option>all-open:annotation=jakarta.persistence.Entity</option>
+                        <option>all-open:annotation=jakarta.persistence.Embeddable</option>
+                        <option>all-open:annotation=jakarta.persistence.MappedSuperclass</option>
                     </pluginOptions>
                 </configuration>
                 <dependencies>

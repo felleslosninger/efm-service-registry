@@ -3,7 +3,7 @@
     <parent>
         <artifactId>serviceregistry-parent</artifactId>
         <groupId>no.difi.meldingsutveksling</groupId>
-        <version>2.22.0-SNAPSHOT</version>
+        <version>3.0.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -32,6 +32,20 @@
                     <groupId>net.minidev</groupId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- Kotlin-->
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-reflect</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-kotlin</artifactId>
         </dependency>
 
         <dependency>
@@ -64,8 +78,8 @@
             <artifactId>spring-ws-security</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -81,9 +95,9 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.jvnet.jaxb2.maven2</groupId>
-                <artifactId>maven-jaxb2-plugin</artifactId>
-                <version>0.15.3</version>
+                <groupId>org.jvnet.jaxb</groupId>
+                <artifactId>jaxb-maven-plugin</artifactId>
+                <version>4.0.0</version>
                 <executions>
                     <execution>
                         <id>xsd-generate</id>
@@ -112,13 +126,13 @@
                     <plugins>
                         <plugin>
                             <groupId>net.codesup.util</groupId>
-                            <artifactId>jaxb2-rich-contract-plugin</artifactId>
-                            <version>2.1.0</version>
+                            <artifactId>jaxb-rich-contract-plugin</artifactId>
+                            <version>4.2.1.2</version>
                         </plugin>
                         <plugin>
-                            <groupId>org.jvnet.jaxb2_commons</groupId>
-                            <artifactId>jaxb2-basics-annotate</artifactId>
-                            <version>1.1.0</version>
+                            <groupId>org.jvnet.jaxb</groupId>
+                            <artifactId>jaxb-plugin-annotate</artifactId>
+                            <version>4.0.0</version>
                         </plugin>
                     </plugins>
                 </configuration>

@@ -23,8 +23,8 @@ import org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get
 import org.springframework.restdocs.operation.preprocess.Preprocessors.*
 import org.springframework.security.core.Authentication
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
@@ -34,7 +34,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @ExtendWith(SpringExtension::class)
 @WebMvcTest(VirksertController::class)
 @ContextConfiguration(classes = [VirksertController::class, GlobalControllerExceptionHandler::class, SRConfig::class])
-@TestPropertySource("classpath:application-test.properties")
+@ActiveProfiles("itest")
 @AutoConfigureRestDocs
 @AutoConfigureMockMvc(addFilters = true)
 class VirksertControllerTest {
@@ -82,9 +82,11 @@ class VirksertControllerTest {
 
     @Test
     fun `test controller should return certificate`() {
-        mvc.perform(get("/virksert/{identifier}", "910076787")
-                        .accept(MediaType.TEXT_PLAIN_VALUE)
-                        .with(authentication(authMock)))
+        mvc.perform(
+            get("/virksert/{identifier}", "910076787")
+                .accept(MediaType.TEXT_PLAIN_VALUE)
+                .with(authentication(authMock))
+        )
             .andExpect(status().isOk)
             .andDo(print())
             .andExpect(content().string("pem123"))
@@ -99,9 +101,11 @@ class VirksertControllerTest {
 
     @Test
     fun `test controller should return error`() {
-        mvc.perform(get("/virksert/{identifier}", "123123123")
-                        .accept(MediaType.TEXT_PLAIN_VALUE)
-                        .with(authentication(authMock)))
+        mvc.perform(
+            get("/virksert/{identifier}", "123123123")
+                .accept(MediaType.TEXT_PLAIN_VALUE)
+                .with(authentication(authMock))
+        )
             .andExpect(status().isNotFound)
             .andDo(print())
             .andDo(

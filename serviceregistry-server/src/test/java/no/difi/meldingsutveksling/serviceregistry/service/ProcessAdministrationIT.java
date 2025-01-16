@@ -1,5 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.service;
 
+import network.oxalis.vefa.peppol.common.model.TransportProfile;
+import network.oxalis.vefa.peppol.lookup.LookupClient;
 import no.difi.meldingsutveksling.serviceregistry.MoveServiceRegistryApplication;
 import no.difi.meldingsutveksling.serviceregistry.client.brreg.BrregClient;
 import no.difi.meldingsutveksling.serviceregistry.domain.DocumentType;
@@ -9,15 +11,13 @@ import no.difi.meldingsutveksling.serviceregistry.persistence.DocumentTypeReposi
 import no.difi.meldingsutveksling.serviceregistry.persistence.ProcessRepository;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
-import network.oxalis.vefa.peppol.common.model.TransportProfile;
-import network.oxalis.vefa.peppol.lookup.LookupClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = MoveServiceRegistryApplication.class)
-@TestPropertySource("classpath:application-test.properties")
+@ActiveProfiles("itest")
 public class ProcessAdministrationIT {
 
     @Autowired

@@ -42,7 +42,7 @@ import org.springframework.restdocs.headers.HeaderDocumentation;
 import org.springframework.restdocs.request.ParameterDescriptor;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -74,7 +74,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(value = ServiceRecordController.class)
-@TestPropertySource("classpath:application-test.properties")
+@ActiveProfiles("itest")
 @Import({PayloadSigner.class, SRConfig.class})
 @WithMockUser
 @AutoConfigureRestDocs
@@ -181,7 +181,7 @@ public class ServiceRecordControllerTest {
         when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString(), anyBoolean()))
                 .thenReturn(Lists.newArrayList(dpiServiceRecord));
         when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString(), anyBoolean(), any(Process.class)))
-            .thenReturn(Lists.newArrayList(dpiServiceRecord));
+                .thenReturn(Lists.newArrayList(dpiServiceRecord));
         when(serviceRecordService.createArkivmeldingServiceRecord(any(), any(), anyInt())).thenReturn(Optional.empty());
         when(serviceRecordService.createEinnsynServiceRecords(any(), any())).thenReturn(Lists.newArrayList());
     }
@@ -209,7 +209,7 @@ public class ServiceRecordControllerTest {
     @Test
     public void testOrgInfoRecordShouldMatchExpectedValues() throws Exception {
         mvc.perform(get("/info/{identifier}", "123123123")
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.infoRecord.identifier", is("123123123")))
                 .andExpect(jsonPath("$.infoRecord.organizationName", is("foo")))
@@ -225,7 +225,7 @@ public class ServiceRecordControllerTest {
     public void testPersonInfoRecordShouldMatchExpectedValues() throws Exception {
         setupMocksForSuccessfulDpi();
         mvc.perform(get("/info/{identifier}", "12345678901")
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.infoRecord.identifier", is("12345678901")))
                 .andExpect(jsonPath("$.infoRecord.entityType.name", is("citizen")))
@@ -242,7 +242,7 @@ public class ServiceRecordControllerTest {
         when(serviceRecordService.createArkivmeldingServiceRecords(any(), any()))
                 .thenReturn(Lists.newArrayList(DPO_SERVICE_RECORD, DPV_SERVICE_RECORD, DPE_SERVICE_RECORD));
         mvc.perform(get("/identifier/{identifier}", "123123123")
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("123123123")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPO")))
@@ -257,7 +257,7 @@ public class ServiceRecordControllerTest {
                         preprocessResponse(prettyPrint()),
                         requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam()),
-                        requestParameters(getSecurityLevelParam(), getConversationIdParam())
+                        queryParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
     }
 
@@ -300,7 +300,7 @@ public class ServiceRecordControllerTest {
     public void get_CredentialsResolveToDpi_ServiceRecordShouldMatchExpectedValues() throws Exception {
         setupMocksForSuccessfulDpi();
         mvc.perform(get("/identifier/{identifier}", "12345678901")
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("12345678901")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPI")))
@@ -309,7 +309,7 @@ public class ServiceRecordControllerTest {
                         preprocessResponse(prettyPrint()),
                         requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam()),
-                        requestParameters(getSecurityLevelParam(), getConversationIdParam())
+                        queryParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
     }
 
@@ -321,7 +321,7 @@ public class ServiceRecordControllerTest {
                 .thenThrow(new KontaktInfoException(message));
 
         mvc.perform(get("/identifier/12345678901")
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_description", containsString(message)));
     }
@@ -333,7 +333,7 @@ public class ServiceRecordControllerTest {
         setupMocksForSuccessfulDpi();
 
         mvc.perform(get("/identifier/{identifier}/process/{processIdentifier}", "12345678901", PROC_DIGITALPOST)
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("12345678901")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPI")))
@@ -342,7 +342,7 @@ public class ServiceRecordControllerTest {
                         preprocessResponse(prettyPrint()),
                         requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam(), getProcessParam()),
-                        requestParameters(getSecurityLevelParam(), getConversationIdParam())
+                        queryParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
     }
 
@@ -356,7 +356,7 @@ public class ServiceRecordControllerTest {
                 .thenThrow(new KontaktInfoException(message));
 
         mvc.perform(get("/identifier/12345678901")
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_description", containsString(message)));
     }
@@ -369,7 +369,7 @@ public class ServiceRecordControllerTest {
                 .thenThrow(new KontaktInfoException(message));
 
         mvc.perform(get("/identifier/12345678901")
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_description", containsString(message)));
     }
@@ -384,7 +384,7 @@ public class ServiceRecordControllerTest {
                 .thenThrow(new KontaktInfoException(message));
 
         mvc.perform(get("/identifier/12345678901/process/some:process")
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_description", containsString(message)));
     }
@@ -411,13 +411,13 @@ public class ServiceRecordControllerTest {
     @Test
     public void get_EntityNotFound_ShouldReturnNotFound() throws Exception {
         mvc.perform(get("/identifier/{identifier}", "404040404")
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andDo(document("identifier/notfound",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(getIdentifierParam()),
-                        requestParameters(getSecurityLevelParam(), getConversationIdParam())
+                        queryParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
     }
 
@@ -458,7 +458,7 @@ public class ServiceRecordControllerTest {
         when(serviceRecordService.createArkivmeldingServiceRecord(any(), any(), any())).thenReturn(Optional.of(DPV_SERVICE_RECORD));
 
         mvc.perform(get("/identifier/{identifier}/process/{processIdentifier}", "123123123", PROC_ARKIVMELDING_TEKNISKE_TJENESTER)
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("123123123")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPV")))
@@ -472,7 +472,7 @@ public class ServiceRecordControllerTest {
                         preprocessResponse(prettyPrint()),
                         requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam(), getProcessParam()),
-                        requestParameters(getSecurityLevelParam(), getConversationIdParam())
+                        queryParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
     }
 
@@ -483,7 +483,7 @@ public class ServiceRecordControllerTest {
         when(serviceRecordService.createArkivmeldingServiceRecord(any(), any(), any())).thenReturn(Optional.of(DPO_SERVICE_RECORD));
 
         mvc.perform(get("/identifier/{identifier}/process/{processIdentifier}", "123123123", PROC_ARKIVMELDING_ADMINISTRASJON)
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("123123123")))
                 .andExpect(jsonPath("$.serviceRecords[0].pemCertificate", is("-----BEGIN CERTIFICATE-----\npem123\n-----END CERTIFICATE-----\n")))
@@ -498,7 +498,7 @@ public class ServiceRecordControllerTest {
                         preprocessResponse(prettyPrint()),
                         requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam(), getProcessParam()),
-                        requestParameters(getSecurityLevelParam(), getConversationIdParam())
+                        queryParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
     }
 
@@ -570,8 +570,8 @@ public class ServiceRecordControllerTest {
         final String message = "security level not found";
         when(serviceRecordService.createArkivmeldingServiceRecord(any(), any(), anyInt())).thenThrow(new SecurityLevelNotFoundException(message));
 
-        mvc.perform(get("/identifier/321321321/process/"+PROC_ARKIVMELDING_ADMINISTRASJON+"?securityLevel=4")
-                .accept(MediaType.APPLICATION_JSON))
+        mvc.perform(get("/identifier/321321321/process/" + PROC_ARKIVMELDING_ADMINISTRASJON + "?securityLevel=4")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_description", is(message)));
     }
@@ -583,7 +583,7 @@ public class ServiceRecordControllerTest {
         when(serviceRecordService.createArkivmeldingServiceRecord(any(), any(), anyInt())).thenReturn(Optional.empty());
 
         MockHttpServletResponse result = mvc.perform(get("/identifier/123123123/process/some:invalid:process?securityLevel=2")
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
         assertEquals(HttpStatus.NOT_FOUND.value(), result.getStatus());
@@ -609,14 +609,14 @@ public class ServiceRecordControllerTest {
         final String message = "security level not found";
         when(serviceRecordService.createArkivmeldingServiceRecords(any(), anyInt())).thenThrow(new SecurityLevelNotFoundException(message));
         mvc.perform(get("/identifier/{identifier}?securityLevel=4", "321321321")
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_description", is(message)))
                 .andDo(document("identifier/sec-level-not-found",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
                         pathParameters(getIdentifierParam()),
-                        requestParameters(getSecurityLevelParam(), getConversationIdParam())
+                        queryParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
     }
 
@@ -627,7 +627,7 @@ public class ServiceRecordControllerTest {
         when(serviceRecordService.createServiceRecord(any(), any(), any())).thenReturn(Optional.of(DPE_SERVICE_RECORD));
 
         mvc.perform(get("/identifier/{identifier}/process/{processIdentifier}", "123123123", PROC_EINNSYN_INNSYNSKRAV)
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("123123123")))
                 .andExpect(jsonPath("$.serviceRecords[0].pemCertificate", is("-----BEGIN CERTIFICATE-----\npem567\n-----END CERTIFICATE-----\n")))
@@ -640,7 +640,7 @@ public class ServiceRecordControllerTest {
                         preprocessResponse(prettyPrint()),
                         requestHeaders(getAuthHeader()),
                         pathParameters(getIdentifierParam(), getProcessParam()),
-                        requestParameters(getSecurityLevelParam(), getConversationIdParam())
+                        queryParameters(getSecurityLevelParam(), getConversationIdParam())
                 ));
     }
 

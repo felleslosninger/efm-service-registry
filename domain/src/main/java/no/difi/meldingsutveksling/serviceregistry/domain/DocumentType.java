@@ -7,8 +7,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import javax.persistence.Entity;
-import javax.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.*;
 import java.util.List;
 
 @Entity

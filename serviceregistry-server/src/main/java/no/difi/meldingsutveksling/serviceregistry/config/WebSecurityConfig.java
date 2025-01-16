@@ -2,56 +2,63 @@ package no.difi.meldingsutveksling.serviceregistry.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.server.resource.authentication.JwtIssuerAuthenticationManagerResolver;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
+
+import static org.springframework.security.config.Customizer.withDefaults;
+import static org.springframework.security.oauth2.server.resource.authentication.JwtIssuerAuthenticationManagerResolver.fromTrustedIssuers;
 
 @Configuration
-@EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity(prePostEnabled = true)
 @RequiredArgsConstructor
-@SuppressWarnings("squid:S1118")
 public class WebSecurityConfig {
 
-    @Configuration
-    @RequiredArgsConstructor
-    @Order(0)
-    public static class SecurityFilter extends WebSecurityConfigurerAdapter {
+    private final ServiceregistryProperties props;
+    private final SecurityProperties securityProperties;
 
-        private final ServiceregistryProperties props;
-        private final SecurityProperties securityProperties;
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        var jwtIssuerAuthenticationManagerResolver =
+                fromTrustedIssuers(props.getAuth().getMaskinportenIssuer());
 
-        @Override
-        protected void configure(HttpSecurity http) throws Exception {
-            var jwtIssuerAuthenticationManagerResolver =
-                    new JwtIssuerAuthenticationManagerResolver(props.getAuth().getMaskinportenIssuer());
+        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/health/**", "/prometheus", "/h2-console/**", "/jwk").permitAll()
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().authenticated()
+                )
+                .headers(headers -> headers.frameOptions(withDefaults()))
+                .httpBasic(withDefaults())
+                .oauth2ResourceServer(oauth2 -> oauth2.authenticationManagerResolver(jwtIssuerAuthenticationManagerResolver));
 
-            http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                    .and().csrf().disable();
-            http.authorizeRequests()
-                    .antMatchers("/health/**", "/prometheus", "/h2-console/**", "/jwk").permitAll()
-                    .and()
-                    .headers().frameOptions().sameOrigin().and()
-                    .authorizeRequests()
-                    .antMatchers("/api/**").authenticated()
-                    .and()
-                    .httpBasic()
-                    .and()
-                    .authorizeRequests()
-                    .anyRequest().authenticated()
-                    .and().oauth2ResourceServer(o -> o.authenticationManagerResolver(jwtIssuerAuthenticationManagerResolver));
-        }
+        return http.build();
+    }
 
-        @Override
-        protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-            auth.inMemoryAuthentication().withUser(securityProperties.getUser().getName())
-                    .password("{noop}" + securityProperties.getUser().getPassword()).roles();
-        }
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    protected InMemoryUserDetailsManager configure() {
+        UserDetails user = User.builder()
+                .username(securityProperties.getUser().getName())
+                .password(passwordEncoder().encode("{noop}" + securityProperties.getUser().getPassword()))
+                .roles()
+                .build();
+        return new InMemoryUserDetailsManager(user);
     }
 }
