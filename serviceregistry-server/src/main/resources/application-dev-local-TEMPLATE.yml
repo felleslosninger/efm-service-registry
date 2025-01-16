@@ -3,7 +3,8 @@ spring:
     config:
       uri: https://test-meldingsutveksling.dificloud.net/discovery/config
   datasource:
-    url: jdbc:mysql://localhost:3306/sr?serverTimezone=Europe/Oslo
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://localhost:3306/sr?serverTimezone=Europe/Oslo
     username: root
     password:
   jpa:
@@ -11,7 +12,7 @@ spring:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+        dialect: org.hibernate.dialect.MariaDBDialect
 
 difi:
   move:
