@@ -10,9 +10,9 @@ ServiceRegistry (SR) er [eFormidling](https://docs.digdir.no/docs/eFormidling/In
 
 ## Oppstart
 ### Føresetnadar
-- Java 11
+- Java 21
 - Maven 3
-- Dedikert database: Standard er MySQL 8.0.
+- Dedikert database: Standard er MariaDB 10.11.
 - Ikkje-offentlege avhengigheitar som må vera i lokalt Maven-repository: `no.difi.virksert:virksert-common` og `no.difi.virksert:virksert-client`
 
 ### Bygging
@@ -28,7 +28,7 @@ difi.move.sign.keystore.password=<passord>
 difi.move.sign.keystore.path=file:<sti-til-jks>
 
 spring.datasource.password=<passord>
-spring.datasource.url=jdbc:mysql://<server>:<port>/<database>?useSSL=false&allowPublicKeyRetrieval=true&autoReconnect=true&serverTimezone=Europe/Oslo
+spring.datasource.url=jdbc:mariadb://<server>:<port>/<database>?serverTimezone=Europe/Oslo
 spring.datasource.username=<brukar>
 ```
 
