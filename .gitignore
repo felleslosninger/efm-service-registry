@@ -41,3 +41,6 @@ sr-db.trace.db
 .springBeans
 .sts4-cache
 
+## Maven versions backup ##
+
+*versionsBackup
