@@ -1,0 +1,87 @@
+spring:
+  application:
+    environment: ${SPRING_APPLICATION_ENVIRONMENT}
+  datasource:
+    url: ${DATASOURCE_URL}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
+    driver-class-name: org.mariadb.jdbc.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MariaDBDialect
+    hibernate:
+      ddl-auto: validate
+  security:
+    user:
+      name: ${ADMIN_API_USERNAME}
+      password: ${ADMIN_API_PASSWORD}
+
+app:
+  logger:
+    destination: ${APP_LOGGER_DESTINATION} #Kun prod, skal vaere stream-meldingsutveksling.difi.no:443
+
+server:
+  port: 8080
+  servlet:
+    context-path: /adressetjeneste
+management:
+  server:
+    port: 8090
+  endpoints:
+    web:
+      base-path: /
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+difi:
+  move:
+    dpo:
+      endpointURL: ${DPO_ENDPOINT_URL} #https://www.altinn.no kun test og prod
+      serviceCode: ${ALTINN_SRR_SERVICECODE}
+      serviceEditionCode: ${ALTINN_SRR_SERVICE_EDITION_CODE}
+    dpv:
+      endpointURL: ${DPV_ENDPOINT_URL} #prod https://www.altinn.no/ServiceEngineExternal/CorrespondenceAgencyExternal.svc
+    dpi:
+      endpointURL: ${DPI_ENDPOINT_URL} #prod https://meldingsformidler.digipost.no/api/ebms
+    krr:
+      mp-endpoint-uri: ${KRR_MP_ENDPOINT_URI} #prod https://kontaktregisteret.no/rest/v1/personer
+      mp-dsf-endpoint-uri: ${KRR_MP_DSP_ENDPOINT_URI} # prod https://kontaktregisteret.no/rest/v1/mf/personer
+      print-url: ${KRR_PRINT_URL} #prod https://kontaktregisteret.no/rest/v2/printSertifikat
+    auth:
+      maskinporten-issuer: ${AUTH_MASKINPORTEN_ISSUER} # prod: https://maskinporten.no/
+      sas-token: ${SAS_TOKEN}
+
+    elma:
+      locatorUrl: ${ELMA_LOCATOR_URL} #prod: http://smp.difi.no.publisher.edelivery.tech.ec.europa.eu/
+    fiks:
+      io:
+        endpoint-url: ${FIKS_IO_ENDPOINT_URL} # SETTES KUN I PROD, skal vaere https://api.fiks.ks.no
+        enable: ${FIKS_IO_ENABLE} #SKAL vaere false i prod, true i test og dev
+        integrasjon-id: ${FIKSIO_ID}
+        integrasjon-passord: ${FIKSIO_PASSWORD}
+      svarut:
+        certificate: ${SVARUT_CERTIFICATE} #SKAL VAERE classpath:svarut_public.pem i prod, tom i dev og test
+        forsendelsesserviceUrl: ${SVARUT_FORSENDELSESSERVICEURL} #Kun prod, skal vaere https://svarut.ks.no/tjenester/forsendelseservice/ForsendelsesServiceV9
+        serviceRecordUrl: ${SVARUT_SERVICERECORDURL} #Kun prod, skal vaere https://svarut.ks.no/tjenester/forsendelseservice/ForsendelsesServiceV6
+        user: ${SVARUT_USER}
+        password: ${SVARUT_PASSWORD}
+    virksert:
+      endpointURL: http://efm-virksert-service:8080/virksomhetssertifikat/
+    freg:
+      endpoint-u-r-l: http://efm-freg-gateway-service:8080/
+    sign:
+      keystore:
+        path: ${KEYSTORE_PATH}
+        alias: ${KEYSTORE_ALIAS}
+        password: ${KEYSTORE_PASSWORD}
+        type: JKS
+
+logging:
+  level:
+    org.springframework.ws.client.MessageTracing: ${LOG_LEVEL}
+    org.springframework.ws.server.MessageTracing: ${LOG_LEVEL}
+    no.difi.meldingsutveksling.serviceregistry.controller: ${LOG_LEVEL}

@@ -74,7 +74,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(value = ServiceRecordController.class)
-@ActiveProfiles("itest")
+@ActiveProfiles("test")
 @Import({PayloadSigner.class, SRConfig.class})
 @WithMockUser
 @AutoConfigureRestDocs

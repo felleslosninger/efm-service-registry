@@ -48,7 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(value = AdminController.class)
 @ContextConfiguration(classes = AdminController.class)
-@ActiveProfiles("itest")
+@ActiveProfiles("test")
 @AutoConfigureRestDocs
 @AutoConfigureMockMvc(addFilters = false)
 public class AdminControllerTest {
