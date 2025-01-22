@@ -1,6 +1,6 @@
 spring:
   application:
-    environment: ${SPRING_APPLICATION_ENVIRONMENT}
+    environment: ${ENVIRONMENT}
   datasource:
     url: ${DATASOURCE_URL}
     username: ${DATASOURCE_USERNAME}
@@ -19,7 +19,7 @@ spring:
 
 app:
   logger:
-    destination: ${APP_LOGGER_DESTINATION} #Kun prod, skal vaere stream-meldingsutveksling.difi.no:443
+    destination: ${LOGGER_DESTINATION}
 
 server:
   port: 8080
@@ -40,33 +40,33 @@ management:
 difi:
   move:
     dpo:
-      endpointURL: ${DPO_ENDPOINT_URL} #https://www.altinn.no kun test og prod
+      endpointURL: ${DPO_URL}
       serviceCode: ${ALTINN_SRR_SERVICECODE}
       serviceEditionCode: ${ALTINN_SRR_SERVICE_EDITION_CODE}
     dpv:
-      endpointURL: ${DPV_ENDPOINT_URL} #prod https://www.altinn.no/ServiceEngineExternal/CorrespondenceAgencyExternal.svc
+      endpointURL: ${DPV_URL} 
     dpi:
-      endpointURL: ${DPI_ENDPOINT_URL} #prod https://meldingsformidler.digipost.no/api/ebms
+      endpointURL: ${DPI_URL}
     krr:
-      mp-endpoint-uri: ${KRR_MP_ENDPOINT_URI} #prod https://kontaktregisteret.no/rest/v1/personer
-      mp-dsf-endpoint-uri: ${KRR_MP_DSP_ENDPOINT_URI} # prod https://kontaktregisteret.no/rest/v1/mf/personer
-      print-url: ${KRR_PRINT_URL} #prod https://kontaktregisteret.no/rest/v2/printSertifikat
+      mp-endpoint-uri: ${KRR_MP_URI}
+      mp-dsf-endpoint-uri: ${KRR_MP_DSP_URI}
+      print-url: ${KRR_PRINT_URL}
     auth:
-      maskinporten-issuer: ${AUTH_MASKINPORTEN_ISSUER} # prod: https://maskinporten.no/
+      maskinporten-issuer: ${AUTH_MASKINPORTEN_ISSUER}
       sas-token: ${SAS_TOKEN}
 
     elma:
-      locatorUrl: ${ELMA_LOCATOR_URL} #prod: http://smp.difi.no.publisher.edelivery.tech.ec.europa.eu/
+      locatorUrl: ${ELMA_LOCATOR_URL}
     fiks:
       io:
-        endpoint-url: ${FIKS_IO_ENDPOINT_URL} # SETTES KUN I PROD, skal vaere https://api.fiks.ks.no
-        enable: ${FIKS_IO_ENABLE} #SKAL vaere false i prod, true i test og dev
+        endpoint-url: ${FIKS_IO_URL}
+        enable: ${FIKS_IO_ENABLE}
         integrasjon-id: ${FIKSIO_ID}
         integrasjon-passord: ${FIKSIO_PASSWORD}
       svarut:
-        certificate: ${SVARUT_CERTIFICATE} #SKAL VAERE classpath:svarut_public.pem i prod, tom i dev og test
-        forsendelsesserviceUrl: ${SVARUT_FORSENDELSESSERVICEURL} #Kun prod, skal vaere https://svarut.ks.no/tjenester/forsendelseservice/ForsendelsesServiceV9
-        serviceRecordUrl: ${SVARUT_SERVICERECORDURL} #Kun prod, skal vaere https://svarut.ks.no/tjenester/forsendelseservice/ForsendelsesServiceV6
+        certificate: ${SVARUT_CERTIFICATE}
+        forsendelsesserviceUrl: ${SVARUT_FORSENDELSESSERVICEURL}
+        serviceRecordUrl: ${SVARUT_SERVICERECORDURL}
         user: ${SVARUT_USER}
         password: ${SVARUT_PASSWORD}
     virksert:
