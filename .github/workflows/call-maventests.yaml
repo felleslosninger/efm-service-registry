@@ -6,7 +6,7 @@ on:
 
 jobs:
   call-workflow-maven-build:
-    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-build.yml@main
+    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-build.yml@PF-1663-1
     with:
       java-version: 21
     secrets: inherit
