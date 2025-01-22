@@ -1,6 +1,6 @@
 spring:
   application:
-    environment: dev
+    environment: ${ENVIRONMENT}
   datasource:
     url: ${DATASOURCE_URL}
     username: ${DATASOURCE_USERNAME}
@@ -16,6 +16,10 @@ spring:
     user:
       name: ${ADMIN_API_USERNAME}
       password: ${ADMIN_API_PASSWORD}
+
+app:
+  logger:
+    destination: ${LOGGER_DESTINATION}
 
 server:
   port: 8080
@@ -35,27 +39,49 @@ management:
 
 difi:
   move:
+    dpo:
+      endpointURL: ${DPO_URL}
+      serviceCode: ${ALTINN_SRR_SERVICECODE}
+      serviceEditionCode: ${ALTINN_SRR_SERVICE_EDITION_CODE}
+    dpv:
+      endpointURL: ${DPV_URL} 
+    dpi:
+      endpointURL: ${DPI_URL}
+    krr:
+      mp-endpoint-uri: ${KRR_MP_URI}
+      mp-dsf-endpoint-uri: ${KRR_MP_DSP_URI}
+      print-url: ${KRR_PRINT_URL}
+    auth:
+      maskinporten-issuer: ${AUTH_MASKINPORTEN_ISSUER}
+      sas-token: ${SAS_TOKEN}
+
+    elma:
+      locatorUrl: ${ELMA_LOCATOR_URL}
     fiks:
       io:
-        enable: true
+        endpoint-url: ${FIKS_IO_URL}
+        enable: ${FIKS_IO_ENABLE}
         integrasjon-id: ${FIKSIO_ID}
         integrasjon-passord: ${FIKSIO_PASSWORD}
       svarut:
+        certificate: ${SVARUT_CERTIFICATE}
+        forsendelsesserviceUrl: ${SVARUT_FORSENDELSESSERVICEURL}
+        serviceRecordUrl: ${SVARUT_SERVICERECORDURL}
         user: ${SVARUT_USER}
         password: ${SVARUT_PASSWORD}
     virksert:
       endpointURL: http://efm-virksert-service:8080/virksomhetssertifikat/
+    freg:
+      endpoint-u-r-l: http://efm-freg-gateway-service:8080/
     sign:
       keystore:
         path: ${KEYSTORE_PATH}
         alias: ${KEYSTORE_ALIAS}
         password: ${KEYSTORE_PASSWORD}
         type: JKS
-    auth:
-      sas-token: ${SAS_TOKEN}
 
 logging:
   level:
-    org.springframework.ws.client.MessageTracing: TRACE
-    org.springframework.ws.server.MessageTracing: TRACE
-    no.difi.meldingsutveksling.serviceregistry.controller: TRACE
+    org.springframework.ws.client.MessageTracing: ${LOG_LEVEL}
+    org.springframework.ws.server.MessageTracing: ${LOG_LEVEL}
+    no.difi.meldingsutveksling.serviceregistry.controller: ${LOG_LEVEL}
