@@ -6,13 +6,13 @@ on:
 
 jobs:
   call-workflow-maven-build:
-    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-build.yml@PF-1663-1
+    uses: felleslosninger/github-workflows/.github/workflows/ci-maven-build.yml@main
     with:
       java-version: 21
     secrets: inherit
 
   call-container-scan:
-    uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-container-scan.yml@PF-1663-1
+    uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-container-scan.yml@main
     with:
       java-version: 21
       application-path: serviceregistry-server/
