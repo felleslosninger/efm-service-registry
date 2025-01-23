@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -39,7 +40,10 @@ public class DefaultFregClientWithMock extends DefaultFregGatewayClient {
                             .poststed("Oslo")
                             .landkode("Norge")
                             .build())
-                .build());
+                    .build());
+        } catch (URISyntaxException e) {
+            log.debug("Invalid URI encountered in Folkeregisteret client with mock");
+            return Optional.empty();
         }
     }
 }
