@@ -35,6 +35,7 @@ difi:
       lookupIcd: 0192
     brreg:
       endpointURL: https://data.brreg.no/
+      enabled: false
     dpv:
       endpointURL: https://tt02.altinn.no/ServiceEngineExternal/CorrespondenceAgencyExternal.svc
     krr:

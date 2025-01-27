@@ -83,6 +83,7 @@ public class ServiceregistryProperties {
     @Data
     public static class Brønnøysundregistrene {
         private URL endpointURL;
+        private boolean enabled;
     }
 
     @Data
