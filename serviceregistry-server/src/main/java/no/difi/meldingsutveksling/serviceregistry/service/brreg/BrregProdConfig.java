@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import java.net.URISyntaxException;
 
 @Configuration
-@ConditionalOnProperty(prefix = "difi.move.freg", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "difi.move.brreg", name = "enabled", havingValue = "true")
 public class BrregProdConfig {
 
     @Bean
