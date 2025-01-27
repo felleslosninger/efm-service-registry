@@ -74,6 +74,8 @@ difi:
     freg:
       endpoint-u-r-l: http://efm-freg-gateway-service:8080/
       enabled: ${CALL_FOLKEREGISTERET}
+    brreg:
+      enabled: ${CALL_ENHETSREGISTERET}
     sign:
       keystore:
         path: ${KEYSTORE_PATH}
