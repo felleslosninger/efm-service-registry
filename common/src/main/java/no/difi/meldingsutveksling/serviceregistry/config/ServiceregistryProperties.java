@@ -87,6 +87,7 @@ public class ServiceregistryProperties {
 
     @Data
     public static class FregGateway {
+        private boolean enabled;
         private String endpointURL;
     }
 
