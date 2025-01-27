@@ -6,7 +6,7 @@ import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperti
 import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Profile;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
@@ -20,7 +20,7 @@ import java.util.Optional;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Profile("production")
+@ConditionalOnProperty(prefix = "difi.move.freg", name = "enabled", havingValue = "true")
 public class DefaultFregGatewayClient implements FregGatewayClient {
     private final ServiceregistryProperties properties;
 

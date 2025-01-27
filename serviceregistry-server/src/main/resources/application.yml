@@ -35,6 +35,7 @@ difi:
       lookupIcd: 0192
     brreg:
       endpointURL: https://data.brreg.no/
+      enabled: false
     dpv:
       endpointURL: https://tt02.altinn.no/ServiceEngineExternal/CorrespondenceAgencyExternal.svc
     krr:
@@ -77,6 +78,7 @@ difi:
       enableDpfDpv: true
     freg:
       endpoint-u-r-l: http://localhost:8082/
+      enabled: false
 logging:
   level:
     org.springframework.web: INFO

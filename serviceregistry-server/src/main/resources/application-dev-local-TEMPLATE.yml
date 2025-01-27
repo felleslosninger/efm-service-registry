@@ -33,6 +33,10 @@ difi:
       svarut:
         user: changeit
         password: changeit
+    freg:
+      enabled: false
+    brreg:
+      enabled: false
 
 app:
   logger:

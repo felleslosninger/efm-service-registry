@@ -83,10 +83,12 @@ public class ServiceregistryProperties {
     @Data
     public static class Brønnøysundregistrene {
         private URL endpointURL;
+        private boolean enabled;
     }
 
     @Data
     public static class FregGateway {
+        private boolean enabled;
         private String endpointURL;
     }
 

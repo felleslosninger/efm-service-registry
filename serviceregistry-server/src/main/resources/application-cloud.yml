@@ -44,7 +44,7 @@ difi:
       serviceCode: ${ALTINN_SRR_SERVICECODE}
       serviceEditionCode: ${ALTINN_SRR_SERVICE_EDITION_CODE}
     dpv:
-      endpointURL: ${DPV_URL} 
+      endpointURL: ${DPV_URL}
     dpi:
       endpointURL: ${DPI_URL}
     krr:
@@ -73,6 +73,9 @@ difi:
       endpointURL: http://efm-virksert-service:8080/virksomhetssertifikat/
     freg:
       endpoint-u-r-l: http://efm-freg-gateway-service:8080/
+      enabled: ${CALL_FOLKEREGISTERET}
+    brreg:
+      enabled: ${CALL_ENHETSREGISTERET}
     sign:
       keystore:
         path: ${KEYSTORE_PATH}
