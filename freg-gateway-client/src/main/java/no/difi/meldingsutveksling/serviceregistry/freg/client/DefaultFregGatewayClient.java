@@ -42,7 +42,7 @@ public class DefaultFregGatewayClient implements FregGatewayClient {
     }
 
     protected Optional<FregGatewayEntity.Address.Response> getAddressFromFreg(String pid) throws HttpClientErrorException, URISyntaxException {
-        String url = UriComponentsBuilder.fromPath(properties.getFreg().getEndpointURL())
+        String url = UriComponentsBuilder.fromUriString(properties.getFreg().getEndpointURL())
                 .pathSegment("person")
                 .pathSegment("personadresse")
                 .pathSegment(pid)
