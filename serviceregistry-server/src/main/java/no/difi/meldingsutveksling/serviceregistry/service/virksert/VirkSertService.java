@@ -40,7 +40,7 @@ public class VirkSertService {
         }
 
         try {
-            if (env.acceptsProfiles(Profiles.of("production"))) {
+            if (env.getProperty("spring.application.environment").equals("prod")) {
                 virksertClient = BusinessCertificateClient.of(virksertUrl, Mode.PRODUCTION);
             } else {
                 virksertClient = BusinessCertificateClient.of(virksertUrl, Mode.MOVE);
