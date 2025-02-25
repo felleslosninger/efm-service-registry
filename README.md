@@ -38,3 +38,5 @@ spring.datasource.username=<brukar>
 Dokumentasjon ([RestDocs](https://docs.spring.io/spring-restdocs/docs/current/reference/htmlsingle/)/HTML) vert generert for "serviceregistry-server"-modulen som del av package-fasen når ein køyrer prosjekt-profilen "restdocs":
 
 ```mvn clean package -P restdocs```
+
+<Test av pipeline 3>
