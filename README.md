@@ -39,4 +39,4 @@ Dokumentasjon ([RestDocs](https://docs.spring.io/spring-restdocs/docs/current/re
 
 ```mvn clean package -P restdocs```
 
-<Test av pipeline 3>
+<Test av pipeline 4>
