@@ -109,6 +109,7 @@ public class ServiceregistryProperties {
         private URL endpointURL;
         private Map<ServiceIdentifier, String> processes;
         private String icd;
+        private String mode = "";
     }
 
     @Data

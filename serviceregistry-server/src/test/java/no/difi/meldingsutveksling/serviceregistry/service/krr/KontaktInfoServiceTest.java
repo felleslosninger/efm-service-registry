@@ -2,6 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.service.krr;
 
 import com.nimbusds.jose.jwk.RSAKey;
 import no.difi.meldingsutveksling.serviceregistry.MoveServiceRegistryApplication;
+import no.difi.meldingsutveksling.serviceregistry.config.VirksertConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.WebSecurityConfig;
 import no.difi.meldingsutveksling.serviceregistry.freg.client.DefaultFregGatewayClient;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
@@ -46,6 +47,9 @@ class KontaktInfoServiceTest {
 
     @MockBean
     private VirkSertService virkSertService;
+
+    @MockBean
+    private VirksertConfig virksertConfig;
 
     @MockBean
     private BrregService brregService;
