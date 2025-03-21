@@ -64,6 +64,9 @@
         <bouncycastle.version>1.70</bouncycastle.version>
 
         <org.apache.ws.commons.axiom.version>1.4.0</org.apache.ws.commons.axiom.version>
+
+        <!-- Fixes CVE-2025-22228. Doesn't even impact us, but whatever, might as well fix rather than ignore -->
+        <spring-security.version>6.4.4</spring-security.version>
     </properties>
 
     <modules>
