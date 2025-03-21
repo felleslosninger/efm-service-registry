@@ -106,10 +106,12 @@ public class ServiceregistryProperties {
 
     @Data
     public static class Virksert {
+        @NotNull
         private URL endpointURL;
         private Map<ServiceIdentifier, String> processes;
         private String icd;
-        private String mode = "";
+        @NotNull
+        private String mode;
     }
 
     @Data
