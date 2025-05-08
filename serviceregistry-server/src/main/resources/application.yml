@@ -47,7 +47,7 @@ difi:
       processes:
         dpo: cenbii-procid-ubl::urn:no:difi:profile:dpo:ver1.0
         dpe: cenbii-procid-ubl::urn:no:difi:profile:dpe:ver1.0
-      mode: move
+      mode: TEST
       endpoint-u-r-l: https://eformidling.dev/virksomhetssertifikat/
     sign:
       keystore:
