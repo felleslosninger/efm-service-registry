@@ -4,13 +4,15 @@ on:
   workflow_dispatch:
 
   push:
-    branches: [main]
+    branches:
+      - '**'  #Filtering on branches is done in the jobs
 
   pull_request:
     types: [] # Empty list ensures PRs are not triggered. Trigger nytt bygg.....
 
 jobs:
   build-install-and-deploy-libs:
+    if: github.ref == 'refs/heads/main' || contains(github.event.head_commit.message, '[run-ci]')
     uses: felleslosninger/github-workflows/.github/workflows/ci-maven-install-deploy-lib.yml@main
     with:
       java-version: 21
@@ -18,6 +20,7 @@ jobs:
     secrets: inherit
 
   call-workflow-image-build-publish:
+    if: github.ref == 'refs/heads/main' || contains(github.event.head_commit.message, '[run-ci]')
     uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-build-publish-image.yml@main
     needs: [build-install-and-deploy-libs]
     with:
@@ -29,8 +32,8 @@ jobs:
     secrets: inherit
 
   call-update-image:
+    if: github.ref == 'refs/heads/main' || contains(github.event.head_commit.message, '[run-ci]')
     needs: [call-workflow-image-build-publish]
-    if: github.ref == 'refs/heads/main'
     uses: felleslosninger/github-workflows/.github/workflows/ci-call-update-image.yml@main
     with:
       application-name: efm-service-registry
