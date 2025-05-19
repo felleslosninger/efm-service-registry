@@ -7,6 +7,9 @@ import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
@@ -47,10 +50,17 @@ public class DefaultFregGatewayClient implements FregGatewayClient {
                 .pathSegment("personadresse")
                 .pathSegment(pid)
                 .build().toUriString();
-        ResponseEntity<FregGatewayEntity.Address.Response> response = restTemplate.getForEntity(
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-API-Key", properties.getFreg().getApiKey());
+
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<FregGatewayEntity.Address.Response> response = restTemplate.exchange(
                 url,
-                FregGatewayEntity.Address.Response.class,
-                pid);
+                HttpMethod.GET,
+                entity,
+                FregGatewayEntity.Address.Response.class
+        );
         FregGatewayEntity.Address.Response responseBody = response.getBody();
         return Optional.of(responseBody);
     }
