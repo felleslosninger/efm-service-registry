@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.CacheConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
-import no.difi.meldingsutveksling.serviceregistry.freg.client.DefaultFregGatewayClient;
+import no.difi.meldingsutveksling.serviceregistry.freg.client.FregGatewayClient;
 import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity;
 import no.difi.meldingsutveksling.serviceregistry.freg.exception.NotFoundInMfGatewayException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClient;
@@ -25,7 +25,7 @@ public class KontaktInfoService {
 
     private final ServiceregistryProperties properties;
     private final KRRClient krrClient;
-    private final DefaultFregGatewayClient defaultFregGatewayClient;
+    private final FregGatewayClient fregGatewayClient;
     private final PrintService printService;
 
     @Cacheable(CacheConfig.KRR_CACHE)
@@ -39,7 +39,7 @@ public class KontaktInfoService {
     @Timed(value = "dsf.client.timer", description = "Timer for DSF client")
     @Retryable
     public Optional<FregGatewayEntity.Address.Response> getFregAdress(LookupParameters params) throws NotFoundInMfGatewayException {
-        return defaultFregGatewayClient.getPersonAdress(params.getIdentifier());
+        return fregGatewayClient.getPersonAdress(params.getIdentifier());
     }
 
     public void setPrintDetails(PersonResource personResource) {
