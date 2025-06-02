@@ -83,11 +83,14 @@ public class ServiceregistryProperties {
     @Data
     public static class Brønnøysundregistrene {
         private URL endpointURL;
+        private boolean enabled;
     }
 
     @Data
     public static class FregGateway {
+        private boolean enabled;
         private String endpointURL;
+        private String apiKey;
     }
 
     @Data
@@ -104,9 +107,12 @@ public class ServiceregistryProperties {
 
     @Data
     public static class Virksert {
+        @NotNull
         private URL endpointURL;
         private Map<ServiceIdentifier, String> processes;
         private String icd;
+        @NotNull
+        private String mode;
     }
 
     @Data
