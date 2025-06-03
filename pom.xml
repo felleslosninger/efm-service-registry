@@ -59,7 +59,7 @@
         <move-common.version>2.0.1</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
 
-        <virksert.version>2.0.4</virksert.version>
+        <virksert.version>2.0.6</virksert.version>
 
         <bouncycastle.version>1.70</bouncycastle.version>
 
