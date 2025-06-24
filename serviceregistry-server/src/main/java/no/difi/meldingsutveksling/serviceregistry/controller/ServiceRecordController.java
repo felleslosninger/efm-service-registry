@@ -164,6 +164,8 @@ public class ServiceRecordController {
             log.trace("Citizen");
             try {
                 entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientOrgnr, print));
+                entity.getServiceRecords().addAll(serviceRecordService.createFastlegeRecords(identifier, clientOrgnr));
+               // create DPH service record
             } catch (FregGatewayException | HttpClientErrorException e) {
                 log.info("No service record found for citizen: {}", identifier);
                 return new ResponseEntity<>("{\"message\": \"No service record found for citizen: " + identifier + "\"}", HttpStatus.NOT_FOUND);

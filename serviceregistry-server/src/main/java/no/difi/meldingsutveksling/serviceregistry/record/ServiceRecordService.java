@@ -152,6 +152,21 @@ public class ServiceRecordService {
         return createDigitalpostServiceRecords(identifier, onBehalfOrgnr, print, processService.findAll(ProcessCategory.DIGITALPOST));
     }
 
+    public List<ServiceRecord> createFastlegeRecords(String identifier,
+                                                               String onBehalfOrgnr) throws KontaktInfoException, BrregNotFoundException, FregGatewayException {
+        return createFastlegeServiceRecords(identifier, onBehalfOrgnr, processService.findAll(ProcessCategory.DIALOGMELDING));
+    }
+
+    private List<ServiceRecord> createFastlegeServiceRecords(String identifier,String onBehalfOrgnr,Set<Process> processer) throws KontaktInfoException {
+        PersonResource personResource = kontaktInfoService.getCitizenInfo(lookup(identifier).token(requestScope.getToken()));
+        Process process = processer.iterator().next();
+        serviceRecordFactory.createDigitalServiceRecord(personResource, identifier, process);
+
+        return List.of();
+    }
+
+
+
     @PreAuthorize("hasAuthority('SCOPE_move/dpi.read')")
     public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
                                                                String onBehalfOrgnr,
@@ -159,6 +174,8 @@ public class ServiceRecordService {
                                                                Process process) throws KontaktInfoException, BrregNotFoundException, FregGatewayException {
         return createDigitalpostServiceRecords(identifier, onBehalfOrgnr, print, Collections.singleton(process));
     }
+
+
 
     private List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
                                                                 String onBehalfOrgnr,
