@@ -116,6 +116,10 @@ public class ServiceRecordController {
                 .orElseThrow(() -> new ReceiverProcessNotFoundException(identifier, processIdentifier));
             entity.getServiceRecords().add(record);
         }
+        if (ProcessCategory.DIALOGMELDING == process.getCategory()) {
+            ServiceRecord record = serviceRecordService.createFastlegeRecords(identifier).iterator().next();
+            entity.getServiceRecords().add(record);
+        }
         if (entity.getServiceRecords().isEmpty()) {
             throw new ReceiverProcessNotFoundException(identifier, processIdentifier);
         }
@@ -164,7 +168,7 @@ public class ServiceRecordController {
             log.trace("Citizen");
             try {
                 entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientOrgnr, print));
-                entity.getServiceRecords().addAll(serviceRecordService.createFastlegeRecords(identifier, clientOrgnr));
+                entity.getServiceRecords().addAll(serviceRecordService.createFastlegeRecords(identifier));
                // create DPH service record
             } catch (FregGatewayException | HttpClientErrorException e) {
                 log.info("No service record found for citizen: {}", identifier);

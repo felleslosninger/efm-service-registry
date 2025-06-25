@@ -16,6 +16,8 @@ import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.service.dph.ARDetails;
+import no.difi.meldingsutveksling.serviceregistry.service.dph.NhnService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
@@ -46,6 +48,7 @@ public class ServiceRecordService {
     private final ProcessService processService;
     private final SRRequestScope requestScope;
     private final ServiceRecordFactory serviceRecordFactory;
+    private final NhnService nhnService;
 
     public Optional<ServiceRecord> createFiksIoServiceRecord(EntityInfo entityInfo, String protocol) {
         return Optional.of(serviceRecordFactory.createDpfioServiceRecord(entityInfo.getIdentifier(), protocol));
@@ -152,17 +155,16 @@ public class ServiceRecordService {
         return createDigitalpostServiceRecords(identifier, onBehalfOrgnr, print, processService.findAll(ProcessCategory.DIGITALPOST));
     }
 
-    public List<ServiceRecord> createFastlegeRecords(String identifier,
-                                                               String onBehalfOrgnr) throws KontaktInfoException, BrregNotFoundException, FregGatewayException {
-        return createFastlegeServiceRecords(identifier, onBehalfOrgnr, processService.findAll(ProcessCategory.DIALOGMELDING));
+    public List<ServiceRecord> createFastlegeRecords(String fnr) throws KontaktInfoException, BrregNotFoundException, FregGatewayException {
+        return createFastlegeServiceRecords(fnr, processService.findAll(ProcessCategory.DIALOGMELDING));
     }
 
-    private List<ServiceRecord> createFastlegeServiceRecords(String identifier,String onBehalfOrgnr,Set<Process> processer) throws KontaktInfoException {
-        PersonResource personResource = kontaktInfoService.getCitizenInfo(lookup(identifier).token(requestScope.getToken()));
+    private List<ServiceRecord> createFastlegeServiceRecords(String fnr,Set<Process> processer) throws KontaktInfoException {
+        ARDetails arDetails = nhnService.getARDetails(fnr);
         Process process = processer.iterator().next();
-        serviceRecordFactory.createDigitalServiceRecord(personResource, identifier, process);
-
-        return List.of();
+        DPHServiceRecord sr = new DPHServiceRecord(ServiceIdentifier.DPH, fnr, process,arDetails.getEdiAdresse(),arDetails.getHerIdLevel1(),arDetails.getGetHerIdLevel2() );
+        sr.setPemCertificate(arDetails.getPemCertificate());
+        return List.of(sr);
     }
 
 
