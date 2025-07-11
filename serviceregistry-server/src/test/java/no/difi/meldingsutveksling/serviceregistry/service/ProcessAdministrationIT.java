@@ -64,7 +64,7 @@ public class ProcessAdministrationIT {
 
     @Test
     public void addProcess_NewDocumentType_ProcessAndDocumentTypeShouldBeAdded() {
-        Process process = createProcess("process", "service", "edition", ProcessCategory.ARKIVMELDING);
+        Process process = createProcess("process", "service", "edition", "resource", ProcessCategory.ARKIVMELDING);
         ArrayList<DocumentType> documentTypes = new ArrayList<>();
         DocumentType documentType = createDocumentType("DocumentType");
         documentTypes.add(documentType);
@@ -78,7 +78,7 @@ public class ProcessAdministrationIT {
 
     @Test
     public void addProcess_DocumentTypeAlreadyExists_ProcessShouldBeAdded() {
-        Process process = createProcess("process", "service", "edition", ProcessCategory.ARKIVMELDING);
+        Process process = createProcess("process", "service", "edition", "resource", ProcessCategory.ARKIVMELDING);
         ArrayList<DocumentType> documentTypes = new ArrayList<>();
         DocumentType documentType = createDocumentType("DocumentType");
         documentTypes.add(documentType);
@@ -95,7 +95,7 @@ public class ProcessAdministrationIT {
     @Test
     public void updateProcess_NewDocumentType_ProcessAndDocumentTypeShouldBeAdded() {
         String processIdentifier = "process";
-        Process process = createProcess(processIdentifier, "service", "edition", ProcessCategory.ARKIVMELDING);
+        Process process = createProcess(processIdentifier, "service", "edition", "resource", ProcessCategory.ARKIVMELDING);
         ArrayList<DocumentType> documentTypes = new ArrayList<>();
         DocumentType documentType1 = createDocumentType("DocumentType1");
         documentTypes.add(documentType1);
@@ -114,7 +114,7 @@ public class ProcessAdministrationIT {
     @Test
     public void updateProcess_DocumentTypeAlreadyExists_ProcessAndDocumentTypeShouldBeAdded() {
         String processIdentifier = "process";
-        Process process = createProcess(processIdentifier, "service", "edition", ProcessCategory.ARKIVMELDING);
+        Process process = createProcess(processIdentifier, "service", "edition", "resource", ProcessCategory.ARKIVMELDING);
         ArrayList<DocumentType> documentTypes = new ArrayList<>();
         DocumentType documentType1 = createDocumentType("DocumentType1");
         documentTypes.add(documentType1);
@@ -134,7 +134,7 @@ public class ProcessAdministrationIT {
 
     @Test
     public void deleteProcess_ProcessHasDocumentType_DocumentTypeShouldRemain() {
-        Process process = createProcess("process", "service", "edition", ProcessCategory.ARKIVMELDING);
+        Process process = createProcess("process", "service", "edition", "resource", ProcessCategory.ARKIVMELDING);
         ArrayList<DocumentType> documentTypes = new ArrayList<>();
         DocumentType documentType = createDocumentType("DocumentType");
         documentTypes.add(documentType);
@@ -154,12 +154,13 @@ public class ProcessAdministrationIT {
         return documentType;
     }
 
-    private Process createProcess(String identifier, String serviceCode, String serviceEditionCode, ProcessCategory category) {
+    private Process createProcess(String identifier, String serviceCode, String serviceEditionCode, String resource, ProcessCategory category) {
         Process process = new Process();
         process.setIdentifier(identifier);
         process.setServiceCode(serviceCode);
         process.setServiceEditionCode(serviceEditionCode);
         process.setCategory(category);
+        process.setResource(resource);
         return process;
     }
 

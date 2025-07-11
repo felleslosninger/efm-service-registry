@@ -84,7 +84,7 @@ public class AdminControllerTest {
     @Test
     public void addProcess_OccupiedIdentifier_ResponseShouldBeConflict() throws Exception {
         when(processServiceMock.findByIdentifier(anyString())).thenReturn(Optional.of(mock(Process.class)));
-        Process process = createProcess("ProcessIdentifier", ProcessCategory.ARKIVMELDING, "code", "editionCode", new ArrayList<>());
+        Process process = createProcess("ProcessIdentifier", ProcessCategory.ARKIVMELDING, "code", "editionCode", "resource", new ArrayList<>());
 
         MockHttpServletResponse response = doPost(PROCESSES_ENDPOINT_URI, process);
 
@@ -97,7 +97,7 @@ public class AdminControllerTest {
         when(documentTypeServiceMock.findByIdentifier(anyString())).thenReturn(Optional.empty());
         ArrayList<DocumentType> documentTypes = new ArrayList<>();
         documentTypes.add(createDocumentType("DocumentTypeIdentifier"));
-        Process process = createProcess("ProcessIdentifier", ProcessCategory.ARKIVMELDING, "code", "editionCode", documentTypes);
+        Process process = createProcess("ProcessIdentifier", ProcessCategory.ARKIVMELDING, "code", "editionCode", "resource", documentTypes);
 
         MockHttpServletResponse response = mockMvc.perform(post(PROCESSES_ENDPOINT_URI)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -128,7 +128,7 @@ public class AdminControllerTest {
     @Test
     public void getProcess_ProcessFound_ResponseShouldBeOk() throws Exception {
         String processIdentifier = "urn:no:difi:profile:foo:ver1.0";
-        Process process = createProcess(processIdentifier, ProcessCategory.ARKIVMELDING, "code", "editionCode", new ArrayList<>());
+        Process process = createProcess(processIdentifier, ProcessCategory.ARKIVMELDING, "code", "editionCode", "resource", new ArrayList<>());
         when(processServiceMock.findByIdentifier(anyString())).thenReturn(Optional.of(process));
 
         mockMvc.perform(get(PROCESSES_ENDPOINT_PATH + "/{identifier}", processIdentifier)
@@ -196,7 +196,7 @@ public class AdminControllerTest {
     @Test
     public void updateProcess_Success_ResponseShouldBeOk() throws Exception {
         URI processUri = UriComponentsBuilder.fromUri(PROCESSES_ENDPOINT_URI).pathSegment("processID").build().toUri();
-        Process updatedValues = createProcess("n/a", null, "serviceCode2", null, null);
+        Process updatedValues = createProcess("n/a", null, "serviceCode2", null, null, null);
         when(processServiceMock.update(anyString(), any(Process.class))).thenReturn(true);
 
         mockMvc.perform(put(processUri)
@@ -213,7 +213,7 @@ public class AdminControllerTest {
     @Test
     public void updateProcess_Failure_ResponseShouldBeNotFound() throws Exception {
         URI processUri = UriComponentsBuilder.fromUri(PROCESSES_ENDPOINT_URI).pathSegment("processID").build().toUri();
-        Process updatedValues = createProcess("n/a", null, "serviceCode2", null, null);
+        Process updatedValues = createProcess("n/a", null, "serviceCode2", null, null, null);
         when(processServiceMock.update(anyString(), any(Process.class))).thenReturn(false);
 
         MockHttpServletResponse response = doPut(processUri, updatedValues);
@@ -330,11 +330,12 @@ public class AdminControllerTest {
         return documentType;
     }
 
-    private Process createProcess(String identifier, ProcessCategory category, String serviceCode, String serviceEditionCode, List<DocumentType> documentTypes) {
+    private Process createProcess(String identifier, ProcessCategory category, String serviceCode, String serviceEditionCode, String resource, List<DocumentType> documentTypes) {
         Process process = new Process();
         process.setIdentifier(identifier);
         process.setServiceCode(serviceCode);
         process.setServiceEditionCode(serviceEditionCode);
+        process.setResource(resource);
         process.setCategory(category);
         process.setDocumentTypes(documentTypes);
         return process;

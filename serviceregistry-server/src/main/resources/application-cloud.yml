@@ -43,6 +43,7 @@ difi:
       endpointURL: ${DPO_URL}
       serviceCode: ${ALTINN_SRR_SERVICECODE}
       serviceEditionCode: ${ALTINN_SRR_SERVICE_EDITION_CODE}
+      resource: ${ALTINN_SRR_RESOURCE}
     dpv:
       endpointURL: ${DPV_URL}
     dpi:
