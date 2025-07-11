@@ -81,6 +81,7 @@ difi:
     freg:
       endpoint-u-r-l: http://localhost:8082/
       enabled: false
+      api-key: 1234567890
 logging:
   level:
     org.springframework.web: INFO
