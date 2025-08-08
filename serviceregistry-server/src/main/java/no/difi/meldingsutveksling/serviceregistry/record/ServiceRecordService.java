@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 
 import static no.difi.meldingsutveksling.serviceregistry.domain.ProcessCategory.AVTALT;
 import static no.difi.meldingsutveksling.serviceregistry.domain.ProcessCategory.EINNSYN;
-import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
+import static no.difi.meldingsutveksling.serviceregistry.record.LookupParameters.lookup;
 
 /**
  * Factory method class to create Service Records based on lookup endpoint urls and certificates corresponding to those services
@@ -49,6 +49,7 @@ public class ServiceRecordService {
     private final SRRequestScope requestScope;
     private final ServiceRecordFactory serviceRecordFactory;
     private final NhnService nhnService;
+    private final SRRequestScope sRRequestScope;
 
     public Optional<ServiceRecord> createFiksIoServiceRecord(EntityInfo entityInfo, String protocol) {
         return Optional.of(serviceRecordFactory.createDpfioServiceRecord(entityInfo.getIdentifier(), protocol));
@@ -160,10 +161,12 @@ public class ServiceRecordService {
     }
 
     private List<ServiceRecord> createFastlegeServiceRecords(String fnr,Set<Process> processer) throws KontaktInfoException {
-        ARDetails arDetails = nhnService.getARDetails(fnr);
+        LookupParameters param = LookupParameters.lookup(fnr);
+        param.setToken(sRRequestScope.getToken());
+        ARDetails arDetails = nhnService.getARDetails(param);
         Process process = processer.iterator().next();
-        DPHServiceRecord sr = new DPHServiceRecord(ServiceIdentifier.DPH, fnr, process,arDetails.getEdiAdresse(),arDetails.getHerIdLevel1(),arDetails.getGetHerIdLevel2() );
-        sr.setPemCertificate(arDetails.getPemCertificate());
+        DPHServiceRecord sr = new DPHServiceRecord(ServiceIdentifier.DPH, fnr, process,arDetails.getEdiAdress(),arDetails.getHerid1(),arDetails.getHerid2() );
+        sr.setPemCertificate(arDetails.getPemDigdirSertifikat());
         return List.of(sr);
     }
 

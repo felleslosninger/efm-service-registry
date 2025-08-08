@@ -83,6 +83,7 @@ public class ServiceRecordController {
             BrregNotFoundException, SvarUtClientException, ReceiverProcessNotFoundException, FregGatewayException {
         MDC.put("identifier", Strings.isNullOrEmpty(identifier) ? identifier : IdentifierHasher.hashIfPersonnr(identifier));
         String clientId = authenticationService.getAuthorizedClientIdentifier(auth, request);
+
         fillRequestScope(identifier, conversationId, clientId, authenticationService.getToken(auth));
 
         EntityInfo entityInfo = entityService.getEntityInfo(identifier)

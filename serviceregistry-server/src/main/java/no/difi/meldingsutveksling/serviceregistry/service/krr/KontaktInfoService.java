@@ -10,7 +10,7 @@ import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity;
 import no.difi.meldingsutveksling.serviceregistry.freg.exception.NotFoundInMfGatewayException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClient;
 import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
-import no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters;
+import no.difi.meldingsutveksling.serviceregistry.record.LookupParameters;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.retry.annotation.Retryable;

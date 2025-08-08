@@ -6,8 +6,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class ARDetails{
-    private String herIdLevel1;
-    private String getHerIdLevel2;
-    private String pemCertificate;
-    private String ediAdresse;
+    private String herid1;
+    private String herid2;
+    private String pemDigdirSertifikat;
+    private String ediAdress;
 }
