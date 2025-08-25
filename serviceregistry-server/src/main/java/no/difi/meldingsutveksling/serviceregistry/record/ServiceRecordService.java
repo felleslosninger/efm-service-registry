@@ -11,13 +11,16 @@ import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.*;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
+import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity;
 import no.difi.meldingsutveksling.serviceregistry.freg.exception.FregGatewayException;
+import no.difi.meldingsutveksling.serviceregistry.freg.exception.NotFoundInMfGatewayException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.service.dph.ARDetails;
 import no.difi.meldingsutveksling.serviceregistry.service.dph.NhnService;
+import no.difi.meldingsutveksling.serviceregistry.service.dph.Patient;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
@@ -160,12 +163,24 @@ public class ServiceRecordService {
         return createFastlegeServiceRecords(fnr, processService.findAll(ProcessCategory.DIALOGMELDING));
     }
 
-    private List<ServiceRecord> createFastlegeServiceRecords(String fnr,Set<Process> processer) throws KontaktInfoException {
+    private List<ServiceRecord> createFastlegeServiceRecords(String fnr,Set<Process> processer) throws FregGatewayException {
         LookupParameters param = LookupParameters.lookup(fnr);
         param.setToken(sRRequestScope.getToken());
         ARDetails arDetails = nhnService.getARDetails(param);
+        Patient patient;
+        try {
+            FregGatewayEntity.Address.Response fregResponse = kontaktInfoService.getFregAdress(param).orElseThrow(() -> new FregGatewayException("Receiver not found in FREG."));
+
+            patient = new Patient(fnr, fregResponse.getNavn().getFornavn(), fregResponse.getNavn().getMellomnavn(), fregResponse.getNavn().getEtternavn());
+
+        }catch (NotFoundInMfGatewayException e) {
+            throw new FregGatewayException("Receiver not found in FREG.",e);
+        }
+        if (processer == null || processer.isEmpty()) {
+            throw new IllegalArgumentException("processer must contain at least one Process");
+        }
         Process process = processer.iterator().next();
-        DPHServiceRecord sr = new DPHServiceRecord(ServiceIdentifier.DPH, fnr, process,arDetails.getEdiAdress(),arDetails.getHerid1(),arDetails.getHerid2() );
+        DPHServiceRecord sr = new DPHServiceRecord(ServiceIdentifier.DPH, fnr, process,arDetails.getEdiAdress(),arDetails.getHerid1(),arDetails.getHerid2(),patient );
         sr.setPemCertificate(arDetails.getPemDigdirSertifikat());
         return List.of(sr);
     }

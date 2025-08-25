@@ -22,7 +22,7 @@ public class NhnService {
         headers.set("Authorization", "Bearer " + param.getToken().getTokenValue());
         headers.set("Accept", "application/json");
 
-        RequestEntity<Void> requestEntity =  RequestEntity.get(uri,param.getIdentifier()).headers(headers).build();
+        RequestEntity<Void> requestEntity =  RequestEntity.get("http://localhost:9080/arlookup/fastlege/{fnr}",param.getIdentifier()).headers(headers).build();
 
         RestTemplate rt = new RestTemplate();
         return rt.exchange(requestEntity,ARDetails.class).getBody();
