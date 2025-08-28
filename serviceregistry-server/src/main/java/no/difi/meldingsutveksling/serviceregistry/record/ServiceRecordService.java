@@ -26,6 +26,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import network.oxalis.vefa.peppol.common.model.ProcessIdentifier;
+import no.idporten.identifiers.validation.PersonIdentifierValidator;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
@@ -159,28 +160,33 @@ public class ServiceRecordService {
         return createDigitalpostServiceRecords(identifier, onBehalfOrgnr, print, processService.findAll(ProcessCategory.DIGITALPOST));
     }
 
-    public List<ServiceRecord> createFastlegeRecords(String fnr) throws KontaktInfoException, BrregNotFoundException, FregGatewayException {
-        return createFastlegeServiceRecords(fnr, processService.findAll(ProcessCategory.DIALOGMELDING));
+    public List<ServiceRecord> createDphRecords(String identifier) throws KontaktInfoException, BrregNotFoundException, FregGatewayException {
+        return createDphServiceRecords(identifier, processService.findAll(ProcessCategory.DIALOGMELDING));
     }
 
-    private List<ServiceRecord> createFastlegeServiceRecords(String fnr,Set<Process> processer) throws FregGatewayException {
-        LookupParameters param = LookupParameters.lookup(fnr);
+    private List<ServiceRecord> createDphServiceRecords(String identifier, Set<Process> processer) throws FregGatewayException {
+        LookupParameters param = LookupParameters.lookup(identifier);
         param.setToken(sRRequestScope.getToken());
         ARDetails arDetails = nhnService.getARDetails(param);
-        Patient patient;
-        try {
-            FregGatewayEntity.Address.Response fregResponse = kontaktInfoService.getFregAdress(param).orElseThrow(() -> new FregGatewayException("Receiver not found in FREG."));
+        Patient patient = null;
+        PersonIdentifierValidator.setSyntheticPersonIdentifiersAllowed(true);
+        if (PersonIdentifierValidator.isValid(identifier)) {
+            try {
+                patient = kontaktInfoService.getFregAdress(param).map(
+                        t -> {
+                            return new Patient(t.getPersonIdentifikator(), t.getNavn().getFornavn(), t.getNavn().getMellomnavn(), t.getNavn().getEtternavn());
+                        }
+                ).orElse(null);
 
-            patient = new Patient(fnr, fregResponse.getNavn().getFornavn(), fregResponse.getNavn().getMellomnavn(), fregResponse.getNavn().getEtternavn());
-
-        }catch (NotFoundInMfGatewayException e) {
-            throw new FregGatewayException("Receiver not found in FREG.",e);
+            } catch (NotFoundInMfGatewayException e) {
+                throw new FregGatewayException("Receiver not found in FREG.", e);
+            }
         }
         if (processer == null || processer.isEmpty()) {
             throw new IllegalArgumentException("processer must contain at least one Process");
         }
         Process process = processer.iterator().next();
-        DPHServiceRecord sr = new DPHServiceRecord(ServiceIdentifier.DPH, fnr, process,arDetails.getEdiAdress(),arDetails.getHerid1(),arDetails.getHerid2(),patient );
+        DPHServiceRecord sr = new DPHServiceRecord(ServiceIdentifier.DPH, arDetails.getOrgNumber(), process,arDetails.getEdiAdress(),arDetails.getHerid1(),arDetails.getHerid2(),patient );
         sr.setPemCertificate(arDetails.getPemDigdirSertifikat());
         return List.of(sr);
     }

@@ -186,6 +186,11 @@
             <artifactId>ks-fiks</artifactId>
         </dependency>
         <dependency>
+            <groupId>no.idporten.identifiers</groupId>
+            <artifactId>idporten-identifiers</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+        <dependency>
             <groupId>no.difi.meldingsutveksling</groupId>
             <artifactId>service-registry-domain</artifactId>
         </dependency>

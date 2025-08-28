@@ -26,7 +26,6 @@ import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundExc
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.move.common.IdentifierHasher;
 import org.slf4j.MDC;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -118,7 +117,7 @@ public class ServiceRecordController {
             entity.getServiceRecords().add(record);
         }
         if (ProcessCategory.DIALOGMELDING == process.getCategory()) {
-            ServiceRecord record = serviceRecordService.createFastlegeRecords(identifier).iterator().next();
+            ServiceRecord record = serviceRecordService.createDphRecords(identifier).iterator().next();
             entity.getServiceRecords().add(record);
         }
         if (entity.getServiceRecords().isEmpty()) {
@@ -169,14 +168,18 @@ public class ServiceRecordController {
             log.trace("Citizen");
             try {
                 entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientOrgnr, print));
-                entity.getServiceRecords().addAll(serviceRecordService.createFastlegeRecords(identifier));
+                entity.getServiceRecords().addAll(serviceRecordService.createDphRecords(identifier));
                // create DPH service record
             } catch (FregGatewayException | HttpClientErrorException e) {
                 log.info("No service record found for citizen: {}", identifier);
                 return new ResponseEntity<>("{\"message\": \"No service record found for citizen: " + identifier + "\"}", HttpStatus.NOT_FOUND);
             }
 
-        } else {
+        }
+        else if (entityInfo instanceof HelseEnhetInfo ) {
+            entity.getServiceRecords().addAll(serviceRecordService.createDphRecords(identifier));
+        }
+        else {
             log.trace("Organization");
             entity.getServiceRecords().addAll(serviceRecordService.createArkivmeldingServiceRecords(entityInfo, securityLevel));
             entity.getServiceRecords().addAll(serviceRecordService.createEinnsynServiceRecords(entityInfo, securityLevel));

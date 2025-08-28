@@ -10,4 +10,5 @@ public class ARDetails{
     private String herid2;
     private String pemDigdirSertifikat;
     private String ediAdress;
+    private String orgNumber;
 }
