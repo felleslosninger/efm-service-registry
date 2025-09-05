@@ -56,7 +56,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <move-common.version>2.0.1</move-common.version>
+        <move-common.version>2.0.2</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
 
         <virksert.version>2.0.4</virksert.version>
@@ -64,9 +64,6 @@
         <bouncycastle.version>1.70</bouncycastle.version>
 
         <org.apache.ws.commons.axiom.version>2.0.0</org.apache.ws.commons.axiom.version>
-
-        <!-- Fixes CVE-2025-22228. Doesn't even impact us, but whatever, might as well fix rather than ignore -->
-        <spring-security.version>6.4.4</spring-security.version>
     </properties>
 
     <modules>
@@ -81,10 +78,10 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <!--CVE-2025-24970, vulnerability in 4.1.116.Final-->
+                <!-- CVE-2025-58056 -->
                 <groupId>io.netty</groupId>
-                <artifactId>netty-handler</artifactId>
-                <version>[4.1.118.Final]</version>
+                <artifactId>netty-codec-http</artifactId>
+                <version>4.1.125.Final</version>
             </dependency>
             <dependency>
                 <groupId>no.difi.meldingsutveksling</groupId>
@@ -196,7 +193,7 @@
             <dependency>
                 <groupId>org.apache.wss4j</groupId>
                 <artifactId>wss4j-ws-security-common</artifactId>
-                <version>3.0.4</version>
+                <version>4.0.0</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.ws.commons.axiom</groupId>
