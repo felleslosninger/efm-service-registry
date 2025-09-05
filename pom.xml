@@ -78,12 +78,6 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <!--CVE-2025-24970, vulnerability in 4.1.116.Final-->
-                <groupId>io.netty</groupId>
-                <artifactId>netty-handler</artifactId>
-                <version>[4.1.118.Final]</version>
-            </dependency>
-            <dependency>
                 <groupId>no.difi.meldingsutveksling</groupId>
                 <artifactId>service-registry-common</artifactId>
                 <version>${project.version}</version>
