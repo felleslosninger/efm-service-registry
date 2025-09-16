@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
+import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.*;
@@ -53,6 +54,7 @@ public class ServiceRecordController {
     private final PayloadSigner payloadSigner;
     private final SRRequestScope requestScope;
     private final ObjectMapper objectMapper;
+    private final ServiceregistryProperties serviceregistryProperties;
 
     @InitBinder
     protected void initBinders(WebDataBinder binder) {
@@ -117,7 +119,7 @@ public class ServiceRecordController {
             entity.getServiceRecords().add(record);
         }
         if (ProcessCategory.DIALOGMELDING == process.getCategory()) {
-            ServiceRecord record = serviceRecordService.createDphRecords(identifier).iterator().next();
+            ServiceRecord record = serviceRecordService.createDphRecords(entityInfo).getFirst();
             entity.getServiceRecords().add(record);
         }
         if (entity.getServiceRecords().isEmpty()) {
@@ -168,7 +170,7 @@ public class ServiceRecordController {
             log.trace("Citizen");
             try {
                 entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientOrgnr, print));
-                entity.getServiceRecords().addAll(serviceRecordService.createDphRecords(identifier));
+                entity.getServiceRecords().addAll(serviceRecordService.createDphRecords(entityInfo));
                // create DPH service record
             } catch (FregGatewayException | HttpClientErrorException e) {
                 log.info("No service record found for citizen: {}", identifier);
@@ -177,7 +179,7 @@ public class ServiceRecordController {
 
         }
         else if (entityInfo instanceof HelseEnhetInfo ) {
-            entity.getServiceRecords().addAll(serviceRecordService.createDphRecords(identifier));
+            entity.getServiceRecords().addAll(serviceRecordService.createDphRecords(entityInfo));
         }
         else {
             log.trace("Organization");
