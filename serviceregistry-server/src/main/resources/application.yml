@@ -2,28 +2,31 @@ spring:
   application:
     name: serviceregistry
   datasource:
-    url: jdbc:h2:file:./sr-db
+    url:
+    username:
+    password:
+    driver-class-name: org.mariadb.jdbc.Driver
   jpa:
-    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MariaDBDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
+server:
+  port: 8080
+  servlet:
+    context-path: /adressetjeneste
 management:
   server:
-    port: 9199
+    port: 8090
   endpoints:
-    enabled-by-default: true
     web:
-      base-path: /manage
-      exposure:
-        include: "info,env,prometheus,health"
-  endpoint:
-    health:
-      show-details: always
-      probes:
-        enabled: true
-  info:
-    git:
-      mode: full
+      base-path: /
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
   metrics:
     tags:
       application: ${spring.application.name}
