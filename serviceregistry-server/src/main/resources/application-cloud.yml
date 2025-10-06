@@ -66,3 +66,5 @@ logging:
     org.springframework.ws.client.MessageTracing: ${LOG_LEVEL}
     org.springframework.ws.server.MessageTracing: ${LOG_LEVEL}
     no.difi.meldingsutveksling.serviceregistry.controller: ${LOG_LEVEL}
+
+
