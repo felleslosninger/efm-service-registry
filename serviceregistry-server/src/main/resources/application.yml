@@ -89,7 +89,7 @@ difi:
     feature:
       enableDpfDpv: true
     freg:
-      endpoint-u-r-l: http://localhost:8082/
+      endpoint-u-r-l: http://efm-freg-gateway-service:8080/
       enabled: false
       api-key: 1234567890
 logging:
