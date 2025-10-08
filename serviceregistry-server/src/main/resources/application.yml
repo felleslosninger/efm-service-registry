@@ -4,28 +4,38 @@ spring:
   application:
     name: serviceregistry
   datasource:
-    url: jdbc:h2:file:./sr-db
+    url:
+    username:
+    password:
+    driver-class-name: org.mariadb.jdbc.Driver
   jpa:
-    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MariaDBDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
+server:
+  port: 8080
+  servlet:
+    context-path: /adressetjeneste
 management:
   server:
-    port: 9199
-  endpoints:
-    enabled-by-default: true
-    web:
-      base-path: /manage
-      exposure:
-        include: "info,env,prometheus,health"
+    port: 8090
   endpoint:
     health:
       show-details: always
       probes:
         enabled: true
-  info:
-    git:
-      mode: full
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: "info,env,prometheus,health"
   metrics:
     tags:
       application: ${spring.application.name}
@@ -53,7 +63,7 @@ difi:
       processes:
         dpo: cenbii-procid-ubl::urn:no:difi:profile:dpo:ver1.0
         dpe: cenbii-procid-ubl::urn:no:difi:profile:dpe:ver1.0
-      mode: move
+      mode: TEST
       endpoint-u-r-l: https://eformidling.dev/virksomhetssertifikat/
     sign:
       keystore:
@@ -85,7 +95,7 @@ difi:
     feature:
       enableDpfDpv: true
     freg:
-      endpoint-u-r-l: http://localhost:8082/
+      endpoint-u-r-l: http://efm-freg-gateway-service:8080/
       enabled: false
       api-key: 1234567890
 logging:
