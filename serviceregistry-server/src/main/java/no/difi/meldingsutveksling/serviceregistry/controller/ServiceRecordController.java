@@ -158,10 +158,6 @@ public class ServiceRecordController {
         EntityInfo entityInfo = entityService.getEntityInfo(identifier)
             .orElseThrow(() -> new EntityNotFoundException(identifier));
         entity.setInfoRecord(entityInfo);
-        try {
-            log.trace("Entity info: " + new ObjectMapper().writeValueAsString(entityInfo));
-        } catch (JsonProcessingException e) {
-        }
         if (entityInfo instanceof FiksIoInfo) {
             return new ResponseEntity<>(entity, HttpStatus.OK);
         }
@@ -187,10 +183,7 @@ public class ServiceRecordController {
             entity.getServiceRecords().addAll(serviceRecordService.createEinnsynServiceRecords(entityInfo, securityLevel));
             entity.getServiceRecords().addAll(serviceRecordService.createAvtaltServiceRecords(identifier));
         }
-        try {
-            log.trace("Service records: " + (new ObjectMapper()).writeValueAsString(entity.getServiceRecords()));
-        } catch (JsonProcessingException e) {
-        }
+
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 

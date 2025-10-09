@@ -25,8 +25,8 @@ import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRe
 import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 
 /**
- * Service is used to lookup information needed to send messages to an entity
- * An entity can be a citizen or an organization
+ * Service is used to lookup information needed to send messages to an entity.
+ * It can be a citizen or an organization
  */
 @Service
 @Slf4j
@@ -60,12 +60,16 @@ public class EntityService {
                 log.error(markerFrom(requestScope), "Could not find entity for the requested identifier={}: {}", identifier, e.getMessage());
                 return Optional.empty();
             }
-        } else if (NumberUtils.isDigits(identifier) && nhnService.getARDetails(LookupParameters.lookup(identifier).setToken(requestScope.getToken()))!=null) {
+        } else if (NumberUtils.isDigits(identifier) && isNhnRegistered(identifier)) {
            log.info("Record found in NHN");
            return Optional.of(new HelseEnhetInfo(identifier));
         } else {
             return Optional.empty();
         }
+    }
+
+    private boolean isNhnRegistered(String identifier) {
+        return nhnService.getARDetails(LookupParameters.lookup(identifier).setToken(requestScope.getToken())) != null;
     }
 
 }

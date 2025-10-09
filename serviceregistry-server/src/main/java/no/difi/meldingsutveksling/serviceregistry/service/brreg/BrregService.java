@@ -1,3 +1,4 @@
+
 package no.difi.meldingsutveksling.serviceregistry.service.brreg;
 
 import lombok.RequiredArgsConstructor;
