@@ -7,6 +7,7 @@ import no.difi.meldingsutveksling.serviceregistry.domain.CitizenInfo;
 import no.difi.meldingsutveksling.serviceregistry.domain.EntityInfo;
 import no.difi.meldingsutveksling.serviceregistry.domain.FiksIoInfo;
 import no.difi.meldingsutveksling.serviceregistry.domain.HelseEnhetInfo;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksIoService;
 import no.difi.meldingsutveksling.serviceregistry.record.LookupParameters;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
@@ -69,7 +70,12 @@ public class EntityService {
     }
 
     private boolean isNhnRegistered(String identifier) {
-        return nhnService.getARDetails(LookupParameters.lookup(identifier).setToken(requestScope.getToken())) != null;
+        try {
+            return nhnService.getARDetails(LookupParameters.lookup(identifier).setToken(requestScope.getToken())) != null;
+        } catch (EntityNotFoundException e) {
+            return false;
+        }
+
     }
 
 }

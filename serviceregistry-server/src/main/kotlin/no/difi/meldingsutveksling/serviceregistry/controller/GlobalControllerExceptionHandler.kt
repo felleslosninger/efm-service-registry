@@ -97,6 +97,12 @@ class GlobalControllerExceptionHandler(private val requestScope: SRRequestScope)
         return errorResponse(HttpStatus.BAD_REQUEST, e.message)
     }
 
+    @ExceptionHandler(IllegalArgumentException::class)
+    fun illegalArgumentException(request: HttpServletRequest, e: Exception): ResponseEntity<*>  {
+        log.error(markerFrom(requestScope), "Client input error", e)
+        return errorResponse(HttpStatus.BAD_REQUEST, e.message)
+    }
+
     private fun errorResponse(status: HttpStatus, msg: String?, code: String = ""): ResponseEntity<*> {
         return ResponseEntity.status(status)
             .body(om.writeValueAsString(ErrorResponse.builder()

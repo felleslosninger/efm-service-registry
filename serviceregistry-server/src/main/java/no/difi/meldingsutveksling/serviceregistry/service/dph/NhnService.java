@@ -1,5 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.service.dph;
 
+import lombok.AllArgsConstructor;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ClientInputException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.record.LookupParameters;
@@ -10,20 +12,12 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
-
+@AllArgsConstructor
 public class NhnService {
 
 
     private String uri;
     private final RestClient restClient;
-
-    public NhnService(String nhnUri) {
-
-
-        this.uri = nhnUri;
-        this.restClient = RestClient.create();
-    }
-
 
     public ARDetails getARDetails(LookupParameters param) {
 
@@ -41,7 +35,7 @@ public class NhnService {
                         throw new AccessDeniedException("AR lookup Access denied");
                     })
                     .onStatus(HttpStatusCode::is4xxClientError,  (request, response) -> {
-                        throw new ServiceRegistryException("Client input error for identifier" + param.getIdentifier());
+                        throw new ClientInputException("Client input error for identifier" + param.getIdentifier());// new ServiceRegistryException("Client input error for identifier" + param.getIdentifier());
                     })
                     .onStatus(HttpStatusCode::is5xxServerError, (request,response) ->{ throw new ServiceRegistryException(
                     "Internal server fail while getting AR details for id " + param.getIdentifier());}).toEntity(ARDetails.class).getBody();

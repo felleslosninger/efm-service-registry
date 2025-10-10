@@ -40,10 +40,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class NhnServiceTest {
 
-    private static final String NHN_URI = "http://localhost:8089/ar/{identifier}";
+    private static final String NHN_URI = "http://localhost:8089/arlookup/{identifier}";
     private static final String IDENTIFIER = "123456789";
     private static final String TOKEN = "test-token";
-    private static final String PATH = "/ar/" + IDENTIFIER;
+    private static final String PATH = "/arlookup/" + IDENTIFIER;
 
     private WireMockServer wireMockServer;
     private NhnService nhnService;
@@ -60,15 +60,7 @@ class NhnServiceTest {
         WireMock.configureFor("localhost", 8089);
 
         restClient = RestClient.create();
-        nhnService = new NhnService(NHN_URI);
-
-        try {
-            var field = NhnService.class.getDeclaredField("restClient");
-            field.setAccessible(true);
-            field.set(nhnService, restClient);
-        } catch (Exception e) {
-            fail("Failed to set up RestClient", e);
-        }
+        nhnService = new NhnService(NHN_URI,restClient);
 
         when(lookupParameters.getIdentifier()).thenReturn(IDENTIFIER);
         when(lookupParameters.getToken()).thenReturn(jwt);
