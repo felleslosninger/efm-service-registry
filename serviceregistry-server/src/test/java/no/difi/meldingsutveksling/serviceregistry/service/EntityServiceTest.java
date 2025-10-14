@@ -150,6 +150,7 @@ public class EntityServiceTest {
 
     @Test
     public void whenIdentifierIsNhn_thenHelseEnhetIsReturned() {
+        var HERID2 = "33232";
         WireMockServer wireMockServer = new WireMockServer(options().port(8089));
         wireMockServer.start();
         WireMock.configureFor("localhost", 8089);
@@ -157,12 +158,12 @@ public class EntityServiceTest {
         String responseBody = """
             {
                 "herid1": "67676",
-                "herid2": "33232",
+                "herid2": "{herId2}",
                 "pemDigdirSertifikat": "pem-cert-data",
                 "ediAdress": "dummyedi@edi.edi",
                 "orgNumber": "797897978"
             }
-            """;
+            """.replace("{herId2}",HERID2);
         String dummyToken = "dummy-token";
         String path = URI.create(serviceregistryProperties.getDph().nhnAdapterEndepunkt().replace("{identifier}", "33232"))
                 .getPath();
@@ -176,7 +177,7 @@ public class EntityServiceTest {
 
         when(jwt.getTokenValue()).thenReturn(dummyToken);
         when(requestScope.getToken()).thenReturn(jwt);
-        Optional<EntityInfo> ei = entityService.getEntityInfo("33232");
+        Optional<EntityInfo> ei = entityService.getEntityInfo(HERID2);
         assertTrue(ei.isPresent());
         assertEquals(HelseEnhetInfo.class, ei.get().getClass());
         wireMockServer.stop();
@@ -190,15 +191,6 @@ public class EntityServiceTest {
         wireMockServer.start();
         WireMock.configureFor("localhost", 8089);
 
-        String responseBody = """
-            {
-                "herid1": "67676",
-                "herid2": "33232",
-                "pemDigdirSertifikat": "pem-cert-data",
-                "ediAdress": "dummyedi@edi.edi",
-                "orgNumber": "797897978"
-            }
-            """;
         String dummyToken = "dummy-token";
         String path = URI.create(serviceregistryProperties.getDph().nhnAdapterEndepunkt().replace("{identifier}", "33232"))
                 .getPath();
@@ -223,15 +215,6 @@ public class EntityServiceTest {
         wireMockServer.start();
         WireMock.configureFor("localhost", 8089);
 
-        String responseBody = """
-            {
-                "herid1": "67676",
-                "herid2": "33232",
-                "pemDigdirSertifikat": "pem-cert-data",
-                "ediAdress": "dummyedi@edi.edi",
-                "orgNumber": "797897978"
-            }
-            """;
         String dummyToken = "dummy-token";
         String path = URI.create(serviceregistryProperties.getDph().nhnAdapterEndepunkt().replace("{identifier}", "33232"))
                 .getPath();
@@ -248,4 +231,50 @@ public class EntityServiceTest {
 
 
     }
+
+    @Test
+    public void whenIdentifierIsNhn_And_ArlookupError400_thenClientInputExceptionIsThrown() {
+        WireMockServer wireMockServer = new WireMockServer(options().port(8089));
+        wireMockServer.start();
+        WireMock.configureFor("localhost", 8089);
+
+        String dummyToken = "dummy-token";
+        String path = URI.create(serviceregistryProperties.getDph().nhnAdapterEndepunkt().replace("{identifier}", "33232"))
+                .getPath();
+        wireMockServer.stubFor(get(path)
+                .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + dummyToken))
+                .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
+                .willReturn(aResponse()
+                        .withStatus(HttpStatus.BAD_REQUEST.value())));
+
+        when(jwt.getTokenValue()).thenReturn(dummyToken);
+        when(requestScope.getToken()).thenReturn(jwt);
+        assertThrows(ClientInputException.class, () -> entityService.getEntityInfo("33232"));
+        wireMockServer.stop();
+
+    }
+
+    @Test
+    public void whenIdentifierIsNhn_And_ArlookupError404_thenEmptyResult() {
+        WireMockServer wireMockServer = new WireMockServer(options().port(8089));
+        wireMockServer.start();
+        WireMock.configureFor("localhost", 8089);
+
+        String dummyToken = "dummy-token";
+        String path = URI.create(serviceregistryProperties.getDph().nhnAdapterEndepunkt().replace("{identifier}", "33232"))
+                .getPath();
+        wireMockServer.stubFor(get(path)
+                .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + dummyToken))
+                .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
+                .willReturn(aResponse()
+                        .withStatus(HttpStatus.NOT_FOUND.value())));
+
+        when(jwt.getTokenValue()).thenReturn(dummyToken);
+        when(requestScope.getToken()).thenReturn(jwt);
+        assertTrue(entityService.getEntityInfo("33232").isEmpty());
+        wireMockServer.stop();
+
+
+    }
+
 }

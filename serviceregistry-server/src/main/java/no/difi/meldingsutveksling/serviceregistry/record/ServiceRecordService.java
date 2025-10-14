@@ -9,9 +9,9 @@ import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.*;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ClientInputException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
-import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity;
 import no.difi.meldingsutveksling.serviceregistry.freg.exception.FregGatewayException;
 import no.difi.meldingsutveksling.serviceregistry.freg.exception.NotFoundInMfGatewayException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
@@ -21,12 +21,12 @@ import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundExc
 import no.difi.meldingsutveksling.serviceregistry.service.dph.ARDetails;
 import no.difi.meldingsutveksling.serviceregistry.service.dph.NhnService;
 import no.difi.meldingsutveksling.serviceregistry.service.dph.Patient;
+import no.difi.meldingsutveksling.serviceregistry.service.dph.PatientNotRetrievedException;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import network.oxalis.vefa.peppol.common.model.ProcessIdentifier;
-import no.idporten.identifiers.validation.PersonIdentifier;
 import no.idporten.identifiers.validation.PersonIdentifierValidator;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
@@ -177,26 +177,31 @@ public class ServiceRecordService {
     }
 
 
-    private List<ServiceRecord> createDphServiceRecords(String identifier, Process process) throws FregGatewayException {
+    private List<ServiceRecord> createDphServiceRecords(String identifier, Process process) throws PatientNotRetrievedException {
         LookupParameters param = LookupParameters.lookup(identifier);
         param.setToken(sRRequestScope.getToken());
+        if (process == null) {
+            throw new ServiceRegistryException("process must contain at least one Process");
+        }
         ARDetails arDetails = nhnService.getARDetails(param);
         Patient patient = null;
         PersonIdentifierValidator.setSyntheticPersonIdentifiersAllowed(true);
-        if (PersonIdentifierValidator.isValid(identifier)) {
-            try {
-                patient = kontaktInfoService.getFregAdress(param).map(
-                        t -> {
-                            return new Patient(t.getPersonIdentifikator(), t.getNavn().getFornavn(), t.getNavn().getMellomnavn(), t.getNavn().getEtternavn());
-                        }
-                ).orElse(null);
+        if (process.getIdentifier().equals(serviceregistryProperties.getDph().fastlegeProcess())) {
+            if (PersonIdentifierValidator.isValid(identifier)) {
+                try {
+                    patient = kontaktInfoService.getFregAdress(param).map(
+                            t -> {
+                                return new Patient(t.getPersonIdentifikator(), t.getNavn().getFornavn(), t.getNavn().getMellomnavn(), t.getNavn().getEtternavn());
+                            }
+                    ).orElseThrow(PatientNotRetrievedException::new);
 
-            } catch (NotFoundInMfGatewayException e) {
-                throw new FregGatewayException("Receiver not found in FREG.", e);
+                } catch (NotFoundInMfGatewayException e) {
+                    throw new PatientNotRetrievedException(e);
+                }
             }
-        }
-        if (process == null) {
-            throw new IllegalArgumentException("processer must contain at least one Process");
+            else {
+                throw new ClientInputException("Identifier needs to be person number.");
+            }
         }
 
         DPHServiceRecord sr = new DPHServiceRecord(ServiceIdentifier.DPH, arDetails.getOrgNumber(), process,arDetails.getEdiAdress(),arDetails.getHerid1(),arDetails.getHerid2(),patient );
