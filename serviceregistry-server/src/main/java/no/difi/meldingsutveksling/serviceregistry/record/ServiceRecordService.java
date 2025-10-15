@@ -13,7 +13,6 @@ import no.difi.meldingsutveksling.serviceregistry.exceptions.ClientInputExceptio
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.freg.exception.FregGatewayException;
-import no.difi.meldingsutveksling.serviceregistry.freg.exception.NotFoundInMfGatewayException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
@@ -30,6 +29,7 @@ import network.oxalis.vefa.peppol.common.model.ProcessIdentifier;
 import no.idporten.identifiers.validation.PersonIdentifierValidator;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -190,14 +190,12 @@ public class ServiceRecordService {
             if (PersonIdentifierValidator.isValid(identifier)) {
                 try {
                     patient = kontaktInfoService.getFregAdress(param).map(
-                            t -> {
-                                return new Patient(t.getPersonIdentifikator(), t.getNavn().getFornavn(), t.getNavn().getMellomnavn(), t.getNavn().getEtternavn());
-                            }
+                            t -> new Patient(t.getPersonIdentifikator(), t.getNavn().getFornavn(), t.getNavn().getMellomnavn(), t.getNavn().getEtternavn())
                     ).orElseThrow(PatientNotRetrievedException::new);
-
-                } catch (NotFoundInMfGatewayException e) {
+                } catch (HttpClientErrorException e) {
                     throw new PatientNotRetrievedException(e);
                 }
+
             }
             else {
                 throw new ClientInputException("Identifier needs to be person number.");

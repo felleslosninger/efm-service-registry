@@ -7,7 +7,6 @@ import no.difi.meldingsutveksling.serviceregistry.CacheConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.freg.client.FregGatewayClient;
 import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity;
-import no.difi.meldingsutveksling.serviceregistry.freg.exception.NotFoundInMfGatewayException;
 import no.difi.meldingsutveksling.serviceregistry.krr.KRRClient;
 import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
 import no.difi.meldingsutveksling.serviceregistry.record.LookupParameters;
@@ -38,7 +37,7 @@ public class KontaktInfoService {
     @Cacheable(CacheConfig.DSF_CACHE)
     @Timed(value = "dsf.client.timer", description = "Timer for DSF client")
     @Retryable
-    public Optional<FregGatewayEntity.Address.Response> getFregAdress(LookupParameters params) throws NotFoundInMfGatewayException {
+    public Optional<FregGatewayEntity.Address.Response> getFregAdress(LookupParameters params) {
         return fregGatewayClient.getPersonAdress(params.getIdentifier());
     }
 

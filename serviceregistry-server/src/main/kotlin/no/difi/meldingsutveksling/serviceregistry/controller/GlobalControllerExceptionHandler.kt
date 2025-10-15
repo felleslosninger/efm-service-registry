@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import jakarta.servlet.http.HttpServletRequest
 import java.rmi.ServerException
 import no.difi.meldingsutveksling.serviceregistry.freg.exception.FregGatewayException
+import no.difi.meldingsutveksling.serviceregistry.service.dph.PatientNotRetrievedException
 
 @ControllerAdvice
 class GlobalControllerExceptionHandler(private val requestScope: SRRequestScope) {
@@ -105,7 +106,7 @@ class GlobalControllerExceptionHandler(private val requestScope: SRRequestScope)
         return errorResponse(HttpStatus.BAD_REQUEST, e.message)
     }
 
-    @ExceptionHandler(FregGatewayException::class)
+    @ExceptionHandler(PatientNotRetrievedException::class)
     fun pationInformationNotFound(request: HttpServletRequest, e: Exception): ResponseEntity<*> {
         log.error(markerFrom(requestScope), "Not able to load Patient information", e)
         return errorResponse(HttpStatus.BAD_REQUEST, e.message)
