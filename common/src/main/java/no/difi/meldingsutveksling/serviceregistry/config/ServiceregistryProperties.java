@@ -106,7 +106,7 @@ public class ServiceregistryProperties {
         private String serviceEditionCode;
     }
 
-    public record DPH(String nhnAdapterEndepunkt,
+    public record DPH(String nhnAdapterEndpointUrl,
                       String fastlegeProcess,
                       String nhnProcess) {
 
