@@ -68,11 +68,11 @@
     </properties>
 
     <modules>
+        <module>common</module>
         <module>serviceregistry-server</module>
         <module>kontakt-reservasjonsregister-client</module>
         <module>ks-fiks</module>
         <module>domain</module>
-        <module>common</module>
         <module>freg-gateway-client</module>
     </modules>
 

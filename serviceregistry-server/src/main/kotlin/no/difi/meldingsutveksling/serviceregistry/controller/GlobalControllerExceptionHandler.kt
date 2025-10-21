@@ -18,8 +18,6 @@ import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import jakarta.servlet.http.HttpServletRequest
-import java.rmi.ServerException
-import no.difi.meldingsutveksling.serviceregistry.freg.exception.FregGatewayException
 import no.difi.meldingsutveksling.serviceregistry.service.dph.PatientNotRetrievedException
 
 @ControllerAdvice
@@ -78,7 +76,7 @@ class GlobalControllerExceptionHandler(private val requestScope: SRRequestScope)
 
     @ExceptionHandler(CertificateNotFoundException::class)
     fun certificateNotFound(request: HttpServletRequest, e: Exception): ResponseEntity<*> {
-        log.warn(markerFrom(requestScope), "Certificate not found for ${request.requestURL}")
+        log.warn(markerFrom(requestScope), "Certificat not found for ${request.requestURL}")
         return errorResponse(HttpStatus.NOT_FOUND, e.message)
     }
 
