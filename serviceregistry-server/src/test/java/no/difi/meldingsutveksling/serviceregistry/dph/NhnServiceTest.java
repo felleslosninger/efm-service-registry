@@ -3,6 +3,7 @@ package no.difi.meldingsutveksling.serviceregistry.dph;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.Fault;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ClientInputException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.record.LookupParameters;
@@ -139,7 +140,7 @@ class NhnServiceTest {
                 .willReturn(aResponse()
                         .withStatus(HttpStatus.BAD_REQUEST.value())));
 
-        ServiceRegistryException exception = assertThrows(ServiceRegistryException.class,
+        ClientInputException exception = assertThrows(ClientInputException.class,
                 () -> nhnService.getARDetails(lookupParameters));
         assertEquals("Client input error for identifier" + IDENTIFIER, exception.getMessage());
         verify(getRequestedFor(urlEqualTo(PATH))

@@ -21,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
@@ -42,10 +43,9 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
+@WebMvcTest(value = ServiceRecordController.class)
 @ActiveProfiles("test")
 @WithMockUser
-@AutoConfigureMockMvc()
 public class ServiceControllerNhnTest {
 
     @MockitoBean
@@ -62,9 +62,6 @@ public class ServiceControllerNhnTest {
 
     @MockitoBean
     private SRRequestScope requestScope;
-
-    @Autowired
-    private ServiceRecordController serviceRecordController;
 
     @MockitoBean
     private PayloadSigner payloadSigner;
@@ -133,7 +130,6 @@ public class ServiceControllerNhnTest {
     @Test
     public void whenEntityServiceEmptyResult_then404() throws Exception {
         when(entityService.getEntityInfo(HerId2)).thenReturn(Optional.empty());
-        //when(serviceRecordService.createDphRecords(argThat(t -> Objects.equals(t.getIdentifier(), FNR)))).thenReturn(List.of(new DPHServiceRecord(ServiceIdentifier.DPH, ON_BEHALF_OF_ORGNUM, fastlegeProcess, "dummyURl", "43234", HerId2, new Patient(FNR, "Petter", "", "Petterson"))));
         webClient.get().uri(identifierHerIDEndpoint + "/process/" + DPH_FASTLEGE).accept(MediaType.APPLICATION_JSON).exchange().expectStatus().isNotFound();
     }
 
@@ -141,7 +137,6 @@ public class ServiceControllerNhnTest {
     @Test
     public void whenServiceRegistryException_then500() throws Exception {
         when(entityService.getEntityInfo(HerId2)).thenThrow(new ServiceRegistryException(HerId2));
-        //when(serviceRecordService.createDphRecords(argThat(t -> Objects.equals(t.getIdentifier(), FNR)))).thenReturn(List.of(new DPHServiceRecord(ServiceIdentifier.DPH, ON_BEHALF_OF_ORGNUM, fastlegeProcess, "dummyURl", "43234", HerId2, new Patient(FNR, "Petter", "", "Petterson"))));
         webClient.get().uri(identifierHerIDEndpoint + "/process/" + DPH_FASTLEGE).accept(MediaType.APPLICATION_JSON).exchange().expectStatus().is5xxServerError();
     }
 
@@ -155,9 +150,6 @@ public class ServiceControllerNhnTest {
         webClient.get().uri(identifierHerIDEndpoint + "/process/" + DPH_FASTLEGE).accept(MediaType.APPLICATION_JSON).exchange().expectStatus().is4xxClientError();
 
     }
-
-    public void whenProcessNotFound_then404() throws Exception {}
-
 
 }
 

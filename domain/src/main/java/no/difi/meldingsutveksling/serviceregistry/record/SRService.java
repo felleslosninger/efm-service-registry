@@ -4,9 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier;
 
 @Data
+@RequiredArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
 public class SRService {
 
     @NonNull

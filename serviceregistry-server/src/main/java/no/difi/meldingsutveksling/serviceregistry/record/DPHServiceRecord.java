@@ -9,9 +9,6 @@ import no.difi.meldingsutveksling.serviceregistry.service.dph.Patient;
 
 import java.util.Collections;
 
-//@Getter
-//@Setter
-//@ToString
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
