@@ -1,4 +1,4 @@
-package no.difi.meldingsutveksling.serviceregistry.krr;
+package no.difi.meldingsutveksling.serviceregistry.record;
 
 import lombok.Data;
 import org.springframework.security.oauth2.jwt.Jwt;

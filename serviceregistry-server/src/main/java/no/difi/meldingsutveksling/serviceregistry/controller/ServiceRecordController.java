@@ -26,7 +26,6 @@ import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundExc
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.move.common.IdentifierHasher;
 import org.slf4j.MDC;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -83,6 +82,7 @@ public class ServiceRecordController {
             BrregNotFoundException, SvarUtClientException, ReceiverProcessNotFoundException, FregGatewayException {
         MDC.put("identifier", Strings.isNullOrEmpty(identifier) ? identifier : IdentifierHasher.hashIfPersonnr(identifier));
         String clientId = authenticationService.getAuthorizedClientIdentifier(auth, request);
+
         fillRequestScope(identifier, conversationId, clientId, authenticationService.getToken(auth));
 
         EntityInfo entityInfo = entityService.getEntityInfo(identifier)
@@ -114,6 +114,10 @@ public class ServiceRecordController {
         if (ProcessCategory.AVTALT == process.getCategory()) {
             ServiceRecord record = serviceRecordService.createServiceRecord(entityInfo, process, securityLevel)
                 .orElseThrow(() -> new ReceiverProcessNotFoundException(identifier, processIdentifier));
+            entity.getServiceRecords().add(record);
+        }
+        if (ProcessCategory.DIALOGMELDING == process.getCategory()) {
+            ServiceRecord record = serviceRecordService.createHealthcareServiceRecords(entityInfo).getFirst();
             entity.getServiceRecords().add(record);
         }
         if (entity.getServiceRecords().isEmpty()) {
@@ -152,10 +156,6 @@ public class ServiceRecordController {
         EntityInfo entityInfo = entityService.getEntityInfo(identifier)
             .orElseThrow(() -> new EntityNotFoundException(identifier));
         entity.setInfoRecord(entityInfo);
-        try {
-            log.trace("Entity info: " + new ObjectMapper().writeValueAsString(entityInfo));
-        } catch (JsonProcessingException e) {
-        }
         if (entityInfo instanceof FiksIoInfo) {
             return new ResponseEntity<>(entity, HttpStatus.OK);
         }
@@ -168,17 +168,23 @@ public class ServiceRecordController {
                 log.info("No service record found for citizen: {}", identifier);
                 return new ResponseEntity<>("{\"message\": \"No service record found for citizen: " + identifier + "\"}", HttpStatus.NOT_FOUND);
             }
+            try {
+                entity.getServiceRecords().addAll(serviceRecordService.createHealthcareServiceRecords(entityInfo));
+            } catch (Exception e) {
+                log.warn("Error while retrieving Healthcare record.",e);
+            }
 
-        } else {
+        }
+        else if (entityInfo instanceof HelseEnhetInfo ) {
+            entity.getServiceRecords().addAll(serviceRecordService.createHealthcareServiceRecords(entityInfo));
+        }
+        else {
             log.trace("Organization");
             entity.getServiceRecords().addAll(serviceRecordService.createArkivmeldingServiceRecords(entityInfo, securityLevel));
             entity.getServiceRecords().addAll(serviceRecordService.createEinnsynServiceRecords(entityInfo, securityLevel));
             entity.getServiceRecords().addAll(serviceRecordService.createAvtaltServiceRecords(identifier));
         }
-        try {
-            log.trace("Service records: " + (new ObjectMapper()).writeValueAsString(entity.getServiceRecords()));
-        } catch (JsonProcessingException e) {
-        }
+
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
