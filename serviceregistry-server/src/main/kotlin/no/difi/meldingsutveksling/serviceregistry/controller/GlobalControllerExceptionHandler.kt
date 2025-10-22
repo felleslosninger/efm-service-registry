@@ -18,7 +18,7 @@ import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import jakarta.servlet.http.HttpServletRequest
-import no.difi.meldingsutveksling.serviceregistry.service.dph.PatientNotRetrievedException
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.PatientNotRetrievedException
 
 @ControllerAdvice
 class GlobalControllerExceptionHandler(private val requestScope: SRRequestScope) {
@@ -76,7 +76,7 @@ class GlobalControllerExceptionHandler(private val requestScope: SRRequestScope)
 
     @ExceptionHandler(CertificateNotFoundException::class)
     fun certificateNotFound(request: HttpServletRequest, e: Exception): ResponseEntity<*> {
-        log.warn(markerFrom(requestScope), "Certificat not found for ${request.requestURL}")
+        log.warn(markerFrom(requestScope), "Certificate not found for ${request.requestURL}")
         return errorResponse(HttpStatus.NOT_FOUND, e.message)
     }
 
@@ -99,7 +99,7 @@ class GlobalControllerExceptionHandler(private val requestScope: SRRequestScope)
     }
 
     @ExceptionHandler(ClientInputException::class)
-    fun illegalArgumentException(request: HttpServletRequest, e: Exception): ResponseEntity<*>  {
+    fun clientInputException(request: HttpServletRequest, e: Exception): ResponseEntity<*>  {
         log.error(markerFrom(requestScope), "Client input error", e)
         return errorResponse(HttpStatus.BAD_REQUEST, e.message)
     }

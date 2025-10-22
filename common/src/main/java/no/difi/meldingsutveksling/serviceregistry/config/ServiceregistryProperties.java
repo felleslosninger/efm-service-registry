@@ -35,7 +35,7 @@ public class ServiceregistryProperties {
     private Auth auth;
     private FeatureToggle feature;
     private ELMA elma;
-    private DPH dph;
+    private Healthcare healthcare;
 
     @Valid
     private Sign sign;
@@ -106,9 +106,9 @@ public class ServiceregistryProperties {
         private String serviceEditionCode;
     }
 
-    public record DPH(String nhnAdapterEndpointUrl,
-                      String fastlegeProcess,
-                      String nhnProcess) {
+    public record Healthcare(String nhnAdapterEndpointUrl,
+                             String fastlegeProcess,
+                             String nhnProcess) {
 
     }
 

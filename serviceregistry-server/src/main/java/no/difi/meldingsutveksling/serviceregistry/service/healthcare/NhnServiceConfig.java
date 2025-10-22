@@ -1,4 +1,4 @@
-package no.difi.meldingsutveksling.serviceregistry.service.dph;
+package no.difi.meldingsutveksling.serviceregistry.service.healthcare;
 
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -13,7 +13,7 @@ public class NhnServiceConfig {
 
     @Bean
     public NhnService nhnService(ServiceregistryProperties serviceregistryProperties,@Qualifier("NHN_CLIENT_NAME") RestClient restClient) {
-        return new NhnService(serviceregistryProperties.getDph().nhnAdapterEndpointUrl(),restClient);
+        return new NhnService(serviceregistryProperties.getHealthcare().nhnAdapterEndpointUrl(),restClient);
     }
 
     @Bean("NHN_CLIENT_NAME")

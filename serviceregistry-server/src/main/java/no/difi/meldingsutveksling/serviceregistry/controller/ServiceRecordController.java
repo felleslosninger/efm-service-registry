@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
-import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.*;
@@ -54,7 +53,6 @@ public class ServiceRecordController {
     private final PayloadSigner payloadSigner;
     private final SRRequestScope requestScope;
     private final ObjectMapper objectMapper;
-    private final ServiceregistryProperties serviceregistryProperties;
 
     @InitBinder
     protected void initBinders(WebDataBinder binder) {
@@ -119,7 +117,7 @@ public class ServiceRecordController {
             entity.getServiceRecords().add(record);
         }
         if (ProcessCategory.DIALOGMELDING == process.getCategory()) {
-            ServiceRecord record = serviceRecordService.createDphRecords(entityInfo).getFirst();
+            ServiceRecord record = serviceRecordService.createHealthcareServiceRecords(entityInfo).getFirst();
             entity.getServiceRecords().add(record);
         }
         if (entity.getServiceRecords().isEmpty()) {
@@ -166,20 +164,19 @@ public class ServiceRecordController {
             log.trace("Citizen");
             try {
                 entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientOrgnr, print));
-                // create DPH service record
             } catch (FregGatewayException | HttpClientErrorException e) {
                 log.info("No service record found for citizen: {}", identifier);
                 return new ResponseEntity<>("{\"message\": \"No service record found for citizen: " + identifier + "\"}", HttpStatus.NOT_FOUND);
             }
             try {
-                entity.getServiceRecords().addAll(serviceRecordService.createDphRecords(entityInfo));
+                entity.getServiceRecords().addAll(serviceRecordService.createHealthcareServiceRecords(entityInfo));
             } catch (Exception e) {
-                log.warn("Error while retrieving DPH record.");
+                log.warn("Error while retrieving Healthcare record.",e);
             }
 
         }
         else if (entityInfo instanceof HelseEnhetInfo ) {
-            entity.getServiceRecords().addAll(serviceRecordService.createDphRecords(entityInfo));
+            entity.getServiceRecords().addAll(serviceRecordService.createHealthcareServiceRecords(entityInfo));
         }
         else {
             log.trace("Organization");

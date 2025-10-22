@@ -1,6 +1,5 @@
-package no.difi.meldingsutveksling.serviceregistry.service.dph;
+package no.difi.meldingsutveksling.serviceregistry.service.healthcare;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data

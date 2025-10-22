@@ -14,9 +14,9 @@ import no.difi.meldingsutveksling.serviceregistry.freg.client.FregGatewayClient;
 import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
-import no.difi.meldingsutveksling.serviceregistry.service.dph.ARDetails;
-import no.difi.meldingsutveksling.serviceregistry.service.dph.NhnService;
-import no.difi.meldingsutveksling.serviceregistry.service.dph.PatientNotRetrievedException;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.AddressRegistrerDetails;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.NhnService;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.PatientNotRetrievedException;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
@@ -121,8 +121,8 @@ public class ServiceRecordServiceTest {
         ServiceregistryProperties.ELMA elmaProps = new ServiceregistryProperties.ELMA();
         elmaProps.setLookupIcd(ELMA_LOOKUP_ICD);
         lenient().when(props.getElma()).thenReturn(elmaProps);
-        ServiceregistryProperties.DPH dphProps = new ServiceregistryProperties.DPH("dummyUrl",DPH_FASTLEGE,DPH_NHN);
-        lenient().when(props.getDph()).thenReturn(dphProps);
+        ServiceregistryProperties.Healthcare healthcareProps = new ServiceregistryProperties.Healthcare("dummyUrl",DPH_FASTLEGE,DPH_NHN);
+        lenient().when(props.getHealthcare()).thenReturn(healthcareProps);
 
         // Arkivmelding
         DocumentType documentType = new DocumentType()
@@ -404,7 +404,7 @@ public class ServiceRecordServiceTest {
     @SneakyThrows
     @Test
     public void whenValidPersonNummer_DphRecordIsCreated() {
-        var testARDetails = new ARDetails("1234","4321","dummySertifikat","dummy",ORGNR);
+        var testARDetails = new AddressRegistrerDetails("1234","4321","dummySertifikat","dummy",ORGNR);
         CitizenInfo citizenInfo = new CitizenInfo(PERSONNUMMER);
 
         FregGatewayEntity.Address.Response personAddress = FregGatewayEntity.Address.Response.builder().navn(new FregGatewayEntity.Address.Navn("Petter","Petterson","","")).personIdentifikator(PERSONNUMMER).build();
@@ -412,10 +412,10 @@ public class ServiceRecordServiceTest {
         when(processService.findByIdentifier(DPH_FASTLEGE)).thenReturn(Optional.of(processFastlege));
         lenient().when(nhnService.getARDetails(  argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(testARDetails);
         when(kontaktInfoService.getFregAdress(argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(Optional.of(personAddress));
-        List<ServiceRecord> resultat = service.createDphRecords(citizenInfo);
+        List<ServiceRecord> resultat = service.createHealthcareServiceRecords(citizenInfo);
         assertEquals(1, resultat.size());
-        assertEquals(DPHServiceRecord.class, resultat.getFirst().getClass());
-        DPHServiceRecord dph = (DPHServiceRecord) resultat.getFirst();
+        assertEquals(HealthCareServiceRecord.class, resultat.getFirst().getClass());
+        HealthCareServiceRecord dph = (HealthCareServiceRecord) resultat.getFirst();
         assertNotNull(dph.getService());
         assertNotNull(dph.getPatient());
         assertEquals(ServiceIdentifier.DPH,dph.getService().getIdentifier());
@@ -429,14 +429,14 @@ public class ServiceRecordServiceTest {
     @Test
     public void whenFastlegePRocess_And_IdentifierIsNotFnr_throwsClientInputException() {
         Mockito.reset(nhnService);
-        var testARDetails = new ARDetails("1234","4321","dummySertifikat","dummy",ORGNR);
+        var testARDetails = new AddressRegistrerDetails("1234","4321","dummySertifikat","dummy",ORGNR);
         var NOT_FNR = "12345678901";
         CitizenInfo citizenInfo = new CitizenInfo(NOT_FNR);
         when(processService.findByIdentifier(DPH_FASTLEGE)).thenReturn(Optional.of(processFastlege));
         lenient().when(nhnService.getARDetails(  argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(testARDetails);
 
         try {
-            service.createDphRecords(citizenInfo);
+            service.createHealthcareServiceRecords(citizenInfo);
             fail("It was supposed to throw ClientInputException");
         } catch (ClientInputException e) {
 
@@ -453,7 +453,7 @@ public class ServiceRecordServiceTest {
         lenient().when(nhnService.getARDetails(  argThat(lookupParameters -> lookupParameters.getIdentifier().equals(NOT_FNR)))).thenThrow(new EntityNotFoundException(NOT_FNR));
 
         try {
-            service.createDphRecords(citizenInfo);
+            service.createHealthcareServiceRecords(citizenInfo);
             fail("It was supposed to throw EntityNotFoundException");
         } catch (EntityNotFoundException e) {
 
@@ -466,14 +466,14 @@ public class ServiceRecordServiceTest {
     @SneakyThrows
     @Test
     public void whenPatientDataIsNotRetrieved_throwsPatientNotRetrieveException() {
-        var testARDetails = new ARDetails("1234","4321","dummySertifikat","dummy",ORGNR);
+        var testARDetails = new AddressRegistrerDetails("1234","4321","dummySertifikat","dummy",ORGNR);
         CitizenInfo citizenInfo = new CitizenInfo(PERSONNUMMER);
 
         when(processService.findByIdentifier(DPH_FASTLEGE)).thenReturn(Optional.of(processFastlege));
         lenient().when(nhnService.getARDetails(  argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(testARDetails);
         lenient().when(kontaktInfoService.getFregAdress(argThat(t -> t.getIdentifier().equals(PERSONNUMMER)))).thenReturn(Optional.empty());
         try {
-            service.createDphRecords(citizenInfo);
+            service.createHealthcareServiceRecords(citizenInfo);
             fail("It was supposed to throw EntityNotFoundException");
         } catch (PatientNotRetrievedException e) {
             return;
@@ -485,14 +485,14 @@ public class ServiceRecordServiceTest {
     @SneakyThrows
     @Test
     public void whenKontaktInfoThrowsHttpClientException_thenThrowPatientNotRetrievedException() {
-        var testARDetails = new ARDetails("1234","4321","dummySertifikat","dummy",ORGNR);
+        var testARDetails = new AddressRegistrerDetails("1234","4321","dummySertifikat","dummy",ORGNR);
         CitizenInfo citizenInfo = new CitizenInfo(PERSONNUMMER);
 
         when(processService.findByIdentifier(DPH_FASTLEGE)).thenReturn(Optional.of(processFastlege));
         lenient().when(nhnService.getARDetails(  argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(testARDetails);
         lenient().when(kontaktInfoService.getFregAdress(argThat(t -> t.getIdentifier().equals(PERSONNUMMER)))).thenReturn(Optional.empty());
         try {
-            service.createDphRecords(citizenInfo);
+            service.createHealthcareServiceRecords(citizenInfo);
             fail("It was supposed to throw EntityNotFoundException");
         } catch (PatientNotRetrievedException e) {
             return;
@@ -505,7 +505,7 @@ public class ServiceRecordServiceTest {
     @Test
     public void whenIdentifierIsHerID_dphRecordIsCreated() {
 
-        var testARDetails = new ARDetails("1234","4321","dummySertifikat","dummy",ORGNR);
+        var testARDetails = new AddressRegistrerDetails("1234","4321","dummySertifikat","dummy",ORGNR);
         var HERID = "43432234";
         HelseEnhetInfo citizenInfo = new HelseEnhetInfo(HERID);
 
@@ -513,11 +513,11 @@ public class ServiceRecordServiceTest {
         lenient().when(nhnService.getARDetails(  argThat(lookupParameters -> lookupParameters.getIdentifier().equals(HERID)))).thenReturn(testARDetails);
 
 
-       var serviceRecords = service.createDphRecords(citizenInfo);
+       var serviceRecords = service.createHealthcareServiceRecords(citizenInfo);
 
        assertEquals(1, serviceRecords.size());
-       assertEquals(DPHServiceRecord.class, serviceRecords.getFirst().getClass());
-       var dph = (DPHServiceRecord) serviceRecords.getFirst();
+       assertEquals(HealthCareServiceRecord.class, serviceRecords.getFirst().getClass());
+       var dph = (HealthCareServiceRecord) serviceRecords.getFirst();
        assertNotNull(dph.getService());
        assertEquals(ServiceIdentifier.DPH,dph.getService().getIdentifier());
        assertEquals(dph.getProcess(),DPH_NHN);

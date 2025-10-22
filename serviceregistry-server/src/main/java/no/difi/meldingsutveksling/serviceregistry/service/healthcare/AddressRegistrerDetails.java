@@ -1,11 +1,11 @@
-package no.difi.meldingsutveksling.serviceregistry.service.dph;
+package no.difi.meldingsutveksling.serviceregistry.service.healthcare;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class ARDetails{
+public class AddressRegistrerDetails {
     private String herid1;
     private String herid2;
     private String pemDigdirSertifikat;

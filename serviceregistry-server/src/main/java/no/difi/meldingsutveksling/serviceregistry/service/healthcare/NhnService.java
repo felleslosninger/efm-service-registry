@@ -1,4 +1,4 @@
-package no.difi.meldingsutveksling.serviceregistry.service.dph;
+package no.difi.meldingsutveksling.serviceregistry.service.healthcare;
 
 import lombok.AllArgsConstructor;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ClientInputException;
@@ -19,7 +19,7 @@ public class NhnService {
     private String uri;
     private final RestClient restClient;
 
-    public ARDetails getARDetails(LookupParameters param) {
+    public AddressRegistrerDetails getARDetails(LookupParameters param) {
 
         try {
             return restClient.get()
@@ -32,17 +32,17 @@ public class NhnService {
                                 param.getIdentifier());
                     })
                     .onStatus( status -> status.equals(HttpStatus.UNAUTHORIZED),  (request, response) -> {
-                        throw new AccessDeniedException("AR lookup Access denied");
+                        throw new AccessDeniedException("AR lookup Access denied, identifier " + param.getIdentifier());
                     })
                     .onStatus(HttpStatusCode::is4xxClientError,  (request, response) -> {
-                        throw new ClientInputException("Client input error for identifier" + param.getIdentifier());// new ServiceRegistryException("Client input error for identifier" + param.getIdentifier());
+                        throw new ClientInputException("Client input error for identifier" + param.getIdentifier());
                     })
                     .onStatus(HttpStatusCode::is5xxServerError, (request,response) ->{ throw new ServiceRegistryException(
-                    "Internal server fail while getting AR details for id " + param.getIdentifier());}).toEntity(ARDetails.class).getBody();
+                    "Internal server fail while getting AR details for id " + param.getIdentifier());}).toEntity(AddressRegistrerDetails.class).getBody();
 
         } catch (RestClientException e) {
             throw new ServiceRegistryException(
-                    "Client error fetching AR details: " + e.getMessage(), e);
+                    "Client error fetching AR details for identifier: %s".formatted(param.getIdentifier()), e);
         }
     }
     }

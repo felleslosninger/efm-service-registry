@@ -17,10 +17,10 @@ import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
-import no.difi.meldingsutveksling.serviceregistry.service.dph.ARDetails;
-import no.difi.meldingsutveksling.serviceregistry.service.dph.NhnService;
-import no.difi.meldingsutveksling.serviceregistry.service.dph.Patient;
-import no.difi.meldingsutveksling.serviceregistry.service.dph.PatientNotRetrievedException;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.AddressRegistrerDetails;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.NhnService;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.Patient;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.PatientNotRetrievedException;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
@@ -162,47 +162,49 @@ public class ServiceRecordService {
         return createDigitalpostServiceRecords(identifier, onBehalfOrgnr, print, processService.findAll(ProcessCategory.DIGITALPOST));
     }
 
-    public List<ServiceRecord> createDphRecords(EntityInfo entityInfo) throws FregGatewayException{
+    public List<ServiceRecord> createHealthcareServiceRecords(EntityInfo entityInfo) throws FregGatewayException{
         Process process;
         if(entityInfo instanceof CitizenInfo)   {
-           process = processService.findByIdentifier(serviceregistryProperties.getDph().fastlegeProcess()).orElseThrow(()->new ServiceRegistryException("Fastlege process not found"));
+           process = processService.findByIdentifier(serviceregistryProperties.getHealthcare().fastlegeProcess()).orElseThrow(()->new ServiceRegistryException("Fastlege process not found"));
         }
         else if (entityInfo instanceof HelseEnhetInfo) {
-            process = processService.findByIdentifier(serviceregistryProperties.getDph().nhnProcess()).orElseThrow(()->new ServiceRegistryException("Nhn process not found"));
+            process = processService.findByIdentifier(serviceregistryProperties.getHealthcare().nhnProcess()).orElseThrow(()->new ServiceRegistryException("Nhn process not found"));
         }
         else {
-            throw new ServiceRegistryException("Identifier is not compatible with DPH");
+            throw new ServiceRegistryException("Identifier is not compatible with Healthcare");
         }
-        return createDphServiceRecords(entityInfo.getIdentifier(),process);
+        return createHealthcareServiceRecords(entityInfo.getIdentifier(),process);
     }
 
 
-    private List<ServiceRecord> createDphServiceRecords(String identifier, Process process) throws PatientNotRetrievedException {
+    private List<ServiceRecord> createHealthcareServiceRecords(String identifier, Process process) throws PatientNotRetrievedException {
         LookupParameters param = LookupParameters.lookup(identifier);
         param.setToken(sRRequestScope.getToken());
         if (process == null) {
             throw new ServiceRegistryException("process must contain at least one Process");
         }
-        ARDetails arDetails = nhnService.getARDetails(param);
+        AddressRegistrerDetails arDetails = nhnService.getARDetails(param);
         Patient patient = null;
         PersonIdentifierValidator.setSyntheticPersonIdentifiersAllowed(true);
-        if (process.getIdentifier().equals(serviceregistryProperties.getDph().fastlegeProcess())) {
+        if (process.getIdentifier().equals(serviceregistryProperties.getHealthcare().fastlegeProcess())) {
             if (PersonIdentifierValidator.isValid(identifier)) {
                 try {
                     patient = kontaktInfoService.getFregAdress(param).map(
                             t -> new Patient(t.getPersonIdentifikator(), t.getNavn().getFornavn(), t.getNavn().getMellomnavn(), t.getNavn().getEtternavn())
                     ).orElseThrow(PatientNotRetrievedException::new);
                 } catch (HttpClientErrorException e) {
+                    log.error("Error while Patient Retrieval ", e);
                     throw new PatientNotRetrievedException(e);
                 }
 
             }
             else {
-                throw new ClientInputException("Identifier needs to be person number.");
+                log.error("Incoming identifier is not compatible with fastlege process: {}", identifier);
+                throw new ClientInputException("Identifier " +identifier +" needs to be person number.");
             }
         }
 
-        DPHServiceRecord sr = new DPHServiceRecord(ServiceIdentifier.DPH, arDetails.getOrgNumber(), process,arDetails.getEdiAdress(),arDetails.getHerid1(),arDetails.getHerid2(),patient );
+        HealthCareServiceRecord sr = new HealthCareServiceRecord(ServiceIdentifier.DPH, arDetails.getOrgNumber(), process,arDetails.getEdiAdress(),arDetails.getHerid1(),arDetails.getHerid2(),patient );
         sr.setPemCertificate(arDetails.getPemDigdirSertifikat());
         return List.of(sr);
     }

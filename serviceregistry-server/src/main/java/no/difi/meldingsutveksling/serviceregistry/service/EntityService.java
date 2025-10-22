@@ -13,7 +13,7 @@ import no.difi.meldingsutveksling.serviceregistry.record.LookupParameters;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
-import no.difi.meldingsutveksling.serviceregistry.service.dph.NhnService;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.NhnService;
 import no.ks.fiks.io.client.model.Konto;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.ObjectProvider;
@@ -62,7 +62,7 @@ public class EntityService {
                 return Optional.empty();
             }
         } else if (NumberUtils.isDigits(identifier) && isNhnRegistered(identifier)) {
-           log.info("Record found in NHN");
+           log.info("Record found in NHN for identifier={}", identifier);
            return Optional.of(new HelseEnhetInfo(identifier));
         } else {
             return Optional.empty();
@@ -73,6 +73,7 @@ public class EntityService {
         try {
             return nhnService.getARDetails(LookupParameters.lookup(identifier).setToken(requestScope.getToken())) != null;
         } catch (EntityNotFoundException e) {
+            log.info("The identifier is not found in address register {}",identifier);
             return false;
         }
 

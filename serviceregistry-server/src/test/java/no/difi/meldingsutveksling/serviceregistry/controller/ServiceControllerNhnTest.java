@@ -9,20 +9,18 @@ import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.ProcessCategory;
 import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
-import no.difi.meldingsutveksling.serviceregistry.record.DPHServiceRecord;
+import no.difi.meldingsutveksling.serviceregistry.record.HealthCareServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.record.ServiceRecordService;
 import no.difi.meldingsutveksling.serviceregistry.security.PayloadSigner;
 import no.difi.meldingsutveksling.serviceregistry.service.AuthenticationService;
 import no.difi.meldingsutveksling.serviceregistry.service.EntityService;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
-import no.difi.meldingsutveksling.serviceregistry.service.dph.Patient;
-import no.difi.meldingsutveksling.serviceregistry.service.dph.PatientNotRetrievedException;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.Patient;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.PatientNotRetrievedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
 import org.springframework.http.codec.json.Jackson2JsonEncoder;
@@ -112,7 +110,7 @@ public class ServiceControllerNhnTest {
     @Test
     public void whenIdentifierIsFnr_thenDphServiceRecord() throws Exception {
         when(entityService.getEntityInfo(FNR)).thenReturn(Optional.of(new CitizenInfo(FNR)));
-        when(serviceRecordService.createDphRecords(argThat(t -> Objects.equals(t.getIdentifier(), FNR)))).thenReturn(List.of(new DPHServiceRecord(ServiceIdentifier.DPH, ON_BEHALF_OF_ORGNUM, fastlegeProcess, "dummyURl", "43234", HerId2, new Patient(FNR, "Petter", "", "Petterson"))));
+        when(serviceRecordService.createHealthcareServiceRecords(argThat(t -> Objects.equals(t.getIdentifier(), FNR)))).thenReturn(List.of(new HealthCareServiceRecord(ServiceIdentifier.DPH, ON_BEHALF_OF_ORGNUM, fastlegeProcess, "dummyURl", "43234", HerId2, new Patient(FNR, "Petter", "", "Petterson"))));
         var response = webClient.get().uri(identifierFastlegeEndpoint + "/process/" + DPH_FASTLEGE).accept(MediaType.APPLICATION_JSON).exchange();
 
         response.expectStatus().isOk().expectBody().jsonPath("$.infoRecord.identifier").isEqualTo(FNR)
@@ -145,7 +143,7 @@ public class ServiceControllerNhnTest {
 
         when(entityService.getEntityInfo(FNR)).thenReturn(Optional.of(new CitizenInfo(FNR)));
         lenient().when(processService.findByIdentifier(DPH_FASTLEGE)).thenReturn(Optional.of(fastlegeProcess));
-        when(serviceRecordService.createDphRecords(argThat(t -> Objects.equals(t.getIdentifier(), FNR)))).thenThrow(new PatientNotRetrievedException());
+        when(serviceRecordService.createHealthcareServiceRecords(argThat(t -> Objects.equals(t.getIdentifier(), FNR)))).thenThrow(new PatientNotRetrievedException());
 
         webClient.get().uri(identifierHerIDEndpoint + "/process/" + DPH_FASTLEGE).accept(MediaType.APPLICATION_JSON).exchange().expectStatus().is4xxClientError();
 

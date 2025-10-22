@@ -7,7 +7,7 @@ import no.difi.meldingsutveksling.serviceregistry.freg.client.DefaultFregGateway
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import no.difi.meldingsutveksling.serviceregistry.record.LookupParameters;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
-import no.difi.meldingsutveksling.serviceregistry.service.dph.NhnService;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.NhnService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClient;

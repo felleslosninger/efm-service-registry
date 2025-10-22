@@ -1,4 +1,4 @@
-package no.difi.meldingsutveksling.serviceregistry.dph;
+package no.difi.meldingsutveksling.serviceregistry.healthcare;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -7,9 +7,8 @@ import no.difi.meldingsutveksling.serviceregistry.exceptions.ClientInputExceptio
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.record.LookupParameters;
-import no.difi.meldingsutveksling.serviceregistry.service.dph.ARDetails;
-import no.difi.meldingsutveksling.serviceregistry.service.dph.NhnService;
-import org.apache.http.entity.ContentType;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.AddressRegistrerDetails;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.NhnService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -92,7 +91,7 @@ class NhnServiceTest {
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                         .withBody(responseBody)));
 
-        ARDetails result = nhnService.getARDetails(lookupParameters);
+        AddressRegistrerDetails result = nhnService.getARDetails(lookupParameters);
 
         assertNotNull(result);
         assertEquals("67676", result.getHerid1());
@@ -128,7 +127,7 @@ class NhnServiceTest {
 
         AccessDeniedException exception = assertThrows(AccessDeniedException.class,
                 () -> nhnService.getARDetails(lookupParameters));
-        assertEquals("AR lookup Access denied", exception.getMessage());
+        assertTrue(exception.getMessage().contains("AR lookup Access denied"));
         verify(getRequestedFor(urlEqualTo(PATH))
                 .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + TOKEN)));
     }
@@ -170,7 +169,7 @@ class NhnServiceTest {
 
         ServiceRegistryException exception = assertThrows(ServiceRegistryException.class,
                 () -> nhnService.getARDetails(lookupParameters));
-        assertTrue(exception.getMessage().startsWith("Client error fetching AR details: "));
+        assertTrue(exception.getMessage().startsWith("Client error fetching AR details"));
         verify(getRequestedFor(urlEqualTo(PATH))
                 .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + TOKEN)));
     }

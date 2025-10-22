@@ -52,7 +52,7 @@ difi:
       mp-endpoint-uri: https://test.kontaktregisteret.no/rest/v1/personer
       mp-dsf-endpoint-uri: https://test.kontaktregisteret.no/rest/v1/mf/personer
       print-url: https://test.kontaktregisteret.no/rest/v2/printSertifikat
-    dph:
+    healthcare:
       nhn-adapter-endpoint-url: http://localhost:9080/arlookup/{identifier}
       fastlege-process: urn:no:difi:profile:digitalpost:fastlege:ver1.0
       nhn-process: urn:no:difi:profile:digitalpost:helse:ver1.0

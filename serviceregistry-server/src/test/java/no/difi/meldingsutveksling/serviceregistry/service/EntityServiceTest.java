@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import no.difi.meldingsutveksling.serviceregistry.service.dph.NhnServiceConfig;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.NhnServiceConfig;
 import no.ks.fiks.io.client.model.FiksOrgId;
 import no.ks.fiks.io.client.model.Konto;
 import no.ks.fiks.io.client.model.KontoId;
@@ -157,7 +157,7 @@ public class EntityServiceTest {
             }
             """.replace("{herId2}",HERID2);
         String dummyToken = "dummy-token";
-        String path = URI.create(serviceregistryProperties.getDph().nhnAdapterEndpointUrl().replace("{identifier}", "33232"))
+        String path = URI.create(serviceregistryProperties.getHealthcare().nhnAdapterEndpointUrl().replace("{identifier}", "33232"))
                 .getPath();
         wireMockServer.stubFor(get(path)
                 .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + dummyToken))
@@ -184,7 +184,7 @@ public class EntityServiceTest {
         WireMock.configureFor("localhost", 8089);
 
         String dummyToken = "dummy-token";
-        String path = URI.create(serviceregistryProperties.getDph().nhnAdapterEndpointUrl().replace("{identifier}", "33232"))
+        String path = URI.create(serviceregistryProperties.getHealthcare().nhnAdapterEndpointUrl().replace("{identifier}", "33232"))
                 .getPath();
         wireMockServer.stubFor(get(path)
                 .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + dummyToken))
@@ -208,7 +208,7 @@ public class EntityServiceTest {
         WireMock.configureFor("localhost", 8089);
 
         String dummyToken = "dummy-token";
-        String path = URI.create(serviceregistryProperties.getDph().nhnAdapterEndpointUrl().replace("{identifier}", "33232"))
+        String path = URI.create(serviceregistryProperties.getHealthcare().nhnAdapterEndpointUrl().replace("{identifier}", "33232"))
                 .getPath();
         wireMockServer.stubFor(get(path)
                 .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + dummyToken))
@@ -231,7 +231,7 @@ public class EntityServiceTest {
         WireMock.configureFor("localhost", 8089);
 
         String dummyToken = "dummy-token";
-        String path = URI.create(serviceregistryProperties.getDph().nhnAdapterEndpointUrl().replace("{identifier}", "33232"))
+        String path = URI.create(serviceregistryProperties.getHealthcare().nhnAdapterEndpointUrl().replace("{identifier}", "33232"))
                 .getPath();
         wireMockServer.stubFor(get(path)
                 .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + dummyToken))
@@ -253,7 +253,7 @@ public class EntityServiceTest {
         WireMock.configureFor("localhost", 8089);
 
         String dummyToken = "dummy-token";
-        String path = URI.create(serviceregistryProperties.getDph().nhnAdapterEndpointUrl().replace("{identifier}", "33232"))
+        String path = URI.create(serviceregistryProperties.getHealthcare().nhnAdapterEndpointUrl().replace("{identifier}", "33232"))
                 .getPath();
         wireMockServer.stubFor(get(path)
                 .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + dummyToken))

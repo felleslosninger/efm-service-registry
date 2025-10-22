@@ -1,4 +1,4 @@
-package no.difi.meldingsutveksling.serviceregistry.service.dph;
+package no.difi.meldingsutveksling.serviceregistry.service.healthcare;
 
 import no.difi.meldingsutveksling.serviceregistry.freg.exception.FregGatewayException;
 
