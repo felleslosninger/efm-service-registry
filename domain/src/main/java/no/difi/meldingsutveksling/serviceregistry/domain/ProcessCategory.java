@@ -5,8 +5,10 @@ package no.difi.meldingsutveksling.serviceregistry.domain;
  */
 public enum ProcessCategory {
     ARKIVMELDING,
+    AVTALT,
     EINNSYN,
     DIGITALPOST,
-    AVTALT
+    DIALOGMELDING
+
 }
 

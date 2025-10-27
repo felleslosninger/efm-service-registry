@@ -22,6 +22,8 @@ public class VirksertConfig {
             return BusinessCertificateClient.of(virksertUrl, properties.getVirksert().getMode());
         } catch (URISyntaxException | BusinessCertificateException e) {
             throw new ServiceRegistryException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }

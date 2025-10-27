@@ -2,6 +2,7 @@ package no.difi.meldingsutveksling.serviceregistry.krr;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import no.difi.meldingsutveksling.serviceregistry.record.LookupParameters;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;

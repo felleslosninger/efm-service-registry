@@ -9,7 +9,6 @@ import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier.DPO
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException
 import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity
 import no.difi.meldingsutveksling.serviceregistry.freg.exception.FregGatewayException
-import no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource
 import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress
 import no.difi.meldingsutveksling.serviceregistry.logger

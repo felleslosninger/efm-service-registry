@@ -3,10 +3,11 @@ package no.difi.meldingsutveksling.serviceregistry.service.krr;
 import com.nimbusds.jose.jwk.RSAKey;
 import no.difi.meldingsutveksling.serviceregistry.MoveServiceRegistryApplication;
 import no.difi.meldingsutveksling.serviceregistry.config.VirksertConfig;
-import no.difi.meldingsutveksling.serviceregistry.config.WebSecurityConfig;
 import no.difi.meldingsutveksling.serviceregistry.freg.client.DefaultFregGatewayClient;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
+import no.difi.meldingsutveksling.serviceregistry.record.LookupParameters;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.NhnService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClient;
@@ -18,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.transport.http.AbstractHttpWebServiceMessageSender;
@@ -53,6 +53,9 @@ class KontaktInfoServiceTest {
 
     @MockBean
     private BrregService brregService;
+
+    @MockBean
+    private NhnService nhnService;
 
     @MockBean
     private ELMALookupService elmaLookupService;
