@@ -131,12 +131,14 @@ public class ServiceRecordServiceTest {
             .setIdentifier(ARKIVMELDING_PROCESS_ADMIN)
             .setCategory(ProcessCategory.ARKIVMELDING)
             .setServiceCode("4192")
-            .setServiceEditionCode("270815");
+            .setServiceEditionCode("270815")
+            .setResource("resource");
         processSkatt = new Process()
             .setIdentifier(ARKIVMELDING_PROCESS_SKATT)
             .setCategory(ProcessCategory.ARKIVMELDING)
             .setServiceCode("4192")
-            .setServiceEditionCode("270815");
+            .setServiceEditionCode("270815")
+            .setResource("resource");
         processSkatt.setDocumentTypes(Lists.newArrayList(documentType));
         processAdmin.setDocumentTypes(Lists.newArrayList(documentType));
         documentType.setProcesses(Lists.newArrayList(processAdmin, processSkatt));
@@ -147,7 +149,8 @@ public class ServiceRecordServiceTest {
         processAvtalt = new Process().setIdentifier(AVTALT_PROCESS)
             .setCategory(ProcessCategory.AVTALT)
             .setServiceCode("4192")
-            .setServiceEditionCode("270815");
+            .setServiceEditionCode("270815")
+            .setResource("resource");
         processAvtalt.setDocumentTypes(Lists.newArrayList(documentTypeAvtalt));
         documentTypeAvtalt.setProcesses(Lists.newArrayList(processAvtalt));
 

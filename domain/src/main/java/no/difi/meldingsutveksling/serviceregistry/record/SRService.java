@@ -20,4 +20,5 @@ public class SRService {
     private String serviceCode;
     private String serviceEditionCode;
     private Integer securityLevel;
+    private String resource;
 }

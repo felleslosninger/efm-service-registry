@@ -45,6 +45,7 @@ class ServiceRecordFactory(
         serviceRecord.pemCertificate = lookupPemCertificate(orgnr, DPO)
         serviceRecord.service.serviceCode = properties.dpo.serviceCode
         serviceRecord.service.serviceEditionCode = properties.dpo.serviceEditionCode
+        serviceRecord.service.resource = properties.dpo.resource
         return serviceRecord
     }
 
@@ -91,6 +92,7 @@ class ServiceRecordFactory(
         val defaultArkivmeldingProcess = processService.defaultArkivmeldingProcess
         dpvServiceRecord.service.serviceCode = defaultArkivmeldingProcess.serviceCode
         dpvServiceRecord.service.serviceEditionCode = defaultArkivmeldingProcess.serviceEditionCode
+        dpvServiceRecord.service.resource = defaultArkivmeldingProcess.resource
         documentTypeService.findByBusinessMessageType(BusinessMessageTypes.DIGITAL_DPV)
             .orElseThrow { missingDocTypeException(BusinessMessageTypes.DIGITAL_DPV) }
             .let { dpvServiceRecord.documentTypes = listOf(it.identifier) }
@@ -179,6 +181,7 @@ class ServiceRecordFactory(
             ServiceRecord(ServiceIdentifier.DPV, orgnr, process, properties.dpv.endpointURL.toString())
         dpvServiceRecord.service.serviceCode = process.serviceCode
         dpvServiceRecord.service.serviceEditionCode = process.serviceEditionCode
+        dpvServiceRecord.service.resource = process.resource
         return dpvServiceRecord
     }
 

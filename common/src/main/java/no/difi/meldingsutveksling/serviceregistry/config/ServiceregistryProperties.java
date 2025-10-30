@@ -104,6 +104,7 @@ public class ServiceregistryProperties {
         private URL endpointURL;
         private String serviceCode;
         private String serviceEditionCode;
+        private String resource;
     }
 
     public record Healthcare(String nhnAdapterEndpointUrl,

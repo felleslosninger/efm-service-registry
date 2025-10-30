@@ -58,6 +58,9 @@ public class ProcessService {
             if (updatedProcess.getServiceEditionCode() != null) {
                 process.setServiceEditionCode(updatedProcess.getServiceEditionCode());
             }
+            if (updatedProcess.getResource() != null) {
+                process.setResource(updatedProcess.getResource());
+            }
             Process updated = repository.save(process);
             return updated != null;
         } catch (Exception e) {
