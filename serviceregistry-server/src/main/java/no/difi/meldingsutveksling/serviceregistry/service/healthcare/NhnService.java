@@ -1,6 +1,7 @@
 package no.difi.meldingsutveksling.serviceregistry.service.healthcare;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ClientInputException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
@@ -9,10 +10,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 @AllArgsConstructor
+@Slf4j
 public class NhnService {
 
 
@@ -40,9 +43,13 @@ public class NhnService {
                     .onStatus(HttpStatusCode::is5xxServerError, (request,response) ->{ throw new ServiceRegistryException(
                     "Internal server fail while getting AR details for id " + param.getIdentifier());}).toEntity(AddressRegistrerDetails.class).getBody();
 
-        } catch (RestClientException e) {
+        }catch (ResourceAccessException e) {
+            log.warn("Healthcare servcie is down");
+            throw e;
+        }
+        catch (RestClientException e) {
             throw new ServiceRegistryException(
-                    "Client error fetching AR details for identifier: %s".formatted(param.getIdentifier()), e);
+                    "Error fetching AR details for identifier: %s".formatted(param.getIdentifier()), e);
         }
     }
     }
