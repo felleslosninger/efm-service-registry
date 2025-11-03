@@ -56,8 +56,8 @@ public class ServiceRecordController {
     private final PayloadSigner payloadSigner;
     private final SRRequestScope requestScope;
     private final ObjectMapper objectMapper;
-    @Value("${difi.move.healthcare.enabled}")
-    private String enableHealthcare;
+    @Value("${difi.move.healthcare.enabled:false}")
+    private Boolean enableHealthcare;
 
     @InitBinder
     protected void initBinders(WebDataBinder binder) {
@@ -173,7 +173,7 @@ public class ServiceRecordController {
                 log.info("No service record found for citizen: {}", identifier);
                 return new ResponseEntity<>("{\"message\": \"No service record found for citizen: " + identifier + "\"}", HttpStatus.NOT_FOUND);
             }
-            if (Boolean.parseBoolean(enableHealthcare)) {
+            if (enableHealthcare) {
                 try {
                     entity.getServiceRecords().addAll(serviceRecordService.createHealthcareServiceRecords(entityInfo));
                 } catch (Exception e) {
