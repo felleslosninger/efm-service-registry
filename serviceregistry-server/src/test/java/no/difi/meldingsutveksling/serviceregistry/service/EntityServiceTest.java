@@ -201,6 +201,44 @@ public class EntityServiceTest {
 
     }
 
+
+    @Test
+    public void whenIdentifierIsNhn_thenHelseEnhetIsReturned2() {
+        var HERID2 = "33232";
+        WireMockServer wireMockServer = new WireMockServer(options().port(8099));
+        wireMockServer.start();
+        WireMock.configureFor("localhost", 8099);
+
+        String responseBody = """
+            {
+                "herid1": "67676",
+                "herid2": "{herId2}",
+                "pemDigdirSertifikat": "pem-cert-data",
+                "ediAdress": "dummyedi@edi.edi",
+                "orgNumber": "797897978"
+            }
+            """.replace("{herId2}",HERID2);
+        String dummyToken = "dummy-token";
+        String path = URI.create(serviceregistryProperties.getHealthcare().nhnAdapterEndpointUrl().replace("{identifier}", "33232"))
+                .getPath();
+        wireMockServer.stubFor(get(path)
+                .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + dummyToken))
+                .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
+                .willReturn(aResponse()
+                        .withStatus(HttpStatus.OK.value())
+                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                        .withBody(responseBody)));
+
+        when(jwt.getTokenValue()).thenReturn(dummyToken);
+        when(requestScope.getToken()).thenReturn(jwt);
+        Optional<EntityInfo> ei = entityService.getEntityInfo(HERID2);
+        assertTrue(ei.isPresent());
+        assertEquals(HelseEnhetInfo.class, ei.get().getClass());
+        wireMockServer.stop();
+
+
+    }
+
     @Test
     public void whenIdentifierIsNhn_And_ArlookupThrowsException_thenExceptionIsThrown() {
         WireMockServer wireMockServer = new WireMockServer(options().port(8089));
