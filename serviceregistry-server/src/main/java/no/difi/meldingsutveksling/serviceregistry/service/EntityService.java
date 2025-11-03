@@ -76,13 +76,8 @@ public class EntityService {
         } catch (EntityNotFoundException e) {
             log.info("The identifier is not found in address register {}",identifier);
             return false;
-        } catch (Exception e) {
-            if (e instanceof ResourceAccessException) {
-                log.warn("Healthcare service is down",e);
-            }
-            else {
-                log.warn("Healthcare service failed, unexpected error",e);
-            }
+        } catch (ResourceAccessException e) {
+            log.warn("Healthcare service is down",e);
             return false;
         }
 
