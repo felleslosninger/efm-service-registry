@@ -21,11 +21,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
 import org.springframework.http.codec.json.Jackson2JsonEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
@@ -41,8 +43,8 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 
-@WebMvcTest(value = ServiceRecordController.class)
-@ActiveProfiles("test")
+@WebMvcTest(value = ServiceRecordController.class,properties = {"difi.move.healthcare.enabled=true"})
+@ActiveProfiles("test")// Inline property
 @WithMockUser
 public class ServiceControllerNhnTest {
 

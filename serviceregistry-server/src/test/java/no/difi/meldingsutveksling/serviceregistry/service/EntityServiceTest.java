@@ -201,6 +201,7 @@ public class EntityServiceTest {
 
     }
 
+
     @Test
     public void whenIdentifierIsNhn_And_ArlookupThrowsException_thenExceptionIsThrown() {
         WireMockServer wireMockServer = new WireMockServer(options().port(8089));

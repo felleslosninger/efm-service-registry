@@ -19,6 +19,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResourceAccessException;
 
 import java.util.Optional;
 
@@ -74,6 +75,9 @@ public class EntityService {
             return nhnService.getARDetails(LookupParameters.lookup(identifier).setToken(requestScope.getToken())) != null;
         } catch (EntityNotFoundException e) {
             log.info("The identifier is not found in address register {}",identifier);
+            return false;
+        } catch (ResourceAccessException e) {
+            log.warn("Healthcare service is down",e);
             return false;
         }
 
