@@ -165,7 +165,7 @@ public class ServiceRecordService {
     public List<ServiceRecord> createHealthcareServiceRecords(EntityInfo entityInfo) throws FregGatewayException{
         Process process;
         if(entityInfo instanceof CitizenInfo)   {
-           process = processService.findByIdentifier(serviceregistryProperties.getHealthcare().fastlegeProcess()).orElseThrow(()->new ServiceRegistryException("Fastlege process not found"));
+           process = processService.findByIdentifier(serviceregistryProperties.getHealthcare().fastlegeProcess()).orElseThrow(()-> new ServiceRegistryException("Fastlege process not found"));
         }
         else if (entityInfo instanceof HelseEnhetInfo) {
             process = processService.findByIdentifier(serviceregistryProperties.getHealthcare().nhnProcess()).orElseThrow(()->new ServiceRegistryException("Nhn process not found"));

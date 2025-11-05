@@ -19,6 +19,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.security.access.AccessDeniedException;
 
@@ -161,15 +162,15 @@ class NhnServiceTest {
     }
 
     @Test
-    void testGetARDetails_RestClientException() {
+    void testGetARDetails_ResourceAccessException() {
         wireMockServer.stubFor(get(urlEqualTo(PATH))
                 .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + TOKEN))
                 .willReturn(aResponse()
                         .withFault(Fault.RANDOM_DATA_THEN_CLOSE)));
 
-        ServiceRegistryException exception = assertThrows(ServiceRegistryException.class,
+        ResourceAccessException exception = assertThrows(ResourceAccessException.class,
                 () -> nhnService.getARDetails(lookupParameters));
-        assertTrue(exception.getMessage().startsWith("Client error fetching AR details"));
+        assertTrue(exception.getMessage().startsWith("I/O error on GET request for"));
         verify(getRequestedFor(urlEqualTo(PATH))
                 .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + TOKEN)));
     }
