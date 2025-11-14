@@ -15,6 +15,6 @@ public class ServiceRegistryException extends RuntimeException {
     }
 
     public ServiceRegistryException(String s, Throwable e) {
-
+        super(s, e);
     }
 }

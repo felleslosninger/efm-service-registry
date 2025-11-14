@@ -35,6 +35,10 @@ public class TestEnvironmentEnheter {
         createBrregEnhet("Hesseng og Våle Revisjon", "AS", "910219308");
         // FIKS test user
         createBrregEnhet("Sømådalen og Bessaker Revisjon", "KOMM", "910229028");
+        createBrregEnhet("FRISK VOKSENDE TIGER AS", "AS", "314244370");
+        createBrregEnhet("HUND", "AS", "311780735");
+        createBrregEnhet("KUL SLITEN TIGER AS", "AS", "314240979");
+        createBrregEnhet("FILOSOFISK BEGEISTRET APE", "AS", "313711218");
     }
 
     private void createBrregEnhet(String navn, String organisasjonsform, String organisasjonsnummer) {

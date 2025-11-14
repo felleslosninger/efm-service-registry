@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.5</version>
+        <version>3.5.6</version>
         <relativePath/>
     </parent>
 
@@ -68,12 +68,12 @@
     </properties>
 
     <modules>
-        <module>serviceregistry-server</module>
+        <module>common</module>
         <module>kontakt-reservasjonsregister-client</module>
         <module>ks-fiks</module>
         <module>domain</module>
-        <module>common</module>
         <module>freg-gateway-client</module>
+        <module>serviceregistry-server</module>
     </modules>
 
     <dependencyManagement>

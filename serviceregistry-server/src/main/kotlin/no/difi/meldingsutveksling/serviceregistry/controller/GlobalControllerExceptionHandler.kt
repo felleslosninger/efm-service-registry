@@ -18,6 +18,7 @@ import org.springframework.security.access.AccessDeniedException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import jakarta.servlet.http.HttpServletRequest
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.PatientNotRetrievedException
 
 @ControllerAdvice
 class GlobalControllerExceptionHandler(private val requestScope: SRRequestScope) {
@@ -94,6 +95,18 @@ class GlobalControllerExceptionHandler(private val requestScope: SRRequestScope)
     @ExceptionHandler(UnknownServiceIdentifierException::class)
     fun unknownServiceIdentifie(request: HttpServletRequest, e: Exception): ResponseEntity<*> {
         log.debug(markerFrom(requestScope), "Converting service identifier failed for ${request.requestURL}", e)
+        return errorResponse(HttpStatus.BAD_REQUEST, e.message)
+    }
+
+    @ExceptionHandler(ClientInputException::class)
+    fun clientInputException(request: HttpServletRequest, e: Exception): ResponseEntity<*>  {
+        log.error(markerFrom(requestScope), "Client input error", e)
+        return errorResponse(HttpStatus.BAD_REQUEST, e.message)
+    }
+
+    @ExceptionHandler(PatientNotRetrievedException::class)
+    fun pationInformationNotFound(request: HttpServletRequest, e: Exception): ResponseEntity<*> {
+        log.error(markerFrom(requestScope), "Not able to load Patient information", e)
         return errorResponse(HttpStatus.BAD_REQUEST, e.message)
     }
 

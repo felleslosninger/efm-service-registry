@@ -22,6 +22,8 @@ public class ServiceRecord {
     private List<String> documentTypes;
     private SRService service;
 
+    public ServiceRecord() {}
+
     public ServiceRecord(ServiceIdentifier serviceIdentifier,
                          String organisationNumber,
                          Process process,

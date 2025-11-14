@@ -1,10 +1,16 @@
 package no.difi.meldingsutveksling.serviceregistry.record;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier;
 
 @Data
+@RequiredArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
 public class SRService {
 
     @NonNull
@@ -14,4 +20,5 @@ public class SRService {
     private String serviceCode;
     private String serviceEditionCode;
     private Integer securityLevel;
+    private String resource;
 }

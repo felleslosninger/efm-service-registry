@@ -17,6 +17,8 @@ difi:
       maskinporten-issuer: https://test.no
     krr:
       print-url: https://test.kontaktregisteret.no/rest/v2/printSertifikat
+    healthcare:
+      enabled: false
 logging:
   level:
     root: DEBUG

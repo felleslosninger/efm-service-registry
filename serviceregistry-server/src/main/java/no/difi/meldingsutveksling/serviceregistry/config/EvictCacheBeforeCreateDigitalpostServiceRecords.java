@@ -3,7 +3,6 @@ package no.difi.meldingsutveksling.serviceregistry.config;
 import lombok.RequiredArgsConstructor;
 import no.difi.meldingsutveksling.serviceregistry.CacheConfig;
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
-import no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.cache.Cache;

@@ -23,6 +23,7 @@ public class Process {
     private String identifier;
     private String serviceCode;
     private String serviceEditionCode;
+    private String resource;
 
     @Enumerated(EnumType.STRING)
     private ProcessCategory category;
