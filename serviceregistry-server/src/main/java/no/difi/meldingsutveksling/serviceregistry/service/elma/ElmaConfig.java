@@ -20,6 +20,7 @@ public class ElmaConfig {
     public LookupClient getElmaLookupClient() throws PeppolLoadingException {
         return LookupClientBuilder.forTest()
                 .locator(new StaticLocator(props.getElma().getLocatorUrl()))
+                .provider(CustomServiceMetadataProvider.class)
                 .certificateValidator(EmptyCertificateValidator.INSTANCE)
                 .build();
     }
