@@ -29,7 +29,6 @@ public class ELMALookupService {
     @Qualifier("defaultLookupClient")
     private final LookupClient peppolLookupClient;
 
-    @Qualifier("eFormidlingLookupClient")
     private final EformidlingLookupClient eFormidlingLookupClient;
 
     public Set<ProcessIdentifier> lookupRegisteredProcesses(String orgnr, Set<String> documentIdentifiers) {

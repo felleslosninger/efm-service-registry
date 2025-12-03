@@ -27,7 +27,6 @@ public class ElmaConfig {
     }
 
     @Bean
-    @Qualifier("eFormidlingLookupClient")
     public EformidlingLookupClient getEformidlingLookupClient() throws PeppolLoadingException {
         return new EformidlingLookupClient(
                 LookupClientBuilder.forTest()
