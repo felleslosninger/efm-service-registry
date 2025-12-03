@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.transport.http.AbstractHttpWebServiceMessageSender;
@@ -60,8 +61,11 @@ class KontaktInfoServiceTest {
     @MockBean
     private ELMALookupService elmaLookupService;
 
-    @MockBean
+    @MockBean(name = "defaultLookupClient")
     private LookupClient lookupClient;
+
+    @MockBean(name = "eFormidlingLookupClient")
+    private LookupClient eFormidlingLookupClient;
 
     @MockBean
     private SvarUtService svarUtService;
