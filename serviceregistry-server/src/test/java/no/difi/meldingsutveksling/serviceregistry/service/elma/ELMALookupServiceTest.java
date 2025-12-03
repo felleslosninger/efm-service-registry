@@ -31,7 +31,7 @@ class ELMALookupServiceTest {
     @BeforeEach
     void setUp() {
         peppolLookupClient = mock(LookupClient.class);
-        eFormidlingLookupClient= mock(EformidlingLookupClient.class);
+        eFormidlingLookupClient = mock(EformidlingLookupClient.class);
         target = new ELMALookupService(peppolLookupClient, eFormidlingLookupClient);
     }
 
@@ -41,8 +41,8 @@ class ELMALookupServiceTest {
         Set<String> documentIds = Set.of(EFORMIDLING_DOC_ID);
         List<DocumentTypeIdentifier> registeredIds = List.of(DocumentTypeIdentifier.of(EFORMIDLING_DOC_ID));
 
-        lenient().when(peppolLookupClient.getDocumentIdentifiers(any())).thenReturn(registeredIds);
-        lenient().when(eFormidlingLookupClient.getServiceMetadata(any(), any())).thenReturn(mock(ServiceMetadata.class));
+        when(peppolLookupClient.getDocumentIdentifiers(any())).thenReturn(registeredIds);
+        when(eFormidlingLookupClient.getServiceMetadata(any(), any())).thenReturn(mock(ServiceMetadata.class));
 
         // Act
         target.lookup(ORG_NUMBER, documentIds);
@@ -61,8 +61,8 @@ class ELMALookupServiceTest {
         Set<String> documentIds = Set.of(PEPPOL_DOC_ID);
         List<DocumentTypeIdentifier> registeredIds = List.of(DocumentTypeIdentifier.of(PEPPOL_DOC_ID));
 
-        lenient().when(peppolLookupClient.getDocumentIdentifiers(any())).thenReturn(registeredIds);
-        lenient().when(peppolLookupClient.getServiceMetadata(any(), any())).thenReturn(mock(ServiceMetadata.class));
+        when(peppolLookupClient.getDocumentIdentifiers(any())).thenReturn(registeredIds);
+        when(peppolLookupClient.getServiceMetadata(any(), any())).thenReturn(mock(ServiceMetadata.class));
 
         // Act
         target.lookup(ORG_NUMBER, documentIds);
@@ -84,7 +84,7 @@ class ELMALookupServiceTest {
                 DocumentTypeIdentifier.of(PEPPOL_DOC_ID)
         );
 
-        lenient().when(peppolLookupClient.getDocumentIdentifiers(any())).thenReturn(registeredIds);
+        when(peppolLookupClient.getDocumentIdentifiers(any())).thenReturn(registeredIds);
         when(peppolLookupClient.getServiceMetadata(any(), eq(DocumentTypeIdentifier.of(PEPPOL_DOC_ID)))).thenReturn(mock(ServiceMetadata.class));
         when(eFormidlingLookupClient.getServiceMetadata(any(), eq(DocumentTypeIdentifier.of(EFORMIDLING_DOC_ID)))).thenReturn(mock(ServiceMetadata.class));
 
