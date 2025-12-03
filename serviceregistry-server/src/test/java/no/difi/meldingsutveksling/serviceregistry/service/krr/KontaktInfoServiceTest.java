@@ -7,6 +7,7 @@ import no.difi.meldingsutveksling.serviceregistry.freg.client.DefaultFregGateway
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
 import no.difi.meldingsutveksling.serviceregistry.record.LookupParameters;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
+import no.difi.meldingsutveksling.serviceregistry.service.elma.EformidlingLookupClientWrapper;
 import no.difi.meldingsutveksling.serviceregistry.service.healthcare.NhnService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
@@ -64,8 +65,8 @@ class KontaktInfoServiceTest {
     @MockBean(name = "defaultLookupClient")
     private LookupClient lookupClient;
 
-    @MockBean(name = "eFormidlingLookupClient")
-    private LookupClient eFormidlingLookupClient;
+    @MockBean
+    private EformidlingLookupClientWrapper eformidlingLookupClientWrapper;
 
     @MockBean
     private SvarUtService svarUtService;

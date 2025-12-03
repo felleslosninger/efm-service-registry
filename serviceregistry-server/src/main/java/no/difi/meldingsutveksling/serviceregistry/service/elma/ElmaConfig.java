@@ -27,11 +27,12 @@ public class ElmaConfig {
     }
 
     @Bean
-    public EformidlingLookupClient getEformidlingLookupClient() throws PeppolLoadingException {
-        return new EformidlingLookupClient(
-                LookupClientBuilder.forTest()
-                        .locator(new StaticLocator(props.getElma().getLocatorUrl()))
-                        .provider(CustomServiceMetadataProvider.class)
-                        .certificateValidator(EmptyCertificateValidator.INSTANCE));
+    public EformidlingLookupClientWrapper getEformidlingLookupClient() throws PeppolLoadingException {
+        LookupClient wrappedClient = LookupClientBuilder.forTest()
+                .locator(new StaticLocator(props.getElma().getLocatorUrl()))
+                .provider(CustomServiceMetadataProvider.class)
+                .certificateValidator(EmptyCertificateValidator.INSTANCE)
+                .build();
+        return new EformidlingLookupClientWrapper(wrappedClient);
     }
 }

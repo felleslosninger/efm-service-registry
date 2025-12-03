@@ -19,8 +19,9 @@ import static org.mockito.Mockito.*;
 class ELMALookupServiceTest {
 
     private LookupClient peppolLookupClient;
+    private LookupClient eFormidlingLookupClient;
 
-    private EformidlingLookupClient eFormidlingLookupClient;
+    private EformidlingLookupClientWrapper eFormidlingLookupClientWrapper;
 
     private ELMALookupService target;
 
@@ -31,8 +32,9 @@ class ELMALookupServiceTest {
     @BeforeEach
     void setUp() {
         peppolLookupClient = mock(LookupClient.class);
-        eFormidlingLookupClient = mock(EformidlingLookupClient.class);
-        target = new ELMALookupService(peppolLookupClient, eFormidlingLookupClient);
+        eFormidlingLookupClient = mock(LookupClient.class);
+        eFormidlingLookupClientWrapper = mock(EformidlingLookupClientWrapper.class);
+        target = new ELMALookupService(peppolLookupClient, eFormidlingLookupClientWrapper);
     }
 
     @Test
@@ -43,6 +45,7 @@ class ELMALookupServiceTest {
 
         when(peppolLookupClient.getDocumentIdentifiers(any())).thenReturn(registeredIds);
         when(eFormidlingLookupClient.getServiceMetadata(any(), any())).thenReturn(mock(ServiceMetadata.class));
+        when(eFormidlingLookupClientWrapper.getLookupClient()).thenReturn(eFormidlingLookupClient);
 
         // Act
         target.lookup(ORG_NUMBER, documentIds);
@@ -87,6 +90,7 @@ class ELMALookupServiceTest {
         when(peppolLookupClient.getDocumentIdentifiers(any())).thenReturn(registeredIds);
         when(peppolLookupClient.getServiceMetadata(any(), eq(DocumentTypeIdentifier.of(PEPPOL_DOC_ID)))).thenReturn(mock(ServiceMetadata.class));
         when(eFormidlingLookupClient.getServiceMetadata(any(), eq(DocumentTypeIdentifier.of(EFORMIDLING_DOC_ID)))).thenReturn(mock(ServiceMetadata.class));
+        when(eFormidlingLookupClientWrapper.getLookupClient()).thenReturn(eFormidlingLookupClient);
 
         // Act
         target.lookup(ORG_NUMBER, documentIds);

@@ -29,7 +29,7 @@ public class ELMALookupService {
     @Qualifier("defaultLookupClient")
     private final LookupClient peppolLookupClient;
 
-    private final EformidlingLookupClient eFormidlingLookupClient;
+    private final EformidlingLookupClientWrapper eFormidlingLookupClientWrapper;
 
     public Set<ProcessIdentifier> lookupRegisteredProcesses(String orgnr, Set<String> documentIdentifiers) {
         List<ServiceMetadata> smdList = lookup(orgnr, documentIdentifiers);
@@ -72,7 +72,7 @@ public class ELMALookupService {
 
     private LookupClient selectLookupClient(String documentTypeIdentifier) {
         return documentTypeIdentifier.startsWith("urn:no:difi")
-                ? eFormidlingLookupClient
+                ? eFormidlingLookupClientWrapper.getLookupClient()
                 : peppolLookupClient;
     }
 
