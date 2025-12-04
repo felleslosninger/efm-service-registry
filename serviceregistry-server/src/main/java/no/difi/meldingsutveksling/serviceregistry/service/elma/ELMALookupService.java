@@ -2,15 +2,17 @@ package no.difi.meldingsutveksling.serviceregistry.service.elma;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
-import network.oxalis.vefa.peppol.common.model.*;
+import network.oxalis.vefa.peppol.common.model.DocumentTypeIdentifier;
+import network.oxalis.vefa.peppol.common.model.ParticipantIdentifier;
+import network.oxalis.vefa.peppol.common.model.ProcessIdentifier;
+import network.oxalis.vefa.peppol.common.model.ServiceMetadata;
 import network.oxalis.vefa.peppol.lookup.LookupClient;
 import network.oxalis.vefa.peppol.lookup.api.LookupException;
 import network.oxalis.vefa.peppol.security.lang.PeppolSecurityException;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -23,7 +25,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ELMALookupService {
 
-    private final LookupClient lookupClient;
+    private final LookupClient peppolLookupClient;
+
+    private final EformidlingLookupClientWrapper eFormidlingLookupClientWrapper;
 
     public Set<ProcessIdentifier> lookupRegisteredProcesses(String orgnr, Set<String> documentIdentifiers) {
         List<ServiceMetadata> smdList = lookup(orgnr, documentIdentifiers);
@@ -38,13 +42,14 @@ public class ELMALookupService {
         List<ServiceMetadata> metadataList = new ArrayList<>();
         String logId = "getDocumentIdentifiers";
         try {
-            Set<String> registeredIdentifiers = lookupClient.getDocumentIdentifiers(ParticipantIdentifier.of(organizationNumber))
+            Set<String> registeredIdentifiers = peppolLookupClient.getDocumentIdentifiers(ParticipantIdentifier.of(organizationNumber))
                     .stream().map(DocumentTypeIdentifier::getIdentifier)
                     .collect(Collectors.toSet());
             for (String id : documentIdentifiers) {
                 logId = id;
                 if (registeredIdentifiers.contains(id)) {
-                    ServiceMetadata serviceMetadata = lookupClient.getServiceMetadata(ParticipantIdentifier.of(organizationNumber), DocumentTypeIdentifier.of(id));
+                    LookupClient clientToUse = selectLookupClient(id);
+                    ServiceMetadata serviceMetadata = clientToUse.getServiceMetadata(ParticipantIdentifier.of(organizationNumber), DocumentTypeIdentifier.of(id));
                     if (serviceMetadata != null) {
                         metadataList.add(serviceMetadata);
                     }
@@ -57,11 +62,16 @@ public class ELMALookupService {
         } catch (LookupException e) {
             // Just log, need to check the remaining documents
             log.debug("Failed ELMA lookup for identifier={}, documentTypeIdentifier={}", organizationNumber, logId, e);
-        }
-        catch (NullPointerException e) {
+        } catch (NullPointerException e) {
             log.debug("Organization {} is not in ELMA", organizationNumber, e);
         }
         return metadataList;
+    }
+
+    private LookupClient selectLookupClient(String documentTypeIdentifier) {
+        return documentTypeIdentifier.startsWith("urn:no:difi")
+                ? eFormidlingLookupClientWrapper.getLookupClient()
+                : peppolLookupClient;
     }
 
 }
