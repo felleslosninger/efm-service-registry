@@ -10,7 +10,6 @@ import network.oxalis.vefa.peppol.lookup.LookupClient;
 import network.oxalis.vefa.peppol.lookup.api.LookupException;
 import network.oxalis.vefa.peppol.security.lang.PeppolSecurityException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -26,7 +25,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ELMALookupService {
 
-    @Qualifier("defaultLookupClient")
     private final LookupClient peppolLookupClient;
 
     private final EformidlingLookupClientWrapper eFormidlingLookupClientWrapper;
