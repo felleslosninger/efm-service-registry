@@ -42,12 +42,6 @@
                                     <attributes>
                                         <project-version>${project.version}</project-version>
                                     </attributes>
-                                    <extensions>
-                                        <extension>
-                                            <className>com.bmuschko.asciidoctorj.tabbedcode.TabbedCodeBlockExtension
-                                            </className>
-                                        </extension>
-                                    </extensions>
                                     <requires>
                                         <require>asciidoctor-diagram</require>
                                     </requires>
