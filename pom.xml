@@ -65,6 +65,7 @@
 
         <org.apache.ws.commons.axiom.version>2.0.0</org.apache.ws.commons.axiom.version>
         <kotlin.version>2.2.10</kotlin.version>
+        <oxalis-libs.version>4.2.1</oxalis-libs.version>
     </properties>
 
     <modules>
@@ -144,17 +145,17 @@
             <dependency>
                 <groupId>network.oxalis.vefa</groupId>
                 <artifactId>peppol-lookup</artifactId>
-                <version>3.8.0</version>
+                <version>${oxalis-libs.version}</version>
             </dependency>
             <dependency>
                 <groupId>network.oxalis.vefa</groupId>
                 <artifactId>commons-busdox</artifactId>
-                <version>3.8.0</version>
+                <version>${oxalis-libs.version}</version>
             </dependency>
             <dependency>
                 <groupId>network.oxalis.vefa</groupId>
                 <artifactId>commons-bdxr</artifactId>
-                <version>3.8.0</version>
+                <version>${oxalis-libs.version}</version>
             </dependency>
 
             <dependency>

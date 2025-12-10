@@ -1,18 +1,21 @@
 package no.difi.meldingsutveksling.serviceregistry.service.krr;
 
 import com.nimbusds.jose.jwk.RSAKey;
+import network.oxalis.vefa.peppol.lookup.LookupClient;
 import no.difi.meldingsutveksling.serviceregistry.MoveServiceRegistryApplication;
 import no.difi.meldingsutveksling.serviceregistry.config.VirksertConfig;
 import no.difi.meldingsutveksling.serviceregistry.freg.client.DefaultFregGatewayClient;
-import no.difi.meldingsutveksling.serviceregistry.krr.*;
+import no.difi.meldingsutveksling.serviceregistry.krr.KRRClient;
+import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
+import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.record.LookupParameters;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
-import no.difi.meldingsutveksling.serviceregistry.service.healthcare.NhnService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
+import no.difi.meldingsutveksling.serviceregistry.service.elma.EformidlingLookupClientWrapper;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.NhnService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClient;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
-import network.oxalis.vefa.peppol.lookup.LookupClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +65,9 @@ class KontaktInfoServiceTest {
 
     @MockBean
     private LookupClient lookupClient;
+
+    @MockBean
+    private EformidlingLookupClientWrapper eformidlingLookupClientWrapper;
 
     @MockBean
     private SvarUtService svarUtService;
