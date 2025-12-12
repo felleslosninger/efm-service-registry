@@ -18,6 +18,7 @@
         <java.version>21</java.version>
         <docker.registry>registry:5000/</docker.registry>
         <docker.build.version>${project.version}</docker.build.version>
+        <wiremock.version>3.0.1</wiremock.version>
     </properties>
 
     <profiles>
@@ -63,7 +64,7 @@
                             <dependency>
                                 <groupId>org.asciidoctor</groupId>
                                 <artifactId>asciidoctorj-diagram</artifactId>
-                                <version>1.5.18</version>
+                                <version>3.0.1</version>
                                 <scope>runtime</scope>
                             </dependency>
                         </dependencies>
@@ -174,10 +175,16 @@
         <dependency>
             <groupId>no.difi.meldingsutveksling</groupId>
             <artifactId>service-registry-common</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>no.difi.meldingsutveksling</groupId>
             <artifactId>ks-fiks</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>no.idporten.identifiers</groupId>
+            <artifactId>idporten-identifiers</artifactId>
+            <version>0.0.1</version>
         </dependency>
         <dependency>
             <groupId>no.difi.meldingsutveksling</groupId>
@@ -268,6 +275,12 @@
         <dependency>
             <groupId>org.codehaus.janino</groupId>
             <artifactId>janino</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.tomakehurst</groupId>
+            <artifactId>wiremock-jre8-standalone</artifactId>
+            <version>${wiremock.version}</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>

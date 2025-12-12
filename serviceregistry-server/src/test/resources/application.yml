@@ -13,10 +13,16 @@ difi:
         path: classpath:keystore.jks
         password: password
         type: JKS
+    elma:
+      locatorUrl: http://test-smp.elma-smp.no
+      defaultProcessIdentifier: urn:no:difi:profile:arkivmelding:administrasjon:ver1.0
+      lookupIcd: 0192
     auth:
       maskinporten-issuer: https://test.no
     krr:
       print-url: https://test.kontaktregisteret.no/rest/v2/printSertifikat
+    healthcare:
+      enabled: false
 logging:
   level:
     root: DEBUG

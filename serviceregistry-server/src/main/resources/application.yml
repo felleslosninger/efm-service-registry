@@ -2,28 +2,38 @@ spring:
   application:
     name: serviceregistry
   datasource:
-    url: jdbc:h2:file:./sr-db
+    url:
+    username:
+    password:
+    driver-class-name: org.mariadb.jdbc.Driver
   jpa:
-    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MariaDBDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
+server:
+  port: 8080
+  servlet:
+    context-path: /adressetjeneste
 management:
   server:
-    port: 9199
-  endpoints:
-    enabled-by-default: true
-    web:
-      base-path: /manage
-      exposure:
-        include: "info,env,prometheus,health"
+    port: 8090
   endpoint:
     health:
       show-details: always
       probes:
         enabled: true
-  info:
-    git:
-      mode: full
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: "info,env,prometheus,health"
   metrics:
     tags:
       application: ${spring.application.name}
@@ -42,6 +52,11 @@ difi:
       mp-endpoint-uri: https://test.kontaktregisteret.no/rest/v1/personer
       mp-dsf-endpoint-uri: https://test.kontaktregisteret.no/rest/v1/mf/personer
       print-url: https://test.kontaktregisteret.no/rest/v2/printSertifikat
+    healthcare:
+      enabled: true
+      nhn-adapter-endpoint-url: http://localhost:8082/nhn-adapter/arlookup/{identifier}
+      fastlege-process: urn:no:difi:profile:digitalpost:fastlege:ver1.0
+      nhn-process: urn:no:difi:profile:digitalpost:helse:ver1.0
     virksert:
       icd: 0192
       processes:
@@ -79,7 +94,7 @@ difi:
     feature:
       enableDpfDpv: true
     freg:
-      endpoint-u-r-l: http://localhost:8082/
+      endpoint-u-r-l: http://efm-freg-gateway-service:8080/
       enabled: false
       api-key: 1234567890
 logging:

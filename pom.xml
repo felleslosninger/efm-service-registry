@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.5</version>
+        <version>3.5.6</version>
         <relativePath/>
     </parent>
 
@@ -65,15 +65,16 @@
 
         <org.apache.ws.commons.axiom.version>2.0.0</org.apache.ws.commons.axiom.version>
         <kotlin.version>2.2.10</kotlin.version>
+        <oxalis-libs.version>4.2.1</oxalis-libs.version>
     </properties>
 
     <modules>
-        <module>serviceregistry-server</module>
+        <module>common</module>
         <module>kontakt-reservasjonsregister-client</module>
         <module>ks-fiks</module>
         <module>domain</module>
-        <module>common</module>
         <module>freg-gateway-client</module>
+        <module>serviceregistry-server</module>
     </modules>
 
     <dependencyManagement>
@@ -144,17 +145,17 @@
             <dependency>
                 <groupId>network.oxalis.vefa</groupId>
                 <artifactId>peppol-lookup</artifactId>
-                <version>3.8.0</version>
+                <version>${oxalis-libs.version}</version>
             </dependency>
             <dependency>
                 <groupId>network.oxalis.vefa</groupId>
                 <artifactId>commons-busdox</artifactId>
-                <version>3.8.0</version>
+                <version>${oxalis-libs.version}</version>
             </dependency>
             <dependency>
                 <groupId>network.oxalis.vefa</groupId>
                 <artifactId>commons-bdxr</artifactId>
-                <version>3.8.0</version>
+                <version>${oxalis-libs.version}</version>
             </dependency>
 
             <dependency>

@@ -26,5 +26,10 @@ difi:
         forsendelsesserviceUrl: https://foo
         user: <user>
         password: <pass>
+    healthcare:
+      enabled: true
+      nhn-adapter-endpoint-url: http://localhost:8089/arlookup/{identifier}
+      fastlege-process: urn:no:difi:profile:digitalpost:fastlege:ver1.0
+      nhn-process: urn:no:difi:profile:digitalpost:helse:ver1.0
 server:
   port: '9099'

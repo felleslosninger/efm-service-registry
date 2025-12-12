@@ -9,10 +9,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @EnableConfigurationProperties({ServiceregistryProperties.class})
 public class MoveServiceRegistryApplication {
 
-
     public static void main(String[] args) {
         new SpringApplicationBuilder(MoveServiceRegistryApplication.class)
                 .run(args);
     }
-
 }

@@ -32,7 +32,7 @@ public class ProcessServiceTest {
     @Test
     public void update_ProcessNotFound_ResponseShouldBeFalse() {
         when(repositoryMock.findByIdentifier(anyString())).thenReturn(null);
-        Process updatedProcess = createProcess("n/a", "n/a", null);
+        Process updatedProcess = createProcess("n/a", "n/a", "n/a", null);
 
         boolean result = target.update("process", updatedProcess);
 
@@ -45,7 +45,7 @@ public class ProcessServiceTest {
         Process existingProcessMock = mock(Process.class);
         when(repositoryMock.findByIdentifier(anyString())).thenReturn(existingProcessMock);
         String newCode = "newCode";
-        Process updatedProcess = createProcess(newCode, null, null);
+        Process updatedProcess = createProcess(newCode, null, null, null);
         when(repositoryMock.save(existingProcessMock)).thenReturn(existingProcessMock);
 
         boolean result = target.update("process", updatedProcess);
@@ -60,7 +60,7 @@ public class ProcessServiceTest {
         Process existingProcessMock = mock(Process.class);
         when(repositoryMock.findByIdentifier(anyString())).thenReturn(existingProcessMock);
         String newCode = "newCode";
-        Process updatedProcess = createProcess(null, newCode, null);
+        Process updatedProcess = createProcess(null, newCode, null, null);
         when(repositoryMock.save(existingProcessMock)).thenReturn(existingProcessMock);
 
         boolean result = target.update("process", updatedProcess);
@@ -71,6 +71,21 @@ public class ProcessServiceTest {
     }
 
     @Test
+    public void update_ChangeResource_ShouldBeSaved() {
+        Process existingProcessMock = mock(Process.class);
+        when(repositoryMock.findByIdentifier(anyString())).thenReturn(existingProcessMock);
+        String newCode = "newResourceCode";
+        Process updatedProcess = createProcess(null, null, newCode, null);
+        when(repositoryMock.save(existingProcessMock)).thenReturn(existingProcessMock);
+
+        boolean result = target.update("process", updatedProcess);
+
+        assertTrue(result);
+        verify(repositoryMock).save(any(Process.class));
+        verify(existingProcessMock).setResource(newCode);
+    }
+
+    @Test
     public void update_ChangeDocumentTypes_ShouldBeSaved() {
         Process existingProcessMock = mock(Process.class);
         when(repositoryMock.findByIdentifier(any())).thenReturn(existingProcessMock);
@@ -78,7 +93,7 @@ public class ProcessServiceTest {
         DocumentType documentTypeMock = mock(DocumentType.class);
         newTypes.add(documentTypeMock);
         when(documentTypeServiceMock.findByIdentifier(any())).thenReturn(Optional.of(documentTypeMock));
-        Process updatedProcess = createProcess(null, null, newTypes);
+        Process updatedProcess = createProcess(null, null, null, newTypes);
         when(repositoryMock.save(existingProcessMock)).thenReturn(existingProcessMock);
 
         boolean result = target.update("process", updatedProcess);
@@ -95,7 +110,7 @@ public class ProcessServiceTest {
         List<DocumentType> newTypes = new ArrayList<>();
         DocumentType documentTypeMock = mock(DocumentType.class);
         newTypes.add(documentTypeMock);
-        Process updatedProcess = createProcess(null, null, newTypes);
+        Process updatedProcess = createProcess(null, null, null, newTypes);
         when(repositoryMock.save(existingProcessMock)).thenReturn(existingProcessMock);
 
         boolean result = target.update("process", updatedProcess);
@@ -104,11 +119,12 @@ public class ProcessServiceTest {
         verify(documentTypeServiceMock).add(documentTypeMock);
     }
 
-    private static Process createProcess(String serviceCode, String serviceEditionCode, List<DocumentType> documentTypes) {
+    private static Process createProcess(String serviceCode, String serviceEditionCode, String resource, List<DocumentType> documentTypes) {
         Process updatedProcess = new Process();
         updatedProcess.setServiceCode(serviceCode);
         updatedProcess.setServiceEditionCode(serviceEditionCode);
         updatedProcess.setDocumentTypes(documentTypes);
+        updatedProcess.setResource(resource);
         return updatedProcess;
     }
 }

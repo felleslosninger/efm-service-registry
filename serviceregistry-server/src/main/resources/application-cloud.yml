@@ -5,13 +5,6 @@ spring:
     url: ${DATASOURCE_URL}
     username: ${DATASOURCE_USERNAME}
     password: ${DATASOURCE_PASSWORD}
-    driver-class-name: org.mariadb.jdbc.Driver
-  jpa:
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MariaDBDialect
-    hibernate:
-      ddl-auto: validate
   security:
     user:
       name: ${ADMIN_API_USERNAME}
@@ -21,28 +14,13 @@ app:
   logger:
     destination: ${LOGGER_DESTINATION}
 
-server:
-  port: 8080
-  servlet:
-    context-path: /adressetjeneste
-management:
-  server:
-    port: 8090
-  endpoints:
-    web:
-      base-path: /
-  health:
-    livenessState:
-      enabled: true
-    readinessState:
-      enabled: true
-
 difi:
   move:
     dpo:
       endpointURL: ${DPO_URL}
       serviceCode: ${ALTINN_SRR_SERVICECODE}
       serviceEditionCode: ${ALTINN_SRR_SERVICE_EDITION_CODE}
+      resource: ${ALTINN_SRR_RESOURCE}
     dpv:
       endpointURL: ${DPV_URL}
     dpi:
@@ -89,3 +67,5 @@ logging:
     org.springframework.ws.client.MessageTracing: ${LOG_LEVEL}
     org.springframework.ws.server.MessageTracing: ${LOG_LEVEL}
     no.difi.meldingsutveksling.serviceregistry.controller: ${LOG_LEVEL}
+
+

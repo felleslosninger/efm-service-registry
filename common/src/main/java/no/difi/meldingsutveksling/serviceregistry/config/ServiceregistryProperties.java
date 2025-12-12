@@ -35,6 +35,7 @@ public class ServiceregistryProperties {
     private Auth auth;
     private FeatureToggle feature;
     private ELMA elma;
+    private Healthcare healthcare;
 
     @Valid
     private Sign sign;
@@ -103,6 +104,13 @@ public class ServiceregistryProperties {
         private URL endpointURL;
         private String serviceCode;
         private String serviceEditionCode;
+        private String resource;
+    }
+
+    public record Healthcare(String nhnAdapterEndpointUrl,
+                             String fastlegeProcess,
+                             String nhnProcess) {
+
     }
 
     @Data

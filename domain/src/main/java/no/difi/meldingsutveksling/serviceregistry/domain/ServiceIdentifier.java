@@ -9,6 +9,10 @@ public enum ServiceIdentifier {
      */
     DPO,
     /**
+     * Identifies transport til EPJ(fastlege)
+     */
+    DPH,
+    /**
      * Identifies using Altinn correspondence agency as transport
      */
     DPV,

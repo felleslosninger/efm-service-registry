@@ -9,6 +9,7 @@ import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.*;
+import no.difi.meldingsutveksling.serviceregistry.exceptions.ClientInputException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.freg.exception.FregGatewayException;
@@ -16,20 +17,26 @@ import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.AddressRegistrerDetails;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.NhnService;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.Patient;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.PatientNotRetrievedException;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
 import network.oxalis.vefa.peppol.common.model.ProcessIdentifier;
+import no.idporten.identifiers.validation.PersonIdentifierValidator;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static no.difi.meldingsutveksling.serviceregistry.domain.ProcessCategory.AVTALT;
 import static no.difi.meldingsutveksling.serviceregistry.domain.ProcessCategory.EINNSYN;
-import static no.difi.meldingsutveksling.serviceregistry.krr.LookupParameters.lookup;
+import static no.difi.meldingsutveksling.serviceregistry.record.LookupParameters.lookup;
 
 /**
  * Factory method class to create Service Records based on lookup endpoint urls and certificates corresponding to those services
@@ -46,6 +53,9 @@ public class ServiceRecordService {
     private final ProcessService processService;
     private final SRRequestScope requestScope;
     private final ServiceRecordFactory serviceRecordFactory;
+    private final NhnService nhnService;
+    private final SRRequestScope sRRequestScope;
+    private final ServiceregistryProperties serviceregistryProperties;
 
     public Optional<ServiceRecord> createFiksIoServiceRecord(EntityInfo entityInfo, String protocol) {
         return Optional.of(serviceRecordFactory.createDpfioServiceRecord(entityInfo.getIdentifier(), protocol));
@@ -152,6 +162,55 @@ public class ServiceRecordService {
         return createDigitalpostServiceRecords(identifier, onBehalfOrgnr, print, processService.findAll(ProcessCategory.DIGITALPOST));
     }
 
+    public List<ServiceRecord> createHealthcareServiceRecords(EntityInfo entityInfo) throws FregGatewayException{
+        Process process;
+        if(entityInfo instanceof CitizenInfo)   {
+           process = processService.findByIdentifier(serviceregistryProperties.getHealthcare().fastlegeProcess()).orElseThrow(()-> new ServiceRegistryException("Fastlege process not found"));
+        }
+        else if (entityInfo instanceof HelseEnhetInfo) {
+            process = processService.findByIdentifier(serviceregistryProperties.getHealthcare().nhnProcess()).orElseThrow(()->new ServiceRegistryException("Nhn process not found"));
+        }
+        else {
+            throw new ServiceRegistryException("Identifier is not compatible with Healthcare");
+        }
+        return createHealthcareServiceRecords(entityInfo.getIdentifier(),process);
+    }
+
+
+    private List<ServiceRecord> createHealthcareServiceRecords(String identifier, Process process) throws PatientNotRetrievedException {
+        LookupParameters param = LookupParameters.lookup(identifier);
+        param.setToken(sRRequestScope.getToken());
+        if (process == null) {
+            throw new ServiceRegistryException("process must contain at least one Process");
+        }
+        AddressRegistrerDetails arDetails = nhnService.getARDetails(param);
+        Patient patient = null;
+        PersonIdentifierValidator.setSyntheticPersonIdentifiersAllowed(true);
+        if (process.getIdentifier().equals(serviceregistryProperties.getHealthcare().fastlegeProcess())) {
+            if (PersonIdentifierValidator.isValid(identifier)) {
+                try {
+                    patient = kontaktInfoService.getFregAdress(param).map(
+                            t -> new Patient(t.getPersonIdentifikator(), t.getNavn().getFornavn(), t.getNavn().getMellomnavn(), t.getNavn().getEtternavn())
+                    ).orElseThrow(PatientNotRetrievedException::new);
+                } catch (HttpClientErrorException e) {
+                    log.error("Error while Patient Retrieval ", e);
+                    throw new PatientNotRetrievedException(e);
+                }
+
+            }
+            else {
+                log.error("Incoming identifier is not compatible with fastlege process: {}", identifier);
+                throw new ClientInputException("Identifier " +identifier +" needs to be person number.");
+            }
+        }
+
+        HealthCareServiceRecord sr = new HealthCareServiceRecord(ServiceIdentifier.DPH, arDetails.getOrgNumber(), process,arDetails.getEdiAdress(),arDetails.getHerid1(),arDetails.getHerid2(),patient );
+        sr.setPemCertificate(arDetails.getPemDigdirSertifikat());
+        return List.of(sr);
+    }
+
+
+
     @PreAuthorize("hasAuthority('SCOPE_move/dpi.read')")
     public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
                                                                String onBehalfOrgnr,
@@ -159,6 +218,8 @@ public class ServiceRecordService {
                                                                Process process) throws KontaktInfoException, BrregNotFoundException, FregGatewayException {
         return createDigitalpostServiceRecords(identifier, onBehalfOrgnr, print, Collections.singleton(process));
     }
+
+
 
     private List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
                                                                 String onBehalfOrgnr,
