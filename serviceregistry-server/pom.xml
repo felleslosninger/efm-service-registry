@@ -29,7 +29,7 @@
                     <plugin>
                         <groupId>org.asciidoctor</groupId>
                         <artifactId>asciidoctor-maven-plugin</artifactId>
-                        <version>2.2.4</version>
+                        <version>3.2.0</version>
                         <executions>
                             <execution>
                                 <id>generate-docs</id>
@@ -43,12 +43,6 @@
                                     <attributes>
                                         <project-version>${project.version}</project-version>
                                     </attributes>
-                                    <extensions>
-                                        <extension>
-                                            <className>com.bmuschko.asciidoctorj.tabbedcode.TabbedCodeBlockExtension
-                                            </className>
-                                        </extension>
-                                    </extensions>
                                     <requires>
                                         <require>asciidoctor-diagram</require>
                                     </requires>
