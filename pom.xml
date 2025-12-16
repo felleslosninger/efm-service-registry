@@ -64,7 +64,7 @@
         <bouncycastle.version>1.70</bouncycastle.version>
 
         <org.apache.ws.commons.axiom.version>2.0.0</org.apache.ws.commons.axiom.version>
-        <kotlin.version>2.2.10</kotlin.version>
+        <kotlin.version>2.3.0</kotlin.version>
         <oxalis-libs.version>4.2.1</oxalis-libs.version>
     </properties>
 
