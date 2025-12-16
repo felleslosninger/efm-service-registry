@@ -83,7 +83,7 @@
                 <!-- CVE-2025-58056 -->
                 <groupId>io.netty</groupId>
                 <artifactId>netty-codec-http</artifactId>
-                <version>4.2.7.Final</version>
+                <version>4.2.9.Final</version>
             </dependency>
             <dependency>
                 <groupId>no.difi.meldingsutveksling</groupId>
