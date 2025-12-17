@@ -64,7 +64,6 @@
         <bouncycastle.version>1.70</bouncycastle.version>
 
         <org.apache.ws.commons.axiom.version>2.0.0</org.apache.ws.commons.axiom.version>
-        <kotlin.version>2.2.10</kotlin.version>
         <oxalis-libs.version>4.2.1</oxalis-libs.version>
     </properties>
 
@@ -159,12 +158,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-test-junit</artifactId>
-                <version>${kotlin.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
                 <groupId>io.mockk</groupId>
                 <artifactId>mockk</artifactId>
                 <version>1.14.2</version>
@@ -230,72 +223,8 @@
         </dependencies>
     </dependencyManagement>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test-junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>compile</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                        <configuration>
-                            <sourceDirs>
-                                <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
-                                <sourceDir>${project.basedir}/src/main/java</sourceDir>
-                            </sourceDirs>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>test-compile</id>
-                        <phase>test-compile</phase>
-                        <goals>
-                            <goal>test-compile</goal>
-                        </goals>
-                        <configuration>
-                            <sourceDirs>
-                                <sourceDir>${project.basedir}/src/test/java</sourceDir>
-                                <sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
-                            </sourceDirs>
-                        </configuration>
-                    </execution>
-                </executions>
-                <configuration>
-                    <jvmTarget>1.8</jvmTarget>
-                    <compilerPlugins>
-                        <plugin>jpa</plugin>
-                        <plugin>all-open</plugin>
-                    </compilerPlugins>
-                    <pluginOptions>
-                        <option>all-open:annotation=jakarta.persistence.Entity</option>
-                        <option>all-open:annotation=jakarta.persistence.Embeddable</option>
-                        <option>all-open:annotation=jakarta.persistence.MappedSuperclass</option>
-                    </pluginOptions>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.jetbrains.kotlin</groupId>
-                        <artifactId>kotlin-maven-allopen</artifactId>
-                        <version>${kotlin.version}</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.jetbrains.kotlin</groupId>
-                        <artifactId>kotlin-maven-noarg</artifactId>
-                        <version>${kotlin.version}</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
