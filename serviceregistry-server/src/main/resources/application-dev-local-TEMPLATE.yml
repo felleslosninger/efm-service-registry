@@ -21,7 +21,7 @@ difi:
         alias: changeit
         password: changeit
     virksert:
-      endpointURL: https://test-meldingsutveksling.dificloud.net/virksomhetssertifikat/
+      endpointURL: https://eformidling.dev/virksomhetssertifikat/
     dpv:
       endpointURL: https://tt02.altinn.no/ServiceEngineExternal/CorrespondenceAgencyExternal.svc
     dpi:
@@ -30,9 +30,17 @@ difi:
       mp-endpoint-uri: https://test.kontaktregisteret.no/rest/v1/personer
       mp-dsf-endpoint-uri: https://test.kontaktregisteret.no/rest/v1/mf/personer
     fiks:
+      oidc:
+        keystore:
+          path: changeit
+          alias: changeit
+          password: changeit
+        client-id: changeit
+        url: https://test.maskinporten.no/token
+        audience: https://test.maskinporten.no/
       svarut:
-        user: changeit
-        password: changeit
+        integrasjon-id: changeit
+        integrasjon-passord: changeit
     freg:
       enabled: false
     brreg:

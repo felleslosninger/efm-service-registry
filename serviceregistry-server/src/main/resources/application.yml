@@ -79,16 +79,24 @@ difi:
       infoProcess: urn:no:difi:profile:digitalpost:info:ver1.0
       vedtakProcess: urn:no:difi:profile:digitalpost:vedtak:ver1.0
     fiks:
+      oidc:
+        audience: https://test.maskinporten.no/
+        url: https://test.maskinporten.no/token
+        client-id: changeit
+        keystore:
+          alias: changeit
+          password: changeit
+          path: changeit
       io:
         enable: false
         endpoint-url: https://api.fiks.test.ks.no
         orgform-filter: KOMM
       svarut:
-        user: <user>
-        password: <pass>
-        forsendelsesserviceUrl: https://test.svarut.ks.no/tjenester/forsendelseservice/ForsendelsesServiceV9
         serviceRecordUrl: https://test.svarut.ks.no/tjenester/forsendelseservice/ForsendelsesServiceV6
         certificate: classpath:svarut_test_public.pem
+        base-url: https://test.svarut.ks.no/api/v2
+        integrasjon-id: <id>
+        integrasjon-passord: <pass>
     auth:
       maskinporten-issuer: https://test.maskinporten.no/
     feature:

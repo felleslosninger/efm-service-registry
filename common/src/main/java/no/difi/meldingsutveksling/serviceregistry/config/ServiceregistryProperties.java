@@ -1,26 +1,20 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package no.difi.meldingsutveksling.serviceregistry.config;
 
 import lombok.Data;
 import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier;
 import no.difi.move.common.config.KeystoreProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.core.io.Resource;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+
 import java.net.URI;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
-/**
- * @author Nikolai Luthman <nikolai dot luthman at inmeta dot no>
- */
 @ConfigurationProperties("difi.move")
 @Data
 public class ServiceregistryProperties {
@@ -129,7 +123,24 @@ public class ServiceregistryProperties {
         private SvarUt svarut;
         @Valid
         private FiksIo io;
+        @Valid
+        private Oidc oidc;
     }
+
+    @Data
+    public static class Oidc {
+
+        private URL url;
+        private String audience;
+        private String clientId;
+
+        /**
+         * Properties for Certificate
+         */
+        @NestedConfigurationProperty
+        private KeystoreProperties keystore;
+    }
+
 
     @Data
     public static class FiksIo {
@@ -146,12 +157,21 @@ public class ServiceregistryProperties {
 
     @Data
     public static class SvarUt {
+        /**
+         * KS fiks SvarUt base url for rest api
+         */
         @NotNull
-        private String user;
+        private URL baseUrl;
+        /**
+         * The integrasjonid for the integration used for communication with KS fiks SvarUt rest api.
+         */
         @NotNull
-        private String password;
+        private String integrasjonId;
+        /**
+         * The integrationpassword for the integration used for communication with KS fiks SvarUt rest api.
+         */
         @NotNull
-        private URL forsendelsesserviceUrl;
+        private String integrasjonPassord;
         @NotNull
         private URL serviceRecordUrl;
         @NotNull
