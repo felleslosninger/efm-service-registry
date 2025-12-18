@@ -29,7 +29,7 @@
                     <plugin>
                         <groupId>org.asciidoctor</groupId>
                         <artifactId>asciidoctor-maven-plugin</artifactId>
-                        <version>2.2.4</version>
+                        <version>3.2.0</version>
                         <executions>
                             <execution>
                                 <id>generate-docs</id>
@@ -43,12 +43,6 @@
                                     <attributes>
                                         <project-version>${project.version}</project-version>
                                     </attributes>
-                                    <extensions>
-                                        <extension>
-                                            <className>com.bmuschko.asciidoctorj.tabbedcode.TabbedCodeBlockExtension
-                                            </className>
-                                        </extension>
-                                    </extensions>
                                     <requires>
                                         <require>asciidoctor-diagram</require>
                                     </requires>
@@ -205,20 +199,6 @@
             <artifactId>freg-gateway-client</artifactId>
         </dependency>
 
-        <!-- Kotlin-->
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-reflect</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.module</groupId>
-            <artifactId>jackson-module-kotlin</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -252,7 +232,7 @@
         <dependency>
             <groupId>com.ninja-squad</groupId>
             <artifactId>springmockk</artifactId>
-            <version>4.0.2</version>
+            <version>5.0.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
