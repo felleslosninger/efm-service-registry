@@ -12,7 +12,7 @@ import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
 import no.difi.meldingsutveksling.serviceregistry.record.LookupParameters;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.retry.annotation.Retryable;
+import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;

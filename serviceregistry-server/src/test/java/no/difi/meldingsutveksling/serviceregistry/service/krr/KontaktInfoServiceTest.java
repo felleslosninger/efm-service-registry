@@ -20,8 +20,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.transport.http.AbstractHttpWebServiceMessageSender;
@@ -39,46 +39,46 @@ class KontaktInfoServiceTest {
     @Autowired
     private KontaktInfoService kontaktInfoService;
 
-    @MockBean
+    @MockitoBean
     private DefaultFregGatewayClient defaultFregGatewayClient;
 
-    @MockBean
+    @MockitoBean
     private KRRClient krrClient;
 
-    @MockBean
+    @MockitoBean
     private RSAKey rsaKey;
 
-    @MockBean
+    @MockitoBean
     private VirkSertService virkSertService;
 
-    @MockBean
+    @MockitoBean
     private VirksertConfig virksertConfig;
 
-    @MockBean
+    @MockitoBean
     private BrregService brregService;
 
-    @MockBean
+    @MockitoBean
     private NhnService nhnService;
 
-    @MockBean
+    @MockitoBean
     private ELMALookupService elmaLookupService;
 
-    @MockBean
+    @MockitoBean
     private LookupClient lookupClient;
 
-    @MockBean
+    @MockitoBean
     private EformidlingLookupClientWrapper eformidlingLookupClientWrapper;
 
-    @MockBean
+    @MockitoBean
     private SvarUtService svarUtService;
 
-    @MockBean
+    @MockitoBean
     private SvarUtClient svarUtClient;
 
-    @MockBean
+    @MockitoBean
     private WebServiceTemplate webServiceTemplate;
 
-    @MockBean
+    @MockitoBean
     private AbstractHttpWebServiceMessageSender sender;
 
     @Test
