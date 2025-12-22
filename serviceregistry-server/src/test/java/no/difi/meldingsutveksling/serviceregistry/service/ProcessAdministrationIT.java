@@ -16,8 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.ArrayList;
@@ -35,19 +35,19 @@ public class ProcessAdministrationIT {
     @Autowired
     private ProcessRepository processRepository;
 
-    @MockBean
+    @MockitoBean
     private VirkSertService virkSertService;
 
-    @MockBean
+    @MockitoBean
     private LookupClient lookupClient;
 
-    @MockBean
+    @MockitoBean
     private TransportProfile transportProfile;
 
-    @MockBean
+    @MockitoBean
     private KontaktInfoService kontaktInfoService;
 
-    @MockBean
+    @MockitoBean
     private BrregClient brregClient;
 
     @Autowired
