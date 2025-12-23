@@ -15,7 +15,7 @@ jobs:
     if: github.ref == 'refs/heads/main' || contains(github.event.head_commit.message, '[run-ci]')
     uses: felleslosninger/github-workflows/.github/workflows/ci-maven-install-deploy-lib.yml@main
     with:
-      java-version: 21
+      java-version: 25
       sbom-path: serviceregistry-server/target/
     secrets: inherit
 
@@ -26,7 +26,7 @@ jobs:
     with:
       application-path: serviceregistry-server/
       image-name: efm-service-registry
-      java-version: 21
+      java-version: 25
       slack-channel-id: C05NLQCFR41
       update-versions: "false"
     secrets: inherit
