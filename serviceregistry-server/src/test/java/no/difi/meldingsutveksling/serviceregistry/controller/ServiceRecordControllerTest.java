@@ -8,8 +8,8 @@ import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
-import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.*;
+import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.freg.exception.FregGatewayException;
 import no.difi.meldingsutveksling.serviceregistry.krr.*;
@@ -49,7 +49,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.ByteArrayInputStream;
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.security.interfaces.RSAPublicKey;
@@ -60,8 +60,8 @@ import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
@@ -136,7 +136,7 @@ public class ServiceRecordControllerTest {
         Process adminProcess = new Process()
                 .setIdentifier(PROC_ARKIVMELDING_ADMINISTRASJON)
                 .setDocumentTypes(singletonList(new DocumentType().setIdentifier(DOC_ARKIVMELDING)));
-        DPO_SERVICE_RECORD = new ServiceRecord(ServiceIdentifier.DPO, "123123123", adminProcess, "http://endpoint.here");
+        DPO_SERVICE_RECORD = new ServiceRecord(ServiceIdentifier.DPO, "123123123", adminProcess, "https://endpoint.here");
         DPO_SERVICE_RECORD.setPemCertificate("pem123");
         DPO_SERVICE_RECORD.getService().setServiceEditionCode(SEC_DPO);
         DPO_SERVICE_RECORD.getService().setServiceCode(SC_DPO);
@@ -145,12 +145,12 @@ public class ServiceRecordControllerTest {
         Process tekniskeTjenesterProcess = new Process()
                 .setIdentifier(PROC_ARKIVMELDING_TEKNISKE_TJENESTER)
                 .setDocumentTypes(singletonList(new DocumentType().setIdentifier(PROC_ARKIVMELDING_TEKNISKE_TJENESTER)));
-        DPV_SERVICE_RECORD = new ServiceRecord(ServiceIdentifier.DPV, "123123123", tekniskeTjenesterProcess, "http://endpoint.here");
+        DPV_SERVICE_RECORD = new ServiceRecord(ServiceIdentifier.DPV, "123123123", tekniskeTjenesterProcess, "https://endpoint.here");
         DPV_SERVICE_RECORD.getService().setServiceCode(SC_DPV);
         DPV_SERVICE_RECORD.getService().setServiceEditionCode(SEC_DPV);
         DPV_SERVICE_RECORD.getService().setResource(R_DPV);
 
-        DPF_SERVICE_RECORD = new ServiceRecord(ServiceIdentifier.DPF, "321321321", adminProcess, "http://endpoint.here");
+        DPF_SERVICE_RECORD = new ServiceRecord(ServiceIdentifier.DPF, "321321321", adminProcess, "https://endpoint.here");
         DPF_SERVICE_RECORD.setPemCertificate("pem234");
 
         Process innsynskravProcess = new Process()
@@ -255,7 +255,7 @@ public class ServiceRecordControllerTest {
                 .andExpect(jsonPath("$.serviceRecords[0].service.serviceCode", is(SC_DPO)))
                 .andExpect(jsonPath("$.serviceRecords[0].service.serviceEditionCode", is(SEC_DPO)))
                 .andExpect(jsonPath("$.serviceRecords[0].service.resource", is(R_DPO)))
-                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("http://endpoint.here")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("https://endpoint.here")))
                 .andExpect(jsonPath("$.infoRecord.identifier", is("123123123")))
                 .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")))
                 .andDo(document("identifier/org",
@@ -296,7 +296,7 @@ public class ServiceRecordControllerTest {
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("123123123")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPV")))
                 .andExpect(jsonPath("$.serviceRecords[0].pemCertificate", is(emptyOrNullString())))
-                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("http://endpoint.here")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("https://endpoint.here")))
                 .andExpect(jsonPath("$.infoRecord.identifier", is("123123123")))
                 .andExpect(jsonPath("$.infoRecord.organizationName", is("foo")))
                 .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")));
@@ -310,6 +310,7 @@ public class ServiceRecordControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("12345678901")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPI")))
+                .andExpect(jsonPath("$.serviceRecords[0].spraak", is("nb")))
                 .andDo(document("identifier/person",
                         preprocessRequest(prettyPrint()),
                         preprocessResponse(prettyPrint()),
@@ -403,13 +404,14 @@ public class ServiceRecordControllerTest {
         personResource.setContactInfo(ContactInfoResource.of("post@post.foo", "", "123", ""));
         personResource.setReserved("NEI");
         personResource.setPrintPostkasseLeverandorAdr("postkasse123");
+        personResource.setPreferredLanguage("nb");
         return personResource;
     }
 
     private ServiceregistryProperties fakePropertiesForDpi() throws MalformedURLException {
         ServiceregistryProperties serviceregistryProperties = new ServiceregistryProperties();
         ServiceregistryProperties.DigitalPostInnbygger dpiConfig = new ServiceregistryProperties.DigitalPostInnbygger();
-        dpiConfig.setEndpointURL(new URL("http://dpi.endpoint.here"));
+        dpiConfig.setEndpointURL(URI.create("https://dpi.endpoint.here").toURL());
         serviceregistryProperties.setDpi(dpiConfig);
         return serviceregistryProperties;
     }
@@ -436,7 +438,7 @@ public class ServiceRecordControllerTest {
 
         String serializedJose = response.getResponse().getContentAsString();
         JWSObject jwsObject = JWSObject.parse(serializedJose);
-        byte[] decode = jwsObject.getHeader().getX509CertChain().get(0).decode();
+        byte[] decode = jwsObject.getHeader().getX509CertChain().getFirst().decode();
         Certificate certificate = CertificateFactory.getInstance("X.509").generateCertificate(new ByteArrayInputStream(decode));
         JWSVerifier jwsVerifier = new RSASSAVerifier((RSAPublicKey) certificate.getPublicKey());
 
@@ -469,7 +471,7 @@ public class ServiceRecordControllerTest {
                 .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("123123123")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPV")))
                 .andExpect(jsonPath("$.serviceRecords[0].pemCertificate", is(emptyOrNullString())))
-                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("http://endpoint.here")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("https://endpoint.here")))
                 .andExpect(jsonPath("$.infoRecord.identifier", is("123123123")))
                 .andExpect(jsonPath("$.infoRecord.organizationName", is("foo")))
                 .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")))
@@ -497,7 +499,7 @@ public class ServiceRecordControllerTest {
                 .andExpect(jsonPath("$.serviceRecords[0].service.serviceCode", is(SC_DPO)))
                 .andExpect(jsonPath("$.serviceRecords[0].service.serviceEditionCode", is(SEC_DPO)))
                 .andExpect(jsonPath("$.serviceRecords[0].service.resource", is(R_DPO)))
-                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("http://endpoint.here")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("https://endpoint.here")))
                 .andExpect(jsonPath("$.infoRecord.identifier", is("123123123")))
                 .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")))
                 .andDo(document("identifier/arkivmelding",
@@ -523,7 +525,7 @@ public class ServiceRecordControllerTest {
                 .andExpect(jsonPath("$.serviceRecords[0].service.serviceCode", is(SC_DPO)))
                 .andExpect(jsonPath("$.serviceRecords[0].service.serviceEditionCode", is(SEC_DPO)))
                 .andExpect(jsonPath("$.serviceRecords[0].service.resource", is(R_DPO)))
-                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("http://endpoint.here")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("https://endpoint.here")))
                 .andExpect(jsonPath("$.infoRecord.identifier", is("123123123")))
                 .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")));
     }
@@ -566,7 +568,7 @@ public class ServiceRecordControllerTest {
                 .andExpect(jsonPath("$.serviceRecords[0].pemCertificate", is("-----BEGIN CERTIFICATE-----\npem234\n-----END CERTIFICATE-----\n")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPF")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.securityLevel", is(3)))
-                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("http://endpoint.here")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("https://endpoint.here")))
                 .andExpect(jsonPath("$.infoRecord.identifier", is("321321321")))
                 .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")));
     }
@@ -607,7 +609,7 @@ public class ServiceRecordControllerTest {
                 .andExpect(jsonPath("$.serviceRecords[0].pemCertificate", is("-----BEGIN CERTIFICATE-----\npem234\n-----END CERTIFICATE-----\n")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPF")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.securityLevel", is(3)))
-                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("http://endpoint.here")))
+                .andExpect(jsonPath("$.serviceRecords[0].service.endpointUrl", is("https://endpoint.here")))
                 .andExpect(jsonPath("$.infoRecord.identifier", is("321321321")))
                 .andExpect(jsonPath("$.infoRecord.entityType.name", is("ORGL")));
     }
