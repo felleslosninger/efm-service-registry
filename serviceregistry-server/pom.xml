@@ -130,6 +130,9 @@
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <skip>false</skip>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>pl.project13.maven</groupId>
