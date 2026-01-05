@@ -18,8 +18,8 @@ jobs:
   call-container-scan:
     needs: [ call-workflow-maven-build ]
     if: ${{ !contains(github.event.head_commit.message, '[run-ci]') }}
-    uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-container-scan.yml@main
+    uses: felleslosninger/github-workflows/.github/workflows/ci-spring-boot-container-scan.yml@work/MOVE-4779
     with:
       java-version: 21
-      application-path: serviceregistry-server/
+      module-name: serviceregistry-server
     secrets: inherit
