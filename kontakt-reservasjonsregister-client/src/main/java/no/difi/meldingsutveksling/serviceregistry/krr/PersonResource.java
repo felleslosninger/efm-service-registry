@@ -33,6 +33,9 @@ public class PersonResource {
     @JsonProperty(value = "sertifikat")
     private String certificate;
 
+    @JsonProperty(value = "spraak")
+    String preferredLanguage;
+
     private String printPostkasseLeverandorAdr;
 
     public boolean hasMailbox() {
