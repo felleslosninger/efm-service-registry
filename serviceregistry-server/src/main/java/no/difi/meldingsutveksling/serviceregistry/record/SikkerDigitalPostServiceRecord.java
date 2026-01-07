@@ -25,6 +25,7 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
     private final boolean fysiskPost;
     private final PostAddress postAddress;
     private final PostAddress returnAddress;
+    private final String spraak;
 
     public SikkerDigitalPostServiceRecord(String identifier,
                                           Process process,
@@ -56,6 +57,6 @@ public class SikkerDigitalPostServiceRecord extends ServiceRecord {
 
         this.postAddress = postAddress;
         this.returnAddress = returnAddress;
+        this.spraak = personResource.getPreferredLanguage();
     }
-
 }
