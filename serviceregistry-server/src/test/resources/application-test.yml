@@ -20,12 +20,20 @@ difi:
         password: changeit
         alias: '991825827'
     fiks:
+      oidc:
+        keystore:
+          path: changeit
+          alias: changeit
+          password: changeit
+        client-id: changeit
+        url: https://foo
+        audience: https://foo
       svarut:
         serviceRecordUrl: https://foo
         certificate: classpath:test.pem
-        forsendelsesserviceUrl: https://foo
-        user: <user>
-        password: <pass>
+        base-url: https://foo
+        integrasjon-id: <user>
+        integrasjon-passord: <pass>
     healthcare:
       enabled: true
       nhn-adapter-endpoint-url: http://localhost:8089/arlookup/{identifier}

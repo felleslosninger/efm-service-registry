@@ -36,6 +36,13 @@
         </dependency>
 
         <dependency>
+            <groupId>org.openapitools</groupId>
+            <artifactId>jackson-databind-nullable</artifactId>
+            <version>0.2.6</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
@@ -88,50 +95,48 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.jvnet.jaxb</groupId>
-                <artifactId>jaxb-maven-plugin</artifactId>
-                <version>4.0.12</version>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>7.13.0</version>
+
+                <!--
+                https://github.com/OpenAPITools/openapi-generator/blob/master/modules/openapi-generator-maven-plugin/README.md
+                mcs org.openapitools:openapi-generator-maven-plugin
+                -->
+                <configuration>
+                    <generatorName>java</generatorName>
+                    <generateApis>false</generateApis>
+                    <generateModels>true</generateModels>
+                    <generateSupportingFiles>false</generateSupportingFiles>
+                    <generateModelTests>false</generateModelTests>
+                    <generateModelDocumentation>false</generateModelDocumentation>
+                    <generateApiTests>false</generateApiTests>
+                    <generateApiDocumentation>false</generateApiDocumentation>
+                    <cleanupOutput>true</cleanupOutput>
+                    <configOptions>
+                        <library>restclient</library>
+                        <dateLibrary>java8</dateLibrary>
+                        <hideGenerationTimestamp>true</hideGenerationTimestamp>
+                        <annotationLibrary>none</annotationLibrary>
+                        <generateClientAsBean>true</generateClientAsBean>
+                        <openApiNullable>false</openApiNullable>
+                        <useJakartaEe>true</useJakartaEe>
+                        <useRuntimeException>true</useRuntimeException>
+                    </configOptions>
+                </configuration>
                 <executions>
                     <execution>
-                        <id>xsd-generate</id>
-                        <phase>generate-sources</phase>
+                        <id>mottakersystem</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/mottakersystem-api-v2.json</inputSpec>
+                            <output>${project.build.directory}/generated-sources/mottakersystem/</output>
+                            <modelPackage>no.difi.meldingsutveksling.serviceregistry.svarut.mottakersystem</modelPackage>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <schemaLanguage>WSDL</schemaLanguage>
-                    <schemaDirectory>${basedir}/src/main/resources</schemaDirectory>
-                    <bindingDirectory>${basedir}/src/main/resources</bindingDirectory>
-                    <schemaIncludes>
-                        <include>*.wsdl</include>
-                    </schemaIncludes>
-                    <bindingIncludes>
-                        <include>bindings.xml</include>
-                    </bindingIncludes>
-                    <generatePackage>no.difi.meldingsutveksling.serviceregistry.svarut</generatePackage>
-                    <strict>true</strict>
-                    <verbose>true</verbose>
-                    <extension>true</extension>
-                    <removeOldOutput>true</removeOldOutput>
-                    <args>
-                        <arg>-Xfluent-builder</arg>
-                        <arg>-Xannotate</arg>
-                    </args>
-                    <plugins>
-                        <plugin>
-                            <groupId>net.codesup.util</groupId>
-                            <artifactId>jaxb-rich-contract-plugin</artifactId>
-                            <version>4.2.1.2</version>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.jvnet.jaxb</groupId>
-                            <artifactId>jaxb-plugin-annotate</artifactId>
-                            <version>4.0.9</version>
-                        </plugin>
-                    </plugins>
-                </configuration>
             </plugin>
         </plugins>
     </build>

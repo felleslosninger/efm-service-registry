@@ -4,24 +4,32 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import org.springframework.stereotype.Component;
-import org.springframework.ws.client.core.WebServiceTemplate;
-
-import jakarta.xml.bind.JAXBElement;
+import org.springframework.web.client.RestClient;
+import no.difi.meldingsutveksling.serviceregistry.svarut.mottakersystem.Mottakersystemer;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class SvarUtClient {
 
-    private final WebServiceTemplate wsTemplate;
     private final ServiceregistryProperties props;
+    private final TokenService tokenProducer;
 
-    @SuppressWarnings("unchecked")
-    public RetrieveMottakerSystemForOrgnrResponse retrieveMottakerSystemForOrgnr(RetrieveMottakerSystemForOrgnr payload) throws SvarUtClientException {
-        String url = props.getFiks().getSvarut().getForsendelsesserviceUrl().toString();
+    private final RestClient restClient = RestClient.builder()
+            .build();
+
+    public Mottakersystemer retrieveMottakerSystemForOrgnr(String orgnr) throws SvarUtClientException{
         try {
-            JAXBElement<RetrieveMottakerSystemForOrgnrResponse> response = (JAXBElement<RetrieveMottakerSystemForOrgnrResponse>) wsTemplate.marshalSendAndReceive(url, payload);
-            return response.getValue();
+            var accessToken = tokenProducer.fetchToken();
+
+            return restClient.get()
+                    .uri(props.getFiks().getSvarut().getBaseUrl() + "/mottakersystem?organisasjonsnummer={orgnr}", orgnr)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .header("IntegrasjonId", props.getFiks().getSvarut().getIntegrasjonId())
+                    .header("IntegrasjonPassord", props.getFiks().getSvarut().getIntegrasjonPassord())
+                    .header("Accept", "application/json")
+                    .retrieve()
+                    .body(Mottakersystemer.class);
         } catch (Exception e) {
             throw new SvarUtClientException(e);
         }

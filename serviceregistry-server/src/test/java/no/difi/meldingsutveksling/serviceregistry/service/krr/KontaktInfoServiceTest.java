@@ -16,6 +16,7 @@ import no.difi.meldingsutveksling.serviceregistry.service.healthcare.NhnService;
 import no.difi.meldingsutveksling.serviceregistry.service.virksert.VirkSertService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClient;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
+import no.difi.meldingsutveksling.serviceregistry.svarut.TokenService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,6 +81,9 @@ class KontaktInfoServiceTest {
 
     @MockitoBean
     private AbstractHttpWebServiceMessageSender sender;
+
+    @MockitoBean
+    private TokenService tokenService;
 
     @Test
     public void testRetry() throws KontaktInfoException, MalformedURLException, URISyntaxException {

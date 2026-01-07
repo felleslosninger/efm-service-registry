@@ -36,6 +36,14 @@ difi:
     elma:
       locatorUrl: ${ELMA_LOCATOR_URL}
     fiks:
+      oidc:
+        keystore:
+          path: ${FIKS_OIDC_KEYSTORE_PATH}
+          alias: ${FIKS_OIDC_KEYSTORE_ALIAS}
+          password: ${FIKS_OIDC_KEYSTORE_PASSWORD}
+        url: ${FIKS_OIDC_URL}
+        client-id: ${FIKS_OIDC_CLIENT_ID}
+        audience: ${FIKS_OIDC_AUDIENCE}
       io:
         endpoint-url: ${FIKS_IO_URL}
         enable: ${FIKS_IO_ENABLE}
@@ -43,10 +51,10 @@ difi:
         integrasjon-passord: ${FIKSIO_PASSWORD}
       svarut:
         certificate: ${SVARUT_CERTIFICATE}
-        forsendelsesserviceUrl: ${SVARUT_FORSENDELSESSERVICEURL}
         serviceRecordUrl: ${SVARUT_SERVICERECORDURL}
-        user: ${SVARUT_USER}
-        password: ${SVARUT_PASSWORD}
+        base-url: ${SVARUT_BASEURL}
+        integrasjon-id: ${SVARUT_ID}
+        integrasjon-passord: ${SVARUT_PASSWORD}
     virksert:
       endpointURL: http://efm-virksert-service:8080/virksomhetssertifikat/
     freg:
