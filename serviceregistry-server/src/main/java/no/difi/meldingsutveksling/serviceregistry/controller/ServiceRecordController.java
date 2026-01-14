@@ -121,7 +121,7 @@ public class ServiceRecordController {
                     .orElseThrow(() -> new ReceiverProcessNotFoundException(identifier, processIdentifier));
             entity.getServiceRecords().add(record);
         }
-        if (ProcessCategory.DIALOGMELDING == process.getCategory()) {
+        if (ProcessCategory.DIALOGMELDING == process.getCategory() && enableHealthcare) {
             ServiceRecord record = serviceRecordService.createHealthcareServiceRecords(entityInfo).getFirst();
             entity.getServiceRecords().add(record);
         }
@@ -182,7 +182,9 @@ public class ServiceRecordController {
             }
 
         } else if (entityInfo instanceof HelseEnhetInfo) {
-            entity.getServiceRecords().addAll(serviceRecordService.createHealthcareServiceRecords(entityInfo));
+            if (enableHealthcare) {
+                entity.getServiceRecords().addAll(serviceRecordService.createHealthcareServiceRecords(entityInfo));
+            }
         } else {
             log.trace("Organization");
             entity.getServiceRecords().addAll(serviceRecordService.createArkivmeldingServiceRecords(entityInfo, securityLevel));
