@@ -79,7 +79,7 @@ class NhnServiceTest {
             {
                 "herid1": "67676",
                 "herid2": "33232",
-                "pemDigdirSertifikat": "pem-cert-data",
+                "derDigdirSertifikat": "pem-cert-data",
                 "ediAdress": "dummyedi@edi.edi",
                 "orgNumber": "797897978"
             }
@@ -97,7 +97,7 @@ class NhnServiceTest {
         assertNotNull(result);
         assertEquals("67676", result.getHerid1());
         assertEquals("33232", result.getHerid2());
-        assertEquals("pem-cert-data", result.getPemDigdirSertifikat());
+        assertEquals("pem-cert-data", result.getDerDigdirSertifikat());
         assertEquals("dummyedi@edi.edi", result.getEdiAdress());
         assertEquals("797897978", result.getOrgNumber());
         verify(getRequestedFor(urlEqualTo(PATH))
