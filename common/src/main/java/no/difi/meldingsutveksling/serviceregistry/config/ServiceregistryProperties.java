@@ -1,14 +1,14 @@
 package no.difi.meldingsutveksling.serviceregistry.config;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier;
 import no.difi.move.common.config.KeystoreProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
+import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.core.io.Resource;
-
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 
 import java.net.URI;
 import java.net.URL;
@@ -101,10 +101,10 @@ public class ServiceregistryProperties {
         private String resource;
     }
 
-    public record Healthcare(String nhnAdapterEndpointUrl,
+    public record Healthcare(@DefaultValue("false") boolean enabled,
+                             String nhnAdapterEndpointUrl,
                              String fastlegeProcess,
                              String nhnProcess) {
-
     }
 
     @Data
