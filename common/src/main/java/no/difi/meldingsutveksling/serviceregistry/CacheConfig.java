@@ -55,7 +55,7 @@ public class CacheConfig extends CachingConfigurerSupport {
                                 .build()),
                 new CaffeineCache(KSFIKS_CACHE,
                         Caffeine.newBuilder()
-                                .expireAfterWrite(270, TimeUnit.SECONDS)
+                                .expireAfterWrite(100, TimeUnit.SECONDS)
                                 .build())
         ));
         return cacheManager;
