@@ -16,7 +16,7 @@ on:
 
 jobs:
   call-workflow-image-build-publish:
-    uses: felleslosninger/github-workflows/.github/workflows/ci-build-publish-image.yml@MOVE-4422-remove-dockerfile
+    uses: felleslosninger/github-workflows/.github/workflows/ci-build-publish-image.yml@main
     with:
       module-name: serviceregistry-server/
       image-name: efm-service-registry
