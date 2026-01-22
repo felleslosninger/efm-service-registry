@@ -1,11 +1,11 @@
-name: Build and publish image
+name: Deploy to dev only
 
 on:
   workflow_dispatch:
 
   push:
     branches:
-      - main
+      - '**'  #Filtering on branches is done in the jobs
 
     workflow_call:
 
@@ -16,8 +16,10 @@ on:
 
 jobs:
   call-workflow-image-build-publish:
+    if: contains(github.event.head_commit.message, '[run-ci]')
     uses: felleslosninger/github-workflows/.github/workflows/ci-build-publish-image.yml@MOVE-4422-remove-dockerfile
     with:
+      lifecycle: 'development'
       module-name: serviceregistry-server/
       image-name: efm-service-registry
       java-version: 25
