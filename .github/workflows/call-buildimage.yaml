@@ -5,7 +5,7 @@ on:
 
   push:
     branches:
-      - '**'  #Filtering on branches is done in the jobs
+      - main
 
     workflow_call:
 
@@ -14,16 +14,11 @@ on:
 
     workflow_dispatch:
 
-  pull_request:
-    types: [] # Empty list ensures PRs are not triggered. Trigger nytt bygg.
-
 jobs:
   call-workflow-image-build-publish:
-    if: github.ref == 'refs/heads/main' || contains(github.event.head_commit.message, '[run-ci]')
     uses: felleslosninger/github-workflows/.github/workflows/ci-build-publish-image.yml@MOVE-4422-remove-dockerfile
     with:
       module-name: serviceregistry-server/
-      image-tag: 0.0.0-TEST
       image-name: efm-service-registry
       java-version: 25
       slack-channel-id: C05NLQCFR41
@@ -31,7 +26,6 @@ jobs:
     secrets: inherit
 
   call-update-image:
-    if: github.ref == 'refs/heads/main' || contains(github.event.head_commit.message, '[run-ci]')
     needs: [call-workflow-image-build-publish]
     uses: felleslosninger/github-workflows/.github/workflows/ci-call-update-image.yml@main
     with:
