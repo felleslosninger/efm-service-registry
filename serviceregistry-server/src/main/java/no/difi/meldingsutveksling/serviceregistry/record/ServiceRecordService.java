@@ -205,7 +205,7 @@ public class ServiceRecordService {
         }
 
         HealthCareServiceRecord sr = new HealthCareServiceRecord(ServiceIdentifier.DPH, arDetails.getOrgNumber(), process,arDetails.getEdiAdress(),arDetails.getHerid1(),arDetails.getHerid2(),patient );
-        sr.setPemCertificate(arDetails.getPemDigdirSertifikat());
+        sr.setPemCertificate(arDetails.getPemCertificate());
         return List.of(sr);
     }
 
