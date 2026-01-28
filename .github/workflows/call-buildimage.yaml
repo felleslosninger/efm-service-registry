@@ -7,12 +7,10 @@ on:
     branches:
       - main
 
-    workflow_call:
+  workflow_call:
 
-    repository_dispatch:
-      types: [ build-publish-image ]
-
-    workflow_dispatch:
+  repository_dispatch:
+    types: [ build-publish-image ]
 
 jobs:
   call-workflow-image-build-publish:

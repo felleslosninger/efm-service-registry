@@ -2,6 +2,11 @@ name: Test
 
 on:
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - edited
     branches: [main]
 
 permissions:
@@ -18,7 +23,7 @@ jobs:
       java-version: 25
       image-name: efm-service-registry
       pull-request-title: ${{ github.event.pull_request.title }}
-      pull-request-allowed-prefixes: "MOVE-,Bump,PF-,ID-"
+      pull-request-allowed-prefixes: "MOVE-,Bump"
       enable-auto-merge-dependabot: true
       enable-trivy-image-scan: true
       auto-merge-types: "semver-patch"
