@@ -1,21 +1,17 @@
-name: Build and publish image
+name: Deploy to dev only
 
 on:
-  workflow_dispatch:
 
   push:
     branches:
-      - main
-
-  workflow_call:
-
-  repository_dispatch:
-    types: [ build-publish-image ]
+      - '**'  #Filtering on branches is done in the jobs
 
 jobs:
   call-workflow-image-build-publish:
+    if: contains(github.event.head_commit.message, '[deploy-to-dev]')
     uses: felleslosninger/github-workflows/.github/workflows/ci-build-publish-image.yml@main
     with:
+      lifecycle: 'development'
       module-name: serviceregistry-server/
       image-name: efm-service-registry
       java-version: 25
