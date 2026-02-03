@@ -32,6 +32,19 @@ spring.datasource.url=jdbc:mariadb://<server>:<port>/<database>?serverTimezone=E
 spring.datasource.username=<brukar>
 ```
 
+### Deployment
+
+Pipeline håndterer bygging av docker images via mvn spring-boot:build-image. [call-buildimage.yml](https://github.com/felleslosninger/efm-service-registry/blob/main/.github/workflows/call-buildimage.yaml)
+
+#### Testing i dev fra feature-branch
+Man kan deploye rett til dev fra featurebranch for å teste ut kode. Dette kan man gjøre ved å bruke taggen [deploy-to-dev] i commitmeldingen. Det vil trigge workflowen [deploy-to-dev-only.yml](https://github.com/felleslosninger/efm-service-registry/blob/main/.github/workflows/deploy-dev-only.yml) 
+Da vil image bli lastet opp i internt container registry "crutvikling", og derfra vil cd-repo deploye til dev. Dette image vil IKKE kunne bli deployet videre i test eller prod.
+
+#### Produksjonssetting
+For å produksjonssette merger man PR mot main i applikasjonsrepoet. Pipeline vil bygge image, laste det opp i container registry satt opp av plattformteamet, og publisere dette i DEV. 
+Når det er ute i dev og podden starter opp uten krasj, vil det automatisk bli generert en PR mot TEST i cd-repoet. 
+Når podden starter opp i TEST uten krasj, vil det automatisk bli generert en PR mot PROD i cd-repoet.  
+
 ## Grensesnitt
 
 ### REST-API
