@@ -24,16 +24,16 @@ public class VirksertController {
     @GetMapping(value = "/{identifier}", produces = MediaType.TEXT_PLAIN_VALUE)
     public String getCertificate(@PathVariable String identifier, Authentication auth) throws CertificateNotFoundException {
         String scope = (String) authenticationService.getToken(auth).getClaims().get("scope");
-        if (scope.contains("move/dpo.read") && scope.contains("move/dpe.read")) {
+        if (containsDpoScope(scope) && containsDpeScope(scope)) {
             String dpoCert = virkSertService.getCertificate(identifier, ServiceIdentifier.DPO);
             String dpeCert = virkSertService.getCertificate(identifier, ServiceIdentifier.DPE);
             if (!dpoCert.equals(dpeCert)) {
                 throw new NonMatchingCertificatesException(identifier);
             }
             return dpoCert;
-        } else if (scope.contains("move/dpo.read")) {
+        } else if (containsDpoScope(scope)) {
             return virkSertService.getCertificate(identifier, ServiceIdentifier.DPO);
-        } else if (scope.contains("move/dpe.read")) {
+        } else if (containsDpeScope(scope)) {
             return virkSertService.getCertificate(identifier, ServiceIdentifier.DPE);
         } else {
             return virkSertService.getCertificate(identifier, ServiceIdentifier.DPO);
@@ -43,5 +43,13 @@ public class VirksertController {
     @GetMapping(value = "/{identifier}", produces = "application/jose")
     public String getCertificateJose(@PathVariable String identifier, Authentication auth) throws CertificateNotFoundException, EntitySignerException {
         return payloadSigner.sign(getCertificate(identifier, auth));
+    }
+
+    private boolean containsDpoScope(String scope){
+        return (scope.contains("move/dpo.read") || scope.contains("eformidling:dpo"));
+    }
+
+    private boolean containsDpeScope(String scope){
+        return (scope.contains("move/dpe.read") || scope.contains("eformidling:dpe"));
     }
 }

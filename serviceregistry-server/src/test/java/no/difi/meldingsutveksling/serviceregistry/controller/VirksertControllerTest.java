@@ -81,7 +81,7 @@ public class VirksertControllerTest {
         when(virksertService.getCertificate(eq("123123123"), any()))
                 .thenThrow(new CertificateNotFoundException("",new VirksertClientException("not found")));
 
-        when(jwtMock.getClaims()).thenReturn(Map.of("scope", "move/dpo.read move/dpe.read"));
+        when(jwtMock.getClaims()).thenReturn(Map.of("scope", "move/dpo.read move/dpe.read eformidling:dpe eformidling:dpo"));
         when(authenticationService.getToken(any())).thenReturn(jwtMock);
     }
 
