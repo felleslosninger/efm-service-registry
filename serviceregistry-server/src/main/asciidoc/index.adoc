@@ -25,11 +25,11 @@ eFormidling creates OAuth clients in Maskinporten as part of the onboarding proc
 
 * The Client ID is `MOVE_IP_<orgnumber>`
 * One or more of the following scopes are granted to the client:
-** `move/dpo.read` (eFormidlings meldingstjeneste)
-** `move/dpe.read` (eInnsyns meldingstjeneste)
-** `move/dpi.read` (Digital Post til Innbyggere)
-** `move/dpf.read` (KS SvarUt og SvarInn)
-** `move/dpv.read` (Altinn Digital Post)
+** `eformidling:dpo` (eFormidlings meldingstjeneste)
+** `eformidling:dpe` (eInnsyns meldingstjeneste)
+** `eformidling:dpi` (Digital Post til Innbyggere)
+** `eformidling:dpf` (KS SvarUt og SvarInn)
+** `eformidling:dpv` (Altinn Digital Post)
 
 == The services
 
