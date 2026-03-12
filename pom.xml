@@ -57,7 +57,6 @@
         <maven.compiler.release>25</maven.compiler.release>
         <move-common.version>3.0.3</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
-
         <virksert.version>2.0.6</virksert.version>
 
         <bouncycastle.version>1.70</bouncycastle.version>
@@ -77,6 +76,22 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>2.21.1</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Added to resolve cve-2026-29062 -->
+            <dependency>
+                <groupId>tools.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>3.1.0</version>
+                <scope>compile</scope>
+            </dependency>
+
             <dependency>
                 <groupId>no.difi.meldingsutveksling</groupId>
                 <artifactId>service-registry-common</artifactId>
