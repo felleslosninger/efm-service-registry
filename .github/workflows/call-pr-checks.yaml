@@ -2,12 +2,7 @@ name: Test
 
 on:
   pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - edited
-    branches: [main]
+    branches: [ main ]
 
 permissions:
   pull-requests: write
@@ -20,11 +15,14 @@ jobs:
     uses: felleslosninger/github-workflows/.github/workflows/ci-pr-checks.yml@main
     with:
       application-type: spring-boot
+      enable-auto-merge-dependabot: true
+      enable-pr-title-verify: true
+      enable-trivy-image-scan: true
       java-version: 25
       image-name: efm-service-registry
+      auto-merge-types: "version-update:semver-patch"
       pull-request-title: ${{ github.event.pull_request.title }}
       pull-request-allowed-prefixes: "MOVE-,Bump"
-      enable-auto-merge-dependabot: true
-      enable-trivy-image-scan: true
-      auto-merge-types: "semver-patch"
+      pull-request-case-sensitive-prefix: true
+      maven-lifecycle: "test"
     secrets: inherit

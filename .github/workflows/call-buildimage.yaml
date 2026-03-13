@@ -12,11 +12,16 @@ on:
   repository_dispatch:
     types: [ build-publish-image ]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   call-workflow-image-build-publish:
     uses: felleslosninger/github-workflows/.github/workflows/ci-build-publish-image.yml@main
     with:
-      module-name: serviceregistry-server/
+      application-type: "spring-boot"
+      module-name: serviceregistry-server
       image-name: efm-service-registry
       java-version: 25
       slack-channel-id: C05NLQCFR41
