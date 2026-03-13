@@ -20,7 +20,7 @@ jobs:
       enable-trivy-image-scan: true
       java-version: 25
       image-name: efm-service-registry
-      auto-merge-types: "semver-patch"
+      auto-merge-types: "version-update:semver-patch"
       pull-request-title: ${{ github.event.pull_request.title }}
       pull-request-allowed-prefixes: "MOVE-,Bump"
       pull-request-case-sensitive-prefix: true
