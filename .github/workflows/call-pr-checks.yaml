@@ -10,6 +10,10 @@ permissions:
   issues: write
   repository-projects: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   run-pr-checks:
     uses: felleslosninger/github-workflows/.github/workflows/ci-pr-checks.yml@main
@@ -24,5 +28,5 @@ jobs:
       pull-request-title: ${{ github.event.pull_request.title }}
       pull-request-allowed-prefixes: "MOVE-,Bump"
       pull-request-case-sensitive-prefix: true
-      maven-lifecycle: "test"
+      maven-lifecycle: "verify"
     secrets: inherit
