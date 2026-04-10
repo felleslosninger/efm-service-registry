@@ -20,7 +20,7 @@ jobs:
     with:
       application-type: spring-boot
       enable-auto-merge-dependabot: true
-      enable-pr-title-verify: false
+      enable-pr-title-verify: true
       enable-trivy-image-scan: true
       java-version: 25
       image-name: efm-service-registry
