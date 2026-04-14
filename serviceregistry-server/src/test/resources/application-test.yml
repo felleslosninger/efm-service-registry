@@ -29,7 +29,7 @@ difi:
         url: https://foo
         audience: https://foo
       svarut:
-        serviceRecordUrl: https://foo
+        service-record-url: https://foo
         certificate: classpath:test.pem
         base-url: https://foo
         integrasjon-id: <user>

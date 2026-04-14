@@ -25,9 +25,9 @@ management:
       probes:
         enabled: true
   health:
-    livenessState:
+    liveness-state:
       enabled: true
-    readinessState:
+    readiness-state:
       enabled: true
   endpoints:
     web:
@@ -40,14 +40,14 @@ management:
 difi:
   move:
     elma:
-      locatorUrl: http://test-smp.elma-smp.no
-      defaultProcessIdentifier: urn:no:difi:profile:arkivmelding:administrasjon:ver1.0
-      lookupIcd: 0192
+      locator-url: http://test-smp.elma-smp.no
+      default-process-identifier: urn:no:difi:profile:arkivmelding:administrasjon:ver1.0
+      lookup-icd: 0192
     brreg:
-      endpointURL: https://data.brreg.no/
+      endpoint-u-r-l: https://data.brreg.no/
       enabled: false
     dpv:
-      endpointURL: https://tt02.altinn.no/ServiceEngineExternal/CorrespondenceAgencyExternal.svc
+      endpoint-u-r-l: https://tt02.altinn.no/ServiceEngineExternal/CorrespondenceAgencyExternal.svc
     krr:
       mp-endpoint-uri: https://test.kontaktregisteret.no/rest/v1/personer
       mp-dsf-endpoint-uri: https://test.kontaktregisteret.no/rest/v1/mf/personer
@@ -71,13 +71,13 @@ difi:
         password: changeit
         type: JKS
     dpo:
-      endpointURL: https://tt02.altinn.no
-      serviceCode: 4192
-      serviceEditionCode: 270815
+      endpoint-u-r-l: https://tt02.altinn.no
+      service-code: 4192
+      service-edition-code: 270815
     dpi:
-      endpointURL: https://qaoffentlig.meldingsformidler.digipost.no/api/ebms
-      infoProcess: urn:no:difi:profile:digitalpost:info:ver1.0
-      vedtakProcess: urn:no:difi:profile:digitalpost:vedtak:ver1.0
+      endpoint-u-r-l: https://qaoffentlig.meldingsformidler.digipost.no/api/ebms
+      info-process: urn:no:difi:profile:digitalpost:info:ver1.0
+      vedtak-process: urn:no:difi:profile:digitalpost:vedtak:ver1.0
     fiks:
       oidc:
         audience: https://test.maskinporten.no/
@@ -92,7 +92,7 @@ difi:
         endpoint-url: https://api.fiks.test.ks.no
         orgform-filter: KOMM
       svarut:
-        serviceRecordUrl: https://test.svarut.ks.no/tjenester/forsendelseservice/ForsendelsesServiceV6
+        service-record-url: https://test.svarut.ks.no/tjenester/forsendelseservice/ForsendelsesServiceV6
         certificate: classpath:svarut_test_public.pem
         base-url: https://test.svarut.ks.no/api/v2
         integrasjon-id: <id>
@@ -100,7 +100,7 @@ difi:
     auth:
       maskinporten-issuer: https://test.maskinporten.no/
     feature:
-      enableDpfDpv: true
+      enable-dpf-dpv: true
     freg:
       endpoint-u-r-l: http://efm-freg-gateway-service:8080/
       enabled: false
