@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class NhnServiceIT {
+class NhnServiceTest {
 
     private static final String NHN_URI = "http://localhost:8089/arlookup/{identifier}";
     private static final String IDENTIFIER = "123456789";
