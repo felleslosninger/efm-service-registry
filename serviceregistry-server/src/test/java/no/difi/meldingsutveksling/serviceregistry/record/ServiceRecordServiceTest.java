@@ -2,11 +2,12 @@ package no.difi.meldingsutveksling.serviceregistry.record;
 
 import com.google.common.collect.Sets;
 import lombok.SneakyThrows;
+import network.oxalis.vefa.peppol.common.model.ProcessIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
-import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.domain.*;
+import no.difi.meldingsutveksling.serviceregistry.domain.Process;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ClientInputException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
@@ -14,14 +15,13 @@ import no.difi.meldingsutveksling.serviceregistry.freg.client.FregGatewayClient;
 import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
+import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.healthcare.AddressRegistrerDetails;
 import no.difi.meldingsutveksling.serviceregistry.service.healthcare.NhnService;
 import no.difi.meldingsutveksling.serviceregistry.service.healthcare.PatientNotRetrievedException;
-import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
-import network.oxalis.vefa.peppol.common.model.ProcessIdentifier;
 import no.difi.virksert.client.lang.VirksertClientException;
 import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,39 +72,38 @@ public class ServiceRecordServiceTest {
     @Mock
     private NhnService nhnService;
 
-    private static String ORGNR = "123456789";
-    private static String ORGNR_FIKS = "987654321";
-    private static String ORGNR_EINNSYN_RESPONSE = "987987987";
-    private static String ORGNR_EINNSYN = "123987654";
-    private static String PERSONNUMMER = "21905297101";
+    private static final String ORGNR = "123456789";
+    private static final String ORGNR_FIKS = "987654321";
+    private static final String ORGNR_EINNSYN_RESPONSE = "987987987";
+    private static final String ORGNR_EINNSYN = "123987654";
+    private static final String PERSONNUMMER = "21905297101";
     private static final String ELMA_LOOKUP_ICD = "0192";
     private static final OrganizationType ORGL = new OrganizationType("ORGL");
     private static final OrganizationType KOMM = new OrganizationType("ORGL");
     private static final EntityInfo ORGNR_ORG = new OrganizationInfo(ORGNR, ORGL);
     private static final EntityInfo ORGNR_FIKS_KOMM = new OrganizationInfo(ORGNR_FIKS, KOMM);
 
-    private static String ARKIVMELDING_PROCESS_ADMIN = "urn:no:difi:profile:arkivmelding:administrasjon:ver1.0";
-    private static String ARKIVMELDING_PROCESS_SKATT = "urn:no:difi:profile:arkivmelding:skatterOgAvgifter:ver1.0";
-    private static String ARKIVMELDING_DOCTYPE = "urn:no:difi:arkivmelding:xsd::arkivmelding";
+    private static final String ARKIVMELDING_PROCESS_ADMIN = "urn:no:difi:profile:arkivmelding:administrasjon:ver1.0";
+    private static final String ARKIVMELDING_PROCESS_SKATT = "urn:no:difi:profile:arkivmelding:skatterOgAvgifter:ver1.0";
+    private static final String ARKIVMELDING_DOCTYPE = "urn:no:difi:arkivmelding:xsd::arkivmelding";
 
-    private static String AVTALT_PROCESS = "urn:no:difi:profile:avtalt:avtalt:ver1.0";
-    private static String AVTALT_DOCTYPE = "urn:no:difi:avtalt:xsd::avtalt";
+    private static final String AVTALT_PROCESS = "urn:no:difi:profile:avtalt:avtalt:ver1.0";
+    private static final String AVTALT_DOCTYPE = "urn:no:difi:avtalt:xsd::avtalt";
 
-    private static String EINNSYN_PROCESS_JOURNALPOST = "urn:no:difi:profile:einnsyn:journalpost:ver1.0";
-    private static String EINNSYN_DOCTYPE_JOURNALPOST = "urn:no:difi:einnsyn:xsd::publisering";
-    private static String EINNSYN_PROCESS_INNSYNSKRAV = "urn:no:difi:profile:einnsyn:innsynskrav:ver1.0";
-    private static String EINNSYN_DOCTYPE_INNSYNSKRAV = "urn:no:difi:einnsyn:xsd::innsynskrav";
+    private static final String EINNSYN_PROCESS_JOURNALPOST = "urn:no:difi:profile:einnsyn:journalpost:ver1.0";
+    private static final String EINNSYN_DOCTYPE_JOURNALPOST = "urn:no:difi:einnsyn:xsd::publisering";
+    private static final String EINNSYN_PROCESS_INNSYNSKRAV = "urn:no:difi:profile:einnsyn:innsynskrav:ver1.0";
+    private static final String EINNSYN_DOCTYPE_INNSYNSKRAV = "urn:no:difi:einnsyn:xsd::innsynskrav";
 
-    private static String DIGITALPOST_PROCESS_VEDTAK = "urn:no:difi:profile:digitalpost:vedtak:ver1.0";
-    private static String DIGITALPOST_PROCESS_INFO = "urn:no:difi:profile:digitalpost:info:ver1.0";
-    private static String DIGITALPOST_DOCTYPE_DIGITAL = "urn:no:difi:digitalpost:xsd:digital::digital";
-    private static String DIGITALPOST_DOCTYPE_DIGITALDPV = "urn:no:difi:digitalpost:xsd:digital::digital_dpv";
-    private static String DIGITALPOST_DOCTYPE_PRINT = "urn:no:difi:digitalpost:xsd:fysisk::print";
+    private static final String DIGITALPOST_PROCESS_VEDTAK = "urn:no:difi:profile:digitalpost:vedtak:ver1.0";
+    private static final String DIGITALPOST_PROCESS_INFO = "urn:no:difi:profile:digitalpost:info:ver1.0";
+    private static final String DIGITALPOST_DOCTYPE_DIGITAL = "urn:no:difi:digitalpost:xsd:digital::digital";
+    private static final String DIGITALPOST_DOCTYPE_DIGITALDPV = "urn:no:difi:digitalpost:xsd:digital::digital_dpv";
+    private static final String DIGITALPOST_DOCTYPE_PRINT = "urn:no:difi:digitalpost:xsd:fysisk::print";
 
-    private static String DPH_DIALOGMELDING = "urn:no:difi:digitalpost:json:schema::dialogmelding";
-
-    private static String DPH_FASTLEGE = "urn:no:difi:profile:digitalpost:fastlege:ver1.0";
-    private static String DPH_NHN = "urn:no:difi:profile:digitalpost:helse:ver1.0";
+    private static final String DPH_DIALOGMELDING = "urn:no:difi:digitalpost:json:schema::dialogmelding";
+    private static final String DPH_FASTLEGE = "urn:no:difi:profile:digitalpost:fastlege:ver1.0";
+    private static final String DPH_NHN = "urn:no:difi:profile:digitalpost:helse:ver1.0";
 
     private Process processAdmin;
     private Process processAvtalt;
@@ -121,67 +120,67 @@ public class ServiceRecordServiceTest {
         ServiceregistryProperties.ELMA elmaProps = new ServiceregistryProperties.ELMA();
         elmaProps.setLookupIcd(ELMA_LOOKUP_ICD);
         lenient().when(props.getElma()).thenReturn(elmaProps);
-        ServiceregistryProperties.Healthcare healthcareProps = new ServiceregistryProperties.Healthcare("dummyUrl",DPH_FASTLEGE,DPH_NHN);
+        ServiceregistryProperties.Healthcare healthcareProps = new ServiceregistryProperties.Healthcare(true, "dummyUrl", DPH_FASTLEGE, DPH_NHN);
         lenient().when(props.getHealthcare()).thenReturn(healthcareProps);
 
         // Arkivmelding
         DocumentType documentType = new DocumentType()
-            .setIdentifier(ARKIVMELDING_DOCTYPE);
+                .setIdentifier(ARKIVMELDING_DOCTYPE);
         processAdmin = new Process()
-            .setIdentifier(ARKIVMELDING_PROCESS_ADMIN)
-            .setCategory(ProcessCategory.ARKIVMELDING)
-            .setServiceCode("4192")
-            .setServiceEditionCode("270815")
-            .setResource("resource");
+                .setIdentifier(ARKIVMELDING_PROCESS_ADMIN)
+                .setCategory(ProcessCategory.ARKIVMELDING)
+                .setServiceCode("4192")
+                .setServiceEditionCode("270815")
+                .setResource("resource");
         processSkatt = new Process()
-            .setIdentifier(ARKIVMELDING_PROCESS_SKATT)
-            .setCategory(ProcessCategory.ARKIVMELDING)
-            .setServiceCode("4192")
-            .setServiceEditionCode("270815")
-            .setResource("resource");
+                .setIdentifier(ARKIVMELDING_PROCESS_SKATT)
+                .setCategory(ProcessCategory.ARKIVMELDING)
+                .setServiceCode("4192")
+                .setServiceEditionCode("270815")
+                .setResource("resource");
         processSkatt.setDocumentTypes(Lists.newArrayList(documentType));
         processAdmin.setDocumentTypes(Lists.newArrayList(documentType));
         documentType.setProcesses(Lists.newArrayList(processAdmin, processSkatt));
 
         // Avtalt
         DocumentType documentTypeAvtalt = new DocumentType()
-            .setIdentifier(AVTALT_DOCTYPE);
+                .setIdentifier(AVTALT_DOCTYPE);
         processAvtalt = new Process().setIdentifier(AVTALT_PROCESS)
-            .setCategory(ProcessCategory.AVTALT)
-            .setServiceCode("4192")
-            .setServiceEditionCode("270815")
-            .setResource("resource");
+                .setCategory(ProcessCategory.AVTALT)
+                .setServiceCode("4192")
+                .setServiceEditionCode("270815")
+                .setResource("resource");
         processAvtalt.setDocumentTypes(Lists.newArrayList(documentTypeAvtalt));
         documentTypeAvtalt.setProcesses(Lists.newArrayList(processAvtalt));
 
         // Digital
         processVedtak = new Process()
-            .setIdentifier(DIGITALPOST_PROCESS_VEDTAK)
-            .setCategory(ProcessCategory.DIGITALPOST)
-            .setDocumentTypes(Lists.newArrayList(new DocumentType().setIdentifier(DIGITALPOST_DOCTYPE_PRINT),
-                new DocumentType().setIdentifier(DIGITALPOST_DOCTYPE_DIGITALDPV)));
+                .setIdentifier(DIGITALPOST_PROCESS_VEDTAK)
+                .setCategory(ProcessCategory.DIGITALPOST)
+                .setDocumentTypes(Lists.newArrayList(new DocumentType().setIdentifier(DIGITALPOST_DOCTYPE_PRINT),
+                        new DocumentType().setIdentifier(DIGITALPOST_DOCTYPE_DIGITALDPV)));
         processInfo = new Process()
-            .setIdentifier(DIGITALPOST_PROCESS_INFO)
-            .setCategory(ProcessCategory.DIGITALPOST)
-            .setDocumentTypes(Lists.newArrayList(new DocumentType().setIdentifier(DIGITALPOST_DOCTYPE_DIGITAL)));
+                .setIdentifier(DIGITALPOST_PROCESS_INFO)
+                .setCategory(ProcessCategory.DIGITALPOST)
+                .setDocumentTypes(Lists.newArrayList(new DocumentType().setIdentifier(DIGITALPOST_DOCTYPE_DIGITAL)));
 
         // Einnsyn
         DocumentType einnsynJournalpostDocumentType = new DocumentType()
-            .setIdentifier(EINNSYN_DOCTYPE_JOURNALPOST);
+                .setIdentifier(EINNSYN_DOCTYPE_JOURNALPOST);
         processJournalpost = new Process()
-            .setIdentifier(EINNSYN_PROCESS_JOURNALPOST)
-            .setCategory(ProcessCategory.EINNSYN)
-            .setServiceCode("data")
-            .setDocumentTypes(Lists.newArrayList(einnsynJournalpostDocumentType));
+                .setIdentifier(EINNSYN_PROCESS_JOURNALPOST)
+                .setCategory(ProcessCategory.EINNSYN)
+                .setServiceCode("data")
+                .setDocumentTypes(Lists.newArrayList(einnsynJournalpostDocumentType));
         einnsynJournalpostDocumentType.setProcesses(Lists.newArrayList(processJournalpost));
 
         DocumentType einnsynInnsynskravDocumentType = new DocumentType()
-            .setIdentifier(EINNSYN_DOCTYPE_INNSYNSKRAV);
+                .setIdentifier(EINNSYN_DOCTYPE_INNSYNSKRAV);
         processInnsynskrav = new Process()
-            .setIdentifier(EINNSYN_PROCESS_INNSYNSKRAV)
-            .setCategory(ProcessCategory.EINNSYN)
-            .setServiceCode("innsyn")
-            .setDocumentTypes(Lists.newArrayList(einnsynInnsynskravDocumentType));
+                .setIdentifier(EINNSYN_PROCESS_INNSYNSKRAV)
+                .setCategory(ProcessCategory.EINNSYN)
+                .setServiceCode("innsyn")
+                .setDocumentTypes(Lists.newArrayList(einnsynInnsynskravDocumentType));
         einnsynInnsynskravDocumentType.setProcesses(Lists.newArrayList(processInnsynskrav));
 
         DocumentType dialogmelding = new DocumentType()
@@ -194,7 +193,7 @@ public class ServiceRecordServiceTest {
 
         processNhn = new Process().setIdentifier(DPH_NHN).setCategory(ProcessCategory.DIALOGMELDING).setDocumentTypes(List.of(dialogmelding));
 
-        dialogmelding.setProcesses(List.of(processFastlege,processNhn));
+        dialogmelding.setProcesses(List.of(processFastlege, processNhn));
 
 
     }
@@ -215,17 +214,17 @@ public class ServiceRecordServiceTest {
 
     private void lookupServiceReturnsArkivmeldingAdminProcess() {
         when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR)), anySet()))
-            .thenReturn(Sets.newHashSet(ProcessIdentifier.of(ARKIVMELDING_PROCESS_ADMIN)));
+                .thenReturn(Sets.newHashSet(ProcessIdentifier.of(ARKIVMELDING_PROCESS_ADMIN)));
     }
 
     private void lookupServiceReturnsAvtaltProcess() {
         when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR)), anySet()))
-            .thenReturn(Sets.newHashSet(ProcessIdentifier.of(AVTALT_PROCESS)));
+                .thenReturn(Sets.newHashSet(ProcessIdentifier.of(AVTALT_PROCESS)));
     }
 
     private void lookupServiceReturnsEinnsynJournalpostProcesses() {
         when(lookupService.lookupRegisteredProcesses(eq(String.format("%s:%s", ELMA_LOOKUP_ICD, ORGNR)), anySet()))
-            .thenReturn(Sets.newHashSet(ProcessIdentifier.of(EINNSYN_PROCESS_JOURNALPOST), ProcessIdentifier.of(EINNSYN_PROCESS_INNSYNSKRAV)));
+                .thenReturn(Sets.newHashSet(ProcessIdentifier.of(EINNSYN_PROCESS_JOURNALPOST), ProcessIdentifier.of(EINNSYN_PROCESS_INNSYNSKRAV)));
     }
 
     @SneakyThrows
@@ -335,7 +334,7 @@ public class ServiceRecordServiceTest {
         enablePropertyEnableDpvDpf();
         when(processService.findAll(ProcessCategory.ARKIVMELDING)).thenReturn(Sets.newHashSet(processAdmin, processSkatt));
         when(svarUtService.hasSvarUtAdressering(eq(ORGNR_FIKS), any()))
-            .thenThrow(new SvarUtClientException(new RuntimeException("service unavailable")));
+                .thenThrow(new SvarUtClientException(new RuntimeException("service unavailable")));
         assertThrows(SvarUtClientException.class, () -> service.createArkivmeldingServiceRecords(ORGNR_FIKS_KOMM, 3));
     }
 
@@ -397,9 +396,9 @@ public class ServiceRecordServiceTest {
 
         when(kontaktInfoService.getCitizenInfo(any(LookupParameters.class))).thenReturn(personResource);
         when(serviceRecordFactory.createPrintServiceRecord(eq(PERSONNUMMER), eq(ORGNR), any(), eq(personResource), eq(processVedtak), eq(true)))
-            .thenReturn(Optional.of(mock(ServiceRecord.class)));
+                .thenReturn(Optional.of(mock(ServiceRecord.class)));
         when(serviceRecordFactory.createDigitalDpvServiceRecord(PERSONNUMMER, processVedtak))
-            .thenReturn(mock(ServiceRecord.class));
+                .thenReturn(mock(ServiceRecord.class));
 
         assertEquals(2, service.createDigitalpostServiceRecords(PERSONNUMMER, ORGNR, true, processVedtak).size());
     }
@@ -407,13 +406,13 @@ public class ServiceRecordServiceTest {
     @SneakyThrows
     @Test
     public void whenValidPersonNummer_DphRecordIsCreated() {
-        var testARDetails = new AddressRegistrerDetails("1234","4321","dummySertifikat","dummy",ORGNR);
+        var testARDetails = new AddressRegistrerDetails("1234", "4321", "dummySertifikat", "dummy", ORGNR);
         CitizenInfo citizenInfo = new CitizenInfo(PERSONNUMMER);
 
-        FregGatewayEntity.Address.Response personAddress = FregGatewayEntity.Address.Response.builder().navn(new FregGatewayEntity.Address.Navn("Petter","Petterson","","")).personIdentifikator(PERSONNUMMER).build();
+        FregGatewayEntity.Address.Response personAddress = FregGatewayEntity.Address.Response.builder().navn(new FregGatewayEntity.Address.Navn("Petter", "Petterson", "", "")).personIdentifikator(PERSONNUMMER).build();
 
         when(processService.findByIdentifier(DPH_FASTLEGE)).thenReturn(Optional.of(processFastlege));
-        lenient().when(nhnService.getARDetails(  argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(testARDetails);
+        lenient().when(nhnService.getARDetails(argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(testARDetails);
         when(kontaktInfoService.getFregAdress(argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(Optional.of(personAddress));
         List<ServiceRecord> resultat = service.createHealthcareServiceRecords(citizenInfo);
         assertEquals(1, resultat.size());
@@ -421,22 +420,22 @@ public class ServiceRecordServiceTest {
         HealthCareServiceRecord dph = (HealthCareServiceRecord) resultat.getFirst();
         assertNotNull(dph.getService());
         assertNotNull(dph.getPatient());
-        assertEquals(ServiceIdentifier.DPH,dph.getService().getIdentifier());
-        assertEquals(dph.getProcess(),DPH_FASTLEGE);
-        assertEquals(dph.getOrganisationNumber(),ORGNR);
-        assertEquals(testARDetails.getHerid1(),dph.getHerIdLevel1());
-        assertEquals(testARDetails.getHerid2(),dph.getHerIdLevel2());
+        assertEquals(ServiceIdentifier.DPH, dph.getService().getIdentifier());
+        assertEquals(DPH_FASTLEGE, dph.getProcess());
+        assertEquals(dph.getOrganisationNumber(), ORGNR);
+        assertEquals(testARDetails.getHerid1(), dph.getHerIdLevel1());
+        assertEquals(testARDetails.getHerid2(), dph.getHerIdLevel2());
     }
 
     @SneakyThrows
     @Test
     public void whenFastlegePRocess_And_IdentifierIsNotFnr_throwsClientInputException() {
         Mockito.reset(nhnService);
-        var testARDetails = new AddressRegistrerDetails("1234","4321","dummySertifikat","dummy",ORGNR);
+        var testARDetails = new AddressRegistrerDetails("1234", "4321", "dummySertifikat", "dummy", ORGNR);
         var NOT_FNR = "12345678901";
         CitizenInfo citizenInfo = new CitizenInfo(NOT_FNR);
         when(processService.findByIdentifier(DPH_FASTLEGE)).thenReturn(Optional.of(processFastlege));
-        lenient().when(nhnService.getARDetails(  argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(testARDetails);
+        lenient().when(nhnService.getARDetails(argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(testARDetails);
 
         try {
             service.createHealthcareServiceRecords(citizenInfo);
@@ -453,7 +452,7 @@ public class ServiceRecordServiceTest {
         CitizenInfo citizenInfo = new CitizenInfo(NOT_FNR);
 
         when(processService.findByIdentifier(DPH_FASTLEGE)).thenReturn(Optional.of(processFastlege));
-        lenient().when(nhnService.getARDetails(  argThat(lookupParameters -> lookupParameters.getIdentifier().equals(NOT_FNR)))).thenThrow(new EntityNotFoundException(NOT_FNR));
+        lenient().when(nhnService.getARDetails(argThat(lookupParameters -> lookupParameters.getIdentifier().equals(NOT_FNR)))).thenThrow(new EntityNotFoundException(NOT_FNR));
 
         try {
             service.createHealthcareServiceRecords(citizenInfo);
@@ -469,11 +468,11 @@ public class ServiceRecordServiceTest {
     @SneakyThrows
     @Test
     public void whenPatientDataIsNotRetrieved_throwsPatientNotRetrieveException() {
-        var testARDetails = new AddressRegistrerDetails("1234","4321","dummySertifikat","dummy",ORGNR);
+        var testARDetails = new AddressRegistrerDetails("1234", "4321", "dummySertifikat", "dummy", ORGNR);
         CitizenInfo citizenInfo = new CitizenInfo(PERSONNUMMER);
 
         when(processService.findByIdentifier(DPH_FASTLEGE)).thenReturn(Optional.of(processFastlege));
-        lenient().when(nhnService.getARDetails(  argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(testARDetails);
+        lenient().when(nhnService.getARDetails(argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(testARDetails);
         lenient().when(kontaktInfoService.getFregAdress(argThat(t -> t.getIdentifier().equals(PERSONNUMMER)))).thenReturn(Optional.empty());
         try {
             service.createHealthcareServiceRecords(citizenInfo);
@@ -488,11 +487,11 @@ public class ServiceRecordServiceTest {
     @SneakyThrows
     @Test
     public void whenKontaktInfoThrowsHttpClientException_thenThrowPatientNotRetrievedException() {
-        var testARDetails = new AddressRegistrerDetails("1234","4321","dummySertifikat","dummy",ORGNR);
+        var testARDetails = new AddressRegistrerDetails("1234", "4321", "dummySertifikat", "dummy", ORGNR);
         CitizenInfo citizenInfo = new CitizenInfo(PERSONNUMMER);
 
         when(processService.findByIdentifier(DPH_FASTLEGE)).thenReturn(Optional.of(processFastlege));
-        lenient().when(nhnService.getARDetails(  argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(testARDetails);
+        lenient().when(nhnService.getARDetails(argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(testARDetails);
         lenient().when(kontaktInfoService.getFregAdress(argThat(t -> t.getIdentifier().equals(PERSONNUMMER)))).thenReturn(Optional.empty());
         try {
             service.createHealthcareServiceRecords(citizenInfo);
@@ -508,31 +507,29 @@ public class ServiceRecordServiceTest {
     @Test
     public void whenIdentifierIsHerID_dphRecordIsCreated() {
 
-        var testARDetails = new AddressRegistrerDetails("1234","4321","dummySertifikat","dummy",ORGNR);
+        var testARDetails = new AddressRegistrerDetails("1234", "4321", "dummySertifikat", "dummy", ORGNR);
         var HERID = "43432234";
         HelseEnhetInfo citizenInfo = new HelseEnhetInfo(HERID);
 
         lenient().when(processService.findByIdentifier(DPH_NHN)).thenReturn(Optional.of(processNhn));
-        lenient().when(nhnService.getARDetails(  argThat(lookupParameters -> lookupParameters.getIdentifier().equals(HERID)))).thenReturn(testARDetails);
+        lenient().when(nhnService.getARDetails(argThat(lookupParameters -> lookupParameters.getIdentifier().equals(HERID)))).thenReturn(testARDetails);
 
 
-       var serviceRecords = service.createHealthcareServiceRecords(citizenInfo);
+        var serviceRecords = service.createHealthcareServiceRecords(citizenInfo);
 
-       assertEquals(1, serviceRecords.size());
-       assertEquals(HealthCareServiceRecord.class, serviceRecords.getFirst().getClass());
-       var dph = (HealthCareServiceRecord) serviceRecords.getFirst();
-       assertNotNull(dph.getService());
-       assertEquals(ServiceIdentifier.DPH,dph.getService().getIdentifier());
-       assertEquals(dph.getProcess(),DPH_NHN);
-       assertEquals(testARDetails.getHerid1(),dph.getHerIdLevel1());
-       assertEquals(testARDetails.getHerid2(),dph.getHerIdLevel2());
-       assertEquals(ORGNR,dph.getOrganisationNumber());
-       assertNull(dph.getPatient());
-
+        assertEquals(1, serviceRecords.size());
+        assertEquals(HealthCareServiceRecord.class, serviceRecords.getFirst().getClass());
+        var dph = (HealthCareServiceRecord) serviceRecords.getFirst();
+        assertNotNull(dph.getService());
+        assertEquals(ServiceIdentifier.DPH, dph.getService().getIdentifier());
+        assertEquals(DPH_NHN, dph.getProcess());
+        assertEquals(testARDetails.getHerid1(), dph.getHerIdLevel1());
+        assertEquals(testARDetails.getHerid2(), dph.getHerIdLevel2());
+        assertEquals(ORGNR, dph.getOrganisationNumber());
+        assertNull(dph.getPatient());
 
 
     }
-
 
 
 }
