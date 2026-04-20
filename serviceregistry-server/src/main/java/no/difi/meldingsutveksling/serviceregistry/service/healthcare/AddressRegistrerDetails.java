@@ -8,7 +8,12 @@ import lombok.Getter;
 public class AddressRegistrerDetails {
     private String herid1;
     private String herid2;
-    private String pemDigdirSertifikat;
+    private String derDigdirSertifikat;
     private String ediAdress;
     private String orgNumber;
+
+    public String getPemCertificate() {
+        return "-----BEGIN CERTIFICATE-----\n" + derDigdirSertifikat + "\n-----END CERTIFICATE-----\n";
+    }
 }
+

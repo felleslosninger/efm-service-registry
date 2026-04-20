@@ -26,7 +26,7 @@ import org.springframework.boot.test.context.SpringBootTest;
                 "difi.move.fiks.oidc.keystore.password=changeit",
                 "difi.move.fiks.oidc.keystore.path=changeit",
         })
-public class SvarUtServiceManualTest {
+public class SvarUtServiceManualIT {
 
     @Autowired
     private SvarUtService service;
