@@ -155,7 +155,7 @@ public class ServiceRecordService {
         return serviceRecords;
     }
 
-    @PreAuthorize("hasAuthority('SCOPE_move/dpi.read')")
+    @PreAuthorize("hasAnyAuthority('SCOPE_eformidling:dpi', 'SCOPE_move/dpi.read')")
     public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
                                                                String onBehalfOrgnr,
                                                                boolean print) throws KontaktInfoException, BrregNotFoundException, FregGatewayException {
@@ -205,13 +205,13 @@ public class ServiceRecordService {
         }
 
         HealthCareServiceRecord sr = new HealthCareServiceRecord(ServiceIdentifier.DPH, arDetails.getOrgNumber(), process,arDetails.getEdiAdress(),arDetails.getHerid1(),arDetails.getHerid2(),patient );
-        sr.setPemCertificate(arDetails.getPemDigdirSertifikat());
+        sr.setPemCertificate(arDetails.getPemCertificate());
         return List.of(sr);
     }
 
 
 
-    @PreAuthorize("hasAuthority('SCOPE_move/dpi.read')")
+    @PreAuthorize("hasAnyAuthority('SCOPE_eformidling:dpi', 'SCOPE_move/dpi.read')")
     public List<ServiceRecord> createDigitalpostServiceRecords(String identifier,
                                                                String onBehalfOrgnr,
                                                                boolean print,

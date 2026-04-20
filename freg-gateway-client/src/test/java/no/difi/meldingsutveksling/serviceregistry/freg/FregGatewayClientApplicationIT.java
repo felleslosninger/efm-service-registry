@@ -3,7 +3,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(classes = FregGatewayApplication.class)
-public class FregGatewayClientApplicationTests {
+public class FregGatewayClientApplicationIT {
 
     @Test
     void contextLoads() {
