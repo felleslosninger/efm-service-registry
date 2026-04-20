@@ -52,7 +52,7 @@
                             <dependency>
                                 <groupId>org.springframework.restdocs</groupId>
                                 <artifactId>spring-restdocs-asciidoctor</artifactId>
-                                <version>3.0.3</version>
+                                <version>4.0.0</version>
                             </dependency>
                             <dependency>
                                 <groupId>com.bmuschko</groupId>
@@ -63,7 +63,7 @@
                             <dependency>
                                 <groupId>org.asciidoctor</groupId>
                                 <artifactId>asciidoctorj-diagram</artifactId>
-                                <version>3.0.1</version>
+                                <version>3.1.0</version>
                                 <scope>runtime</scope>
                             </dependency>
                         </dependencies>
@@ -163,7 +163,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>3.3.1</version>
+                <version>3.4.0</version>
                 <configuration>
                     <!-- specify UTF-8, ISO-8859-1 or any other file encoding -->
                     <encoding>UTF-8</encoding>
@@ -212,10 +212,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -313,7 +309,7 @@
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
-            <version>8.1</version>
+            <version>9.0</version>
         </dependency>
 
         <dependency>
