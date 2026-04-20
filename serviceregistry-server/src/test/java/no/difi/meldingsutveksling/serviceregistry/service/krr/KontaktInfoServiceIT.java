@@ -36,7 +36,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = MoveServiceRegistryApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class KontaktInfoServiceTest {
+class KontaktInfoServiceIT {
     @Autowired
     private KontaktInfoService kontaktInfoService;
 

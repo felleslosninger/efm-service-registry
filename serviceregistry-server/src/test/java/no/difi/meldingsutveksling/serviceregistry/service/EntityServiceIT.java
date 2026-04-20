@@ -55,7 +55,7 @@ import java.util.Optional;
 @EnableConfigurationProperties(ServiceregistryProperties.class)
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class EntityServiceTest {
+public class EntityServiceIT {
 
     @MockitoBean
     private BrregClient brregClient;
