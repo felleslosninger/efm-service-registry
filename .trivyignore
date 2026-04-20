@@ -1,1 +1,6 @@
-GHSA-2m67-wjpj-xhg9
+GHSA-2m67-wjpj-xhg9 #Jackson Core: Document length constraint bypass in blocking, async, and DataInput parsers
+CVE-2026-34483 # Apache Tomcat: Apache Tomcat: Information disclosure due to improper encoding in JsonAccessLogValve
+CVE-2026-34486 # Apache Tomcat
+CVE-2026-34487 # Apache Tomcat
+CVE-2026-32282 # Golang CVE in baseimage from Paketo
+CVE-2026-32280 # more Paketo stuff
