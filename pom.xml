@@ -55,7 +55,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>25</maven.compiler.release>
-        <move-common.version>3.0.3</move-common.version>
+        <move-common.version>3.0.5</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <virksert.version>2.0.6</virksert.version>
 
