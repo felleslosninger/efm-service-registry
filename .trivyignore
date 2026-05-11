@@ -1,6 +1,10 @@
-GHSA-2m67-wjpj-xhg9 #Jackson Core: Document length constraint bypass in blocking, async, and DataInput parsers
-CVE-2026-34483 # Apache Tomcat: Apache Tomcat: Information disclosure due to improper encoding in JsonAccessLogValve
-CVE-2026-34486 # Apache Tomcat
-CVE-2026-34487 # Apache Tomcat
-CVE-2026-32282 # Golang CVE in baseimage from Paketo
-CVE-2026-32280 # more Paketo stuff
+CVE-2026-42583 #Netty Lz4FrameDecoder is vulnerable to resource exhaustion
+CVE-2026-42579 #Netty has a DNS Codec Input Validation Bypass
+CVE-2026-42584 #Netty has HttpClientCodec response desynchronization
+CVE-2026-42587 #Netty: HttpContentDecompressor maxAllocation
+CVE-2026-42582 #Netty HTTP/3 QPACK literal unbounded allocation
+CVE-2026-42577 #Netty epoll transport denial of service via RST
+CVE-2026-5598 #bouncycastle: BC-JAVA: private key leakage
+CVE-2026-42198 #jdbc.postgresql.org: pgjdbc: Client-side Denial of Service via malicious SCRAM-SHA-256 authentication
+CVE-2025-9288 #sha.js: Missing type checks leading to hash rewind and passing on crafted...
+CVE-2022-0235 #node-fetch: exposure of sensitive information to an unauthorized actor
