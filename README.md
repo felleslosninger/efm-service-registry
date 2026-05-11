@@ -13,7 +13,7 @@ ServiceRegistry (SR) er [eFormidling](https://docs.digdir.no/docs/eFormidling/In
 - Java 25
 - Maven 3
 - Dedikert database: Standard er MariaDB 10.11.
-- Ikkje-offentlege avhengigheitar som må vera i lokalt Maven-repository: `no.difi.virksert:virksert-common` og `no.difi.virksert:virksert-client`
+- Ikkje-offentlege avhengigheitar som må vera i lokalt Maven-repository: `no.difi.virksert:virksert-common` og `no.difi.virksert:virksert-client`. For å bygge nye avhengigheter, må man release ny versjon av virksert, se: https://github.com/felleslosninger/efm-virksert#release
 
 ### Bygging
 
