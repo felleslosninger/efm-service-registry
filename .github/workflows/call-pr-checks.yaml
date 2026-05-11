@@ -18,6 +18,7 @@ jobs:
   run-pr-checks:
     uses: felleslosninger/github-workflows/.github/workflows/ci-pr-checks.yml@main
     with:
+      module-name: serviceregistry-server
       application-type: spring-boot
       enable-auto-merge-dependabot: true
       enable-pr-title-verify: true
