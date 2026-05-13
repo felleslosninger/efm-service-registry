@@ -11,6 +11,8 @@ permissions:
   pull-requests: write
   issues: write
   repository-projects: read
+  packages: write
+  id-token: write
 
 concurrency:
   group: ci-${{ github.ref }}
