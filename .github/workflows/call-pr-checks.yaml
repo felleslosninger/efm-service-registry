@@ -1,12 +1,13 @@
-name: Test
+name: Call CI PR Checks
 
 on:
   pull_request:
     branches: [ main ]
+    types: [opened, edited, synchronize, reopened]
 
 permissions:
-  pull-requests: write
   contents: write
+  pull-requests: write
   issues: write
   repository-projects: read
 
