@@ -1,4 +1,4 @@
-name: Build and publish image
+name: Call build publish image
 
 on:
   workflow_dispatch:
@@ -11,6 +11,13 @@ on:
 
   repository_dispatch:
     types: [ build-publish-image ]
+
+permissions:
+  contents: write
+  repository-projects: read
+  packages: read
+  id-token: write
+  pull-requests: read
 
 concurrency:
   group: ci-${{ github.ref }}
