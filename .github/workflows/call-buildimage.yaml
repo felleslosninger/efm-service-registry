@@ -15,7 +15,7 @@ on:
 permissions:
   contents: write
   repository-projects: read
-  packages: read
+  packages: write
   id-token: write
   pull-requests: read
 
