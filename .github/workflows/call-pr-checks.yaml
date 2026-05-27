@@ -23,7 +23,7 @@ jobs:
       application-type: spring-boot
       enable-auto-merge-dependabot: true
       enable-pr-title-verify: true
-      enable-trivy-image-scan: true
+      enable-image-build: true
       java-version: 25
       image-name: efm-service-registry
       auto-merge-types: "version-update:semver-patch"
