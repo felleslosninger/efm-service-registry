@@ -10,3 +10,9 @@ CVE-2025-9288 #sha.js: Missing type checks leading to hash rewind and passing on
 CVE-2022-0235 #node-fetch: exposure of sensitive information to an unauthorized actor
 CVE-2026-34483 #Apache Tomcat: Apache Tomcat: Information disclosure due to improper encoding in JsonAccessLogValve
 CVE-2026-34487# #Apache Tomcat: Apache Tomcat: Information disclosure via sensitive data in log files
+CVE-2026-41293 # improper validation
+CVE-2026-43512
+CVE-2026-43515
+CVE-2026-41284
+CVE-2026-42498
+CVE-2026-43513
