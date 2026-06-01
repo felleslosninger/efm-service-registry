@@ -10,6 +10,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.util.Base64;
 import io.micrometer.core.aop.TimedAspect;
 import io.micrometer.core.instrument.MeterRegistry;
+import no.difi.meldingsutveksling.serviceregistry.converter.StringToPartnerIdentifierConverter;
 import no.difi.meldingsutveksling.serviceregistry.mvc.ServiceIdentifierConverter;
 import no.difi.move.common.cert.KeystoreHelper;
 import org.springframework.context.annotation.Bean;
@@ -30,6 +31,7 @@ public class SRConfig implements WebMvcConfigurer {
     @Override
     public void addFormatters(FormatterRegistry registry) {
         registry.addConverter(new ServiceIdentifierConverter());
+        registry.addConverter(new StringToPartnerIdentifierConverter());
     }
 
     @Override

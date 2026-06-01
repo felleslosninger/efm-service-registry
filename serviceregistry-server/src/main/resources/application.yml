@@ -54,9 +54,11 @@ difi:
       print-url: https://test.kontaktregisteret.no/rest/v2/printSertifikat
     healthcare:
       enabled: true
-      nhn-adapter-endpoint-url: http://localhost:8082/nhn-adapter/arlookup/{identifier}
-      fastlege-process: urn:no:difi:profile:digitalpost:fastlege:ver1.0
-      nhn-process: urn:no:difi:profile:digitalpost:helse:ver1.0
+      endpoint-url: http://localhost:8082/api/lookup/{identifier}
+      nhn-process: urn:no:difi:profile:helse:helse:ver1.0
+      timeout:
+        connect: 3000
+        read: 10000
     virksert:
       icd: 0192
       processes:

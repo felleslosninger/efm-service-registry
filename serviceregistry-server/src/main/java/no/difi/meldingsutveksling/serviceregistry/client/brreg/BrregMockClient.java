@@ -1,5 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.client.brreg;
 
+import no.difi.meldingsutveksling.domain.Iso6523;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
 import no.difi.meldingsutveksling.serviceregistry.domain.BrregEnhet;
 import no.difi.meldingsutveksling.serviceregistry.domain.BrregMockEnhet;
@@ -24,8 +25,8 @@ public class BrregMockClient implements BrregClient {
     }
 
     @Override
-    public Optional<BrregEnhet> getBrregEnhetByOrgnr(String orgnr) {
-        Optional<BrregMockEnhet> enhet = enheter.getBrregEnhet(orgnr);
+    public Optional<BrregEnhet> getBrregEnhetByOrgnr(Iso6523 orgnr) {
+        Optional<BrregMockEnhet> enhet = enheter.getBrregEnhet(orgnr.getOrganizationIdentifier());
         Optional<BrregEnhet> brregEnhet = enhet.map(this::mapToBrregEnhet);
         if (brregEnhet.isPresent()) {
             return brregEnhet;
@@ -35,8 +36,8 @@ public class BrregMockClient implements BrregClient {
     }
 
     @Override
-    public Optional<BrregEnhet> getBrregUnderenhetByOrgnr(String orgnr) {
-        Optional<BrregMockEnhet> enhet = enheter.getBrregEnhet(orgnr);
+    public Optional<BrregEnhet> getBrregUnderenhetByOrgnr(Iso6523 orgnr) {
+        Optional<BrregMockEnhet> enhet = enheter.getBrregEnhet(orgnr.getOrganizationIdentifier());
         Optional<BrregEnhet> brregEnhet = enhet.map(this::mapToBrregEnhet);
         if (brregEnhet.isPresent()) {
             return brregEnhet;

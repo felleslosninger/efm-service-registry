@@ -2,6 +2,8 @@ package no.difi.meldingsutveksling.serviceregistry.record;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import network.oxalis.vefa.peppol.common.api.QualifiedIdentifier;
+import no.difi.meldingsutveksling.domain.Iso6523;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
@@ -104,7 +106,7 @@ public class ServiceRecordFactory {
 
     public Optional<ServiceRecord> createPrintServiceRecord(
             String identifier,
-            String onBehalfOrgnr,
+            Iso6523 onBehalfOrgnr,
             Jwt token,
             PersonResource personResource,
             Process p,

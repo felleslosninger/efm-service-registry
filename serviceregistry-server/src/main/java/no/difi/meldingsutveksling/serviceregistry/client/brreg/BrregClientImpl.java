@@ -1,5 +1,6 @@
 package no.difi.meldingsutveksling.serviceregistry.client.brreg;
 
+import no.difi.meldingsutveksling.domain.Iso6523;
 import no.difi.meldingsutveksling.serviceregistry.domain.BrregEnhet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +16,7 @@ import java.util.Optional;
 
 /**
  * Client for "Enhetsregisteret" at data.brreg.no
- *
+ * <p>
  * Created by kons-mwa on 06.06.2016.
  */
 public class BrregClientImpl implements BrregClient {
@@ -25,6 +26,7 @@ public class BrregClientImpl implements BrregClient {
 
     /**
      * Creates a client configured to connect to http://data.brreg.no/
+     *
      * @param uri
      */
     public BrregClientImpl(URI uri) {
@@ -33,11 +35,12 @@ public class BrregClientImpl implements BrregClient {
 
     /**
      * Lookup an organization in BRREG
+     *
      * @param orgnr organization number to lookup
      * @return BRREG enhet or empty if none is found
      */
     @Override
-    public Optional<BrregEnhet> getBrregEnhetByOrgnr(String orgnr) {
+    public Optional<BrregEnhet> getBrregEnhetByOrgnr(Iso6523 orgnr) {
         return getEnhet("enhetsregisteret/api/enheter/",
                 "application/vnd.brreg.enhetsregisteret.enhet.v2+json",
                 orgnr);
@@ -45,17 +48,18 @@ public class BrregClientImpl implements BrregClient {
 
     /**
      * Lookup a sub organization in BRREG
+     *
      * @param orgnr organization number to lookup
      * @return BRREG enhet or empty if none is found
      */
     @Override
-    public Optional<BrregEnhet> getBrregUnderenhetByOrgnr(String orgnr) {
+    public Optional<BrregEnhet> getBrregUnderenhetByOrgnr(Iso6523 orgnr) {
         return getEnhet("enhetsregisteret/api/underenheter/",
                 "application/vnd.brreg.enhetsregisteret.underenhet.v2+json",
                 orgnr);
     }
 
-    private Optional<BrregEnhet> getEnhet(String registerUriPart, String apiVersjon, String orgnr) {
+    private Optional<BrregEnhet> getEnhet(String registerUriPart, String apiVersjon, Iso6523 orgnr) {
         URI currentURI = uri.resolve(String.format("%s/%s", registerUriPart, orgnr));
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(5000);
@@ -77,10 +81,10 @@ public class BrregClientImpl implements BrregClient {
             }
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
-                log.error(String.format("Error looking up entity with identifier=%s in brreg", orgnr), e);
+                log.error("Error looking up entity with identifier={} in brreg", orgnr, e);
             }
         } catch (ResourceAccessException e) {
-            log.error(String.format("Error looking up entity with identifier=%s in brreg", orgnr), e);
+            log.error("Error looking up entity with identifier={} in brreg", orgnr, e);
         }
         return Optional.empty();
 

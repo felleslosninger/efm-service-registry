@@ -7,7 +7,7 @@ import no.difi.meldingsutveksling.serviceregistry.exceptions.ClientInputExceptio
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ServiceRegistryException;
 import no.difi.meldingsutveksling.serviceregistry.record.LookupParameters;
-import no.difi.meldingsutveksling.serviceregistry.service.healthcare.AddressRegistrerDetails;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.HealthAddressRegistryDetails;
 import no.difi.meldingsutveksling.serviceregistry.service.healthcare.NhnService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,28 +18,26 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
-import org.springframework.security.access.AccessDeniedException;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class NhnServiceTest {
+class NhnServiceIT {
 
     private static final String NHN_URI = "http://localhost:8089/arlookup/{identifier}";
     private static final String IDENTIFIER = "123456789";
@@ -61,7 +59,7 @@ class NhnServiceTest {
         WireMock.configureFor("localhost", 8089);
 
         restClient = RestClient.create();
-        nhnService = new NhnService(NHN_URI,restClient);
+        nhnService = new NhnService(NHN_URI, restClient);
 
         when(lookupParameters.getIdentifier()).thenReturn(IDENTIFIER);
         when(lookupParameters.getToken()).thenReturn(jwt);
@@ -76,14 +74,13 @@ class NhnServiceTest {
     @Test
     void testGetARDetailsSuccess() {
         String responseBody = """
-            {
-                "herid1": "67676",
-                "herid2": "33232",
-                "derDigdirSertifikat": "pem-cert-data",
-                "ediAdress": "dummyedi@edi.edi",
-                "orgNumber": "797897978"
-            }
-            """;
+                {
+                    "parentHerId": 67676,
+                    "herId": 33232,
+                    "derCertificate": "pem-cert-data",
+                    "orgNumber": "797897978"
+                }
+                """;
         wireMockServer.stubFor(get(urlEqualTo(PATH))
                 .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + TOKEN))
                 .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE))
@@ -92,16 +89,15 @@ class NhnServiceTest {
                         .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                         .withBody(responseBody)));
 
-        AddressRegistrerDetails result = nhnService.getARDetails(lookupParameters);
+        HealthAddressRegistryDetails result = nhnService.getARDetails(lookupParameters);
 
         assertNotNull(result);
-        assertEquals("67676", result.getHerid1());
-        assertEquals("33232", result.getHerid2());
-        assertEquals("pem-cert-data", result.getDerDigdirSertifikat());
-        assertEquals("dummyedi@edi.edi", result.getEdiAdress());
+        assertEquals(67676, result.getParentHerId());
+        assertEquals(33232, result.getHerId());
+        assertEquals("pem-cert-data", result.getDerCertificate());
         assertEquals("797897978", result.getOrgNumber());
         verify(getRequestedFor(urlEqualTo(PATH))
-                .withHeader(HttpHeaders.AUTHORIZATION, equalTo( "Bearer " + TOKEN))
+                .withHeader(HttpHeaders.AUTHORIZATION, equalTo("Bearer " + TOKEN))
                 .withHeader(HttpHeaders.ACCEPT, equalTo(MediaType.APPLICATION_JSON_VALUE)));
     }
 
