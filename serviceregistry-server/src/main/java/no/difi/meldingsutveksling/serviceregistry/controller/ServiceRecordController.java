@@ -6,11 +6,20 @@ import com.google.common.base.Strings;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import no.difi.meldingsutveksling.domain.Iso6523;
+import no.difi.meldingsutveksling.domain.PartnerIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
-import no.difi.meldingsutveksling.serviceregistry.domain.*;
+import no.difi.meldingsutveksling.serviceregistry.domain.CitizenInfo;
+import no.difi.meldingsutveksling.serviceregistry.domain.Entity;
+import no.difi.meldingsutveksling.serviceregistry.domain.EntityInfo;
+import no.difi.meldingsutveksling.serviceregistry.domain.FiksIoInfo;
+import no.difi.meldingsutveksling.serviceregistry.domain.HelseEnhetInfo;
+import no.difi.meldingsutveksling.serviceregistry.domain.Notification;
+import no.difi.meldingsutveksling.serviceregistry.domain.OrganizationInfo;
 import no.difi.meldingsutveksling.serviceregistry.domain.Process;
+import no.difi.meldingsutveksling.serviceregistry.domain.ProcessCategory;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.ReceiverProcessNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
@@ -34,28 +43,35 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
 
+import java.util.List;
 import java.util.Optional;
 
 import static no.difi.meldingsutveksling.serviceregistry.businesslogic.ServiceRecordPredicates.shouldCreateServiceRecordForCitizen;
 import static no.difi.meldingsutveksling.serviceregistry.logging.SRMarkerFactory.markerFrom;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
-@Slf4j
 public class ServiceRecordController {
 
     static final String X_ENABLE_BETA_FEATURES = "X-Enable-Beta-Features";
 
-    private final ServiceRecordService serviceRecordService;
-    private final ProcessService processService;
-    private final AuthenticationService authenticationService;
+    private final ObjectMapper objectMapper;
     private final EntityService entityService;
     private final PayloadSigner payloadSigner;
     private final SRRequestScope requestScope;
-    private final ObjectMapper objectMapper;
+    private final ProcessService processService;
+    private final ServiceRecordService serviceRecordService;
+    private final AuthenticationService authenticationService;
     private final ServiceregistryProperties properties;
 
     @InitBinder
@@ -67,7 +83,7 @@ public class ServiceRecordController {
      * Used to retrieve information needed to send a message within the provided process
      * to an entity with the provided identifier.
      *
-     * @param identifier        specifies the target entity.
+     * @param partnerIdentifier specifies the target entity.
      * @param processIdentifier specifies the target process.
      * @param auth              provides the authentication object.
      * @param request           is the servlet request.
@@ -75,7 +91,7 @@ public class ServiceRecordController {
      */
     @GetMapping(value = "/identifier/{identifier}/process/{processIdentifier}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity<?> entity(@PathVariable String identifier,
+    public ResponseEntity<?> entity(@PathVariable(name = "identifier") PartnerIdentifier partnerIdentifier,
                                     @PathVariable String processIdentifier,
                                     @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
                                     @RequestParam(name = "conversationId", required = false) String conversationId,
@@ -85,12 +101,14 @@ public class ServiceRecordController {
                                     HttpServletRequest request)
             throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException,
             BrregNotFoundException, SvarUtClientException, ReceiverProcessNotFoundException, FregGatewayException {
+        String identifier = partnerIdentifier.getIdentifier();
+
         MDC.put("identifier", Strings.isNullOrEmpty(identifier) ? identifier : IdentifierHasher.hashIfPersonnr(identifier));
-        String clientId = authenticationService.getAuthorizedClientIdentifier(auth, request);
+        Iso6523 clientId = authenticationService.getAuthorizedClientIdentifier(auth, request);
 
         fillRequestScope(identifier, conversationId, clientId, authenticationService.getToken(auth));
 
-        EntityInfo entityInfo = entityService.getEntityInfo(identifier)
+        EntityInfo entityInfo = entityService.getEntityInfo(partnerIdentifier)
                 .orElseThrow(() -> new EntityNotFoundException(identifier));
         Entity entity = new Entity();
         entity.setInfoRecord(entityInfo);
@@ -103,6 +121,13 @@ public class ServiceRecordController {
         }
 
         Process process = processService.findByIdentifier(processIdentifier).orElseThrow(() -> new ReceiverProcessNotFoundException(identifier, processIdentifier));
+
+        if (entityInfo instanceof HelseEnhetInfo helseEnhetInfo && isHealthcareEnabled() && enableBetaFeatures) {
+            List<ServiceRecord> healthcareServiceRecords = serviceRecordService.createHealthcareServiceRecords(helseEnhetInfo, process);
+            entity.getServiceRecords().addAll(healthcareServiceRecords);
+            return ResponseEntity.ok(entity);
+        }
+
         if (ProcessCategory.DIGITALPOST == process.getCategory() && shouldCreateServiceRecordForCitizen().test(entityInfo)) {
             entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientId, print, process));
         }
@@ -121,10 +146,6 @@ public class ServiceRecordController {
                     .orElseThrow(() -> new ReceiverProcessNotFoundException(identifier, processIdentifier));
             entity.getServiceRecords().add(record);
         }
-        if (ProcessCategory.DIALOGMELDING == process.getCategory() && isHealthcareEnabled() && enableBetaFeatures) {
-            ServiceRecord record = serviceRecordService.createHealthcareServiceRecords(entityInfo).getFirst();
-            entity.getServiceRecords().add(record);
-        }
         if (entity.getServiceRecords().isEmpty()) {
             throw new ReceiverProcessNotFoundException(identifier, processIdentifier);
         }
@@ -136,70 +157,76 @@ public class ServiceRecordController {
      * Used to retrieve information needed to send a message to an entity (organization or a person) having the provided
      * identifier
      *
-     * @param identifier of the organization/person to receive a message
+     * @param partnerIdentifier of the organization/person to receive a message
      * @return JSON object with information needed to send a message
      */
     @GetMapping(value = "/identifier/{identifier}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     @SuppressWarnings("squid:S2583")
     public ResponseEntity<?> entity(
-            @PathVariable String identifier,
+            @PathVariable(name = "identifier") PartnerIdentifier partnerIdentifier,
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             @RequestParam(name = "conversationId", required = false) String conversationId,
             @RequestParam(name = "print", defaultValue = "true") boolean print,
             @RequestHeader(name = X_ENABLE_BETA_FEATURES, defaultValue = "false", required = false) boolean enableBetaFeatures,
             Authentication auth,
             HttpServletRequest request)
-            throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException, BrregNotFoundException, SvarUtClientException, FregGatewayException {
+            throws SecurityLevelNotFoundException, CertificateNotFoundException, KontaktInfoException, BrregNotFoundException, SvarUtClientException {
 
-        log.trace("Identifier: {}", identifier);
+        String identifier = partnerIdentifier.getIdentifier();
+
+        log.trace("Identifier: {}", partnerIdentifier);
         MDC.put("identifier", Strings.isNullOrEmpty(identifier) ? identifier : IdentifierHasher.hashIfPersonnr(identifier));
-        String clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
+        Iso6523 clientOrgnr = authenticationService.getAuthorizedClientIdentifier(auth, request);
         log.trace("Client orgnr: {}", clientOrgnr);
         fillRequestScope(identifier, conversationId, clientOrgnr, authenticationService.getToken(auth));
 
         Entity entity = new Entity();
-        EntityInfo entityInfo = entityService.getEntityInfo(identifier)
+        EntityInfo entityInfo = entityService.getEntityInfo(partnerIdentifier)
                 .orElseThrow(() -> new EntityNotFoundException(identifier));
         entity.setInfoRecord(entityInfo);
-        if (entityInfo instanceof FiksIoInfo) {
-            return new ResponseEntity<>(entity, HttpStatus.OK);
-        }
 
-        if (shouldCreateServiceRecordForCitizen().test(entityInfo)) {
-            log.trace("Citizen");
-            try {
-                entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientOrgnr, print));
-            } catch (FregGatewayException | HttpClientErrorException e) {
-                log.info("No service record found for citizen: {}", identifier);
-                return new ResponseEntity<>("{\"message\": \"No service record found for citizen: " + identifier + "\"}", HttpStatus.NOT_FOUND);
-            }
-            if (isHealthcareEnabled() && enableBetaFeatures) {
-                try {
-                    entity.getServiceRecords().addAll(serviceRecordService.createHealthcareServiceRecords(entityInfo));
-                } catch (Exception e) {
-                    log.warn("Error while retrieving Healthcare record.", e);
+        switch (entityInfo) {
+            case OrganizationInfo _ -> {
+                {
+                    log.trace("Organization");
+                    entity.getServiceRecords().addAll(serviceRecordService.createArkivmeldingServiceRecords(entityInfo, securityLevel));
+                    entity.getServiceRecords().addAll(serviceRecordService.createEinnsynServiceRecords(entityInfo, securityLevel));
+                    entity.getServiceRecords().addAll(serviceRecordService.createAvtaltServiceRecords(identifier));
                 }
             }
-
-        } else if (entityInfo instanceof HelseEnhetInfo) {
-            if (isHealthcareEnabled() && enableBetaFeatures) {
-                entity.getServiceRecords().addAll(serviceRecordService.createHealthcareServiceRecords(entityInfo));
+            case CitizenInfo _ -> {
+                log.trace("Citizen");
+                try {
+                    entity.getServiceRecords().addAll(serviceRecordService.createDigitalpostServiceRecords(identifier, clientOrgnr, print));
+                } catch (FregGatewayException | HttpClientErrorException e) {
+                    log.info("No service record found for citizen: {}", identifier);
+                    return new ResponseEntity<>("{\"message\": \"No service record found for citizen: " + identifier + "\"}", HttpStatus.NOT_FOUND);
+                }
             }
-        } else {
-            log.trace("Organization");
-            entity.getServiceRecords().addAll(serviceRecordService.createArkivmeldingServiceRecords(entityInfo, securityLevel));
-            entity.getServiceRecords().addAll(serviceRecordService.createEinnsynServiceRecords(entityInfo, securityLevel));
-            entity.getServiceRecords().addAll(serviceRecordService.createAvtaltServiceRecords(identifier));
+            case FiksIoInfo _ -> {
+            }
+            case HelseEnhetInfo helseEnhetInfo -> {
+                if(isHealthcareEnabled() && enableBetaFeatures) {
+                    try {
+                        entity.getServiceRecords().addAll(serviceRecordService.createHealthcareServiceRecords(helseEnhetInfo));
+                    } catch (Exception e) {
+                        log.warn("Error while retrieving Healthcare record.", e);
+                    }
+                }
+            }
+            default -> {
+
+            }
         }
 
         return new ResponseEntity<>(entity, HttpStatus.OK);
     }
 
-    private void fillRequestScope(String identifier, String conversationId, String clientId, Jwt token) {
+    private void fillRequestScope(String identifier, String conversationId, Iso6523 clientId, Jwt token) {
         requestScope.setConversationId(conversationId);
         requestScope.setIdentifier(identifier);
-        requestScope.setClientId(clientId);
+        Optional.ofNullable(clientId).map(Iso6523::getOrganizationIdentifier).ifPresent(requestScope::setClientId);
         requestScope.setToken(token);
     }
 
@@ -211,7 +238,7 @@ public class ServiceRecordController {
     @GetMapping(value = "/identifier/{identifier}", produces = "application/jose")
     @ResponseBody
     public ResponseEntity<?> signed(
-            @PathVariable String identifier,
+            @PathVariable(name = "identifier") PartnerIdentifier partnerIdentifier,
             @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
             @RequestParam(name = "conversationId", required = false) String conversationId,
             @RequestParam(name = "print", defaultValue = "true") boolean print,
@@ -220,12 +247,12 @@ public class ServiceRecordController {
             HttpServletRequest request)
             throws EntitySignerException, SecurityLevelNotFoundException, KontaktInfoException,
             CertificateNotFoundException, BrregNotFoundException, SvarUtClientException, FregGatewayException {
-        return signEntity(entity(identifier, securityLevel, conversationId, print, enableBetaFeatures, auth, request));
+        return signEntity(entity(partnerIdentifier, securityLevel, conversationId, print, enableBetaFeatures, auth, request));
     }
 
     @GetMapping(value = "/identifier/{identifier}/process/{processIdentifier}", produces = "application/jose")
     @ResponseBody
-    public ResponseEntity<?> signed(@PathVariable String identifier,
+    public ResponseEntity<?> signed(@PathVariable(name = "identifier") PartnerIdentifier partnerIdentifier,
                                     @PathVariable String processIdentifier,
                                     @RequestParam(name = "securityLevel", required = false) Integer securityLevel,
                                     @RequestParam(name = "conversationId", required = false) String conversationId,
@@ -235,16 +262,18 @@ public class ServiceRecordController {
                                     HttpServletRequest request)
             throws SecurityLevelNotFoundException, KontaktInfoException, CertificateNotFoundException,
             BrregNotFoundException, SvarUtClientException, EntitySignerException, ReceiverProcessNotFoundException, FregGatewayException {
-        return signEntity(entity(identifier, processIdentifier, securityLevel, conversationId, print, enableBetaFeatures, auth, request));
+        return signEntity(entity(partnerIdentifier, processIdentifier, securityLevel, conversationId, print, enableBetaFeatures, auth, request));
     }
 
     @GetMapping(value = "/info/{identifier}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity<?> info(@PathVariable String identifier) {
+    public ResponseEntity<?> info(@PathVariable(name = "identifier") PartnerIdentifier partnerIdentifier, Authentication auth) {
+        requestScope.setToken(authenticationService.getToken(auth));
+
         Entity entity = new Entity();
-        Optional<EntityInfo> entityInfo = entityService.getEntityInfo(identifier);
+        Optional<EntityInfo> entityInfo = entityService.getEntityInfo(partnerIdentifier);
         if (entityInfo.isEmpty()) {
-            return notFoundResponse(String.format("Entity with identifier '%s' not found.", identifier));
+            return notFoundResponse(String.format("Entity with identifier '%s' not found.", partnerIdentifier));
         }
         entity.setInfoRecord(entityInfo.get());
         return ResponseEntity.ok(entity);
@@ -252,8 +281,8 @@ public class ServiceRecordController {
 
     @GetMapping(value = "/info/{identifier}", produces = "application/jose")
     @ResponseBody
-    public ResponseEntity<?> signed(@PathVariable String identifier) throws EntitySignerException {
-        return signEntity(info(identifier));
+    public ResponseEntity<?> signed(@PathVariable(name = "identifier") PartnerIdentifier partnerIdentifier, Authentication auth) throws EntitySignerException {
+        return signEntity(info(partnerIdentifier, auth));
     }
 
     private ResponseEntity<?> signEntity(ResponseEntity<?> entity) throws EntitySignerException {
@@ -273,6 +302,6 @@ public class ServiceRecordController {
     }
 
     private boolean isHealthcareEnabled() {
-        return properties.getHealthcare().enabled();
+        return properties.getHealthcare().isEnabled();
     }
 }

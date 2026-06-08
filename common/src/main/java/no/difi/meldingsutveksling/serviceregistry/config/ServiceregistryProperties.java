@@ -7,7 +7,6 @@ import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier;
 import no.difi.move.common.config.KeystoreProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
-import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.core.io.Resource;
 
 import java.net.URI;
@@ -101,10 +100,21 @@ public class ServiceregistryProperties {
         private String resource;
     }
 
-    public record Healthcare(@DefaultValue("false") boolean enabled,
-                             String nhnAdapterEndpointUrl,
-                             String fastlegeProcess,
-                             String nhnProcess) {
+    @Data
+    public static class Healthcare {
+
+        private boolean enabled;
+
+        @NotNull
+        private String endpointURL;
+
+        @NotNull
+        private String nhnProcess;
+
+        @NotNull
+        @Valid
+        @NestedConfigurationProperty
+        private Timeout timeout;
     }
 
     @Data
@@ -176,5 +186,11 @@ public class ServiceregistryProperties {
         private URL serviceRecordUrl;
         @NotNull
         private Resource certificate;
+    }
+
+    @Data
+    public static class Timeout {
+        private int connect = 3000;
+        private int read = 10000;
     }
 }

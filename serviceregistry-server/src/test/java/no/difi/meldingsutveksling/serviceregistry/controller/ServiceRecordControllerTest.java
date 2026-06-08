@@ -4,15 +4,28 @@ import com.jayway.jsonpath.JsonPath;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
+import no.difi.meldingsutveksling.domain.Iso6523;
+import no.difi.meldingsutveksling.domain.NhnIdentifier;
+import no.difi.meldingsutveksling.domain.PersonIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.meldingsutveksling.serviceregistry.config.SRConfig;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
-import no.difi.meldingsutveksling.serviceregistry.domain.*;
+import no.difi.meldingsutveksling.serviceregistry.domain.CitizenInfo;
+import no.difi.meldingsutveksling.serviceregistry.domain.DocumentType;
+import no.difi.meldingsutveksling.serviceregistry.domain.HelseEnhetInfo;
+import no.difi.meldingsutveksling.serviceregistry.domain.OrganizationInfo;
+import no.difi.meldingsutveksling.serviceregistry.domain.OrganizationType;
+import no.difi.meldingsutveksling.serviceregistry.domain.Postadresse;
 import no.difi.meldingsutveksling.serviceregistry.domain.Process;
+import no.difi.meldingsutveksling.serviceregistry.domain.ProcessCategory;
+import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.freg.exception.FregGatewayException;
-import no.difi.meldingsutveksling.serviceregistry.krr.*;
+import no.difi.meldingsutveksling.serviceregistry.krr.ContactInfoResource;
+import no.difi.meldingsutveksling.serviceregistry.krr.DigitalPostResource;
+import no.difi.meldingsutveksling.serviceregistry.krr.KontaktInfoException;
+import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;import no.difi.meldingsutveksling.serviceregistry.krr.PostAddress;
 import no.difi.meldingsutveksling.serviceregistry.record.HealthCareServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.record.ServiceRecord;
 import no.difi.meldingsutveksling.serviceregistry.record.ServiceRecordService;
@@ -29,7 +42,6 @@ import no.difi.virksert.client.lang.VirksertClientException;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +59,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -64,26 +75,35 @@ import java.util.Optional;
 
 import static java.util.Collections.singletonList;
 import static no.difi.meldingsutveksling.serviceregistry.controller.ServiceRecordController.X_ENABLE_BETA_FEATURES;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.emptyOrNullString;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
-import static org.springframework.restdocs.payload.PayloadDocumentation.responseBody;
-import static org.springframework.restdocs.request.RequestDocumentation.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.pathParameters;
+import static org.springframework.restdocs.request.RequestDocumentation.queryParameters;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(SpringExtension.class)
-@WebMvcTest(value = ServiceRecordController.class)
-@ActiveProfiles("test")
 @Import({PayloadSigner.class, SRConfig.class})
 @WithMockUser
+@ActiveProfiles("test")
+@WebMvcTest(value = ServiceRecordController.class)
 @AutoConfigureRestDocs
 public class ServiceRecordControllerTest {
 
@@ -97,8 +117,7 @@ public class ServiceRecordControllerTest {
     private static final String PROC_EINNSYN_INNSYNSKRAV = "urn:no:difi:profile:einnsyn:innsynskrav:ver1.0";
     private static final String PROC_DIGITALPOST = "urn:no:difi:profile:digitalpost:info:ver1.0";
 
-    private static final String DPH_DIALOGMELDING = "urn:no:difi:digitalpost:json:schema::dialogmelding";
-    private static final String DPH_FASTLEGE = "urn:no:difi:profile:digitalpost:fastlege:ver1.0";
+    private static final String DPH_DIALOGMELDING = "urn:no:difi:helse:xsd:schema::dialogmelding";
     private static final String DPH_NHN = "urn:no:difi:profile:digitalpost:helse:ver1.0";
 
     private static final String DOC_ARKIVMELDING = "urn:no:difi:arkivmelding:xsd::arkivmelding";
@@ -139,9 +158,6 @@ public class ServiceRecordControllerTest {
     @MockitoSpyBean
     private ServiceregistryProperties properties;
 
-    @Autowired
-    private PayloadSigner payloadSigner;
-
     @MockitoBean
     private JwtDecoder jwtDecoder;
 
@@ -176,62 +192,67 @@ public class ServiceRecordControllerTest {
         Postadresse testAdr = new Postadresse("Skrivarvegen 42", "1337", "teststed", "testland");
         OrganizationInfo info123123123 = new OrganizationInfo("123123123", "foo",
                 testAdr, new OrganizationType("ORGL"));
-        when(entityService.getEntityInfo("123123123")).thenReturn(Optional.of(info123123123));
+        when(entityService.getEntityInfo(Iso6523.parse("0192:123123123"))).thenReturn(Optional.of(info123123123));
         OrganizationInfo info321321312 = new OrganizationInfo("321321321", "bar",
                 testAdr, new OrganizationType("ORGL"));
-        when(entityService.getEntityInfo("321321321")).thenReturn(Optional.of(info321321312));
+        when(entityService.getEntityInfo(Iso6523.parse("0192:321321321"))).thenReturn(Optional.of(info321321312));
 
-        CitizenInfo citizenInfo = new CitizenInfo("12345678901");
-        when(entityService.getEntityInfo("12345678901")).thenReturn(Optional.of(citizenInfo));
-        when(entityService.getEntityInfo("404040404")).thenReturn(Optional.empty());
+        CitizenInfo citizenInfo = new CitizenInfo("17912099997");
+        when(entityService.getEntityInfo(PersonIdentifier.parse("17912099997"))).thenReturn(Optional.of(citizenInfo));
     }
 
     private void setupMocksForSuccessfulDpi() throws MalformedURLException, KontaktInfoException, SecurityLevelNotFoundException, CertificateNotFoundException, BrregNotFoundException, SvarUtClientException, FregGatewayException {
         ServiceregistryProperties props = fakePropertiesForDpi();
-        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
+        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn(Iso6523.parse("0192:987654321"));
         PersonResource personResource = fakePersonResourceForDpi();
         PostAddress postAddress = new PostAddress("Address name", "Street x", "Postal code", "Area", "Country");
         Process digitalpostProcess = new Process().setIdentifier(PROC_DIGITALPOST)
                 .setDocumentTypes(Arrays.asList(new DocumentType().setIdentifier(DOC_DIGITAL), new DocumentType().setIdentifier(DOC_PRINT)));
-        SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord("12345678901", digitalpostProcess, personResource,
+        SikkerDigitalPostServiceRecord dpiServiceRecord = new SikkerDigitalPostServiceRecord("17912099997", digitalpostProcess, personResource,
                 props.getDpi().getEndpointURL().toString(), false, postAddress, postAddress);
         dpiServiceRecord.setProcess(PROC_DIGITALPOST);
         dpiServiceRecord.setDocumentTypes(Arrays.asList(DOC_DIGITAL, DOC_PRINT));
-        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString(), anyBoolean()))
+        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), any(), anyBoolean()))
                 .thenReturn(List.of(dpiServiceRecord));
-        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString(), anyBoolean(), any(Process.class)))
+        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), any(), anyBoolean(), any(Process.class)))
                 .thenReturn(List.of(dpiServiceRecord));
         when(serviceRecordService.createArkivmeldingServiceRecord(any(), any(), anyInt())).thenReturn(Optional.empty());
         when(serviceRecordService.createEinnsynServiceRecords(any(), any())).thenReturn(List.of());
     }
 
     private void setupMocksForSuccessfulDph() throws FregGatewayException {
-        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
+        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn(Iso6523.parse("0192:987654321"));
 
         DocumentType dialogmelding = new DocumentType()
                 .setIdentifier(DPH_DIALOGMELDING);
 
-        Process processFastlege = new Process()
-                .setIdentifier(DPH_FASTLEGE)
-                .setCategory(ProcessCategory.DIALOGMELDING)
-                .setDocumentTypes(List.of(dialogmelding));
-
         Process processNhn = new Process().setIdentifier(DPH_NHN).setCategory(ProcessCategory.DIALOGMELDING).setDocumentTypes(List.of(dialogmelding));
 
-        dialogmelding.setProcesses(List.of(processFastlege, processNhn));
+        dialogmelding.setProcesses(List.of(processNhn));
 
-        lenient().when(processService.findByIdentifier(DPH_FASTLEGE)).thenReturn(Optional.of(processFastlege));
         lenient().when(processService.findByIdentifier(DPH_NHN)).thenReturn(Optional.of(processNhn));
 
         Patient patient = new Patient("17912099997", "Kjell", "Sprell", "Nordmann");
+        List<ServiceRecord> serviceRecords = List.of(
+                new HealthCareServiceRecord(ServiceIdentifier.DPH,
+                        "987654321", processNhn,
+                        "http://localhost:8090/endpoint", 1234, patient));
         when(serviceRecordService.createHealthcareServiceRecords(any()))
-                .thenReturn(List.of(
-                        new HealthCareServiceRecord(ServiceIdentifier.DPH,
-                                "12345678901", processFastlege,
-                                "http://localhost:8090/endpoint", "HerId1", "HerId2", patient),
-                        new HealthCareServiceRecord(ServiceIdentifier.DPH,
-                                "12345678901", processNhn,
-                                "http://localhost:8090/endpoint", "HerId1", "HerId2", null)));
+                .thenReturn(serviceRecords);
+        when(serviceRecordService.createHealthcareServiceRecords(any(), any()))
+                .thenReturn(serviceRecords);
+
+        HelseEnhetInfo helseEnhetInfo = new HelseEnhetInfo(
+                "fastlege-for:17912099997",
+                4321,
+                "987654321",
+                1234,
+                "Fastlegen",
+                "876543210",
+                "17912099997"
+                );
+
+        when(entityService.getEntityInfo(NhnIdentifier.parse("fastlege-for:17912099997"))).thenReturn(Optional.of(helseEnhetInfo));
     }
 
     private ParameterDescriptor getIdentifierParam() {
@@ -272,10 +293,10 @@ public class ServiceRecordControllerTest {
     @Test
     public void testPersonInfoRecordShouldMatchExpectedValues() throws Exception {
         setupMocksForSuccessfulDpi();
-        mvc.perform(get("/info/{identifier}", "12345678901")
+        mvc.perform(get("/info/{identifier}", "17912099997")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.infoRecord.identifier", is("12345678901")))
+                .andExpect(jsonPath("$.infoRecord.identifier", is("17912099997")))
                 .andExpect(jsonPath("$.infoRecord.entityType.name", is("citizen")))
                 .andDo(document("info/person",
                         preprocessRequest(prettyPrint()),
@@ -348,10 +369,10 @@ public class ServiceRecordControllerTest {
     @Test
     public void get_CredentialsResolveToDpi_ServiceRecordShouldMatchExpectedValues() throws Exception {
         setupMocksForSuccessfulDpi();
-        mvc.perform(get("/identifier/{identifier}", "12345678901")
+        mvc.perform(get("/identifier/{identifier}", "17912099997")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("12345678901")))
+                .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("17912099997")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPI")))
                 .andExpect(jsonPath("$.serviceRecords[0].spraak", is("nb")))
                 .andDo(document("identifier/person",
@@ -367,10 +388,10 @@ public class ServiceRecordControllerTest {
     public void get_CredentialsResolveToDpiAndDsfLookupFails_ShouldReturnErrorResponseBody() throws Exception {
         setupMocksForSuccessfulDpi();
         final String message = "identifier not found in DSF";
-        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString(), anyBoolean()))
+        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), any(), anyBoolean()))
                 .thenThrow(new KontaktInfoException(message));
 
-        mvc.perform(get("/identifier/12345678901")
+        mvc.perform(get("/identifier/17912099997")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_description", containsString(message)));
@@ -382,10 +403,10 @@ public class ServiceRecordControllerTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         setupMocksForSuccessfulDpi();
 
-        mvc.perform(get("/identifier/{identifier}/process/{processIdentifier}", "12345678901", PROC_DIGITALPOST)
+        mvc.perform(get("/identifier/{identifier}/process/{processIdentifier}", "17912099997", PROC_DIGITALPOST)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("12345678901")))
+                .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("17912099997")))
                 .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPI")))
                 .andDo(document("identifier/digital",
                         preprocessRequest(prettyPrint()),
@@ -402,10 +423,10 @@ public class ServiceRecordControllerTest {
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         setupMocksForSuccessfulDpi();
         final String message = "identifier not found in DSF";
-        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString(), anyBoolean()))
+        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), any(), anyBoolean()))
                 .thenThrow(new KontaktInfoException(message));
 
-        mvc.perform(get("/identifier/12345678901")
+        mvc.perform(get("/identifier/17912099997")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_description", containsString(message)));
@@ -414,11 +435,11 @@ public class ServiceRecordControllerTest {
     @Test
     public void get_CredentialsResolveToDpiAndLookupGivesError_ShouldReturnErrorResponseBody() throws Exception {
         final String message = "Error looking up identifier in KRR";
-        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
-        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString(), anyBoolean()))
+        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn(Iso6523.parse("0192:987654321"));
+        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), any(), anyBoolean()))
                 .thenThrow(new KontaktInfoException(message));
 
-        mvc.perform(get("/identifier/12345678901")
+        mvc.perform(get("/identifier/17912099997")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_description", containsString(message)));
@@ -429,11 +450,11 @@ public class ServiceRecordControllerTest {
         Process processMock = mockProcess(ProcessCategory.DIGITALPOST);
         when(processService.findByIdentifier(anyString())).thenReturn(Optional.of(processMock));
         final String message = "Error looking up identifier in KRR";
-        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn("AuthorizedIdentifier");
-        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), anyString(), anyBoolean(), any(Process.class)))
+        when(authenticationService.getAuthorizedClientIdentifier(any(), any())).thenReturn(Iso6523.parse("0192:987654321"));
+        when(serviceRecordService.createDigitalpostServiceRecords(anyString(), any(), anyBoolean(), any(Process.class)))
                 .thenThrow(new KontaktInfoException(message));
 
-        mvc.perform(get("/identifier/12345678901/process/some:process")
+        mvc.perform(get("/identifier/17912099997/process/some:process")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error_description", containsString(message)));
@@ -493,7 +514,7 @@ public class ServiceRecordControllerTest {
 
     @Test
     public void getWithProcessIdentifier_MissingEntity_ShouldReturn404() throws Exception {
-        mvc.perform(get("/identifier/1337/process/ProcessIdHere")).andExpect(status().isNotFound());
+        mvc.perform(get("/identifier/17912099997/process/ProcessIdHere")).andExpect(status().isNotFound());
     }
 
     @Test
@@ -706,14 +727,14 @@ public class ServiceRecordControllerTest {
             """, nullValues = "null")
     public void getWithProcessIdentifier_Healthcare(boolean enabled, Boolean enableBetaFeaturesHeader, boolean expectDPH) throws Exception {
         when(properties.getHealthcare()).thenReturn(
-                new ServiceregistryProperties.Healthcare(enabled,
-                        "http://localhost:8089/arlookup/{identifier}",
-                        DPH_FASTLEGE,
-                        DPH_NHN));
+                new ServiceregistryProperties.Healthcare()
+                        .setEnabled(enabled)
+                        .setEndpointURL("http://localhost:8089/api/lookup/{identifier}")
+                        .setNhnProcess(DPH_NHN));
 
         setupMocksForSuccessfulDph();
 
-        ResultActions resultActions = mvc.perform(get("/identifier/{identifier}/process/{processIdentifier}", "12345678901", DPH_FASTLEGE)
+        ResultActions resultActions = mvc.perform(get("/identifier/{identifier}/process/{processIdentifier}", "fastlege-for:17912099997", DPH_NHN)
                 .accept(MediaType.APPLICATION_JSON)
                 .headers(headers -> Optional.ofNullable(enableBetaFeaturesHeader).ifPresent(p -> headers.add(X_ENABLE_BETA_FEATURES, p.toString())))
         );
@@ -721,11 +742,13 @@ public class ServiceRecordControllerTest {
         if (expectDPH) {
             resultActions
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("12345678901")))
+                    .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("987654321")))
                     .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPH")))
-                    .andExpect(jsonPath("$.serviceRecords[0].process", is(DPH_FASTLEGE)))
-                    .andExpect(jsonPath("$.serviceRecords[0].herIdLevel1", is("HerId1")))
-                    .andExpect(jsonPath("$.serviceRecords[0].herIdLevel2", is("HerId2")))
+                    .andExpect(jsonPath("$.serviceRecords[0].process", is(DPH_NHN)))
+                    .andExpect(jsonPath("$.serviceRecords[0].herId", is(1234)))
+                    .andExpect(jsonPath("$.serviceRecords[0].patient.firstName", is("Kjell")))
+                    .andExpect(jsonPath("$.serviceRecords[0].patient.middleName", is("Sprell")))
+                    .andExpect(jsonPath("$.serviceRecords[0].patient.lastName", is("Nordmann")))
                     .andExpect(jsonPath("$.serviceRecords[0].documentTypes[0]", is(DPH_DIALOGMELDING)))
                     .andDo(document("identifier/digital",
                             preprocessRequest(prettyPrint()),
@@ -748,14 +771,14 @@ public class ServiceRecordControllerTest {
             """, nullValues = "null")
     public void get_Healthcare(boolean enabled, Boolean enableBetaFeaturesHeader, boolean expectDPH) throws Exception {
         when(properties.getHealthcare()).thenReturn(
-                new ServiceregistryProperties.Healthcare(enabled,
-                        "http://localhost:8089/arlookup/{identifier}",
-                        DPH_FASTLEGE,
-                        DPH_NHN));
+                new ServiceregistryProperties.Healthcare()
+                        .setEnabled(enabled)
+                        .setEndpointURL("http://localhost:8089/api/lookup/{identifier}")
+                        .setNhnProcess(DPH_NHN));
 
         setupMocksForSuccessfulDph();
 
-        ResultActions resultActions = mvc.perform(get("/identifier/{identifier}", "12345678901")
+        ResultActions resultActions = mvc.perform(get("/identifier/{identifier}", "fastlege-for:17912099997")
                 .accept(MediaType.APPLICATION_JSON)
                 .headers(headers -> Optional.ofNullable(enableBetaFeaturesHeader).ifPresent(p -> headers.add(X_ENABLE_BETA_FEATURES, p.toString())))
         );
@@ -763,7 +786,7 @@ public class ServiceRecordControllerTest {
         if (expectDPH) {
             resultActions
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("12345678901")))
+                    .andExpect(jsonPath("$.serviceRecords[0].organisationNumber", is("987654321")))
                     .andExpect(jsonPath("$.serviceRecords[0].service.identifier", is("DPH")))
                     .andDo(document("identifier/dph",
                             preprocessRequest(prettyPrint()),

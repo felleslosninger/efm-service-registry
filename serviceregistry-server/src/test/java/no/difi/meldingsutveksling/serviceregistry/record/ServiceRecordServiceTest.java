@@ -3,22 +3,27 @@ package no.difi.meldingsutveksling.serviceregistry.record;
 import com.google.common.collect.Sets;
 import lombok.SneakyThrows;
 import network.oxalis.vefa.peppol.common.model.ProcessIdentifier;
+import no.difi.meldingsutveksling.domain.ICD;
+import no.difi.meldingsutveksling.domain.Iso6523;
 import no.difi.meldingsutveksling.serviceregistry.CertificateNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperties;
-import no.difi.meldingsutveksling.serviceregistry.domain.*;
+import no.difi.meldingsutveksling.serviceregistry.domain.DocumentType;
+import no.difi.meldingsutveksling.serviceregistry.domain.EntityInfo;
+import no.difi.meldingsutveksling.serviceregistry.domain.HelseEnhetInfo;
+import no.difi.meldingsutveksling.serviceregistry.domain.OrganizationInfo;
+import no.difi.meldingsutveksling.serviceregistry.domain.OrganizationType;
 import no.difi.meldingsutveksling.serviceregistry.domain.Process;
-import no.difi.meldingsutveksling.serviceregistry.exceptions.ClientInputException;
-import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException;
+import no.difi.meldingsutveksling.serviceregistry.domain.ProcessCategory;
+import no.difi.meldingsutveksling.serviceregistry.domain.ServiceIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.SecurityLevelNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.freg.client.FregGatewayClient;
 import no.difi.meldingsutveksling.serviceregistry.freg.domain.FregGatewayEntity;
 import no.difi.meldingsutveksling.serviceregistry.krr.PersonResource;
 import no.difi.meldingsutveksling.serviceregistry.service.ProcessService;
 import no.difi.meldingsutveksling.serviceregistry.service.elma.ELMALookupService;
-import no.difi.meldingsutveksling.serviceregistry.service.healthcare.AddressRegistrerDetails;
+import no.difi.meldingsutveksling.serviceregistry.service.healthcare.HealthAddressRegistryDetails;
 import no.difi.meldingsutveksling.serviceregistry.service.healthcare.NhnService;
-import no.difi.meldingsutveksling.serviceregistry.service.healthcare.PatientNotRetrievedException;
 import no.difi.meldingsutveksling.serviceregistry.service.krr.KontaktInfoService;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtClientException;
 import no.difi.meldingsutveksling.serviceregistry.svarut.SvarUtService;
@@ -29,15 +34,25 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anySet;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class ServiceRecordServiceTest {
@@ -73,6 +88,7 @@ public class ServiceRecordServiceTest {
     private NhnService nhnService;
 
     private static final String ORGNR = "123456789";
+    private static final Iso6523 ISO_6523_ORGNR = Iso6523.of(ICD.NO_ORG, ORGNR);
     private static final String ORGNR_FIKS = "987654321";
     private static final String ORGNR_EINNSYN_RESPONSE = "987987987";
     private static final String ORGNR_EINNSYN = "123987654";
@@ -102,7 +118,6 @@ public class ServiceRecordServiceTest {
     private static final String DIGITALPOST_DOCTYPE_PRINT = "urn:no:difi:digitalpost:xsd:fysisk::print";
 
     private static final String DPH_DIALOGMELDING = "urn:no:difi:digitalpost:json:schema::dialogmelding";
-    private static final String DPH_FASTLEGE = "urn:no:difi:profile:digitalpost:fastlege:ver1.0";
     private static final String DPH_NHN = "urn:no:difi:profile:digitalpost:helse:ver1.0";
 
     private Process processAdmin;
@@ -112,7 +127,6 @@ public class ServiceRecordServiceTest {
     private Process processInnsynskrav;
     private Process processVedtak;
     private Process processInfo;
-    private Process processFastlege;
     private Process processNhn;
 
     @BeforeEach
@@ -120,7 +134,11 @@ public class ServiceRecordServiceTest {
         ServiceregistryProperties.ELMA elmaProps = new ServiceregistryProperties.ELMA();
         elmaProps.setLookupIcd(ELMA_LOOKUP_ICD);
         lenient().when(props.getElma()).thenReturn(elmaProps);
-        ServiceregistryProperties.Healthcare healthcareProps = new ServiceregistryProperties.Healthcare(true, "dummyUrl", DPH_FASTLEGE, DPH_NHN);
+        ServiceregistryProperties.Healthcare healthcareProps = new ServiceregistryProperties.Healthcare()
+                .setEnabled(true)
+                .setEndpointURL("dummyURL")
+                .setNhnProcess(DPH_NHN);
+
         lenient().when(props.getHealthcare()).thenReturn(healthcareProps);
 
         // Arkivmelding
@@ -186,16 +204,9 @@ public class ServiceRecordServiceTest {
         DocumentType dialogmelding = new DocumentType()
                 .setIdentifier(DPH_DIALOGMELDING);
 
-        processFastlege = new Process()
-                .setIdentifier(DPH_FASTLEGE)
-                .setCategory(ProcessCategory.DIALOGMELDING)
-                .setDocumentTypes(List.of(dialogmelding));
-
         processNhn = new Process().setIdentifier(DPH_NHN).setCategory(ProcessCategory.DIALOGMELDING).setDocumentTypes(List.of(dialogmelding));
 
-        dialogmelding.setProcesses(List.of(processFastlege, processNhn));
-
-
+        dialogmelding.setProcesses(List.of(processNhn));
     }
 
     private void enablePropertyEnableDpvDpf() {
@@ -377,7 +388,7 @@ public class ServiceRecordServiceTest {
         when(kontaktInfoService.getCitizenInfo(any(LookupParameters.class))).thenReturn(personResource);
         when(serviceRecordFactory.createDigitalServiceRecord(personResource, PERSONNUMMER, processInfo)).thenReturn(mock(ServiceRecord.class));
 
-        List<ServiceRecord> records = service.createDigitalpostServiceRecords(PERSONNUMMER, ORGNR, true, processInfo);
+        List<ServiceRecord> records = service.createDigitalpostServiceRecords(PERSONNUMMER, ISO_6523_ORGNR, true, processInfo);
         assertEquals(1, records.size());
     }
 
@@ -395,141 +406,42 @@ public class ServiceRecordServiceTest {
         when(personResource.hasMailbox()).thenReturn(false);
 
         when(kontaktInfoService.getCitizenInfo(any(LookupParameters.class))).thenReturn(personResource);
-        when(serviceRecordFactory.createPrintServiceRecord(eq(PERSONNUMMER), eq(ORGNR), any(), eq(personResource), eq(processVedtak), eq(true)))
+        when(serviceRecordFactory.createPrintServiceRecord(eq(PERSONNUMMER), eq(ISO_6523_ORGNR), any(), eq(personResource), eq(processVedtak), eq(true)))
                 .thenReturn(Optional.of(mock(ServiceRecord.class)));
         when(serviceRecordFactory.createDigitalDpvServiceRecord(PERSONNUMMER, processVedtak))
                 .thenReturn(mock(ServiceRecord.class));
 
-        assertEquals(2, service.createDigitalpostServiceRecords(PERSONNUMMER, ORGNR, true, processVedtak).size());
+        assertEquals(2, service.createDigitalpostServiceRecords(PERSONNUMMER, ISO_6523_ORGNR, true, processVedtak).size());
     }
 
     @SneakyThrows
     @Test
     public void whenValidPersonNummer_DphRecordIsCreated() {
-        var testARDetails = new AddressRegistrerDetails("1234", "4321", "dummySertifikat", "dummy", ORGNR);
-        CitizenInfo citizenInfo = new CitizenInfo(PERSONNUMMER);
+        var testARDetails = new HealthAddressRegistryDetails(1234, "Parent org name",
+                4321, "Org name", "dummySertifikat", ORGNR);
+        String identifier = "fastlege-for:" + PERSONNUMMER;
+        HelseEnhetInfo helseEnhetInfo = new HelseEnhetInfo(identifier,
+                1234, "Parent org name",
+                4321, "Org name",
+                ORGNR, PERSONNUMMER);
 
         FregGatewayEntity.Address.Response personAddress = FregGatewayEntity.Address.Response.builder().navn(new FregGatewayEntity.Address.Navn("Petter", "Petterson", "", "")).personIdentifikator(PERSONNUMMER).build();
 
-        when(processService.findByIdentifier(DPH_FASTLEGE)).thenReturn(Optional.of(processFastlege));
-        lenient().when(nhnService.getARDetails(argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(testARDetails);
-        when(kontaktInfoService.getFregAdress(argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(Optional.of(personAddress));
-        List<ServiceRecord> resultat = service.createHealthcareServiceRecords(citizenInfo);
+        when(processService.findByIdentifier(DPH_NHN)).thenReturn(Optional.of(processNhn));
+        when(nhnService.getARDetails(any())).thenReturn(testARDetails);
+        when(kontaktInfoService.getFregAdress(any())).thenReturn(Optional.of(personAddress));
+        List<ServiceRecord> resultat = service.createHealthcareServiceRecords(helseEnhetInfo);
         assertEquals(1, resultat.size());
         assertEquals(HealthCareServiceRecord.class, resultat.getFirst().getClass());
         HealthCareServiceRecord dph = (HealthCareServiceRecord) resultat.getFirst();
         assertNotNull(dph.getService());
         assertNotNull(dph.getPatient());
         assertEquals(ServiceIdentifier.DPH, dph.getService().getIdentifier());
-        assertEquals(DPH_FASTLEGE, dph.getProcess());
-        assertEquals(dph.getOrganisationNumber(), ORGNR);
-        assertEquals(testARDetails.getHerid1(), dph.getHerIdLevel1());
-        assertEquals(testARDetails.getHerid2(), dph.getHerIdLevel2());
-    }
-
-    @SneakyThrows
-    @Test
-    public void whenFastlegePRocess_And_IdentifierIsNotFnr_throwsClientInputException() {
-        Mockito.reset(nhnService);
-        var testARDetails = new AddressRegistrerDetails("1234", "4321", "dummySertifikat", "dummy", ORGNR);
-        var NOT_FNR = "12345678901";
-        CitizenInfo citizenInfo = new CitizenInfo(NOT_FNR);
-        when(processService.findByIdentifier(DPH_FASTLEGE)).thenReturn(Optional.of(processFastlege));
-        lenient().when(nhnService.getARDetails(argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(testARDetails);
-
-        try {
-            service.createHealthcareServiceRecords(citizenInfo);
-            fail("It was supposed to throw ClientInputException");
-        } catch (ClientInputException e) {
-
-        }
-    }
-
-    @SneakyThrows
-    @Test
-    public void whenMissingEntryInAR_throwsEntityNotFoundException() {
-        var NOT_FNR = "12345678901";
-        CitizenInfo citizenInfo = new CitizenInfo(NOT_FNR);
-
-        when(processService.findByIdentifier(DPH_FASTLEGE)).thenReturn(Optional.of(processFastlege));
-        lenient().when(nhnService.getARDetails(argThat(lookupParameters -> lookupParameters.getIdentifier().equals(NOT_FNR)))).thenThrow(new EntityNotFoundException(NOT_FNR));
-
-        try {
-            service.createHealthcareServiceRecords(citizenInfo);
-            fail("It was supposed to throw EntityNotFoundException");
-        } catch (EntityNotFoundException e) {
-
-        }
-
-
-    }
-
-
-    @SneakyThrows
-    @Test
-    public void whenPatientDataIsNotRetrieved_throwsPatientNotRetrieveException() {
-        var testARDetails = new AddressRegistrerDetails("1234", "4321", "dummySertifikat", "dummy", ORGNR);
-        CitizenInfo citizenInfo = new CitizenInfo(PERSONNUMMER);
-
-        when(processService.findByIdentifier(DPH_FASTLEGE)).thenReturn(Optional.of(processFastlege));
-        lenient().when(nhnService.getARDetails(argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(testARDetails);
-        lenient().when(kontaktInfoService.getFregAdress(argThat(t -> t.getIdentifier().equals(PERSONNUMMER)))).thenReturn(Optional.empty());
-        try {
-            service.createHealthcareServiceRecords(citizenInfo);
-            fail("It was supposed to throw EntityNotFoundException");
-        } catch (PatientNotRetrievedException e) {
-            return;
-        }
-        fail("It was suppposed to throw PatientNotRetrievedException");
-
-    }
-
-    @SneakyThrows
-    @Test
-    public void whenKontaktInfoThrowsHttpClientException_thenThrowPatientNotRetrievedException() {
-        var testARDetails = new AddressRegistrerDetails("1234", "4321", "dummySertifikat", "dummy", ORGNR);
-        CitizenInfo citizenInfo = new CitizenInfo(PERSONNUMMER);
-
-        when(processService.findByIdentifier(DPH_FASTLEGE)).thenReturn(Optional.of(processFastlege));
-        lenient().when(nhnService.getARDetails(argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)))).thenReturn(testARDetails);
-        lenient().when(kontaktInfoService.getFregAdress(argThat(t -> t.getIdentifier().equals(PERSONNUMMER)))).thenReturn(Optional.empty());
-        try {
-            service.createHealthcareServiceRecords(citizenInfo);
-            fail("It was supposed to throw EntityNotFoundException");
-        } catch (PatientNotRetrievedException e) {
-            return;
-        }
-        fail("It was suppposed to throw PatientNotRetrievedException");
-
-    }
-
-    @SneakyThrows
-    @Test
-    public void whenIdentifierIsHerID_dphRecordIsCreated() {
-
-        var testARDetails = new AddressRegistrerDetails("1234", "4321", "dummySertifikat", "dummy", ORGNR);
-        var HERID = "43432234";
-        HelseEnhetInfo citizenInfo = new HelseEnhetInfo(HERID);
-
-        lenient().when(processService.findByIdentifier(DPH_NHN)).thenReturn(Optional.of(processNhn));
-        lenient().when(nhnService.getARDetails(argThat(lookupParameters -> lookupParameters.getIdentifier().equals(HERID)))).thenReturn(testARDetails);
-
-
-        var serviceRecords = service.createHealthcareServiceRecords(citizenInfo);
-
-        assertEquals(1, serviceRecords.size());
-        assertEquals(HealthCareServiceRecord.class, serviceRecords.getFirst().getClass());
-        var dph = (HealthCareServiceRecord) serviceRecords.getFirst();
-        assertNotNull(dph.getService());
-        assertEquals(ServiceIdentifier.DPH, dph.getService().getIdentifier());
         assertEquals(DPH_NHN, dph.getProcess());
-        assertEquals(testARDetails.getHerid1(), dph.getHerIdLevel1());
-        assertEquals(testARDetails.getHerid2(), dph.getHerIdLevel2());
         assertEquals(ORGNR, dph.getOrganisationNumber());
-        assertNull(dph.getPatient());
-
+        assertEquals(testARDetails.getHerId(), dph.getHerId());
+        verify(nhnService).getARDetails(argThat(lookupParameters -> lookupParameters.getIdentifier().equals(identifier)));
+        verify(kontaktInfoService).getFregAdress(argThat(lookupParameters -> lookupParameters.getIdentifier().equals(PERSONNUMMER)));
 
     }
-
-
 }
