@@ -60,7 +60,7 @@ public class BrregClientImpl implements BrregClient {
     }
 
     private Optional<BrregEnhet> getEnhet(String registerUriPart, String apiVersjon, Iso6523 orgnr) {
-        URI currentURI = uri.resolve(String.format("%s/%s", registerUriPart, orgnr));
+        URI currentURI = uri.resolve(String.format("%s/%s", registerUriPart, orgnr.getOrganizationIdentifier()));
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(5000);
         requestFactory.setReadTimeout(5000);
