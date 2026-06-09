@@ -54,7 +54,7 @@ difi:
       print-url: https://test.kontaktregisteret.no/rest/v2/printSertifikat
     healthcare:
       enabled: true
-      endpoint-url: http://localhost:8082/api/lookup/{identifier}
+      endpoint-url: https://test.eformidling.no/nhn-adapter/api/lookup/{identifier}
       nhn-process: urn:no:difi:profile:helse:helse:ver1.0
       timeout:
         connect: 3000
