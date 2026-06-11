@@ -6,4 +6,6 @@ on:
 
 jobs:
   on-pr-label:
+    permissions:
+        pull-requests: write
     uses: felleslosninger/github-workflows/.github/workflows/on-pr-label.yml@main
