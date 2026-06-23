@@ -59,7 +59,7 @@
         <bouncycastle.version>1.70</bouncycastle.version>
 
         <org.apache.ws.commons.axiom.version>2.0.0</org.apache.ws.commons.axiom.version>
-        <oxalis-libs.version>4.2.1</oxalis-libs.version>
+        <oxalis-libs.version>4.4.0</oxalis-libs.version>
         <netty.version>4.2.15.Final</netty.version>
     </properties>
 
