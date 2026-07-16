@@ -73,9 +73,9 @@
         </dependency>
 
         <dependency>
-            <groupId>no.ks.fiks</groupId>
-            <artifactId>fiks-io-klient-java</artifactId>
-            <version>3.6.2</version>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>

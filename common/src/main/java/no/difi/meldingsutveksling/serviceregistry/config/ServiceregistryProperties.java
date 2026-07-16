@@ -11,7 +11,6 @@ import org.springframework.core.io.Resource;
 
 import java.net.URI;
 import java.net.URL;
-import java.util.List;
 import java.util.Map;
 
 @ConfigurationProperties("difi.move")
@@ -132,8 +131,6 @@ public class ServiceregistryProperties {
         @Valid
         private SvarUt svarut;
         @Valid
-        private FiksIo io;
-        @Valid
         private Oidc oidc;
     }
 
@@ -149,20 +146,6 @@ public class ServiceregistryProperties {
          */
         @NestedConfigurationProperty
         private KeystoreProperties keystore;
-    }
-
-
-    @Data
-    public static class FiksIo {
-        private boolean enable;
-        @NotNull
-        private String endpointUrl;
-        @NotNull
-        private List<String> orgformFilter;
-        @NotNull
-        private String integrasjonId;
-        @NotNull
-        private String integrasjonPassord;
     }
 
     @Data

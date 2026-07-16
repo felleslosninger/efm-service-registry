@@ -65,10 +65,6 @@ public class ServiceRecordService {
     private final SRRequestScope sRRequestScope;
     private final ServiceregistryProperties serviceregistryProperties;
 
-    public Optional<ServiceRecord> createFiksIoServiceRecord(EntityInfo entityInfo, String protocol) {
-        return Optional.of(serviceRecordFactory.createDpfioServiceRecord(entityInfo.getIdentifier(), protocol));
-    }
-
     @SuppressWarnings("squid:S1166")
     public List<ServiceRecord> createArkivmeldingServiceRecords(EntityInfo entityInfo, Integer securityLevel) throws SecurityLevelNotFoundException, CertificateNotFoundException, SvarUtClientException {
         ArrayList<ServiceRecord> serviceRecords = new ArrayList<>();

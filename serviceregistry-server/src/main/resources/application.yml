@@ -89,10 +89,6 @@ difi:
           alias: changeit
           password: changeit
           path: changeit
-      io:
-        enable: false
-        endpoint-url: https://api.fiks.test.ks.no
-        orgform-filter: KOMM
       svarut:
         service-record-url: https://test.svarut.ks.no/tjenester/forsendelseservice/ForsendelsesServiceV6
         certificate: classpath:svarut_test_public.pem

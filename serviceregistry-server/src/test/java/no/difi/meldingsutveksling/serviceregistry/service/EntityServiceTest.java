@@ -1,30 +1,25 @@
 package no.difi.meldingsutveksling.serviceregistry.service;
 
-import no.difi.meldingsutveksling.domain.FiksIoIdentifier;
 import no.difi.meldingsutveksling.domain.Iso6523;
 import no.difi.meldingsutveksling.domain.NhnIdentifier;
 import no.difi.meldingsutveksling.domain.PersonIdentifier;
 import no.difi.meldingsutveksling.serviceregistry.SRRequestScope;
 import no.difi.meldingsutveksling.serviceregistry.domain.CitizenInfo;
 import no.difi.meldingsutveksling.serviceregistry.domain.EntityInfo;
-import no.difi.meldingsutveksling.serviceregistry.domain.FiksIoInfo;
 import no.difi.meldingsutveksling.serviceregistry.domain.HelseEnhetInfo;
 import no.difi.meldingsutveksling.serviceregistry.domain.OrganizationInfo;
 import no.difi.meldingsutveksling.serviceregistry.domain.OrganizationType;
 import no.difi.meldingsutveksling.serviceregistry.exceptions.EntityNotFoundException;
-import no.difi.meldingsutveksling.serviceregistry.fiks.io.FiksIoService;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregNotFoundException;
 import no.difi.meldingsutveksling.serviceregistry.service.brreg.BrregService;
 import no.difi.meldingsutveksling.serviceregistry.service.healthcare.HealthAddressRegistryDetails;
 import no.difi.meldingsutveksling.serviceregistry.service.healthcare.NhnService;
-import no.ks.fiks.io.client.model.Konto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.client.ResourceAccessException;
 
 import java.util.Optional;
@@ -33,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,9 +35,6 @@ class EntityServiceTest {
 
     @Mock
     private BrregService brregService;
-
-    @Mock
-    private ObjectProvider<FiksIoService> fiksIoService;
 
     @Mock
     private SRRequestScope requestScope;
@@ -55,7 +46,6 @@ class EntityServiceTest {
     private EntityService entityService;
 
     private static final String IDENTIFIER = "123456789";
-    private static final String FIKS_IO_IDENTIFIER = "00000000-0000-0000-0000-000000000000";
     private static final String NHN_IDENTIFIER = "fastlege-for:17912099997";
 
     @BeforeEach
@@ -93,48 +83,6 @@ class EntityServiceTest {
         assertTrue(result.isPresent());
         assertInstanceOf(CitizenInfo.class, result.get());
         assertEquals("17912099997", result.get().getIdentifier());
-    }
-
-    @Test
-    void getEntityInfo_FiksIoIdentifierSuccess() {
-        FiksIoIdentifier fiksIoIdentifier = FiksIoIdentifier.parse(FIKS_IO_IDENTIFIER);
-        FiksIoService fiksIoServiceMock = mock(FiksIoService.class);
-        Konto konto = mock(Konto.class);
-
-        when(fiksIoService.getIfAvailable()).thenReturn(fiksIoServiceMock);
-        when(fiksIoServiceMock.lookup(FIKS_IO_IDENTIFIER)).thenReturn(Optional.of(konto));
-        when(konto.isGyldigMottaker()).thenReturn(true);
-
-        Optional<EntityInfo> result = entityService.getEntityInfo(fiksIoIdentifier);
-
-        assertTrue(result.isPresent());
-        assertInstanceOf(FiksIoInfo.class, result.get());
-        assertEquals(FIKS_IO_IDENTIFIER, result.get().getIdentifier());
-    }
-
-    @Test
-    void getEntityInfo_FiksIoIdentifierNotGyldig() {
-        FiksIoIdentifier fiksIoIdentifier = FiksIoIdentifier.parse(FIKS_IO_IDENTIFIER);
-        FiksIoService fiksIoServiceMock = mock(FiksIoService.class);
-        Konto konto = mock(Konto.class);
-
-        when(fiksIoService.getIfAvailable()).thenReturn(fiksIoServiceMock);
-        when(fiksIoServiceMock.lookup(FIKS_IO_IDENTIFIER)).thenReturn(Optional.of(konto));
-        when(konto.isGyldigMottaker()).thenReturn(false);
-
-        Optional<EntityInfo> result = entityService.getEntityInfo(fiksIoIdentifier);
-
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void getEntityInfo_FiksIoServiceNotAvailable() {
-        FiksIoIdentifier fiksIoIdentifier = FiksIoIdentifier.parse(FIKS_IO_IDENTIFIER);
-        when(fiksIoService.getIfAvailable()).thenReturn(null);
-
-        Optional<EntityInfo> result = entityService.getEntityInfo(fiksIoIdentifier);
-
-        assertTrue(result.isEmpty());
     }
 
     @Test
