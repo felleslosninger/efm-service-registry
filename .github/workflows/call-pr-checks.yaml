@@ -17,18 +17,17 @@ concurrency:
 
 jobs:
   run-pr-checks:
-    uses: felleslosninger/github-workflows/.github/workflows/ci-pr-checks.yml@main
+    uses: felleslosninger/github-workflows/.github/workflows/ci-pr-checks-image.yml@main
     with:
       module-name: serviceregistry-server
       application-type: spring-boot
       enable-auto-merge-dependabot: true
       enable-pr-title-verify: true
-      enable-image-build: true
       java-version: 25
       image-name: efm-service-registry
       auto-merge-types: "version-update:semver-patch"
       pull-request-title: ${{ github.event.pull_request.title }}
-      pull-request-allowed-prefixes: "MOVE-,Bump"
+      pull-request-allowed-prefixes: "MOVE-,Bump,PF-"
       pull-request-case-sensitive-prefix: true
       maven-lifecycle: "verify"
     secrets: inherit
