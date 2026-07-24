@@ -21,7 +21,6 @@ public class CacheConfig extends CachingConfigurerSupport {
     public static final String KRR_CACHE = "krrCache";
     public static final String NHN_CACHE = "nhnCache";
     public static final String DSF_CACHE = "dsfCache";
-    public static final String FIKSIO_CACHE = "fiksIoCache";
     public static final String CACHE_KRR_PRINT = "krrPrintCache";
     public static final String KSFIKS_CACHE = "ksfiks";
 
@@ -31,10 +30,6 @@ public class CacheConfig extends CachingConfigurerSupport {
         SimpleCacheManager cacheManager = new SimpleCacheManager();
         cacheManager.setCaches(Arrays.asList(
                 new CaffeineCache(SVARUT_CACHE,
-                        Caffeine.newBuilder()
-                                .expireAfterWrite(5, TimeUnit.MINUTES)
-                                .build()),
-                new CaffeineCache(FIKSIO_CACHE,
                         Caffeine.newBuilder()
                                 .expireAfterWrite(5, TimeUnit.MINUTES)
                                 .build()),

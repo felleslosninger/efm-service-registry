@@ -24,9 +24,5 @@ public enum ServiceIdentifier {
     /**
      * Identifies eInnsyn
      */
-    DPE,
-    /**
-     * Fiks IO
-     */
-    DPFIO
+    DPE
 }

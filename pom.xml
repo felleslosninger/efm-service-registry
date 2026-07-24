@@ -52,7 +52,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>25</maven.compiler.release>
-        <move-common.version>3.1.0-RC1</move-common.version>
+        <move-common.version>3.1.3</move-common.version>
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <virksert.version>2.0.8</virksert.version>
 
@@ -147,14 +147,6 @@
                 <artifactId>commons-bdxr</artifactId>
                 <version>${oxalis-libs.version}</version>
             </dependency>
-
-            <dependency>
-                <groupId>io.mockk</groupId>
-                <artifactId>mockk</artifactId>
-                <version>1.14.11</version>
-                <scope>test</scope>
-            </dependency>
-
             <dependency>
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcpkix-jdk15on</artifactId>

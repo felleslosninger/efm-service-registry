@@ -160,12 +160,6 @@ public class ServiceRecordFactory {
         return Optional.of(printRecord);
     }
 
-    public ServiceRecord createDpfioServiceRecord(String kontoId, String protocol) {
-        ServiceRecord record = new ServiceRecord(ServiceIdentifier.DPFIO, kontoId, protocol, kontoId);
-        record.getService().setServiceCode(protocol);
-        return record;
-    }
-
     public ServiceRecord createDpvServiceRecord(String orgnr, Process process) {
         ServiceRecord dpvServiceRecord = new ServiceRecord(ServiceIdentifier.DPV, orgnr, process, properties.getDpv().getEndpointURL().toString());
         dpvServiceRecord.getService().setServiceCode(process.getServiceCode());

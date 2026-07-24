@@ -14,7 +14,6 @@ import no.difi.meldingsutveksling.serviceregistry.config.ServiceregistryProperti
 import no.difi.meldingsutveksling.serviceregistry.domain.CitizenInfo;
 import no.difi.meldingsutveksling.serviceregistry.domain.Entity;
 import no.difi.meldingsutveksling.serviceregistry.domain.EntityInfo;
-import no.difi.meldingsutveksling.serviceregistry.domain.FiksIoInfo;
 import no.difi.meldingsutveksling.serviceregistry.domain.HelseEnhetInfo;
 import no.difi.meldingsutveksling.serviceregistry.domain.Notification;
 import no.difi.meldingsutveksling.serviceregistry.domain.OrganizationInfo;
@@ -113,13 +112,6 @@ public class ServiceRecordController {
         Entity entity = new Entity();
         entity.setInfoRecord(entityInfo);
 
-        if (entityInfo instanceof FiksIoInfo) {
-            ServiceRecord fiksIoRecord = serviceRecordService.createFiksIoServiceRecord(entityInfo, processIdentifier)
-                    .orElseThrow(() -> new ReceiverProcessNotFoundException(identifier, processIdentifier));
-            entity.getServiceRecords().add(fiksIoRecord);
-            return ResponseEntity.ok(entity);
-        }
-
         Process process = processService.findByIdentifier(processIdentifier).orElseThrow(() -> new ReceiverProcessNotFoundException(identifier, processIdentifier));
 
         if (entityInfo instanceof HelseEnhetInfo helseEnhetInfo && isHealthcareEnabled() && enableBetaFeatures) {
@@ -203,8 +195,6 @@ public class ServiceRecordController {
                     log.info("No service record found for citizen: {}", identifier);
                     return new ResponseEntity<>("{\"message\": \"No service record found for citizen: " + identifier + "\"}", HttpStatus.NOT_FOUND);
                 }
-            }
-            case FiksIoInfo _ -> {
             }
             case HelseEnhetInfo helseEnhetInfo -> {
                 if(isHealthcareEnabled() && enableBetaFeatures) {
