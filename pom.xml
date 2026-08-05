@@ -81,10 +81,13 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <!-- Må stå før move-common-bom og ha samme versjon som spring-boot-starter-parent:
+                 overstyrer Spring Boot-versjonene som move-common-bom arver fra sin egen
+                 (eldre) Spring Boot-parent -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
-                <version>4.0.6</version>
+                <version>4.1.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
