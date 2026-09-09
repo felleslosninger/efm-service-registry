@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.0</version>
+        <version>4.1.1</version>
         <relativePath/>
     </parent>
 
@@ -14,6 +14,14 @@
     <artifactId>serviceregistry-parent</artifactId>
     <version>DEV-SNAPSHOT</version>
     <packaging>pom</packaging>
+
+    <licenses>
+        <license>
+            <name>BSD 3-Clause License</name>
+            <url>https://opensource.org/licenses/BSD-3-Clause</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
     <scm>
         <connection>scm:git:https://github.com/felleslosninger/efm-service-registry</connection>
@@ -56,7 +64,6 @@
 
         <org.apache.ws.commons.axiom.version>2.0.0</org.apache.ws.commons.axiom.version>
         <oxalis-libs.version>4.5.0</oxalis-libs.version>
-        <netty.version>4.2.15.Final</netty.version>
     </properties>
 
     <modules>
@@ -70,20 +77,13 @@
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-bom</artifactId>
-                <version>${netty.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
             <!-- Må stå før move-common-bom og ha samme versjon som spring-boot-starter-parent:
                  overstyrer Spring Boot-versjonene som move-common-bom arver fra sin egen
                  (eldre) Spring Boot-parent -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
-                <version>4.1.0</version>
+                <version>4.1.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -201,6 +201,12 @@
                 <groupId>org.yaml</groupId>
                 <artifactId>snakeyaml</artifactId>
                 <version>2.6</version>
+            </dependency>
+            <!-- CVE-2026-65182 -->
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-core</artifactId>
+                <version>11.0.25</version>
             </dependency>
             <dependency>
                 <groupId>org.wiremock</groupId>
