@@ -61,7 +61,6 @@
         <virksert.version>2.0.8</virksert.version>
 
         <bouncycastle.version>1.86</bouncycastle.version>
-
         <org.apache.ws.commons.axiom.version>2.0.0</org.apache.ws.commons.axiom.version>
         <oxalis-libs.version>4.5.0</oxalis-libs.version>
     </properties>
