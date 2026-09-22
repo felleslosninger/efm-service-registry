@@ -51,3 +51,7 @@ Når podden starter opp i TEST uten krasj, vil det automatisk bli generert en PR
 Dokumentasjon ([RestDocs](https://docs.spring.io/spring-restdocs/docs/current/reference/htmlsingle/)/HTML) vert generert for "serviceregistry-server"-modulen som del av package-fasen når ein køyrer prosjekt-profilen "restdocs":
 
 ```mvn clean package -P restdocs```
+
+## License
+
+This project is licensed under the BSD 3-Clause License. See the [LICENSE](LICENSE) file for details.
