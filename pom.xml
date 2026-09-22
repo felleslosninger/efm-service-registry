@@ -60,7 +60,7 @@
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <virksert.version>2.0.8</virksert.version>
 
-        <bouncycastle.version>1.70</bouncycastle.version>
+        <bouncycastle.version>1.86</bouncycastle.version>
 
         <org.apache.ws.commons.axiom.version>2.0.0</org.apache.ws.commons.axiom.version>
         <oxalis-libs.version>4.5.0</oxalis-libs.version>
@@ -148,7 +148,19 @@
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
-                <artifactId>bcpkix-jdk15on</artifactId>
+                <artifactId>bcpkix-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+            <!-- Styrt eksplisitt: bcprov kjem transitivt via wss4j -> cryptacular på ein
+                 eldre versjon enn bcpkix, og må haldast i takt -->
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcutil-jdk18on</artifactId>
                 <version>${bouncycastle.version}</version>
             </dependency>
             <dependency>

@@ -1,8 +1,0 @@
-# Ryddet 2026-09-22 etter bump til Spring Boot 4.1.1: kun CVE-er som framleis blir
-# rapporterte er att. CI feiler på HIGH/CRITICAL, så MEDIUM-funn er ikkje lista.
-
-# org.bouncycastle:bcprov-jdk18on (1.78.1, fiksa i 1.84/1.85)
-# Transitiv - bør løysast ved å heve bouncycastle i staden for å ignorere
-CVE-2025-14813
-CVE-2026-8763
-CVE-2026-13506
