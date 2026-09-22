@@ -15,6 +15,14 @@
     <version>DEV-SNAPSHOT</version>
     <packaging>pom</packaging>
 
+    <licenses>
+        <license>
+            <name>BSD 3-Clause License</name>
+            <url>https://opensource.org/licenses/BSD-3-Clause</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <scm>
         <connection>scm:git:https://github.com/felleslosninger/efm-service-registry</connection>
         <developerConnection>scm:git:https://github.com/felleslosninger/efm-service-registry</developerConnection>
@@ -43,10 +51,6 @@
             <name>GitHub felleslosninger Apache Maven Packages</name>
             <url>https://maven.pkg.github.com/felleslosninger/efm-service-registry</url>
         </repository>
-        <snapshotRepository>
-            <id>github</id>
-            <url>https://maven.pkg.github.com/felleslosninger/efm-service-registry</url>
-        </snapshotRepository>
     </distributionManagement>
 
     <properties>
@@ -59,8 +63,7 @@
         <bouncycastle.version>1.70</bouncycastle.version>
 
         <org.apache.ws.commons.axiom.version>2.0.0</org.apache.ws.commons.axiom.version>
-        <oxalis-libs.version>4.4.0</oxalis-libs.version>
-        <netty.version>4.2.17.Final</netty.version>
+        <oxalis-libs.version>4.5.0</oxalis-libs.version>
     </properties>
 
     <modules>
@@ -74,13 +77,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-bom</artifactId>
-                <version>${netty.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
             <!-- Må stå før move-common-bom og ha samme versjon som spring-boot-starter-parent:
                  overstyrer Spring Boot-versjonene som move-common-bom arver fra sin egen
                  (eldre) Spring Boot-parent -->
@@ -206,6 +202,12 @@
                 <artifactId>snakeyaml</artifactId>
                 <version>2.6</version>
             </dependency>
+            <!-- CVE-2026-65182 -->
+            <dependency>
+                <groupId>org.apache.tomcat.embed</groupId>
+                <artifactId>tomcat-embed-core</artifactId>
+                <version>11.0.25</version>
+            </dependency>
             <dependency>
                 <groupId>org.wiremock</groupId>
                 <artifactId>wiremock-standalone</artifactId>
@@ -293,17 +295,4 @@
         </plugins>
     </build>
 
-    <profiles>
-        <profile>
-            <id>sonar</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <sonar.host.url>
-                    http://sonar-app01.difi.local:9000/
-                </sonar.host.url>
-            </properties>
-        </profile>
-    </profiles>
 </project>
